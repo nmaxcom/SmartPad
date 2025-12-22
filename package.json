@@ -1,0 +1,78 @@
+{
+  "name": "smartpad",
+  "version": "1.0.0",
+  "description": "> A text-based web application that combines the simplicity of a plain text editor with the power of real-time mathematical interpretation and calculation.",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "node scripts/npm_run_dev_server_check.js",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "npm run test:unit",
+    "test:unit": "jest",
+    "test:browser": "cucumber-js --config cucumber.config.js tests/features/browser-critical.feature",
+    "test:full": "npm run test:unit && npm run test:browser && npm run test:e2e",
+    "test:bdd": "cucumber-js --config cucumber.config.js",
+    "test:e2e": "playwright test --project=chromium --config=playwright.config.ts",
+    "test:visual": "playwright test --project=visual-tests --config=playwright.config.ts",
+    "test:visual:update": "playwright test --project=visual-tests --update-snapshots --config=playwright.config.ts",
+    "generate-syntax-docs": "tsx scripts/generate-syntax-docs.ts"
+  },
+  "lint-staged": {
+    "*.{js,ts}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nmaxcom/SmartPad.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nmaxcom/SmartPad/issues"
+  },
+  "homepage": "https://github.com/nmaxcom/SmartPad#readme",
+  "dependencies": {
+    "@testing-library/dom": "^10.0.0",
+    "@tiptap/core": "^2.7.0",
+    "@tiptap/extension-placeholder": "^2.14.0",
+    "@tiptap/pm": "^2.14.0",
+    "@tiptap/react": "^2.14.0",
+    "@tiptap/starter-kit": "^2.14.0",
+    "@types/mathjs": "^9.4.1",
+    "mathjs": "^14.6.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "unitsnet-js": "^1.0.0"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^11.3.0",
+    "@playwright/test": "^1.54.2",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.15.30",
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "@typescript-eslint/eslint-plugin": "^8.33.1",
+    "@typescript-eslint/parser": "^8.33.1",
+    "@vitejs/plugin-react": "^4.2.1",
+    "chai": "^5.2.0",
+    "eslint": "^9.28.0",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^30.1.1",
+    "jsdom": "^26.1.0",
+    "nerdamer": "^1.1.13",
+    "prettier": "^3.5.3",
+    "ts-jest": "^29.4.1",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.4",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.33.1",
+    "vite": "^5.4.19"
+  }
+}

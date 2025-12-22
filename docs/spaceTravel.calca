@@ -1,0 +1,15 @@
+@en-US
+@precision= 1
+
+EarthToMarsDist = 60*10^9m
+1h=60s
+1day = 24h
+AccRate = 10m/s^2 # Viajando a 1g
+AccPctge = 80% # Distancia acelerando, el resto es de frenada
+DecPctge = 100% - AccPctge
+
+Equations:
+v = a*t
+x = 1/2 * a * t^2
+t = sqrt(2distAcc/AccRate + DecRate)
+DecRate = (2x-AccRate*t^2)/t^2

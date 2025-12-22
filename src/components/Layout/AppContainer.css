@@ -1,0 +1,20 @@
+/* AppContainer.css */
+
+.app-container {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--spacing-8) var(--spacing-6);
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    padding: var(--spacing-6) var(--spacing-4);
+  }
+}
+
+@media (max-width: 480px) {
+  .app-container {
+    padding: var(--spacing-4) var(--spacing-2);
+  }
+} 

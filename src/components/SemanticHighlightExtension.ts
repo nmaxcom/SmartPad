@@ -1,0 +1,569 @@
+/**
+ * @file This file defines the Tiptap extension responsible for semantic highlighting.
+ * It works by parsing each line of the document into an AST (Abstract Syntax Tree)
+ * and then applying syntax highlighting based on the tokens extracted from the AST.
+ * This approach ensures that highlighting is accurate and context-aware.
+ */
+import { Extension, Mark } from "@tiptap/core";
+import { Plugin, PluginKey } from "prosemirror-state";
+import { Decoration, DecorationSet } from "prosemirror-view";
+import { Node as ProseMirrorNode } from "prosemirror-model";
+import { Variable } from "../state/types";
+import { parseLine } from "../parsing/astParser";
+import type { ASTNode } from "../parsing/ast";
+import {
+  isPlainTextNode,
+  isVariableAssignmentNode,
+  isExpressionNode,
+  isCombinedAssignmentNode,
+  isErrorNode,
+} from "../parsing/ast";
+
+// Token types that can be identified in mathematical expressions
+export type TokenType =
+  | "variable"
+  | "operator"
+  | "number"
+  | "scrubbableNumber"
+  | "function"
+  | "result"
+  | "error"
+  | "trigger"
+  | "constant"
+  | "keyword"
+  | "unit";
+
+export interface Token {
+  type: TokenType;
+  start: number;
+  end: number;
+  text: string;
+}
+
+// Custom marks for each token type
+export const VariableMark = Mark.create({
+  name: "variable",
+  parseHTML() {
+    return [{ tag: "span.semantic-variable" }];
+  },
+  renderHTML() {
+    return ["span", { class: "semantic-variable" }, 0];
+  },
+});
+
+export const OperatorMark = Mark.create({
+  name: "operator",
+  parseHTML() {
+    return [{ tag: "span.semantic-operator" }];
+  },
+  renderHTML() {
+    return ["span", { class: "semantic-operator" }, 0];
+  },
+});
+
+export const NumberMark = Mark.create({
+  name: "number",
+  parseHTML() {
+    return [{ tag: "span.semantic-number" }];
+  },
+  renderHTML() {
+    return ["span", { class: "semantic-number" }, 0];
+  },
+});
+
+export const FunctionMark = Mark.create({
+  name: "function",
+  parseHTML() {
+    return [{ tag: "span.semantic-function" }];
+  },
+  renderHTML() {
+    return ["span", { class: "semantic-function" }, 0];
+  },
+});
+
+export const ResultMark = Mark.create({
+  name: "result",
+  parseHTML() {
+    return [{ tag: "span.semantic-result" }];
+  },
+  renderHTML() {
+    return ["span", { class: "semantic-result" }, 0];
+  },
+});
+
+export const ErrorMark = Mark.create({
+  name: "error",
+  parseHTML() {
+    return [{ tag: "span.semantic-error" }];
+  },
+  renderHTML() {
+    return ["span", { class: "semantic-error" }, 0];
+  },
+});
+
+export const ScrubbableNumberMark = Mark.create({
+  name: "scrubbableNumber",
+  parseHTML() {
+    return [{ tag: "span.semantic-scrubbableNumber" }];
+  },
+  renderHTML() {
+    return ["span", { class: "semantic-scrubbableNumber" }, 0];
+  },
+});
+
+export const TriggerMark = Mark.create({
+  name: "trigger",
+  parseHTML() {
+    return [{ tag: "span.semantic-trigger" }];
+  },
+  renderHTML() {
+    return ["span", { class: "semantic-trigger" }, 0];
+  },
+});
+
+// Main semantic highlighting extension
+// This Tiptap extension creates a ProseMirror plugin that decorates the document
+// with CSS classes based on the token type.
+export const SemanticHighlightExtension = Extension.create({
+  name: "semanticHighlight",
+
+  addProseMirrorPlugins() {
+    const getVariableContext = () => {
+        const context = this.options.getVariableContext?.() || new Map<string, Variable>();
+        // Ensure we have a proper Map
+        return context instanceof Map ? context : new Map(Object.entries(context));
+      };
+    const evaluateNode = this.options.evaluateNode || (() => null);
+
+    return [
+      new Plugin({
+        key: new PluginKey("semanticHighlight"),
+
+        state: {
+          init() {
+            return DecorationSet.empty;
+          },
+
+          apply(tr, oldState) {
+            // Only update if document changed
+            if (!tr.docChanged) {
+              return oldState.map(tr.mapping, tr.doc);
+            }
+
+            const decorations: Decoration[] = [];
+            const doc = tr.doc;
+
+            // Process each paragraph
+            doc.forEach((node: ProseMirrorNode, offset: number) => {
+              if (node.type.name === "paragraph") {
+                const text = node.textContent;
+                const lineNumber = Math.floor(offset / 100); // Approximate line number
+                const astNode = parseLine(text, lineNumber); // Parse text into AST
+                const tokens = extractTokensFromASTNode(astNode, getVariableContext());
+
+                // Apply decorations for each token
+                tokens.forEach((token) => {
+                  const from = offset + token.start + 1; // +1 for paragraph node
+                  const to = offset + token.end + 1;
+
+                  // Create inline decoration with appropriate class
+                  const decoration = Decoration.inline(from, to, {
+                    class: `semantic-${token.type}`,
+                  });
+                  decorations.push(decoration);
+                });
+
+                // Remove result widget logic to make highlighter colour-only
+                // CRITICAL: Add result/error decorations for trigger expressions
+                // if (text.includes("=>")) {
+                //   const arrowIndex = text.indexOf("=>");
+                //   const afterArrow = text.substring(arrowIndex + 2).trim();
+                //
+                //   // If there's no result text after the arrow, compute and display it via decoration
+                //   if (!afterArrow) {
+                //     try {
+                //       // Simple local evaluation for decoration purposes only
+                //       const expressionText = text.substring(0, arrowIndex).trim();
+                //
+                //       const enhancedContext = buildEnhancedVariableContext(doc, offset, getVariableContext());
+                //
+                //       Results are now handled by ResultsDecoratorExtension via AST pipeline
+                //         expressionText,
+                //         enhancedContext
+                //       );
+                //
+                //       if (result) {
+                //         // Create a decoration that appears AFTER the trigger, not spanning it
+                //         const triggerEndPosition = offset + arrowIndex + 2 + 1; // +1 for paragraph node
+                //
+                //         // Use widget decoration to insert result after the trigger
+                //         // (Removed: handled by ResultsDecorator plugin in new architecture)
+                //       }
+                //     } catch (error) {
+                //       // Ignore errors in decoration phase
+                //     }
+                //   }
+                // }
+              }
+            });
+
+            return DecorationSet.create(doc, decorations);
+          },
+        },
+
+        props: {
+          decorations(state) {
+            return this.getState(state);
+          },
+        },
+      }),
+    ];
+  },
+});
+
+/**
+ * Extracts a flat list of semantic tokens from a given AST node.
+ * This function is the core of the syntax highlighting logic. It traverses the AST
+ * and generates tokens for variables, operators, numbers, etc., with their
+ * corresponding positions in the text.
+ * @param astNode The AST node to process.
+ * @param variableContext A map of known variables to help with identification.
+ * @returns An array of tokens.
+ */
+function extractTokensFromASTNode(
+  astNode: ASTNode,
+  variableContext: Map<string, Variable>
+): Token[] {
+  const tokens: Token[] = [];
+  const text = astNode.raw;
+
+  if (!text.trim()) return tokens;
+
+  const trimmedText = text.trim();
+  const leadingWhitespace = text.indexOf(trimmedText);
+
+  // Handle different AST node types with structured data (no more complex parsing!)
+  if (isVariableAssignmentNode(astNode)) {
+    // Variable assignment: x = 10
+    const varName = astNode.variableName;
+    const varStart = leadingWhitespace;
+    const varEnd = varStart + varName.length;
+
+    tokens.push({
+      type: "variable",
+      start: varStart,
+      end: varEnd,
+      text: varName,
+    });
+
+    // Find equals sign
+    const equalsIndex = text.indexOf("=", varEnd);
+    if (equalsIndex !== -1) {
+      tokens.push({
+        type: "operator",
+        start: equalsIndex,
+        end: equalsIndex + 1,
+        text: "=",
+      });
+
+      // Handle the value part
+      const valueStart = equalsIndex + 1;
+      const valueText = text.substring(valueStart).trim();
+      const valueStartPos = text.indexOf(valueText, valueStart);
+
+      if (astNode.parsedValue?.isNumeric()) {
+        tokens.push({
+          type: "scrubbableNumber",
+          start: valueStartPos,
+          end: text.length,
+          text: valueText,
+        });
+      } else {
+        // It's an expression - tokenize it
+        const exprTokens = tokenizeExpression(valueText, valueStartPos, variableContext);
+        tokens.push(...exprTokens);
+      }
+    }
+  } else if (isExpressionNode(astNode)) {
+    // Expression evaluation: 2 + 3 => or unit expressions: 100 ft to m
+    const arrowIndex = text.indexOf("=>");
+    if (arrowIndex !== -1) {
+      // Traditional expression with =>
+      // Tokenize expression before =>
+      const exprText = text.substring(0, arrowIndex).trim();
+      const exprTokens = tokenizeExpression(exprText, leadingWhitespace, variableContext);
+      tokens.push(...exprTokens);
+
+      // Add => trigger
+      tokens.push({
+        type: "trigger",
+        start: arrowIndex,
+        end: arrowIndex + 2,
+        text: "=>",
+      });
+
+      // Check for result or error after =>
+      const afterArrow = text.substring(arrowIndex + 2).trim();
+      if (afterArrow) {
+        const resultStart = text.indexOf(afterArrow, arrowIndex + 2);
+        const isError = afterArrow.includes("⚠️");
+        tokens.push({
+          type: isError ? "error" : "result",
+          start: resultStart,
+          end: text.length,
+          text: afterArrow,
+        });
+      }
+    } else {
+      // Unit expression without => (e.g., "100 ft to m", "PI")
+      const exprTokens = tokenizeExpression(trimmedText, leadingWhitespace, variableContext);
+      tokens.push(...exprTokens);
+    }
+  } else if (isCombinedAssignmentNode(astNode)) {
+    // Combined assignment: x = 2 + 3 =>
+    const varName = astNode.variableName;
+    const varStart = leadingWhitespace;
+    const varEnd = varStart + varName.length;
+
+    tokens.push({
+      type: "variable",
+      start: varStart,
+      end: varEnd,
+      text: varName,
+    });
+
+    // Find equals sign
+    const equalsIndex = text.indexOf("=", varEnd);
+    if (equalsIndex !== -1) {
+      tokens.push({
+        type: "operator",
+        start: equalsIndex,
+        end: equalsIndex + 1,
+        text: "=",
+      });
+
+      // Find arrow
+      const arrowIndex = text.indexOf("=>", equalsIndex);
+      if (arrowIndex !== -1) {
+        // Tokenize expression between = and =>
+        const exprText = text.substring(equalsIndex + 1, arrowIndex).trim();
+        const exprStart = text.indexOf(exprText, equalsIndex + 1);
+        const exprTokens = tokenizeExpression(exprText, exprStart, variableContext);
+        tokens.push(...exprTokens);
+
+        // Add => trigger
+        tokens.push({
+          type: "trigger",
+          start: arrowIndex,
+          end: arrowIndex + 2,
+          text: "=>",
+        });
+
+        // Check for result or error after =>
+        const afterArrow = text.substring(arrowIndex + 2).trim();
+        if (afterArrow) {
+          const resultStart = text.indexOf(afterArrow, arrowIndex + 2);
+          const isError = afterArrow.includes("⚠️");
+          tokens.push({
+            type: isError ? "error" : "result",
+            start: resultStart,
+            end: text.length,
+            text: afterArrow,
+          });
+        }
+      }
+    }
+  } else if (isErrorNode(astNode)) {
+    // Error node - highlight the entire thing as error
+    tokens.push({
+      type: "error",
+      start: 0,
+      end: text.length,
+      text: text,
+    });
+  }
+  // For PlainTextNode, return no tokens (no highlighting)
+
+  return tokens;
+}
+
+// Tokenize a mathematical expression (still useful for detailed expression parsing)
+export function tokenizeExpression(
+  expr: string,
+  baseOffset: number,
+  variableContext: Map<string, Variable>
+): Token[] {
+  const tokens: Token[] = [];
+
+  // Regular expressions for different token types
+  const numberRegex = /^-?\d+(\.\d+)?/;
+  const functionRegex = /^(sqrt|abs|round|floor|ceil|max|min)\s*\(/;
+  const operatorRegex = /^[\+\-\*\/\^\%]/;
+  const parenRegex = /^[\(\)]/;
+  const triggerRegex = /^=>/;
+  const unitRegex = /^[a-zA-Z°]+(?:\/[a-zA-Z°]+)?(?:\^?\d+)?/;
+  const toKeywordRegex = /^to\b/;
+  const constantRegex = /^(PI|E)\b/;
+
+  // Get all variable names sorted by length (longest first for greedy matching)
+  const variableNames = Array.from(variableContext.keys()).sort((a, b) => b.length - a.length);
+
+  let pos = 0;
+  while (pos < expr.length) {
+    // Skip whitespace
+    if (/\s/.test(expr[pos])) {
+      pos++;
+      continue;
+    }
+
+    let matched = false;
+
+    // Check for functions
+    const funcMatch = expr.substring(pos).match(functionRegex);
+    if (funcMatch) {
+      tokens.push({
+        type: "function",
+        start: baseOffset + pos,
+        end: baseOffset + pos + funcMatch[1].length,
+        text: funcMatch[1],
+      });
+      pos += funcMatch[1].length;
+      // Skip whitespace between function name and parenthesis
+      while (pos < expr.length && /\s/.test(expr[pos])) {
+        pos++;
+      }
+      // Add the opening parenthesis as an operator
+      if (pos < expr.length && expr[pos] === "(") {
+        tokens.push({
+          type: "operator",
+          start: baseOffset + pos,
+          end: baseOffset + pos + 1,
+          text: "(",
+        });
+        pos++;
+      }
+      matched = true;
+    }
+
+    // Check for variables (longest match first)
+    if (!matched) {
+      for (const varName of variableNames) {
+        if (expr.substring(pos).startsWith(varName)) {
+          // Check if it's a word boundary (not part of a larger word)
+          const afterChar = expr[pos + varName.length];
+          if (!afterChar || /[\s\+\-\*\/\^\%\(\)]/.test(afterChar)) {
+            tokens.push({
+              type: "variable",
+              start: baseOffset + pos,
+              end: baseOffset + pos + varName.length,
+              text: varName,
+            });
+            pos += varName.length;
+            matched = true;
+            break;
+          }
+        }
+      }
+    }
+
+    // Check for numbers
+    if (!matched) {
+      const numMatch = expr.substring(pos).match(numberRegex);
+      if (numMatch) {
+        tokens.push({
+          type: "scrubbableNumber",
+          start: baseOffset + pos,
+          end: baseOffset + pos + numMatch[0].length,
+          text: numMatch[0],
+        });
+        pos += numMatch[0].length;
+        matched = true;
+      }
+    }
+
+    // Check for mathematical constants (PI, E)
+    if (!matched) {
+      const constantMatch = expr.substring(pos).match(constantRegex);
+      if (constantMatch) {
+        tokens.push({
+          type: "constant",
+          start: baseOffset + pos,
+          end: baseOffset + pos + constantMatch[0].length,
+          text: constantMatch[0],
+        });
+        pos += constantMatch[0].length;
+        matched = true;
+      }
+    }
+
+    // Check for "to" keyword (unit conversion)
+    if (!matched) {
+      const toMatch = expr.substring(pos).match(toKeywordRegex);
+      if (toMatch) {
+        tokens.push({
+          type: "keyword",
+          start: baseOffset + pos,
+          end: baseOffset + pos + toMatch[0].length,
+          text: toMatch[0],
+        });
+        pos += toMatch[0].length;
+        matched = true;
+      }
+    }
+
+    // Check for units (after numbers and variables, before operators)
+    if (!matched) {
+      const unitMatch = expr.substring(pos).match(unitRegex);
+      if (unitMatch) {
+        // Make sure it's not a variable name
+        const unitText = unitMatch[0];
+        if (!variableContext.has(unitText)) {
+          tokens.push({
+            type: "unit",
+            start: baseOffset + pos,
+            end: baseOffset + pos + unitText.length,
+            text: unitText,
+          });
+          pos += unitText.length;
+          matched = true;
+        }
+      }
+    }
+
+    // Check for trigger (=>) - must come before operator check
+    if (!matched) {
+      const triggerMatch = expr.substring(pos).match(triggerRegex);
+      if (triggerMatch) {
+        tokens.push({
+          type: "trigger",
+          start: baseOffset + pos,
+          end: baseOffset + pos + 2,
+          text: "=>",
+        });
+        pos += 2;
+        matched = true;
+      }
+    }
+
+    // Check for operators and parentheses
+    if (!matched) {
+      if (operatorRegex.test(expr[pos]) || parenRegex.test(expr[pos])) {
+        tokens.push({
+          type: "operator",
+          start: baseOffset + pos,
+          end: baseOffset + pos + 1,
+          text: expr[pos],
+        });
+        pos++;
+        matched = true;
+      }
+    }
+
+    // If nothing matched, skip this character
+    if (!matched) {
+      pos++;
+    }
+  }
+
+  return tokens;
+}

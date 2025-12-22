@@ -1,0 +1,200 @@
+[
+  {
+    "syntax": "x% of y =>",
+    "description": "Calculate percentage of a value",
+    "output": "numeric result",
+    "category": "percentages",
+    "examples": [
+      "30% of 500 =>",
+      "15% of 200 =>"
+    ]
+  },
+  {
+    "syntax": "x% on y =>",
+    "description": "Add percentage to a value (increase)",
+    "output": "numeric result",
+    "category": "percentages",
+    "examples": [
+      "20% on 80 =>",
+      "10% on 100 =>"
+    ]
+  },
+  {
+    "syntax": "x% off y =>",
+    "description": "Subtract percentage from a value (decrease)",
+    "output": "numeric result",
+    "category": "percentages",
+    "examples": [
+      "20% off $80 =>",
+      "15% off 200 =>"
+    ]
+  },
+  {
+    "syntax": "x / y as % =>",
+    "description": "Convert ratio to percentage",
+    "output": "percentage with % symbol",
+    "category": "percentages",
+    "examples": [
+      "20 / 80 as % =>",
+      "3 / 10 as % =>"
+    ]
+  },
+  {
+    "syntax": "part of base is % =>",
+    "description": "Calculate percentage from part and base",
+    "output": "percentage with % symbol",
+    "category": "percentages",
+    "examples": [
+      "20 of 80 is % =>",
+      "15 of 60 is % =>"
+    ]
+  },
+  {
+    "syntax": "base + x% =>",
+    "description": "Add percentage to base value",
+    "output": "numeric result",
+    "category": "percentages",
+    "examples": [
+      "80 + 20% =>",
+      "100 + 15% =>"
+    ]
+  },
+  {
+    "syntax": "base - x% =>",
+    "description": "Subtract percentage from base value",
+    "output": "numeric result",
+    "category": "percentages",
+    "examples": [
+      "500 - 10% =>",
+      "200 - 25% =>"
+    ]
+  },
+  {
+    "syntax": "x% of y% of z =>",
+    "description": "Chained percentage calculations",
+    "output": "numeric result",
+    "category": "percentages",
+    "examples": [
+      "20% of 50% of 1000 =>"
+    ]
+  },
+  {
+    "syntax": "name = value",
+    "description": "Simple variable assignment",
+    "output": "variable stored",
+    "category": "variables",
+    "examples": [
+      "price = 10.5",
+      "discount = 20%",
+      "tax_rate = 0.15"
+    ]
+  },
+  {
+    "syntax": "name = expression =>",
+    "description": "Variable assignment with evaluation",
+    "output": "variable stored + result displayed",
+    "category": "variables",
+    "examples": [
+      "total = price * 1.08 =>",
+      "area = length * width =>"
+    ]
+  },
+  {
+    "syntax": "phrase name = value",
+    "description": "Variable with spaces in name",
+    "output": "variable stored",
+    "category": "variables",
+    "examples": [
+      "my password = 2929",
+      "tax rate = 0.08"
+    ]
+  },
+  {
+    "syntax": "expression =>",
+    "description": "Evaluate expression and show result",
+    "output": "result displayed",
+    "category": "expressions",
+    "examples": [
+      "2 + 3 =>",
+      "sqrt(16) + 2 =>",
+      "price * 1.08 =>"
+    ]
+  },
+  {
+    "syntax": "value unit",
+    "description": "Value with units",
+    "output": "value with units",
+    "category": "units",
+    "examples": [
+      "100 m",
+      "25 kg",
+      "98.6 °F"
+    ]
+  },
+  {
+    "syntax": "value unit =>",
+    "description": "Unit conversion with result",
+    "output": "converted value with units",
+    "category": "units",
+    "examples": [
+      "100 m =>",
+      "25 kg =>",
+      "98.6 °F =>"
+    ]
+  },
+  {
+    "syntax": "name = value unit",
+    "description": "Variable assignment with units",
+    "output": "variable stored with units",
+    "category": "units",
+    "examples": [
+      "height = 180 cm",
+      "weight = 70 kg",
+      "temp = 37 °C"
+    ]
+  },
+  {
+    "syntax": "quantity to unit =>",
+    "description": "Convert quantity to different unit",
+    "output": "converted value in target unit",
+    "category": "units",
+    "examples": [
+      "100 m to km =>",
+      "25 kg to lb =>",
+      "98.6 °F to C =>"
+    ]
+  },
+  {
+    "syntax": "$value",
+    "description": "US Dollar amount",
+    "output": "currency with $ symbol",
+    "category": "currency",
+    "examples": [
+      "$100",
+      "$25.50",
+      "$1,000"
+    ]
+  },
+  {
+    "syntax": "€value",
+    "description": "Euro amount",
+    "output": "currency with € symbol",
+    "category": "currency",
+    "examples": [
+      "€100",
+      "€25.50",
+      "€1,000"
+    ]
+  },
+  {
+    "syntax": "£value",
+    "description": "British Pound amount",
+    "output": "currency with £ symbol",
+    "category": "currency",
+    "examples": [
+      "£100",
+      "£25.50",
+      "£1,000"
+    ]
+  }
+]

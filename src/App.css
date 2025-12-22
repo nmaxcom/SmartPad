@@ -1,0 +1,57 @@
+/* 
+  App.css - Minimal app-level styles.
+  Most styling is now handled in component-specific CSS files 
+  or defined in globals.css and variables.css.
+*/
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-main {
+  flex: 1;
+  width: 100%;
+}
+
+/* 
+  This class is applied to the AppContainer that wraps the editor 
+  to give it the card-like appearance.
+*/
+.editor-card-container {
+  background-color: var(--color-surface);
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-border);
+  padding: var(--spacing-2);
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Container for the sidebar elements (VariablePanel and ExampleButton) */
+.sidebar-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.main-grid-layout {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  gap: var(--spacing-8);
+  align-items: flex-start;
+}
+
+@media (max-width: 1024px) {
+  .main-grid-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .editor-card-container {
+    padding: var(--spacing-4);
+  }
+}

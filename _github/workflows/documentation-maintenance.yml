@@ -1,0 +1,28 @@
+name: Documentation Link Checker
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/**.md'
+      - 'README.md'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  markdown-link-check:
+    runs-on: ubuntu-latest
+    name: 🔗 Check Markdown Links
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+    
+    - name: 🔗 Check for broken links
+      uses: ruzickap/action-my-markdown-link-checker@v1
+      with:
+        # We only check files in the /docs directory and the root README
+        # The action will automatically find all .md files within these paths.
+        search_paths: |
+          docs/
+          README.md 

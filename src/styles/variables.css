@@ -1,0 +1,49 @@
+/* 
+  Defines global CSS custom properties for theming, spacing, and typography.
+  This approach makes the UI consistent and easy to update.
+*/
+
+:root {
+  /* Colors */
+  --color-background: #f8f9fa;
+  --color-surface: #ffffff;
+  --color-primary: #3b82f6;
+  --color-primary-light: #dbeafe;
+  --color-text-primary: #1e293b;
+  --color-text-secondary: #64748b;
+  --color-border: #e2e8f0;
+
+  /* Typography */
+  --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif;
+  --font-family-mono: 'Fira Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  
+  --font-size-xs: 0.75rem;   /* 12px */
+  --font-size-sm: 0.875rem;  /* 14px */
+  --font-size-base: 1rem;     /* 16px */
+  --font-size-md: 1.05rem;   /* ~17px, for editor */
+  --font-size-lg: 1.125rem; /* 18px */
+  --font-size-xl: 1.25rem;  /* 20px */
+  --font-size-2xl: 1.5rem;   /* 24px */
+
+  /* Spacing */
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-4: 1rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-10: 2.5rem;
+  --spacing-12: 3rem;
+
+  /* Borders & Shadows */
+  --border-radius-md: 0.375rem; /* 6px */
+  --border-radius-lg: 0.5rem;   /* 8px */
+  --border-radius-xl: 0.75rem;  /* 12px */
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /* Variable Highlighting */
+  --variable-highlight-declaration-bg: rgba(59, 130, 246, 0.2);
+  --variable-highlight-reference-bg: rgba(59, 130, 246, 0.1);
+} 

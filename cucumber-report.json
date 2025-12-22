@@ -1,0 +1,356 @@
+[
+  {
+    "description": "  As a user relying on SmartPad for critical work\n  I want the application to handle critical operations reliably\n  So that I can trust it for important tasks",
+    "elements": [
+      {
+        "description": "",
+        "id": "browser-critical;critical-functionality-works",
+        "keyword": "Scenario",
+        "line": 18,
+        "name": "Critical functionality works",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 555039082
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 15,
+            "name": "I am using the SmartPad editor",
+            "match": {
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:41"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 49688167
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 16,
+            "name": "the editor is ready for input",
+            "match": {
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:46"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 128556749
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 19,
+            "name": "I type \"Hello World\"",
+            "match": {
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:82"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 62992292
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 20,
+            "name": "I should see \"Hello World\" displayed in the editor",
+            "match": {
+              "location": "tests/features/step_definitions/basic-editor.steps.ts:22"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 3151583
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 2913583
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "browser-critical;simple-expression-evaluation",
+        "keyword": "Scenario",
+        "line": 22,
+        "name": "Simple expression evaluation",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 214639833
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 15,
+            "name": "I am using the SmartPad editor",
+            "match": {
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:41"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 39374707
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 16,
+            "name": "the editor is ready for input",
+            "match": {
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:46"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 126632541
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 23,
+            "name": "I type \"2 + 3 =>\"",
+            "match": {
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:82"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 66635791
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 24,
+            "name": "I should see \"2 + 3 => 5\" in the editor",
+            "match": {
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:110"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 5008922125,
+              "error_message": "Error: Content \"2 + 3 => 5\" not found within 5000ms. Editor content: \"2 + 3 => \", Widget content: \"\", Body content (first 500 chars): \"\n    SmartPadText-based calculator with real-time mathematical calculations⚙️2 + 3 => VariablesNo variables defined yet.Load ExampleQuick Templates🏠Rent Calculator🍕Pizza Party⛽Road Trip📱Phone Bill🏋️Fitness Goal⚗️Physics Units🧪Units Quick Check\n    \n  \n \"\n    at waitForContent (/Users/nm4/STUFF/Coding/smartpad/SmartPad/tests/features/support/playwright-setup.ts:360:11)\n    at async World.<anonymous> (/Users/nm4/STUFF/Coding/smartpad/SmartPad/tests/features/step_definitions/variable_assignments.steps.ts:114:3)"
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 4205374
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "browser-critical;variable-creation",
+        "keyword": "Scenario",
+        "line": 26,
+        "name": "Variable creation",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 228799042
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 15,
+            "name": "I am using the SmartPad editor",
+            "match": {
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:41"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 29466291
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 16,
+            "name": "the editor is ready for input",
+            "match": {
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:46"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 125438208
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 27,
+            "name": "I type \"price = 125\"",
+            "match": {
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:82"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 53855124
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 28,
+            "name": "the variable \"price\" should be stored with value 125",
+            "match": {
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:317"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2306249
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1576457
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "browser-critical;enter-key-creates-new-paragraph",
+        "keyword": "Scenario",
+        "line": 30,
+        "name": "Enter key creates new paragraph",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 230503749
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 15,
+            "name": "I am using the SmartPad editor",
+            "match": {
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:41"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 35072791
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 16,
+            "name": "the editor is ready for input",
+            "match": {
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:46"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 125306875
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 31,
+            "name": "I type \"line one\"",
+            "match": {
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:82"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 55603000
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 32,
+            "name": "I press Enter",
+            "match": {
+              "location": "tests/features/step_definitions/enter_key.steps.ts:30"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 3450666
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 33,
+            "name": "I type \"line two\"",
+            "match": {
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:82"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 41593417
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 34,
+            "name": "the editor should contain both lines",
+            "match": {
+              "location": "tests/features/step_definitions/browser-critical.steps.ts:4"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1792416
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1665458
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      }
+    ],
+    "id": "browser-critical",
+    "line": 9,
+    "keyword": "Feature",
+    "name": "Browser Critical",
+    "tags": [],
+    "uri": "tests/features/browser-critical.feature"
+  }
+]

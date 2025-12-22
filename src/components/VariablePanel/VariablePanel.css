@@ -1,0 +1,113 @@
+.variable-panel {
+  background-color: var(--color-surface);
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-border);
+  padding: var(--spacing-6);
+  height: fit-content;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.panel-title {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-4);
+  padding-bottom: var(--spacing-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.variable-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.variable-item {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-sm);
+}
+
+.variable-info {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+}
+
+.variable-name {
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.variable-values {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.variable-raw-value {
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.variable-equals {
+  color: var(--color-text-secondary);
+  padding: 0 var(--spacing-2);
+}
+
+.variable-computed-value {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.variable-value {
+  color: var(--color-text-primary);
+}
+
+.variable-type {
+  font-size: var(--font-size-xs);
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--border-radius-sm);
+  font-weight: 500;
+  text-transform: lowercase;
+}
+
+/* Type-specific colors */
+.variable-type-number {
+  background-color: var(--color-blue-100);
+  color: var(--color-blue-700);
+}
+
+.variable-type-percentage {
+  background-color: var(--color-green-100);
+  color: var(--color-green-700);
+}
+
+.variable-type-currency {
+  background-color: var(--color-yellow-100);
+  color: var(--color-yellow-700);
+}
+
+.variable-type-unit {
+  background-color: var(--color-purple-100);
+  color: var(--color-purple-700);
+}
+
+.variable-type-error {
+  background-color: var(--color-red-100);
+  color: var(--color-red-700);
+}
+
+.empty-message {
+  color: var(--color-text-secondary);
+  font-style: italic;
+  text-align: center;
+  padding: var(--spacing-4);
+}
