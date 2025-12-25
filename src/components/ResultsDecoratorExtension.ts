@@ -3,6 +3,7 @@ import { Plugin, PluginKey } from "prosemirror-state";
 import { Decoration, DecorationSet } from "prosemirror-view";
 import { Node as ProseMirrorNode } from "prosemirror-model";
 import type { RenderNode } from "../eval/renderNodes";
+import { parseVariableAssignment } from "../parsing/variableParser";
 
 /**
  * ResultsDecoratorExtension
@@ -51,6 +52,29 @@ export const ResultsDecoratorExtension = Extension.create({
             const normalize = (s: string | undefined | null): string =>
               (s || "").replace(/\s+/g, "").trim();
 
+            const isLiteralAssignmentValue = (value: string): boolean => {
+              const trimmed = value.trim();
+              if (!trimmed) return false;
+
+              const numberLiteral =
+                /^-?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?:[eE][+-]?\d+)?$/;
+              const percentLiteral = /^-?\d+(?:\.\d+)?%$/;
+              const currencySymbolLiteral =
+                /^[\$€£¥₹₿]\s*\d{1,3}(?:,\d{3})*(?:\.\d+)?$/;
+              const currencyCodeLiteral =
+                /^\d{1,3}(?:,\d{3})*(?:\.\d+)?\s+(CHF|CAD|AUD)$/;
+              const unitLiteral =
+                /^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\s*[a-zA-Z°][a-zA-Z0-9°\/\^\-\*\·]*$/;
+
+              return (
+                numberLiteral.test(trimmed) ||
+                percentLiteral.test(trimmed) ||
+                currencySymbolLiteral.test(trimmed) ||
+                currencyCodeLiteral.test(trimmed) ||
+                unitLiteral.test(trimmed)
+              );
+            };
+
             // Only eligible node types should create widgets
             const isWidgetEligible = (rn: any) =>
               rn && (rn.type === "mathResult" || rn.type === "combined" || rn.type === "error");
@@ -75,42 +99,98 @@ export const ResultsDecoratorExtension = Extension.create({
                 const info = paragraphIndex[i];
                 if (!info) continue;
                 const arrowIdx = info.text.indexOf("=>");
-                if (arrowIdx < 0) continue;
-                const exprText = info.text.substring(0, arrowIdx).trim();
-                // Find best matching eligible render node by comparing left-of-arrow text
-                let matched: any | null = null;
-                for (const rn of eligibleNodes) {
-                  const displayText = String((rn as any).displayText || "");
-                  if (!displayText) continue;
-                  if (displayText.includes("=>")) {
-                    const leftOfArrow = displayText.split("=>")[0].trim();
-                    if (normalize(leftOfArrow) === normalize(exprText)) {
-                      matched = rn;
-                      break;
+                if (arrowIdx >= 0) {
+                  const exprText = info.text.substring(0, arrowIdx).trim();
+                  // Find best matching eligible render node by comparing left-of-arrow text
+                  let matched: any | null = null;
+                  for (const rn of eligibleNodes) {
+                    const displayText = String((rn as any).displayText || "");
+                    if (!displayText) continue;
+                    if (displayText.includes("=>")) {
+                      const leftOfArrow = displayText.split("=>")[0].trim();
+                      if (normalize(leftOfArrow) === normalize(exprText)) {
+                        matched = rn;
+                        break;
+                      }
+                    } else if ((rn as any).originalRaw) {
+                      const orig = String((rn as any).originalRaw)
+                        .replace(/\s*=>\s*$/, "")
+                        .trim();
+                      if (normalize(orig) === normalize(exprText)) {
+                        matched = rn;
+                        break;
+                      }
                     }
-                  } else if ((rn as any).originalRaw) {
-                    const orig = String((rn as any).originalRaw)
-                      .replace(/\s*=>\s*$/, "")
-                      .trim();
-                    if (normalize(orig) === normalize(exprText)) {
-                      matched = rn;
-                      break;
+                  }
+                  if (!matched) continue;
+                  const displayText = String(matched.displayText || "");
+                  let resultText: string = "";
+                  if (displayText.includes("=>")) {
+                    resultText = displayText.replace(/^.*=>\s*/, "");
+                  } else if (displayText.includes("⚠️")) {
+                    resultText = displayText.substring(displayText.indexOf("⚠️")).trim();
+                  } else {
+                    resultText = displayText;
+                  }
+                  const anchor = info.start + arrowIdx + 2; // after =>
+                  const isError = matched.type === "error";
+
+                  const widget = Decoration.widget(
+                    anchor,
+                    () => {
+                      const wrapper = document.createElement("span");
+                      wrapper.className = "semantic-wrapper";
+                      wrapper.setAttribute("contenteditable", "false");
+                      wrapper.appendChild(document.createTextNode(" "));
+                      const container = document.createElement("span");
+                      container.className = "semantic-result-container";
+                      const span = document.createElement("span");
+                      span.className = isError ? "semantic-error-result" : "semantic-result-display";
+                      span.setAttribute("data-result", resultText);
+                      span.setAttribute("title", resultText);
+                      span.setAttribute("aria-label", resultText);
+                      if (isError) {
+                        span.appendChild(document.createTextNode("⚠️"));
+                      }
+                      container.appendChild(span);
+                      wrapper.appendChild(container);
+                      // Ensure one visible space outside the result container after '=>'
+                      // The wrapper itself begins with a text node " "; no trailing text content needed
+                      return wrapper;
+                    },
+                    { side: 1 }
+                  );
+                  decorations.push(widget);
+                  continue;
+                }
+
+                const assignment = parseVariableAssignment(info.text);
+                if (!assignment.isValid || !assignment.rawValue) continue;
+
+                const renderNode = renderMap.get(i);
+                const isError = renderNode?.type === "error";
+                if (!isError && !isLiteralAssignmentValue(assignment.rawValue)) continue;
+
+                let resultText = assignment.rawValue.trim();
+                if (renderNode) {
+                  const rn: any = renderNode;
+                  if (rn.type === "combined" && rn.result !== undefined) {
+                    resultText = String(rn.result);
+                  } else if (rn.type === "variable" && rn.value !== undefined) {
+                    resultText = String(rn.value);
+                  } else if (rn.type === "error" && rn.displayText) {
+                    const displayText = String(rn.displayText || "");
+                    if (displayText.includes("=>")) {
+                      resultText = displayText.replace(/^.*=>\s*/, "");
+                    } else if (displayText.includes("⚠️")) {
+                      resultText = displayText.substring(displayText.indexOf("⚠️")).trim();
+                    } else {
+                      resultText = displayText.trim();
                     }
                   }
                 }
-                if (!matched) continue;
-                const displayText = String(matched.displayText || "");
-                let resultText: string = "";
-                if (displayText.includes("=>")) {
-                  resultText = displayText.replace(/^.*=>\s*/, "");
-                } else if (displayText.includes("⚠️")) {
-                  resultText = displayText.substring(displayText.indexOf("⚠️")).trim();
-                } else {
-                  resultText = displayText;
-                }
-                const anchor = info.start + arrowIdx + 2; // after =>
-                const isError = matched.type === "error";
 
+                const anchor = info.start + info.text.length;
                 const widget = Decoration.widget(
                   anchor,
                   () => {
@@ -121,7 +201,9 @@ export const ResultsDecoratorExtension = Extension.create({
                     const container = document.createElement("span");
                     container.className = "semantic-result-container";
                     const span = document.createElement("span");
-                    span.className = isError ? "semantic-error-result" : "semantic-result-display";
+                    span.className = isError
+                      ? "semantic-error-result"
+                      : "semantic-assignment-display";
                     span.setAttribute("data-result", resultText);
                     span.setAttribute("title", resultText);
                     span.setAttribute("aria-label", resultText);
@@ -130,8 +212,6 @@ export const ResultsDecoratorExtension = Extension.create({
                     }
                     container.appendChild(span);
                     wrapper.appendChild(container);
-                    // Ensure one visible space outside the result container after '=>'
-                    // The wrapper itself begins with a text node " "; no trailing text content needed
                     return wrapper;
                   },
                   { side: 1 }

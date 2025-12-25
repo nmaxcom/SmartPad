@@ -160,12 +160,13 @@ It serves as a comprehensive reference for all supported syntax patterns in Smar
 ## Variables
 
 3 syntax patterns available.
+Names may include underscores.
 
 ### 1. `name = value`
 
 **Description:** Simple variable assignment
 
-**Output:** variable stored
+**Output:** variable stored (literal values show a value widget)
 
 **Examples:**
 

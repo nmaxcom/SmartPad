@@ -164,7 +164,7 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
 
     // For variable assignments, check if the value contains units or variables
     if (isVariableAssignmentNode(node)) {
-      const valueStr = node.parsedValue.toString();
+      const valueStr = (node.rawValue || node.parsedValue?.toString() || "").trim();
       const hasUnits = expressionContainsUnitsNet(valueStr);
       const hasConstants = this.containsMathematicalConstants(valueStr);
       const hasVariables = /\b[a-zA-Z_][a-zA-Z0-9_]*\b/.test(valueStr); // Check for variable names
@@ -326,7 +326,7 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
 
     try {
       // Parse the value to extract units
-      const valueStr = node.parsedValue.toString();
+      const valueStr = (node.rawValue || node.parsedValue?.toString() || "").trim();
 
       // Check if this is a units expression, mathematical constants, or variables
       const hasUnits = expressionContainsUnitsNet(valueStr);
@@ -380,7 +380,7 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
         originalRaw: `${node.variableName} = ${valueStr}`,
       } as CombinedRenderNode;
     } catch (error) {
-      const valueStr = node.parsedValue.toString();
+      const valueStr = (node.rawValue || node.parsedValue?.toString() || "").trim();
       return {
         type: "error",
         error: error instanceof Error ? error.message : String(error),

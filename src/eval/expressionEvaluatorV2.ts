@@ -27,6 +27,7 @@ import {
   SemanticParsers,
   SemanticArithmetic
 } from "../types";
+import { parseAndEvaluateExpression } from "../parsing/expressionParser";
 
 /**
  * Simple expression parser for basic arithmetic
@@ -152,8 +153,15 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       }
       // Try simple arithmetic
       else if (this.isSimpleArithmetic(exprNode.expression)) {
-        const arithmeticResult = SimpleExpressionParser.parseArithmetic(exprNode.expression, context);
-        result = arithmeticResult || ErrorValue.semanticError("Could not evaluate arithmetic expression");
+        const evalResult = parseAndEvaluateExpression(
+          exprNode.expression,
+          context.variableContext
+        );
+        if (evalResult.error) {
+          result = ErrorValue.semanticError(evalResult.error);
+        } else {
+          result = NumberValue.from(evalResult.value);
+        }
       }
       // Fallback
       else {

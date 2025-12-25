@@ -16,18 +16,34 @@ interface VariableProviderProps {
 export function VariableProvider({ children }: VariableProviderProps) {
   // Create a reactive variable store for this context
   const [reactiveStore] = useState(() => new ReactiveVariableStore());
+  const [variables, setVariables] = useState<Map<string, Variable>>(new Map());
 
   // Memoized methods that delegate to reactiveStore
-  const replaceAllVariables = useCallback((newVariables: Map<string, Variable>) => {
-    // Convert to array of [name, value] pairs and set each one
-    Array.from(newVariables.entries()).forEach(([name, variable]) => {
-      reactiveStore.setVariableWithSemanticValue(name, variable.value, variable.rawValue);
+  const refreshVariables = useCallback(() => {
+    const vars = new Map<string, Variable>();
+    reactiveStore.getAllVariables().forEach((variable) => {
+      vars.set(variable.name, variable);
     });
+    setVariables(vars);
+  }, [reactiveStore]);
+
+  const replaceAllVariables = useCallback((newVariables: Map<string, Variable>) => {
+    const nextNames = new Set(newVariables.keys());
+    reactiveStore.getAllVariables().forEach((variable) => {
+      if (!nextNames.has(variable.name)) {
+        reactiveStore.deleteVariable(variable.name);
+      }
+    });
+    Array.from(newVariables.entries()).forEach(([name, variable]) => {
+      reactiveStore.setVariableWithMetadata({ ...variable, name });
+    });
+    setVariables(new Map(newVariables));
   }, [reactiveStore]);
 
   const setVariable = useCallback((name: string, value: number) => {
     reactiveStore.setVariable(name, value.toString());
-  }, [reactiveStore]);
+    refreshVariables();
+  }, [reactiveStore, refreshVariables]);
 
   const getVariable = useCallback(
     (name: string) => {
@@ -38,14 +54,17 @@ export function VariableProvider({ children }: VariableProviderProps) {
 
   const deleteVariable = useCallback(
     (name: string) => {
-      return reactiveStore.deleteVariable(name);
+      const result = reactiveStore.deleteVariable(name);
+      refreshVariables();
+      return result;
     },
-    [reactiveStore]
+    [reactiveStore, refreshVariables]
   );
 
   const clearVariables = useCallback(() => {
     reactiveStore.clearVariables();
-  }, [reactiveStore]);
+    refreshVariables();
+  }, [reactiveStore, refreshVariables]);
 
   const hasVariable = useCallback(
     (name: string) => {
@@ -57,15 +76,6 @@ export function VariableProvider({ children }: VariableProviderProps) {
   const getAllVariables = useCallback(() => {
     return reactiveStore.getAllVariables();
   }, [reactiveStore]);
-
-  // Create a Map view of the variables for compatibility
-  const variables = useMemo(() => {
-    const vars = new Map<string, Variable>();
-    getAllVariables().forEach(variable => {
-      vars.set(variable.name, variable);
-    });
-    return vars;
-  }, [getAllVariables]);
 
   // Memoize the context value to prevent unnecessary re-renders
   const contextValue = useMemo<VariableContextType>(

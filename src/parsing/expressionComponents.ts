@@ -38,7 +38,21 @@ function tokenize(expression: string): Token[] {
 
   const isWhitespace = (char: string) => /\s/.test(char);
   const isIdentChar = (char: string) => /[a-zA-Z0-9_]/.test(char);
-  const functionNames = ['sqrt', 'abs', 'round', 'floor', 'ceil', 'max', 'min'];
+  const functionNames = [
+    'sqrt',
+    'abs',
+    'round',
+    'floor',
+    'ceil',
+    'max',
+    'min',
+    'sin',
+    'cos',
+    'tan',
+    'log',
+    'ln',
+    'exp',
+  ];
 
   while (pos < expression.length) {
     let matched = false;
@@ -52,10 +66,24 @@ function tokenize(expression: string): Token[] {
     // Match numbers (including decimals)
     if (!matched && /\d/.test(expression[pos])) {
       const start = pos;
-      while (pos < expression.length && /[\d.]/.test(expression[pos])) {
-        pos++;
+      let value = "";
+      while (pos < expression.length) {
+        const char = expression[pos];
+        if (/[\d.]/.test(char)) {
+          value += char;
+          pos++;
+          continue;
+        }
+        if (char === ",") {
+          const nextDigits = expression.slice(pos + 1, pos + 4);
+          if (/^\d{3}$/.test(nextDigits)) {
+            pos++;
+            continue;
+          }
+        }
+        break;
       }
-      tokens.push({ type: 'number', value: expression.slice(start, pos), start, end: pos });
+      tokens.push({ type: 'number', value: value.replace(/,/g, ""), start, end: pos });
       matched = true;
     }
 

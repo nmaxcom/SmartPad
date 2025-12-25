@@ -55,14 +55,23 @@ export function tokenize(expression: string): Token[] {
     // Numbers (including decimals)
     if (/\d/.test(char) || char === ".") {
       let numberStr = "";
-      while (
-        position < expression.length &&
-        (/\d/.test(expression[position]) || expression[position] === ".")
-      ) {
-        numberStr += expression[position];
-        position++;
+      while (position < expression.length) {
+        const current = expression[position];
+        if (/\d/.test(current) || current === ".") {
+          numberStr += current;
+          position++;
+          continue;
+        }
+        if (current === ",") {
+          const nextDigits = expression.slice(position + 1, position + 4);
+          if (/^\d{3}$/.test(nextDigits)) {
+            position++;
+            continue;
+          }
+        }
+        break;
       }
-      tokens.push({ type: TokenType.NUMBER, value: numberStr, position });
+      tokens.push({ type: TokenType.NUMBER, value: numberStr.replace(/,/g, ""), position });
       continue;
     }
 
@@ -365,6 +374,40 @@ export class MathParser {
       case "min":
         if (args.length < 1) throw new Error(`min expects at least 1 argument, got ${args.length}`);
         return Math.min(...args);
+
+      case "sin":
+        if (args.length !== 1) throw new Error(`sin expects 1 argument, got ${args.length}`);
+        return Math.sin(args[0]);
+
+      case "cos":
+        if (args.length !== 1) throw new Error(`cos expects 1 argument, got ${args.length}`);
+        return Math.cos(args[0]);
+
+      case "tan":
+        if (args.length !== 1) throw new Error(`tan expects 1 argument, got ${args.length}`);
+        return Math.tan(args[0]);
+
+      case "log":
+        if (args.length !== 1) throw new Error(`log expects 1 argument, got ${args.length}`);
+        if (args[0] <= 0) {
+          const error = new Error("Logarithm of non-positive number") as MathError;
+          error.type = "INVALID_OPERATION";
+          throw error;
+        }
+        return Math.log10(args[0]);
+
+      case "ln":
+        if (args.length !== 1) throw new Error(`ln expects 1 argument, got ${args.length}`);
+        if (args[0] <= 0) {
+          const error = new Error("Logarithm of non-positive number") as MathError;
+          error.type = "INVALID_OPERATION";
+          throw error;
+        }
+        return Math.log(args[0]);
+
+      case "exp":
+        if (args.length !== 1) throw new Error(`exp expects 1 argument, got ${args.length}`);
+        return Math.exp(args[0]);
 
       default:
         throw new Error(`Unknown function: ${name}`);

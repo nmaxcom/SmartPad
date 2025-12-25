@@ -189,7 +189,8 @@ body.number-scrubbing * {
 }
 
 /* New widget-based result display - appears after the trigger operator */
-.semantic-result-display {
+.semantic-result-display,
+.semantic-assignment-display {
   color: #006dff;
   background-color: #dbe9fe;
   padding: 2px 5px;
@@ -199,7 +200,8 @@ body.number-scrubbing * {
 }
 
 /* Display result text using data-result attribute so paragraph textContent stays clean */
-.semantic-result-display::after {
+.semantic-result-display::after,
+.semantic-assignment-display::after {
   content: attr(data-result);
 }
 
@@ -298,6 +300,7 @@ body.number-scrubbing * {
 .semantic-function,
 .semantic-result,
 .semantic-result-display,
+.semantic-assignment-display,
 .semantic-error,
 .semantic-error-result,
 .semantic-trigger {

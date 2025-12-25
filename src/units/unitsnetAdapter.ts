@@ -1124,7 +1124,56 @@ export class UnitsNetMathEvaluator {
       case "abs":
         if (args.length !== 1) throw new Error("abs requires exactly 1 argument");
         const absValue = Math.abs(args[0].value);
-        return new SmartPadQuantity(absValue, args[0].unit, args[0].unitsnetValue);
+        return args[0].isDimensionless()
+          ? SmartPadQuantity.dimensionless(absValue)
+          : SmartPadQuantity.fromValueAndUnit(absValue, args[0].unit);
+
+      case "round":
+        if (args.length !== 1) throw new Error("round requires exactly 1 argument");
+        const roundedValue = Math.round(args[0].value);
+        return args[0].isDimensionless()
+          ? SmartPadQuantity.dimensionless(roundedValue)
+          : SmartPadQuantity.fromValueAndUnit(roundedValue, args[0].unit);
+
+      case "floor":
+        if (args.length !== 1) throw new Error("floor requires exactly 1 argument");
+        const flooredValue = Math.floor(args[0].value);
+        return args[0].isDimensionless()
+          ? SmartPadQuantity.dimensionless(flooredValue)
+          : SmartPadQuantity.fromValueAndUnit(flooredValue, args[0].unit);
+
+      case "ceil":
+        if (args.length !== 1) throw new Error("ceil requires exactly 1 argument");
+        const ceiledValue = Math.ceil(args[0].value);
+        return args[0].isDimensionless()
+          ? SmartPadQuantity.dimensionless(ceiledValue)
+          : SmartPadQuantity.fromValueAndUnit(ceiledValue, args[0].unit);
+
+      case "max": {
+        if (args.length < 1) throw new Error("max requires at least 1 argument");
+        const baseUnit = args[0].unit;
+        const compatible = args.every((arg) => arg.unit === baseUnit);
+        if (!compatible) {
+          throw new Error("max requires compatible units");
+        }
+        const maxArg = args.reduce((prev, curr) => (curr.value > prev.value ? curr : prev));
+        return baseUnit === ""
+          ? SmartPadQuantity.dimensionless(maxArg.value)
+          : SmartPadQuantity.fromValueAndUnit(maxArg.value, baseUnit);
+      }
+
+      case "min": {
+        if (args.length < 1) throw new Error("min requires at least 1 argument");
+        const baseUnit = args[0].unit;
+        const compatible = args.every((arg) => arg.unit === baseUnit);
+        if (!compatible) {
+          throw new Error("min requires compatible units");
+        }
+        const minArg = args.reduce((prev, curr) => (curr.value < prev.value ? curr : prev));
+        return baseUnit === ""
+          ? SmartPadQuantity.dimensionless(minArg.value)
+          : SmartPadQuantity.fromValueAndUnit(minArg.value, baseUnit);
+      }
 
       case "sin":
       case "cos":

@@ -235,6 +235,13 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
           }
         }
 
+        // Sync variables into React context so the panel updates
+        const updatedVariables = new Map<string, Variable>();
+        reactiveStore.getAllVariables().forEach((variable: Variable) => {
+          updatedVariables.set(variable.name, variable);
+        });
+        replaceAllVariables(updatedVariables);
+
         console.timeEnd("handleUpdateV2-evaluation");
 
         // DISPATCH EVENT: Notify plugins that evaluation is complete with render nodes

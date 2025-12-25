@@ -20,6 +20,7 @@ import {
   expressionNeedsUpdate,
 } from "../../src/parsing/expressionParser";
 import { Variable } from "../../src/state/types";
+import { NumberValue } from "../../src/types";
 
 describe("Expression Parser", () => {
   // Helper to create variable store
@@ -28,7 +29,8 @@ describe("Expression Parser", () => {
     Object.entries(variables).forEach(([name, value]) => {
       store.set(name, {
         name,
-        value,
+        value: NumberValue.from(value),
+        rawValue: value.toString(),
         createdAt: new Date(),
         updatedAt: new Date(),
       });

@@ -38,7 +38,7 @@ export const NumberScrubberExtension = Extension.create({
               // Check if we clicked on a scrubbable number
               if (target.classList.contains("semantic-scrubbableNumber")) {
                 const text = target.textContent || "";
-                const value = parseFloat(text);
+                const value = parseFloat(text.replace(/,/g, ""));
 
                 if (isNaN(value)) return false; // Let normal text editing handle this
 

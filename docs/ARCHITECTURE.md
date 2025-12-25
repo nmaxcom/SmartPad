@@ -23,7 +23,7 @@ The following diagram illustrates the entire data flow of SmartPad, from user in
 ```mermaid
 graph TD
     subgraph User Interface
-        A["User types in CodeMirror Editor"] --> B{"Debounced onUpdate"};
+        A["User types in TipTap (ProseMirror) Editor"] --> B{"Debounced onUpdate"};
     end
 
     subgraph Core Pipeline
@@ -88,12 +88,13 @@ The registry iterates through its list of evaluators in a predefined order of pr
 
 The default evaluator priority is:
 
-1.  `UnitsNetExpressionEvaluator`: Handles expressions with units.
-2.  `PercentageExpressionEvaluator`: Handles percentage calculations.
-3.  `VariableEvaluator`: Handles variable assignments without units.
-4.  `ExpressionEvaluator`: Handles standard mathematical expressions.
-5.  `ErrorEvaluator`: Handles nodes that have already been marked as errors.
-6.  `PlainTextEvaluator`: Handles plain text nodes.
+1.  `PercentageExpressionEvaluator`: Handles percentage calculations.
+2.  `UnitsNetExpressionEvaluator`: Handles expressions with units.
+3.  `CombinedAssignmentEvaluator`: Handles `name = expression =>` patterns.
+4.  `VariableEvaluator`: Handles variable assignments without `=>`.
+5.  `ExpressionEvaluator`: Handles standard mathematical expressions.
+6.  `ErrorEvaluator`: Handles nodes that have already been marked as errors.
+7.  `PlainTextEvaluator`: Handles plain text nodes.
 
 The output of an evaluator is a **Render Node**. A render node is a simple data structure that contains all the information needed to display a result in the UI, including the text to display and the position in the document where it should be rendered.
 

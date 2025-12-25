@@ -45,7 +45,7 @@ test.describe("User Issues Fixed", () => {
 
     // Check that we get a units display (not just plain text)
     const issue2Display = await page
-      .locator(".semantic-result-display")
+      .locator(".semantic-assignment-display")
       .last()
       .getAttribute("data-result");
     expect(issue2Display || "").toContain("°C");

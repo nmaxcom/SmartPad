@@ -1,6 +1,6 @@
 # 📋 SmartPad Project Overview
 
-> 🧭 **Navigation**: [`INDEX.md`](./INDEX.md) > `about.MD`  
+> 🧭 **Navigation**: [`docs/INDEX.md`](./docs/INDEX.md) > `about.MD`  
 > 📍 **You are here**: Complete project vision & requirements
 
 # SmartPad: Next-Generation Text-Based Calculator

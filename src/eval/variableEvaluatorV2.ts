@@ -16,7 +16,8 @@ import {
   VariableRenderNode,
   ErrorRenderNode,
 } from "./renderNodes";
-import { ErrorValue, SemanticValueTypes } from "../types";
+import { ErrorValue, SemanticValueTypes, NumberValue } from "../types";
+import { parseAndEvaluateExpression } from "../parsing/expressionParser";
 
 /**
  * Semantic-aware variable evaluator
@@ -52,16 +53,43 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
       });
       
       // The value is already parsed as a SemanticValue!
-      const semanticValue = varNode.parsedValue;
+      let semanticValue = varNode.parsedValue;
       
       // Check if parsing resulted in an error
       if (SemanticValueTypes.isError(semanticValue)) {
-        console.warn('VariableEvaluatorV2: Semantic value is an error:', (semanticValue as ErrorValue).getMessage());
-        return this.createErrorNode(
-          `Invalid variable value: ${(semanticValue as ErrorValue).getMessage()}`,
-          varNode.variableName,
-          context.lineNumber
-        );
+        const errorValue = semanticValue as ErrorValue;
+
+        // If this looks like a non-literal expression, try evaluating it numerically
+        if (errorValue.getErrorType() === "parse" && varNode.rawValue) {
+          const evalResult = parseAndEvaluateExpression(
+            varNode.rawValue,
+            context.variableContext
+          );
+
+          if (evalResult.error) {
+            console.warn(
+              "VariableEvaluatorV2: Expression evaluation error:",
+              evalResult.error
+            );
+            return this.createErrorNode(
+              `Invalid variable value: ${evalResult.error}`,
+              varNode.variableName,
+              context.lineNumber
+            );
+          }
+
+          semanticValue = NumberValue.from(evalResult.value);
+        } else {
+          console.warn(
+            "VariableEvaluatorV2: Semantic value is an error:",
+            errorValue.getMessage()
+          );
+          return this.createErrorNode(
+            `Invalid variable value: ${errorValue.getMessage()}`,
+            varNode.variableName,
+            context.lineNumber
+          );
+        }
       }
       
       // Store the variable with its semantic value

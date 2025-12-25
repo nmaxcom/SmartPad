@@ -27,6 +27,7 @@ import { PercentageExpressionEvaluatorV2 } from "./percentageEvaluatorV2";
 import { VariableEvaluatorV2 } from "./variableEvaluatorV2";
 import { ExpressionEvaluatorV2 } from "./expressionEvaluatorV2";
 import { CombinedAssignmentEvaluatorV2 } from "./combinedAssignmentEvaluatorV2";
+import { UnitsNetExpressionEvaluator } from "../units/unitsnetAstEvaluator";
 
 /**
  * Sets up the V2 evaluator registry with semantic-aware evaluators.
@@ -37,6 +38,7 @@ export function setupDefaultEvaluators(): void {
 
   // Create V2 evaluator instances (semantic-aware)
   const percentageEvaluatorV2 = new PercentageExpressionEvaluatorV2();
+  const unitsNetEvaluator = new UnitsNetExpressionEvaluator();
   const combinedAssignmentEvaluatorV2 = new CombinedAssignmentEvaluatorV2();
   const variableEvaluatorV2 = new VariableEvaluatorV2();
   const expressionEvaluatorV2 = new ExpressionEvaluatorV2();
@@ -45,6 +47,9 @@ export function setupDefaultEvaluators(): void {
   // Percentage evaluator first - handles complex percentage operations
   defaultRegistry.register(percentageEvaluatorV2);
   
+  // UnitsNet evaluator - handles unit-aware and identifier-based expressions
+  defaultRegistry.register(unitsNetEvaluator);
+
   // Combined assignment evaluator - handles "x = 100 =>" patterns
   defaultRegistry.register(combinedAssignmentEvaluatorV2);
   

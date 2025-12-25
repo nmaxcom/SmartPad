@@ -122,7 +122,9 @@ Then("I should see {string} in the editor", async function (expectedText: string
   if (!hasContent) {
     // Also check widget decorations
     const hasWidget = await global.page.evaluate((text) => {
-      const widgets = document.querySelectorAll(".semantic-result-display, .semantic-error-result");
+      const widgets = document.querySelectorAll(
+        ".semantic-result-display, .semantic-assignment-display, .semantic-error-result"
+      );
       return Array.from(widgets).some((widget) => widget.textContent?.includes(text));
     }, expectedText);
 
@@ -921,7 +923,9 @@ Then("the expression should immediately show {string}", async function (expected
   if (!hasResult) {
     // Double-check widget decorations
     const hasWidget = await global.page.evaluate((text) => {
-      const widgets = document.querySelectorAll(".semantic-result-display, .semantic-error-result");
+      const widgets = document.querySelectorAll(
+        ".semantic-result-display, .semantic-assignment-display, .semantic-error-result"
+      );
       return Array.from(widgets).some((widget) => widget.textContent?.includes(text));
     }, expectedResult);
 
