@@ -23,6 +23,13 @@ export class PercentagePreprocessor {
       lastResult = result;
 
       // Process "X% off Y" first -> Y - ((X/100) * Y)
+      // Special-case chained "X% on Y% off Z" to preserve expected nesting
+      result = result.replace(
+        /(\d+(?:\.\d+)?)%\s*on\s+(\d+(?:\.\d+)?)%\s*off\s+(\S+)/g,
+        '(($3) - (($2/100) * ($3))) + (($1/100) * (($3) - (($2/100) * ($3))))'
+      );
+
+      // Process "X% off Y" -> Y - ((X/100) * Y)
       result = result.replace(
         /(\d+(?:\.\d+)?)%\s*off\s+(\([^)]+\)|\S+)/g,
         '$2 - (($1/100) * $2)'
@@ -35,20 +42,14 @@ export class PercentagePreprocessor {
       );
 
       // Process "X% of Y" -> ((X/100) * Y)
-      // Handle parenthesized expressions
-      result = result.replace(
-        /(\d+(?:\.\d+)?)%\s*of\s+(\([^)]+\))/g,
-        '(($1/100) * $2)'
-      );
-
-      // Handle simple "X% of Y" (rightmost first for chaining)
-      const matches = [...result.matchAll(/(\d+(?:\.\d+)?)%\s*of\s+(\S+)/g)];
-      if (matches.length > 0) {
-        const lastMatch = matches[matches.length - 1];
-        const replacement = `((${lastMatch[1]}/100) * ${lastMatch[2]})`;
+      // Replace the rightmost percent-of occurrence to support chaining.
+      const percentOfMatches = [...result.matchAll(/(\d+(?:\.\d+)?)%\s*of\s+/g)];
+      if (percentOfMatches.length > 0) {
+        const lastMatch = percentOfMatches[percentOfMatches.length - 1];
         const beforeMatch = result.substring(0, lastMatch.index!);
-        const afterMatch = result.substring(lastMatch.index! + lastMatch[0].length);
-        result = beforeMatch + replacement + afterMatch;
+        const rightExpr = result.substring(lastMatch.index! + lastMatch[0].length).trim();
+        const replacement = `((${lastMatch[1]}/100) * ${rightExpr})`;
+        result = beforeMatch + replacement;
       }
     }
 

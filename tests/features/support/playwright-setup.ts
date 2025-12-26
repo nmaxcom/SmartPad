@@ -173,14 +173,38 @@ export async function pressEnter(): Promise<void> {
 
 // Helper function to get editor content
 export async function getEditorContent(): Promise<string> {
-  const editor = await getEditor();
-  return (await editor.textContent()) || "";
+  const lines = await getEditorDisplayLines();
+  return lines.join("\n").trim();
 }
 
 // Helper function to get editor HTML content
 export async function getEditorHTML(): Promise<string> {
   const editor = await getEditor();
   return await editor.innerHTML();
+}
+
+// Helper function to get editor lines including widget-rendered results
+export async function getEditorDisplayLines(): Promise<string[]> {
+  return await global.page.evaluate(() => {
+    const paragraphs = Array.from(document.querySelectorAll(".ProseMirror p"));
+    return paragraphs.map((p) => {
+      const rawText = (p.textContent || "").replace(/\s+/g, " ").trim();
+      const widget = p.querySelector(
+        ".semantic-result-display, .semantic-assignment-display, .semantic-error-result"
+      ) as HTMLElement | null;
+      if (!widget) return rawText;
+
+      const result = widget.getAttribute("data-result") || "";
+      if (!result) return rawText;
+
+      let baseText = rawText;
+      if (widget.classList.contains("semantic-error-result") && result.includes("⚠️")) {
+        baseText = baseText.replace(/\s*⚠️\s*$/, "").trim();
+      }
+
+      return `${baseText} ${result}`.replace(/\s+/g, " ").trim();
+    });
+  });
 }
 
 // Helper function to get variable panel content
@@ -327,20 +351,28 @@ export async function waitForContent(content: string, timeout: number = 3000): P
   try {
     await global.page.waitForFunction(
       (expectedContent) => {
-        // Check both the editor content and widget decorations
-        const editorElement = document.querySelector(".ProseMirror");
-        const editorText = editorElement?.textContent || "";
+        const paragraphs = Array.from(document.querySelectorAll(".ProseMirror p"));
+        const lines = paragraphs.map((p) => {
+          const rawText = (p.textContent || "").replace(/\s+/g, " ").trim();
+          const widget = p.querySelector(
+            ".semantic-result-display, .semantic-assignment-display, .semantic-error-result"
+          );
+          if (!widget) return rawText;
+
+          const result = widget.getAttribute("data-result") || "";
+          if (!result) return rawText;
+
+          let baseText = rawText;
+          if (widget.classList.contains("semantic-error-result") && result.includes("⚠️")) {
+            baseText = baseText.replace(/\s*⚠️\s*$/, "").trim();
+          }
+
+          return `${baseText} ${result}`.replace(/\s+/g, " ").trim();
+        });
+
+        const editorText = lines.join("\n").trim();
         const bodyText = document.body.textContent || "";
-
-        // Also check for widget decorations
-        const widgets = document.querySelectorAll(
-          ".semantic-result-display, .semantic-assignment-display, .semantic-error-result"
-        );
-        const widgetTexts = Array.from(widgets)
-          .map((w) => w.textContent || "")
-          .join(" ");
-
-        const allContent = `${editorText} ${bodyText} ${widgetTexts}`;
+        const allContent = `${editorText} ${bodyText}`;
 
         return allContent.includes(expectedContent);
       },
@@ -350,20 +382,37 @@ export async function waitForContent(content: string, timeout: number = 3000): P
   } catch (error) {
     // If the wait fails, provide detailed debugging information
     const actualContent = await global.page.evaluate(() => {
-      const editorElement = document.querySelector(".ProseMirror");
-      const editorText = editorElement?.textContent || "";
+      const paragraphs = Array.from(document.querySelectorAll(".ProseMirror p"));
+      const displayLines = paragraphs.map((p) => {
+        const rawText = (p.textContent || "").replace(/\s+/g, " ").trim();
+        const widget = p.querySelector(
+          ".semantic-result-display, .semantic-assignment-display, .semantic-error-result"
+        );
+        if (!widget) return rawText;
+
+        const result = widget.getAttribute("data-result") || "";
+        if (!result) return rawText;
+
+        let baseText = rawText;
+        if (widget.classList.contains("semantic-error-result") && result.includes("⚠️")) {
+          baseText = baseText.replace(/\s*⚠️\s*$/, "").trim();
+        }
+
+        return `${baseText} ${result}`.replace(/\s+/g, " ").trim();
+      });
+
       const bodyText = document.body.textContent || "";
       const widgets = document.querySelectorAll(
         ".semantic-result-display, .semantic-assignment-display, .semantic-error-result"
       );
-      const widgetTexts = Array.from(widgets)
-        .map((w) => w.textContent || "")
+      const widgetData = Array.from(widgets)
+        .map((w) => w.getAttribute("data-result") || w.getAttribute("aria-label") || "")
         .join(" ");
 
       return {
-        editorContent: editorText,
-        bodyContent: bodyText.substring(0, 500), // Limit to first 500 chars for readability
-        widgetContent: widgetTexts,
+        editorContent: displayLines.join("\n"),
+        bodyContent: bodyText.substring(0, 500),
+        widgetContent: widgetData,
         fullLength: bodyText.length,
       };
     });

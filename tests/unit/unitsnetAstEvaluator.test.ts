@@ -10,6 +10,7 @@ import { ReactiveVariableStore } from "../../src/state/variableStore";
 import { EvaluationContext } from "../../src/eval/registry";
 import { Variable } from "../../src/state/types";
 import { SmartPadQuantity } from "../../src/units/unitsnetAdapter";
+import { UnitValue } from "../../src/types";
 
 describe("UnitsNet.js AST Evaluator", () => {
   let unitsNetEvaluator: UnitsNetExpressionEvaluator;
@@ -192,11 +193,9 @@ describe("UnitsNet.js AST Evaluator", () => {
       const variables = new Map<string, Variable>();
       const lengthVar: Variable = {
         name: "length",
-        value: 10,
+        value: new UnitValue(SmartPadQuantity.fromValueAndUnit(10, "m")),
         rawValue: "10 m",
         units: "m",
-        displayValue: "10 m",
-        quantity: new SmartPadQuantity(10, "m"),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -227,11 +226,9 @@ describe("UnitsNet.js AST Evaluator", () => {
       const variables = new Map<string, Variable>();
       const areaVar: Variable = {
         name: "area",
-        value: 140,
+        value: new UnitValue(SmartPadQuantity.fromValueAndUnit(140, "m^2")),
         rawValue: "length * width",
         units: "m^2",
-        displayValue: "140 m^2",
-        quantity: new SmartPadQuantity(140, "m^2"),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -252,21 +249,17 @@ describe("UnitsNet.js AST Evaluator", () => {
       const variables = new Map<string, Variable>();
       const lengthVar: Variable = {
         name: "length",
-        value: 10,
+        value: new UnitValue(SmartPadQuantity.fromValueAndUnit(10, "m")),
         rawValue: "10 m",
         units: "m",
-        displayValue: "10 m",
-        quantity: new SmartPadQuantity(10, "m"),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
       const widthVar: Variable = {
         name: "width",
-        value: 14,
+        value: new UnitValue(SmartPadQuantity.fromValueAndUnit(14, "m")),
         rawValue: "14 m",
         units: "m",
-        displayValue: "14 m",
-        quantity: new SmartPadQuantity(14, "m"),
         createdAt: new Date(),
         updatedAt: new Date(),
       };

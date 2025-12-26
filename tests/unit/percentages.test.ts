@@ -1,6 +1,16 @@
 import { parseLine } from "../../src/parsing/astParser";
 import { defaultRegistry } from "../../src/eval/registry";
+import { CurrencyValue, NumberValue, PercentageValue } from "../../src/types";
+import { Variable } from "../../src/state/types";
 import "../../src/eval/index"; // ensure registry is set up
+
+const makeVariable = (name: string, value: NumberValue | PercentageValue | CurrencyValue, rawValue: string): Variable => ({
+  name,
+  value,
+  rawValue,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+});
 
 describe("Natural Percentages", () => {
   test("x% of y", () => {
@@ -69,10 +79,8 @@ describe("Natural Percentages", () => {
 
   test("x / y as % with variables", () => {
     const variableContext = new Map();
-    // @ts-ignore
-    variableContext.set("numerator", { value: 20 });
-    // @ts-ignore
-    variableContext.set("denominator", { value: 80 });
+    variableContext.set("numerator", makeVariable("numerator", new NumberValue(20), "20"));
+    variableContext.set("denominator", makeVariable("denominator", new NumberValue(80), "80"));
     const node = parseLine("numerator / denominator as % =>", 1);
     const result: any = defaultRegistry.evaluate(node as any, {
       variableStore: { clearVariables() {}, setVariableWithMetadata() {} } as any,
@@ -102,10 +110,8 @@ describe("Natural Percentages", () => {
 
   test("variables with % symbols in percentage calculations", () => {
     const variableContext = new Map();
-    // @ts-ignore
-    variableContext.set("rate", { value: 15, displayValue: "15%" });
-    // @ts-ignore
-    variableContext.set("base", { value: 200, displayValue: "$200" });
+    variableContext.set("rate", makeVariable("rate", new PercentageValue(15), "15%"));
+    variableContext.set("base", makeVariable("base", CurrencyValue.fromString("$200"), "$200"));
     const node = parseLine("rate of base =>", 1);
     const result: any = defaultRegistry.evaluate(node as any, {
       variableStore: { clearVariables() {}, setVariableWithMetadata() {} } as any,
@@ -170,10 +176,8 @@ describe("Natural Percentages", () => {
   test("variables with percent values", () => {
     const variableContext = new Map();
     // commission_rate is a plain number (interpreted as %)
-    // @ts-ignore
-    variableContext.set("total_sales", { value: 5000 });
-    // @ts-ignore
-    variableContext.set("commission_rate", { value: 5.5 });
+    variableContext.set("total_sales", makeVariable("total_sales", new NumberValue(5000), "5000"));
+    variableContext.set("commission_rate", makeVariable("commission_rate", new NumberValue(5.5), "5.5"));
     const node = parseLine("commission_rate of total_sales =>", 1);
     const result: any = defaultRegistry.evaluate(node as any, {
       variableStore: { clearVariables() {}, setVariableWithMetadata() {} } as any,
@@ -187,11 +191,8 @@ describe("Natural Percentages", () => {
 
   test("percent variable added to money base (implicit 'on')", () => {
     const variableContext = new Map();
-    // @ts-ignore
-    variableContext.set("money", { value: 400, displayValue: "$400" });
-    // store taxes as percent-looking value
-    // @ts-ignore
-    variableContext.set("taxes", { value: 5, displayValue: "5%" });
+    variableContext.set("money", makeVariable("money", CurrencyValue.fromString("$400"), "$400"));
+    variableContext.set("taxes", makeVariable("taxes", new PercentageValue(5), "5%"));
     const node = parseLine("money + taxes =>", 1);
     const result: any = defaultRegistry.evaluate(node as any, {
       variableStore: { clearVariables() {}, setVariableWithMetadata() {} } as any,
@@ -206,10 +207,8 @@ describe("Natural Percentages", () => {
 
   test("percent variable subtracted from base (implicit 'off')", () => {
     const variableContext = new Map();
-    // @ts-ignore
-    variableContext.set("base", { value: 1000 });
-    // @ts-ignore
-    variableContext.set("discount", { value: 10, displayValue: "10%" });
+    variableContext.set("base", makeVariable("base", new NumberValue(1000), "1000"));
+    variableContext.set("discount", makeVariable("discount", new PercentageValue(10), "10%"));
     const node = parseLine("base - discount =>", 1);
     const result: any = defaultRegistry.evaluate(node as any, {
       variableStore: { clearVariables() {}, setVariableWithMetadata() {} } as any,
@@ -223,10 +222,8 @@ describe("Natural Percentages", () => {
 
   test("currency base with percent variable", () => {
     const variableContext = new Map();
-    // @ts-ignore
-    variableContext.set("money", { value: 400, displayValue: "$400" });
-    // @ts-ignore
-    variableContext.set("taxes", { value: 5, displayValue: "5%" });
+    variableContext.set("money", makeVariable("money", CurrencyValue.fromString("$400"), "$400"));
+    variableContext.set("taxes", makeVariable("taxes", new PercentageValue(5), "5%"));
     const node = parseLine("money + taxes =>", 1);
     const result: any = defaultRegistry.evaluate(node as any, {
       variableStore: { clearVariables() {}, setVariableWithMetadata() {} } as any,
@@ -241,12 +238,9 @@ describe("Natural Percentages", () => {
 
   test("euro currency and chained discounts", () => {
     const variableContext = new Map();
-    // @ts-ignore
-    variableContext.set("price", { value: 200, displayValue: "€200" });
-    // @ts-ignore
-    variableContext.set("d1", { value: 10, displayValue: "10%" });
-    // @ts-ignore
-    variableContext.set("d2", { value: 5, displayValue: "5%" });
+    variableContext.set("price", makeVariable("price", CurrencyValue.fromString("€200"), "€200"));
+    variableContext.set("d1", makeVariable("d1", new PercentageValue(10), "10%"));
+    variableContext.set("d2", makeVariable("d2", new PercentageValue(5), "5%"));
     const node = parseLine("price - d1 - d2 =>", 1);
     const result: any = defaultRegistry.evaluate(node as any, {
       variableStore: { clearVariables() {}, setVariableWithMetadata() {} } as any,
@@ -261,10 +255,8 @@ describe("Natural Percentages", () => {
 
   test("mixed on/off with percent literals and variables", () => {
     const variableContext = new Map();
-    // @ts-ignore
-    variableContext.set("base", { value: 100 });
-    // @ts-ignore
-    variableContext.set("bonus", { value: 20, displayValue: "20%" });
+    variableContext.set("base", makeVariable("base", new NumberValue(100), "100"));
+    variableContext.set("bonus", makeVariable("bonus", new PercentageValue(20), "20%"));
     const node = parseLine("10% on base + bonus =>", 1);
     const result: any = defaultRegistry.evaluate(node as any, {
       variableStore: { clearVariables() {}, setVariableWithMetadata() {} } as any,
@@ -279,8 +271,7 @@ describe("Natural Percentages", () => {
 
   test("percent variable used inside parentheses", () => {
     const variableContext = new Map();
-    // @ts-ignore
-    variableContext.set("p", { value: 25, displayValue: "25%" });
+    variableContext.set("p", makeVariable("p", new PercentageValue(25), "25%"));
     const node = parseLine("(100 + 200) + p =>", 1);
     const result: any = defaultRegistry.evaluate(node as any, {
       variableStore: { clearVariables() {}, setVariableWithMetadata() {} } as any,
@@ -295,10 +286,8 @@ describe("Natural Percentages", () => {
 
   test("guard: adding different currency symbols should error", () => {
     const variableContext = new Map();
-    // @ts-ignore
-    variableContext.set("usd", { value: 100, displayValue: "$100" });
-    // @ts-ignore
-    variableContext.set("eur", { value: 10, displayValue: "€10%" });
+    variableContext.set("usd", makeVariable("usd", CurrencyValue.fromString("$100"), "$100"));
+    variableContext.set("eur", makeVariable("eur", new PercentageValue(10), "€10%"));
     const node = parseLine("usd + eur =>", 1);
     const result: any = defaultRegistry.evaluate(node as any, {
       variableStore: { clearVariables() {}, setVariableWithMetadata() {} } as any,
@@ -325,10 +314,8 @@ describe("Natural Percentages", () => {
   test("percentage variables should work in expressions", () => {
     // Test that percentage variables can be used in calculations
     const variableContext = new Map();
-    // @ts-ignore
-    variableContext.set("discount", { value: "20%", displayValue: "20%" });
-    // @ts-ignore
-    variableContext.set("price", { value: 100, displayValue: "$100" });
+    variableContext.set("discount", makeVariable("discount", new PercentageValue(20), "20%"));
+    variableContext.set("price", makeVariable("price", CurrencyValue.fromString("$100"), "$100"));
     
     const node = parseLine("discount of price =>", 1);
     const result: any = defaultRegistry.evaluate(node as any, {

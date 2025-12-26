@@ -14,6 +14,7 @@ import {
   positionCursorInText,
   clearEditor,
   takeScreenshot,
+  getEditorDisplayLines,
 } from "../support/playwright-setup";
 
 // Import Playwright setup
@@ -21,11 +22,7 @@ require("../support/playwright-setup");
 
 // Helper function to get individual editor lines (paragraphs)
 async function getEditorLines(): Promise<string[]> {
-  const html = await getEditorHTML();
-
-  // Extract text from each paragraph
-  const paragraphs = html.match(/<p[^>]*>(.*?)<\/p>/g) || [];
-  return paragraphs.map((p) => p.replace(/<[^>]*>/g, "").trim());
+  return await getEditorDisplayLines();
 }
 
 // Helper function to get full app content (editor + variable panel)
@@ -120,12 +117,15 @@ Then("I should see {string} in the editor", async function (expectedText: string
   // Check if content appears in editor text OR widget decorations
   const hasContent = content.includes(expectedText);
   if (!hasContent) {
-    // Also check widget decorations
     const hasWidget = await global.page.evaluate((text) => {
       const widgets = document.querySelectorAll(
         ".semantic-result-display, .semantic-assignment-display, .semantic-error-result"
       );
-      return Array.from(widgets).some((widget) => widget.textContent?.includes(text));
+      return Array.from(widgets).some((widget) => {
+        const dataResult = widget.getAttribute("data-result") || "";
+        const ariaLabel = widget.getAttribute("aria-label") || "";
+        return dataResult.includes(text) || ariaLabel.includes(text);
+      });
     }, expectedText);
 
     if (!hasWidget) {

@@ -224,8 +224,19 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
         } as ErrorRenderNode;
       }
 
-      // For expressions, use smart thresholds
-      let formattedResult = result.value.toString({ precision: decimalPlaces });
+      // For expressions, use smart thresholds for units
+      let formattedResult: string;
+      if (result.value instanceof UnitValue) {
+        formattedResult = this.formatQuantityWithSmartThresholds(
+          result.value.getQuantity(),
+          decimalPlaces
+        );
+      } else {
+        const numericValue = result.value.getNumericValue();
+        formattedResult = this.isMathematicalConstant(numericValue)
+          ? numericValue.toString()
+          : result.value.toString({ precision: decimalPlaces });
+      }
       if (rewritten.currencySymbol && result.value instanceof NumberValue) {
         formattedResult = `${rewritten.currencySymbol}${formattedResult}`;
       }
@@ -290,7 +301,10 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
 
       variableStore.setVariableWithMetadata(variable);
 
-      let valueStr = result.value.toString({ precision: decimalPlaces });
+      let valueStr =
+        result.value instanceof UnitValue
+          ? this.formatQuantityWithSmartThresholds(result.value.getQuantity(), decimalPlaces)
+          : result.value.toString({ precision: decimalPlaces });
       if (rewritten.currencySymbol && result.value instanceof NumberValue) {
         valueStr = `${rewritten.currencySymbol}${valueStr}`;
       }
@@ -368,13 +382,17 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
 
       variableStore.setVariableWithMetadata(variable);
 
-      const displayText = `${node.variableName} = ${value.toString({ precision: decimalPlaces })}`;
+      const displayValue =
+        value instanceof UnitValue
+          ? this.formatQuantity(value.getQuantity(), decimalPlaces)
+          : value.toString({ precision: decimalPlaces });
+      const displayText = `${node.variableName} = ${displayValue}`;
 
       return {
         type: "combined",
         variableName: node.variableName,
         expression: valueStr,
-        result: value.toString({ precision: decimalPlaces }),
+        result: displayValue,
         displayText,
         line: context.lineNumber,
         originalRaw: `${node.variableName} = ${valueStr}`,
@@ -460,8 +478,8 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     const abs = Math.abs(value);
     // Length (meters): more precision for sub-meter values
     if (unit === "m") {
-      // Use default places for meters when value is >= 1; bump precision only for sub-meter values
-      return abs < 1 ? Math.max(defaultPlaces, 3) : defaultPlaces;
+      // Keep higher precision for meters to match expected unit conversion detail
+      return abs < 1 ? Math.max(defaultPlaces, 4) : Math.max(defaultPlaces, 3);
     }
     // Area (square meters): show at least 3 decimals for readability in examples
     if (unit === "m^2") {

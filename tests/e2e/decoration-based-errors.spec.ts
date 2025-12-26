@@ -273,10 +273,10 @@ test.describe("Decoration-Based Error Display", () => {
     console.log(`Error element user-select style: ${userSelect}`);
     expect(userSelect).toBe("text");
 
-    // Test that the error text is visible and accessible
-    const errorText = await errorElement.textContent();
-    console.log(`Error element text content: "${errorText}"`);
-    expect(errorText).toContain("⚠️");
+    // Test that the error text is visible and accessible via attributes
+    const errorText = await errorElement.getAttribute("data-result");
+    console.log(`Error element data-result: "${errorText}"`);
+    expect(errorText || "").toContain("⚠️");
 
     // Test that the error element can be clicked (even if it doesn't get focus)
     await errorElement.click();

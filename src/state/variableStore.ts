@@ -109,7 +109,13 @@ export class ReactiveVariableStore {
     const node = this.dependencyGraph.getNode(this.normalizeVariableName(name));
     if (node?.isCircular) return null;
 
-    return typeof variable.value === "number" ? variable.value : null;
+    if (typeof variable.value === "number") {
+      return variable.value;
+    }
+    if (variable.value instanceof SemanticValue && variable.value.isNumeric()) {
+      return variable.value.getNumericValue();
+    }
+    return null;
   }
 
   /**

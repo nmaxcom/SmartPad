@@ -35,14 +35,16 @@ function convertVariablesToQuantities(
   const quantities: Record<string, Quantity> = {};
 
   variableContext.forEach((variable, name) => {
-    if (typeof variable.value === "number") {
+    if (typeof variable.value === "number" || variable.value instanceof NumberValue) {
       // CRITICAL FIX: Check if the variable has a stored Quantity object
       if (variable.quantity) {
         // Use the stored Quantity object to preserve dimensional information
         quantities[name] = variable.quantity;
       } else {
         // Fallback: treat as dimensionless quantity for backward compatibility
-        quantities[name] = Quantity.dimensionless(variable.value);
+        const numericValue =
+          typeof variable.value === "number" ? variable.value : variable.value.getNumericValue();
+        quantities[name] = Quantity.dimensionless(numericValue);
       }
     }
   });
@@ -74,7 +76,7 @@ export class UnitsExpressionEvaluator implements NodeEvaluator {
 
     // For variable assignments, check if the value contains units
     if (isVariableAssignmentNode(node)) {
-      const valueStr = node.parsedValue.toString();
+      const valueStr = node.rawValue || node.parsedValue.toString();
       return expressionContainsUnits(valueStr);
     }
 
@@ -229,7 +231,7 @@ export class UnitsExpressionEvaluator implements NodeEvaluator {
       const quantities = convertVariablesToQuantities(variableContext);
 
       // Evaluate the value (which contains the units expression) with units
-      const valueStr = node.parsedValue.toString();
+      const valueStr = node.rawValue || node.parsedValue.toString();
       const result = evaluateUnitsExpression(valueStr, quantities);
 
       if (result.error) {

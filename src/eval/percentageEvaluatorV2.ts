@@ -36,6 +36,7 @@ import {
   SemanticValueTypes,
   SemanticArithmetic
 } from "../types";
+import { evaluateMath } from "../parsing/mathEvaluator";
 
 /**
  * Expression parser for percentage operations
@@ -85,6 +86,19 @@ class PercentageExpressionParser {
     
     return null;
   }
+
+  /**
+   * Parse "A of B is %" pattern
+   */
+  static parsePartOfBaseIsPercent(expr: string): { partExpr: string; baseExpr: string } | null {
+    const match = expr.match(/^\s*(.+?)\s+of\s+(.+?)\s+is\s+%\s*$/i);
+    if (!match) return null;
+
+    return {
+      partExpr: match[1].trim(),
+      baseExpr: match[2].trim(),
+    };
+  }
   
   /**
    * Parse "X as %" pattern
@@ -127,6 +141,8 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
       /^what\s+%\s+is\b/.test(expr) ||
       // "0.2 as %"
       /\bas\s+%\s*$/.test(expr) ||
+      // Implicit "X of Y" where X is a percent-like value
+      /\bof\b/.test(expr) ||
       // Contains percentage values that need special handling
       /%/.test(expr)
     );
@@ -142,49 +158,7 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
         ? (node as ExpressionNode).expression
         : (node as CombinedAssignmentNode).expression;
       
-      // Parse percentage operation patterns
-      let result: SemanticValue | null = null;
-      
-      // Try "X% of Y" pattern
-      const percentOf = PercentageExpressionParser.parsePercentOf(expression);
-      if (percentOf) {
-        result = this.evaluatePercentOf(percentOf.percent, percentOf.baseExpr, context);
-      }
-      
-      // Try "X% on/off Y" pattern
-      if (!result) {
-        const percentOnOff = PercentageExpressionParser.parsePercentOnOff(expression);
-        if (percentOnOff) {
-          result = this.evaluatePercentOnOff(
-            percentOnOff.percent, 
-            percentOnOff.operation, 
-            percentOnOff.baseExpr, 
-            context
-          );
-        }
-      }
-      
-      // Try "A is what % of B" pattern
-      if (!result) {
-        const whatPercent = PercentageExpressionParser.parseWhatPercent(expression);
-        if (whatPercent) {
-          result = this.evaluateWhatPercent(whatPercent.partExpr, whatPercent.baseExpr, context);
-        }
-      }
-      
-      // Try "X as %" pattern  
-      if (!result) {
-        const asPercent = PercentageExpressionParser.parseAsPercent(expression);
-        if (asPercent) {
-          result = this.evaluateAsPercent(asPercent.valueExpr, context);
-        }
-      }
-      
-      // If no specific pattern matched, try general percentage arithmetic
-      if (!result) {
-        result = this.evaluateGeneralPercentageExpression(expression, context);
-      }
-      
+      const result = this.evaluatePercentageExpression(expression, context);
       if (!result) {
         return this.createErrorNode("Could not evaluate percentage expression", expression, context.lineNumber);
       }
@@ -205,6 +179,73 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
       return this.createErrorNode(message, '', context.lineNumber);
     }
   }
+
+  /**
+   * Evaluate a percentage expression string and return a SemanticValue
+   */
+  private evaluatePercentageExpression(expression: string, context: EvaluationContext): SemanticValue | null {
+    let result: SemanticValue | null = null;
+
+    // Try "X% of Y" pattern
+    const percentOf = PercentageExpressionParser.parsePercentOf(expression);
+    if (percentOf) {
+      result = this.evaluatePercentOf(percentOf.percent, percentOf.baseExpr, context);
+    }
+
+    // Try "X% on/off Y" pattern
+    if (!result) {
+      const percentOnOff = PercentageExpressionParser.parsePercentOnOff(expression);
+      if (percentOnOff) {
+        result = this.evaluatePercentOnOff(
+          percentOnOff.percent,
+          percentOnOff.operation,
+          percentOnOff.baseExpr,
+          context
+        );
+      }
+    }
+
+    // Try "A is what % of B" pattern
+    if (!result) {
+      const whatPercent = PercentageExpressionParser.parseWhatPercent(expression);
+      if (whatPercent) {
+        result = this.evaluateWhatPercent(whatPercent.partExpr, whatPercent.baseExpr, context);
+      }
+    }
+
+    // Try "A of B is %" pattern
+    if (!result) {
+      const partOfBase = PercentageExpressionParser.parsePartOfBaseIsPercent(expression);
+      if (partOfBase) {
+        result = this.evaluateWhatPercent(partOfBase.partExpr, partOfBase.baseExpr, context);
+      }
+    }
+
+    // Try "X as %" pattern
+    if (!result) {
+      const asPercent = PercentageExpressionParser.parseAsPercent(expression);
+      if (asPercent) {
+        result = this.evaluateAsPercent(asPercent.valueExpr, context);
+      }
+    }
+
+    // Try base +/- percent chain (e.g., "500 - 10% - 5%")
+    if (!result) {
+      result = this.evaluateAdditivePercentageChain(expression, context);
+    }
+
+    // Try implicit "X of Y" where X is a percent-like value
+    if (!result) {
+      result = this.evaluateImplicitPercentOf(expression, context);
+    }
+
+    // If no specific pattern matched, try general percentage arithmetic
+    if (!result) {
+      result = this.evaluateGeneralPercentageExpression(expression, context);
+    }
+
+    return result;
+  }
   
   /**
    * Evaluate "20% of 100" -> 20
@@ -218,6 +259,56 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     }
     
     return percentValue.of(baseValue);
+  }
+
+  /**
+   * Evaluate "base +/- percent" chains like "500 - 10% - 5%"
+   */
+  private evaluateAdditivePercentageChain(expression: string, context: EvaluationContext): SemanticValue | null {
+    const parsed = this.parseTrailingPercentChain(expression);
+    if (!parsed) return null;
+
+    const baseValue = this.evaluateSubExpression(parsed.baseExpr, context);
+    if (SemanticValueTypes.isError(baseValue)) {
+      return baseValue;
+    }
+
+    let current = baseValue;
+    for (const op of parsed.ops) {
+      const percentValue = new PercentageValue(op.percent);
+      current = op.sign === "+" ? percentValue.on(current) : percentValue.off(current);
+    }
+
+    return current;
+  }
+
+  /**
+   * Evaluate implicit "X of Y" where X is a percent-like value (number or percentage)
+   */
+  private evaluateImplicitPercentOf(expression: string, context: EvaluationContext): SemanticValue | null {
+    const match = expression.match(/^\s*(.+?)\s+of\s+(.+)$/i);
+    if (!match) return null;
+
+    const leftValue = this.evaluateSubExpression(match[1], context);
+    const rightValue = this.evaluateSubExpression(match[2], context);
+
+    if (SemanticValueTypes.isError(leftValue)) return leftValue;
+    if (SemanticValueTypes.isError(rightValue)) return rightValue;
+
+    if (SemanticValueTypes.isPercentage(leftValue)) {
+      return (leftValue as PercentageValue).of(rightValue);
+    }
+
+    if (leftValue.isNumeric()) {
+      const percentValue = new PercentageValue(leftValue.getNumericValue());
+      return percentValue.of(rightValue);
+    }
+
+    return ErrorValue.typeError(
+      "Left side of 'of' must be numeric or percentage",
+      undefined,
+      leftValue.getType()
+    );
   }
   
   /**
@@ -293,17 +384,107 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     
     return null;
   }
+
+  private parseTrailingPercentChain(
+    expression: string
+  ): { baseExpr: string; ops: Array<{ sign: "+" | "-"; percent: number }> } | null {
+    let expr = expression.trim();
+    const ops: Array<{ sign: "+" | "-"; percent: number }> = [];
+    const tailRegex = /([+\-])\s*(\d+(?:\.\d+)?)\s*%\s*$/;
+
+    while (true) {
+      const match = tailRegex.exec(expr);
+      if (!match) break;
+
+      ops.push({ sign: match[1] as "+" | "-", percent: parseFloat(match[2]) });
+      expr = expr.slice(0, match.index).trim();
+    }
+
+    if (ops.length === 0 || !expr) {
+      return null;
+    }
+
+    return { baseExpr: expr, ops: ops.reverse() };
+  }
+
+  private containsPercentageSyntax(expr: string): boolean {
+    return (
+      /%/.test(expr) ||
+      /\bof\b/.test(expr) ||
+      /\bon\b/.test(expr) ||
+      /\boff\b/.test(expr) ||
+      /\bis\s+%\b/.test(expr) ||
+      /\bas\s+%\b/.test(expr)
+    );
+  }
+
+  private evaluateArithmeticExpression(expr: string, context: EvaluationContext): SemanticValue | null {
+    if (/[€$£¥₹₿%]/.test(expr)) {
+      return null;
+    }
+
+    const variables = this.buildNumericContext(context.variableContext);
+    const result = evaluateMath(expr, variables);
+    if (result.error) {
+      return ErrorValue.semanticError(result.error);
+    }
+    return new NumberValue(result.value);
+  }
+
+  private buildNumericContext(variableContext: Map<string, any>): Record<string, number> {
+    const context: Record<string, number> = {};
+    variableContext.forEach((variable, name) => {
+      const value = variable?.value;
+      if (value instanceof SemanticValue) {
+        if (value.isNumeric()) {
+          context[name] = value.getNumericValue();
+        }
+      } else if (typeof value === "number") {
+        context[name] = value;
+      }
+    });
+    return context;
+  }
   
   /**
    * Evaluate a sub-expression (could be variable, literal, etc.)
    */
-  private evaluateSubExpression(expr: string, context: EvaluationContext): SemanticValue {
+  private evaluateSubExpression(
+    expr: string,
+    context: EvaluationContext,
+    options: { skipPercentVariableChain?: boolean } = {}
+  ): SemanticValue {
     const trimmed = expr.trim();
+
+    if (!options.skipPercentVariableChain) {
+      const percentVariableResult = this.evaluatePercentVariableChain(trimmed, context);
+      if (percentVariableResult) {
+        return percentVariableResult;
+      }
+    }
     
     // Try to get variable first
     const variable = context.variableContext.get(trimmed);
     if (variable) {
-      return variable.value; // Now a SemanticValue!
+      const value = (variable as any).value;
+      if (value instanceof SemanticValue) {
+        return value;
+      }
+      if (typeof value === "number") {
+        return NumberValue.from(value);
+      }
+      if (typeof value === "string") {
+        const parsedValue = this.parseLiteral(value.trim());
+        if (parsedValue) return parsedValue;
+      }
+    }
+
+    // Try nested percentage expressions
+    if (this.containsPercentageSyntax(trimmed)) {
+      const percentResult = this.evaluatePercentageExpression(trimmed, context);
+      if (percentResult) {
+        return percentResult;
+      }
     }
     
     // Try to parse as literal
@@ -311,9 +492,70 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     if (parsed) {
       return parsed;
     }
+
+    // Try to evaluate as arithmetic expression
+    const arithmetic = this.evaluateArithmeticExpression(trimmed, context);
+    if (arithmetic) {
+      return arithmetic;
+    }
     
     // If we can't resolve it, return an error
     return ErrorValue.semanticError(`Cannot resolve expression: "${expr}"`);
+  }
+
+  private evaluatePercentVariableChain(
+    expression: string,
+    context: EvaluationContext
+  ): SemanticValue | null {
+    let expr = expression.trim();
+    const ops: Array<{ sign: "+" | "-"; percent: PercentageValue }> = [];
+    const tailRegex = /([+\-])\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*$/;
+
+    while (true) {
+      const match = tailRegex.exec(expr);
+      if (!match) break;
+
+      const percentValue = this.getPercentValueFromVariable(match[2], context);
+      if (!percentValue) break;
+
+      ops.push({ sign: match[1] as "+" | "-", percent: percentValue });
+      expr = expr.slice(0, match.index).trim();
+    }
+
+    if (ops.length === 0 || !expr) return null;
+
+    const baseValue = this.evaluateSubExpression(expr, context, { skipPercentVariableChain: true });
+    if (SemanticValueTypes.isError(baseValue)) {
+      return baseValue;
+    }
+
+    let current = baseValue;
+    for (const op of ops.reverse()) {
+      current = op.sign === "+" ? op.percent.on(current) : op.percent.off(current);
+    }
+
+    return current;
+  }
+
+  private getPercentValueFromVariable(
+    variableName: string,
+    context: EvaluationContext
+  ): PercentageValue | null {
+    const variable = context.variableContext.get(variableName);
+    if (!variable) return null;
+
+    const value = (variable as any).value;
+    if (value instanceof PercentageValue) {
+      return value;
+    }
+
+    const rawValue = (variable as any).rawValue;
+    const percentMatch = rawValue ? String(rawValue).match(/(\d+(?:\.\d+)?)\s*%/) : null;
+    if (percentMatch) {
+      return new PercentageValue(parseFloat(percentMatch[1]));
+    }
+
+    return null;
   }
   
   /**
@@ -329,7 +571,7 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     }
     
     // Try currency
-    if (str.match(/^[\$€£]\d+(?:\.\d+)?$/)) {
+    if (str.match(/^[\$€£]\s*\d{1,3}(?:,\d{3})*(?:\.\d+)?$/)) {
       try {
         return CurrencyValue.fromString(str);
       } catch {
@@ -338,7 +580,7 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     }
     
     // Try number
-    if (str.match(/^\d+(?:\.\d+)?$/)) {
+    if (str.match(/^-?\d+(?:\.\d+)?$/)) {
       return new NumberValue(parseFloat(str));
     }
     

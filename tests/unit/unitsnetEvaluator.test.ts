@@ -12,6 +12,7 @@ import {
   UnitsNetParser,
 } from "../../src/units/unitsnetEvaluator";
 import { SmartPadQuantity } from "../../src/units/unitsnetAdapter";
+import { NumberValue, UnitValue } from "../../src/types";
 
 describe("UnitsNet.js Evaluator", () => {
   describe("Tokenizer", () => {
@@ -21,24 +22,24 @@ describe("UnitsNet.js Evaluator", () => {
       expect(tokens).toHaveLength(2); // QUANTITY + EOF
       expect(tokens[0].type).toBe(UnitsNetTokenType.QUANTITY);
       expect(tokens[0].value).toBe("10 m");
-      expect(tokens[0].quantity?.value).toBe(10);
-      expect(tokens[0].quantity?.unit).toBe("m");
+      expect(tokens[0].quantity?.getNumericValue()).toBe(10);
+      expect(tokens[0].quantity?.getUnit()).toBe("m");
     });
 
     test("should tokenize decimal numbers with units", () => {
       const tokens = tokenizeWithUnitsNet("5.5 kg");
 
       expect(tokens[0].type).toBe(UnitsNetTokenType.QUANTITY);
-      expect(tokens[0].quantity?.value).toBe(5.5);
-      expect(tokens[0].quantity?.unit).toBe("kg");
+      expect(tokens[0].quantity?.getNumericValue()).toBe(5.5);
+      expect(tokens[0].quantity?.getUnit()).toBe("kg");
     });
 
     test("should tokenize compound units", () => {
       const tokens = tokenizeWithUnitsNet("60 km/h");
 
       expect(tokens[0].type).toBe(UnitsNetTokenType.QUANTITY);
-      expect(tokens[0].quantity?.value).toBe(60);
-      expect(tokens[0].quantity?.unit).toBe("km/h");
+      expect(tokens[0].quantity?.getNumericValue()).toBe(60);
+      expect(tokens[0].quantity?.getUnit()).toBe("km/h");
     });
 
     test("should tokenize regular numbers without units", () => {
@@ -53,7 +54,7 @@ describe("UnitsNet.js Evaluator", () => {
 
       expect(tokens[0].type).toBe(UnitsNetTokenType.CONSTANT);
       expect(tokens[0].value).toBe("PI");
-      expect(tokens[0].constant).toBe(3.141592653589793);
+      expect(tokens[0].constant?.getNumericValue()).toBe(3.141592653589793);
     });
 
     test("should tokenize functions", () => {
@@ -92,116 +93,128 @@ describe("UnitsNet.js Evaluator", () => {
       const result = evaluateUnitsNetExpression("10 m");
 
       expect(result.error).toBeUndefined();
-      expect(result.quantity.value).toBe(10);
-      expect(result.quantity.unit).toBe("m");
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBe(10);
+      expect(quantity.getUnit()).toBe("m");
     });
 
     test("should add compatible units", () => {
       const result = evaluateUnitsNetExpression("10 m + 5 m");
 
       expect(result.error).toBeUndefined();
-      expect(result.quantity.value).toBe(15);
-      expect(result.quantity.unit).toBe("m");
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBe(15);
+      expect(quantity.getUnit()).toBe("m");
     });
 
     test("should convert units when adding", () => {
       const result = evaluateUnitsNetExpression("1000 m + 1 km");
 
       expect(result.error).toBeUndefined();
-      expect(result.quantity.value).toBe(2000); // Both converted to meters
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBe(2000); // Both converted to meters
     });
 
     test("should subtract compatible units", () => {
       const result = evaluateUnitsNetExpression("10 m - 3 m");
 
       expect(result.error).toBeUndefined();
-      expect(result.quantity.value).toBe(7);
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBe(7);
     });
 
     test("should multiply units correctly", () => {
       const result = evaluateUnitsNetExpression("10 m * 5 m");
 
       expect(result.error).toBeUndefined();
-      expect(result.quantity.value).toBe(50);
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBe(50);
       // Depending on implementation, unit may remain base unit; accept both
-      expect(["m^2", "m"]).toContain(result.quantity.unit);
+      expect(["m^2", "m"]).toContain(quantity.getUnit());
     });
 
     test("should divide units correctly", () => {
       const result = evaluateUnitsNetExpression("100 m / 10 s");
 
       expect(result.error).toBeUndefined();
-      expect(result.quantity.value).toBe(10);
-      expect(["m/s", "m"]).toContain(result.quantity.unit);
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBe(10);
+      expect(["m/s", "m"]).toContain(quantity.getUnit());
     });
 
     test("should handle dimensionless calculations", () => {
       const result = evaluateUnitsNetExpression("10 * 5");
 
       expect(result.error).toBeUndefined();
-      expect(result.quantity.value).toBe(50);
-      expect(result.quantity.isDimensionless()).toBe(true);
+      const value = result.value as NumberValue;
+      expect(value.getNumericValue()).toBe(50);
     });
 
     test("should multiply quantity by dimensionless number", () => {
       const result = evaluateUnitsNetExpression("10 m * 5");
 
       expect(result.error).toBeUndefined();
-      expect(result.quantity.value).toBe(50);
-      expect(result.quantity.unit).toBe("m");
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBe(50);
+      expect(quantity.getUnit()).toBe("m");
     });
 
     test("should handle mathematical constants", () => {
       const result = evaluateUnitsNetExpression("PI * 2");
 
       expect(result.error).toBeUndefined();
-      expect(result.quantity.value).toBeCloseTo(2 * Math.PI, 5);
-      expect(result.quantity.isDimensionless()).toBe(true);
+      const value = result.value as NumberValue;
+      expect(value.getNumericValue()).toBeCloseTo(2 * Math.PI, 5);
     });
 
     test("should handle mathematical functions", () => {
       const result = evaluateUnitsNetExpression("sqrt(16 m^2)");
 
       expect(result.error).toBeUndefined();
-      expect(result.quantity.value).toBe(4);
-      expect(result.quantity.unit).toBe("m");
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBe(4);
+      expect(quantity.getUnit()).toBe("m");
     });
 
     test("should handle complex expressions", () => {
       const result = evaluateUnitsNetExpression("(10 m * 5 m) / 2 s");
 
       expect(result.error).toBeUndefined();
-      expect(result.quantity.value).toBe(25);
-      expect(["m^2/s", "m", ""]).toContain(result.quantity.unit);
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBe(25);
+      expect(["m^2/s", "m", ""]).toContain(quantity.getUnit());
     });
 
     test("should handle temperature conversions", () => {
       const result = evaluateUnitsNetExpression("25 C + 10 K");
 
       expect(result.error).toBeUndefined();
-      expect(result.quantity.value).toBe(35);
-      expect(result.quantity.unit).toBe("C");
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBe(35);
+      expect(quantity.getUnit()).toBe("C");
     });
 
     test("should handle power operations", () => {
       const result = evaluateUnitsNetExpression("5 m ^ 2");
 
       expect(result.error).toBeUndefined();
-      expect(result.quantity.value).toBe(25);
-      expect(result.quantity.unit).toBe("m^2");
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBe(25);
+      expect(quantity.getUnit()).toBe("m^2");
     });
 
     test("should handle variables", () => {
       const variables = {
-        length: new SmartPadQuantity(10, "m"),
-        time: new SmartPadQuantity(5, "s"),
+        length: new UnitValue(SmartPadQuantity.fromValueAndUnit(10, "m")),
+        time: new UnitValue(SmartPadQuantity.fromValueAndUnit(5, "s")),
       };
 
       const result = evaluateUnitsNetExpression("length / time", variables);
 
       expect(result.error).toBeUndefined();
-      expect(result.quantity.value).toBe(2);
-      expect(result.quantity.unit).toBe("m/s");
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBe(2);
+      expect(quantity.getUnit()).toBe("m/s");
     });
 
     test("should handle undefined variables", () => {
@@ -249,8 +262,9 @@ describe("UnitsNet.js Evaluator", () => {
       const parser = new UnitsNetParser(tokens, {});
       const result = parser.parse();
 
-      expect(result.value).toBe(10);
-      expect(result.unit).toBe("m");
+      const quantity = result as UnitValue;
+      expect(quantity.getNumericValue()).toBe(10);
+      expect(quantity.getUnit()).toBe("m");
     });
 
     test("should parse arithmetic expressions", () => {
@@ -258,8 +272,9 @@ describe("UnitsNet.js Evaluator", () => {
       const parser = new UnitsNetParser(tokens, {});
       const result = parser.parse();
 
-      expect(result.value).toBe(15);
-      expect(result.unit).toBe("m");
+      const quantity = result as UnitValue;
+      expect(quantity.getNumericValue()).toBe(15);
+      expect(quantity.getUnit()).toBe("m");
     });
 
     test("should parse function calls", () => {
@@ -267,8 +282,9 @@ describe("UnitsNet.js Evaluator", () => {
       const parser = new UnitsNetParser(tokens, {});
       const result = parser.parse();
 
-      expect(result.value).toBe(4);
-      expect(result.unit).toBe("m");
+      const quantity = result as UnitValue;
+      expect(quantity.getNumericValue()).toBe(4);
+      expect(quantity.getUnit()).toBe("m");
     });
 
     test("should parse parenthesized expressions", () => {
@@ -276,22 +292,24 @@ describe("UnitsNet.js Evaluator", () => {
       const parser = new UnitsNetParser(tokens, {});
       const result = parser.parse();
 
-      expect(result.value).toBe(30);
-      expect(result.unit).toBe("m");
+      const quantity = result as UnitValue;
+      expect(quantity.getNumericValue()).toBe(30);
+      expect(quantity.getUnit()).toBe("m");
     });
 
     test("should handle variables", () => {
       const variables = {
-        x: new SmartPadQuantity(10, "m"),
-        y: new SmartPadQuantity(5, "s"),
+        x: new UnitValue(SmartPadQuantity.fromValueAndUnit(10, "m")),
+        y: new UnitValue(SmartPadQuantity.fromValueAndUnit(5, "s")),
       };
 
       const tokens = tokenizeWithUnitsNet("x / y");
       const parser = new UnitsNetParser(tokens, variables);
       const result = parser.parse();
 
-      expect(result.value).toBe(2);
-      expect(result.unit).toBe("m/s");
+      const quantity = result as UnitValue;
+      expect(quantity.getNumericValue()).toBe(2);
+      expect(quantity.getUnit()).toBe("m/s");
     });
 
     test("should throw error for undefined variables", () => {

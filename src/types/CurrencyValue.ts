@@ -174,8 +174,8 @@ export class CurrencyValue extends SemanticValue {
     
     if (other.getType() === 'percentage') {
       // $100 * 20% = $20 (percentage of amount)
-      const percentValue = other as PercentageValue;
-      return percentValue.of(this);
+      const percentDecimal = other.getNumericValue();
+      return new CurrencyValue(this.symbol, this.amount * percentDecimal);
     }
     
     if (other.getType() === 'currency') {

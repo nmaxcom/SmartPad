@@ -12,6 +12,8 @@ import { parseContent } from "../../src/parsing/astParser";
 import { ReactiveVariableStore } from "../../src/state/variableStore";
 import { expressionContainsUnits } from "../../src/units/unitsEvaluator";
 import { Variable } from "../../src/state/types";
+import { UnitValue } from "../../src/types";
+import { SmartPadQuantity } from "../../src/units/unitsnetAdapter";
 
 describe("Semantic Result Issues", () => {
   let variableContext: Map<string, Variable>;
@@ -87,10 +89,9 @@ describe("Semantic Result Issues", () => {
       // Set up variables with units
       variableContext.set("temp", {
         name: "temp",
-        value: 87,
+        value: new UnitValue(SmartPadQuantity.fromValueAndUnit(87, "°C")),
         rawValue: "87°C",
         units: "°C",
-        displayValue: "87°C",
         quantity: undefined, // This might be the issue - missing quantity object
         createdAt: now,
         updatedAt: now,
@@ -98,10 +99,9 @@ describe("Semantic Result Issues", () => {
 
       variableContext.set("mass", {
         name: "mass",
-        value: 58,
+        value: new UnitValue(SmartPadQuantity.fromValueAndUnit(58, "kg")),
         rawValue: "58kg",
         units: "kg",
-        displayValue: "58kg",
         quantity: undefined, // This might be the issue - missing quantity object
         createdAt: now,
         updatedAt: now,
@@ -121,7 +121,7 @@ describe("Semantic Result Issues", () => {
         // The variable should be found and should include units
         const variable = variableContext.get("temp");
         expect(variable).toBeDefined();
-        expect(variable?.displayValue).toBe("87°C");
+        expect(variable?.value.toString()).toBe("87 °C");
         expect(variable?.units).toBe("°C");
       }
     });
@@ -139,7 +139,7 @@ describe("Semantic Result Issues", () => {
         // The variable should be found and should include units
         const variable = variableContext.get("mass");
         expect(variable).toBeDefined();
-        expect(variable?.displayValue).toBe("58kg");
+        expect(variable?.value.toString()).toBe("58 kg");
         expect(variable?.units).toBe("kg");
       }
     });

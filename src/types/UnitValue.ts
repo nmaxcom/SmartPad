@@ -174,8 +174,9 @@ export class UnitValue extends SemanticValue {
     
     if (other.getType() === 'percentage') {
       // 50 m * 20% = 10 m (percentage of quantity)
-      const percentValue = other as PercentageValue;
-      return percentValue.of(this);
+      const percentDecimal = other.getNumericValue();
+      const result = this.quantity.multiply(SmartPadQuantity.dimensionless(percentDecimal));
+      return new UnitValue(result);
     }
     
     throw this.createIncompatibilityError(other, 'multiply', 'invalid unit multiplication');
@@ -307,7 +308,7 @@ export class UnitValue extends SemanticValue {
    */
   static fromString(str: string): UnitValue {
     // Match patterns like "50 m", "100.5 kg", "25 mph"
-    const match = str.match(/^(-?\d+(?:\.\d+)?)\s*([a-zA-Z]+(?:\/[a-zA-Z]+)?(?:\^?\d+)?)$/);
+    const match = str.match(/^(-?\d+(?:\.\d+)?)\s*([a-zA-Z°]+(?:\/[a-zA-Z°]+)?(?:\^?\d+)?)$/);
     if (!match) {
       throw new Error(`Invalid unit format: "${str}"`);
     }
@@ -327,7 +328,7 @@ export class UnitValue extends SemanticValue {
    */
   static isUnitString(str: string): boolean {
     // Basic pattern matching for unit expressions
-    return /^-?\d+(?:\.\d+)?\s*[a-zA-Z]+(?:\/[a-zA-Z]+)?(?:\^?\d+)?$/.test(str.trim());
+    return /^-?\d+(?:\.\d+)?\s*[a-zA-Z°]+(?:\/[a-zA-Z°]+)?(?:\^?\d+)?$/.test(str.trim());
   }
 
   getMetadata(): Record<string, any> {

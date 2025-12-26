@@ -19,6 +19,7 @@ import { UnitsNetExpressionEvaluator } from "../../src/units/unitsnetAstEvaluato
 import { ReactiveVariableStore } from "../../src/state/variableStore";
 import { EvaluationContext } from "../../src/eval/registry";
 import { Variable } from "../../src/state/types";
+import { NumberValue, UnitValue } from "../../src/types";
 
 describe("UnitsNet.js Integration with SmartPad Infrastructure", () => {
   let unitsNetEvaluator: UnitsNetExpressionEvaluator;
@@ -147,22 +148,20 @@ energy = heat_capacity * mass_water * temp_change =>
       // Store variables with units
       const lengthVar: Variable = {
         name: "length",
-        value: 10,
+        value: new UnitValue(SmartPadQuantity.fromValueAndUnit(10, "m")),
         rawValue: "10 m",
         units: "m",
-        displayValue: "10 m",
-        quantity: new SmartPadQuantity(10, "m"),
+        quantity: SmartPadQuantity.fromValueAndUnit(10, "m"),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
       const massVar: Variable = {
         name: "mass",
-        value: 5,
+        value: new UnitValue(SmartPadQuantity.fromValueAndUnit(5, "kg")),
         rawValue: "5 kg",
         units: "kg",
-        displayValue: "5 kg",
-        quantity: new SmartPadQuantity(5, "kg"),
+        quantity: SmartPadQuantity.fromValueAndUnit(5, "kg"),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -189,22 +188,20 @@ energy = heat_capacity * mass_water * temp_change =>
       // Store variables
       const lengthVar: Variable = {
         name: "length",
-        value: 10,
+        value: new UnitValue(SmartPadQuantity.fromValueAndUnit(10, "m")),
         rawValue: "10 m",
         units: "m",
-        displayValue: "10 m",
-        quantity: new SmartPadQuantity(10, "m"),
+        quantity: SmartPadQuantity.fromValueAndUnit(10, "m"),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
       const widthVar: Variable = {
         name: "width",
-        value: 5,
+        value: new UnitValue(SmartPadQuantity.fromValueAndUnit(5, "m")),
         rawValue: "5 m",
         units: "m",
-        displayValue: "5 m",
-        quantity: new SmartPadQuantity(5, "m"),
+        quantity: SmartPadQuantity.fromValueAndUnit(5, "m"),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -232,42 +229,46 @@ energy = heat_capacity * mass_water * temp_change =>
   describe("Expression Evaluation Integration", () => {
     test("should evaluate complex expressions with units", () => {
       const variables = {
-        length: new SmartPadQuantity(10, "m"),
-        time: new SmartPadQuantity(5, "s"),
-        mass: new SmartPadQuantity(2, "kg"),
+        length: new UnitValue(SmartPadQuantity.fromValueAndUnit(10, "m")),
+        time: new UnitValue(SmartPadQuantity.fromValueAndUnit(5, "s")),
+        mass: new UnitValue(SmartPadQuantity.fromValueAndUnit(2, "kg")),
       };
 
       const result = evaluateUnitsNetExpression("length / time * mass", variables);
 
       expect(result.error).toBeUndefined();
-      expect(result.quantity.value).toBe(4);
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBe(4);
       // Depending on simplification, unit may be flattened or dropped; accept common forms or empty
-      expect(["kg*m/s", "m*kg/s", "kg m/s", ""]).toContain(result.quantity.unit);
+      expect(["kg*m/s", "m*kg/s", "kg m/s", ""]).toContain(quantity.getUnit());
     });
 
     test("should handle mathematical constants in expressions", () => {
       const result = evaluateUnitsNetExpression("PI * 5 m^2");
 
       expect(result.error).toBeUndefined();
-      expect(result.quantity.value).toBeCloseTo(Math.PI * 5, 5);
-      expect(result.quantity.unit).toBe("m^2");
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBeCloseTo(Math.PI * 5, 5);
+      expect(quantity.getUnit()).toBe("m^2");
     });
 
     test("should handle mathematical functions with units", () => {
       const result = evaluateUnitsNetExpression("sqrt(100 m^2)");
 
       expect(result.error).toBeUndefined();
-      expect(result.quantity.value).toBe(10);
-      expect(result.quantity.unit).toBe("m");
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBe(10);
+      expect(quantity.getUnit()).toBe("m");
     });
 
     test("should handle temperature conversions", () => {
       const result = evaluateUnitsNetExpression("25 C + 273.15 K");
 
       expect(result.error).toBeUndefined();
-      expect(result.quantity.value).toBeCloseTo(298.15, 2);
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBeCloseTo(298.15, 2);
       // Our adapter preserves left operand unit for temperature addition when appropriate
-      expect(["K", "C"]).toContain(result.quantity.unit);
+      expect(["K", "C"]).toContain(quantity.getUnit());
     });
   });
 
@@ -303,10 +304,9 @@ energy = heat_capacity * mass_water * temp_change =>
       // Create legacy variable without quantity
       const legacyVar: Variable = {
         name: "legacy",
-        value: 42,
+        value: new NumberValue(42),
         rawValue: "42",
         units: "",
-        displayValue: "42",
         quantity: undefined,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -333,10 +333,9 @@ energy = heat_capacity * mass_water * temp_change =>
 
       const legacyVar: Variable = {
         name: "scalar",
-        value: 5,
+        value: new NumberValue(5),
         rawValue: "5",
         units: "",
-        displayValue: "5",
         quantity: undefined,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -344,11 +343,10 @@ energy = heat_capacity * mass_water * temp_change =>
 
       const newVar: Variable = {
         name: "length",
-        value: 10,
+        value: new UnitValue(SmartPadQuantity.fromValueAndUnit(10, "m")),
         rawValue: "10 m",
         units: "m",
-        displayValue: "10 m",
-        quantity: new SmartPadQuantity(10, "m"),
+        quantity: SmartPadQuantity.fromValueAndUnit(10, "m"),
         createdAt: new Date(),
         updatedAt: new Date(),
       };

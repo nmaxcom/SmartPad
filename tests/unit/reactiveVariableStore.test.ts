@@ -9,6 +9,7 @@
  */
 
 import { ReactiveVariableStore } from "../../src/state/variableStore";
+import { ErrorValue } from "../../src/types";
 
 describe("ReactiveVariableStore", () => {
   let store: ReactiveVariableStore;
@@ -22,7 +23,7 @@ describe("ReactiveVariableStore", () => {
     expect(result.success).toBe(true);
 
     const variable = store.getVariable("a");
-    expect(variable?.value).toBe(10);
+    expect(variable?.value.getNumericValue()).toBe(10);
   });
 
   it("should handle expression-based variables", () => {
@@ -30,7 +31,7 @@ describe("ReactiveVariableStore", () => {
     store.setVariable("b", "a * 2");
 
     const variableB = store.getVariable("b");
-    expect(variableB?.value).toBe(20);
+    expect(variableB?.value.getNumericValue()).toBe(20);
   });
 
   it("should update dependent variables when a dependency changes", () => {
@@ -43,8 +44,8 @@ describe("ReactiveVariableStore", () => {
     const variableA = store.getVariable("a");
     const variableB = store.getVariable("b");
 
-    expect(variableA?.value).toBe(5);
-    expect(variableB?.value).toBe(10); // 5 * 2
+    expect(variableA?.value.getNumericValue()).toBe(5);
+    expect(variableB?.value.getNumericValue()).toBe(10); // 5 * 2
   });
 
   it("should handle chained dependencies", () => {
@@ -53,7 +54,7 @@ describe("ReactiveVariableStore", () => {
     store.setVariable("c", "b * 2");
 
     const variableC = store.getVariable("c");
-    expect(variableC?.value).toBe(30); // (10 + 5) * 2
+    expect(variableC?.value.getNumericValue()).toBe(30); // (10 + 5) * 2
 
     // Change the root and verify propagation
     store.setVariable("a", "20");
@@ -62,9 +63,9 @@ describe("ReactiveVariableStore", () => {
     const updatedB = store.getVariable("b");
     const updatedC = store.getVariable("c");
 
-    expect(updatedA?.value).toBe(20);
-    expect(updatedB?.value).toBe(25); // 20 + 5
-    expect(updatedC?.value).toBe(50); // 25 * 2
+    expect(updatedA?.value.getNumericValue()).toBe(20);
+    expect(updatedB?.value.getNumericValue()).toBe(25); // 20 + 5
+    expect(updatedC?.value.getNumericValue()).toBe(50); // 25 * 2
   });
 
   it("should detect and handle circular dependencies", () => {
@@ -75,7 +76,8 @@ describe("ReactiveVariableStore", () => {
     expect(result.error).toContain("Circular dependency detected");
 
     const variableB = store.getVariable("b");
-    expect(variableB?.value).toBe("Circular dependency");
+    expect(variableB?.value).toBeInstanceOf(ErrorValue);
+    expect((variableB?.value as ErrorValue).getMessage()).toContain("Circular dependency");
   });
 
   it("should handle complex expressions", () => {
@@ -84,15 +86,15 @@ describe("ReactiveVariableStore", () => {
     store.setVariable("c", "(a + b) * 2 - 3");
 
     const variableC = store.getVariable("c");
-    expect(variableC?.value).toBe(27); // (10 + 5) * 2 - 3
+    expect(variableC?.value.getNumericValue()).toBe(27); // (10 + 5) * 2 - 3
   });
 
   it("should handle errors in expressions gracefully", () => {
     store.setVariable("a", "undefined_var + 5");
 
     const variable = store.getVariable("a");
-    expect(typeof variable?.value).toBe("string");
-    expect(variable?.value).toContain("Error");
+    expect(variable?.value).toBeInstanceOf(ErrorValue);
+    expect((variable?.value as ErrorValue).getMessage()).toContain("Undefined variable");
   });
 
   it("should provide correct variable values for calculations", () => {

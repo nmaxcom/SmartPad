@@ -11,6 +11,16 @@ import { parseLine } from "../../../src/parsing/astParser";
 import { defaultRegistry } from "../../../src/eval/registry";
 import "../../../src/eval/index"; // ensure registry is set up
 import { getSyntaxByCategory } from "../../../src/syntax/registry";
+import { CurrencyValue, NumberValue, PercentageValue } from "../../../src/types";
+import { Variable } from "../../../src/state/types";
+
+const makeVariable = (name: string, value: NumberValue | PercentageValue | CurrencyValue, rawValue: string): Variable => ({
+  name,
+  value,
+  rawValue,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+});
 
 describe("Percentage Syntax Reference", () => {
   // Get all documented percentage syntax patterns
@@ -169,10 +179,8 @@ describe("Percentage Syntax Reference", () => {
   describe("Percentage with Variables", () => {
     test("Using percentage variables in calculations", () => {
       const variableContext = new Map();
-      // @ts-ignore
-      variableContext.set("commission_rate", { value: 5.5 });
-      // @ts-ignore
-      variableContext.set("total_sales", { value: 5000 });
+      variableContext.set("commission_rate", makeVariable("commission_rate", new NumberValue(5.5), "5.5"));
+      variableContext.set("total_sales", makeVariable("total_sales", new NumberValue(5000), "5000"));
       
       const node = parseLine("commission_rate of total_sales =>", 1);
       const result: any = defaultRegistry.evaluate(node as any, {
@@ -188,10 +196,8 @@ describe("Percentage Syntax Reference", () => {
 
     test("Percentage variables with currency", () => {
       const variableContext = new Map();
-      // @ts-ignore
-      variableContext.set("money", { value: 400, displayValue: "$400" });
-      // @ts-ignore
-      variableContext.set("taxes", { value: 5, displayValue: "5%" });
+      variableContext.set("money", makeVariable("money", CurrencyValue.fromString("$400"), "$400"));
+      variableContext.set("taxes", makeVariable("taxes", new PercentageValue(5), "5%"));
       
       const node = parseLine("money + taxes =>", 1);
       const result: any = defaultRegistry.evaluate(node as any, {

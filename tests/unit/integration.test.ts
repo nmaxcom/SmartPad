@@ -22,6 +22,7 @@ import { UnitsExpressionEvaluator } from "../../src/units/astEvaluator";
 import { ReactiveVariableStore } from "../../src/state/variableStore";
 import { EvaluationContext } from "../../src/eval/registry";
 import { Variable } from "../../src/state/types";
+import { NumberValue } from "../../src/types";
 
 describe("Units Integration with AST Pipeline", () => {
   let unitsEvaluator: UnitsExpressionEvaluator;
@@ -138,7 +139,7 @@ describe("Units Integration with AST Pipeline", () => {
         // Check that the variable was stored (numeric value)
         const storedVariable = variableStore.getVariable("area");
         expect(storedVariable).toBeDefined();
-        expect(storedVariable?.value).toBe(50);
+        expect(storedVariable?.value.getNumericValue()).toBe(50);
       }
     });
   });
@@ -149,13 +150,19 @@ describe("Units Integration with AST Pipeline", () => {
       const variables = new Map<string, Variable>([
         [
           "width",
-          { name: "width", value: 5, rawValue: "5", createdAt: new Date(), updatedAt: new Date() },
+          {
+            name: "width",
+            value: new NumberValue(5),
+            rawValue: "5",
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
         ],
         [
           "height",
           {
             name: "height",
-            value: 10,
+            value: new NumberValue(10),
             rawValue: "10",
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -195,7 +202,7 @@ describe("Units Integration with AST Pipeline", () => {
         // Verify the variable was stored correctly
         const storedVariable = variableStore.getVariable("time");
         expect(storedVariable).toBeDefined();
-        expect(storedVariable?.value).toBe(100); // Numeric value extracted from 100s
+        expect(storedVariable?.value.getNumericValue()).toBe(100); // Numeric value extracted from 100s
       }
     });
 
@@ -222,7 +229,7 @@ describe("Units Integration with AST Pipeline", () => {
             // Extract variable name from input
             const varName = input.split("=")[0].trim();
             const storedVariable = variableStore.getVariable(varName);
-            expect(storedVariable?.value).toBe(expectedValue);
+            expect(storedVariable?.value.getNumericValue()).toBe(expectedValue);
           }
         }
       });
@@ -248,8 +255,8 @@ describe("Units Integration with AST Pipeline", () => {
       // Both should store the same numeric value
       const speed1 = variableStore.getVariable("speed");
       const speed2 = variableStore.getVariable("speed2");
-      expect(speed1?.value).toBe(60);
-      expect(speed2?.value).toBe(60);
+      expect(speed1?.value.getNumericValue()).toBe(60);
+      expect(speed2?.value.getNumericValue()).toBe(60);
     });
 
     test("should store complete units information for variable panel display", () => {
@@ -263,9 +270,9 @@ describe("Units Integration with AST Pipeline", () => {
         // Verify the variable was stored with complete units information
         const storedVariable = variableStore.getVariable("time");
         expect(storedVariable).toBeDefined();
-        expect(storedVariable?.value).toBe(100); // Numeric value for calculations
+        expect(storedVariable?.value.getNumericValue()).toBe(100); // Numeric value for calculations
         expect(storedVariable?.units).toBe("s"); // Unit string
-        expect(storedVariable?.displayValue).toBe("100 s"); // Formatted display
+        expect(storedVariable?.quantity?.toString()).toBe("100 s"); // Formatted display
         expect(storedVariable?.rawValue).toBe("100s"); // Original expression
       }
     });
@@ -303,9 +310,9 @@ describe("Units Integration with AST Pipeline", () => {
           const varName = input.split("=")[0].trim();
           const storedVariable = variableStore.getVariable(varName);
 
-          expect(storedVariable?.value).toBe(expectedValue);
+          expect(storedVariable?.value.getNumericValue()).toBe(expectedValue);
           expect(storedVariable?.units).toBe(expectedUnits);
-          expect(storedVariable?.displayValue).toBe(expectedDisplay);
+          expect(storedVariable?.quantity?.toString()).toBe(expectedDisplay);
         }
       });
     });
@@ -320,10 +327,10 @@ describe("Units Integration with AST Pipeline", () => {
 
         // Verify the variable has full dimensional information
         const tempVar = variableStore.getVariable("temperature");
-        expect(tempVar?.value).toBe(100);
+        expect(tempVar?.value.getNumericValue()).toBe(100);
         expect(tempVar?.units).toBe("°C");
         expect(tempVar?.quantity).toBeDefined();
-        expect(tempVar?.displayValue).toBe("100 °C");
+        expect(tempVar?.quantity?.toString()).toBe("100 °C");
       }
 
       // Now use that variable in a calculation - it should preserve units
@@ -385,9 +392,9 @@ describe("Units Integration with AST Pipeline", () => {
         // Verify the variable was stored with complete units information
         const storedVariable = variableStore.getVariable("j");
         expect(storedVariable).toBeDefined();
-        expect(storedVariable?.value).toBe(208); // Numeric value
+        expect(storedVariable?.value.getNumericValue()).toBe(208); // Numeric value
         expect(storedVariable?.units).toBe("°C"); // Unit string
-        expect(storedVariable?.displayValue).toBe("208 °C"); // Full display
+        expect(storedVariable?.quantity?.toString()).toBe("208 °C"); // Full display
         expect(storedVariable?.quantity).toBeDefined(); // Quantity object
       }
     });

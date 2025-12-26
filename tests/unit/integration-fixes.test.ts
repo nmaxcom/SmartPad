@@ -10,6 +10,8 @@
 import { parseLine } from "../../src/parsing/astParser";
 import { expressionContainsUnits } from "../../src/units/unitsEvaluator";
 import { Variable } from "../../src/state/types";
+import { UnitValue } from "../../src/types";
+import { SmartPadQuantity } from "../../src/units/unitsnetAdapter";
 
 describe("Integration Fixes Validation", () => {
   let variableContext: Map<string, Variable>;
@@ -34,10 +36,9 @@ describe("Integration Fixes Validation", () => {
       // Step 2: Simulate storing the variable with units (as would happen in the evaluator)
       variableContext.set("temp", {
         name: "temp",
-        value: 87,
+        value: new UnitValue(SmartPadQuantity.fromValueAndUnit(87, "°C")),
         rawValue: "87°C",
         units: "°C",
-        displayValue: "87°C",
         quantity: undefined,
         createdAt: now,
         updatedAt: now,
@@ -52,7 +53,7 @@ describe("Integration Fixes Validation", () => {
 
       // Step 4: Units are now handled by the main AST pipeline and ResultsDecoratorExtension
       const variable = variableContext.get("temp");
-      expect(variable?.displayValue).toBe("87°C");
+      expect(variable?.value.toString()).toBe("87 °C");
       expect(variable?.units).toBe("°C");
     });
 
@@ -108,20 +109,19 @@ describe("Integration Fixes Validation", () => {
 
       // Set up multiple variables with different unit types
       const variables = [
-        { name: "temp", value: 87, units: "°C", display: "87°C" },
-        { name: "mass", value: 58, units: "kg", display: "58kg" },
-        { name: "distance", value: 100, units: "m", display: "100m" },
-        { name: "time", value: 5.5, units: "s", display: "5.5s" },
-        { name: "speed", value: 25, units: "m/s", display: "25m/s" },
+        { name: "temp", value: 87, units: "°C", display: "87 °C" },
+        { name: "mass", value: 58, units: "kg", display: "58 kg" },
+        { name: "distance", value: 100, units: "m", display: "100 m" },
+        { name: "time", value: 5.5, units: "s", display: "5.5 s" },
+        { name: "speed", value: 25, units: "m/s", display: "25 m/s" },
       ];
 
       variables.forEach((v) => {
         variableContext.set(v.name, {
           name: v.name,
-          value: v.value,
+          value: new UnitValue(SmartPadQuantity.fromValueAndUnit(v.value, v.units)),
           rawValue: v.display,
           units: v.units,
-          displayValue: v.display,
           quantity: undefined,
           createdAt: now,
           updatedAt: now,
@@ -136,7 +136,7 @@ describe("Integration Fixes Validation", () => {
         expect(node.type).toBe("expression");
 
         const variable = variableContext.get(v.name);
-        expect(variable?.displayValue).toBe(v.display);
+        expect(variable?.value.toString()).toBe(v.display);
         expect(variable?.units).toBe(v.units);
       });
     });

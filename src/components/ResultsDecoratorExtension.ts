@@ -149,9 +149,6 @@ export const ResultsDecoratorExtension = Extension.create({
                       span.setAttribute("data-result", resultText);
                       span.setAttribute("title", resultText);
                       span.setAttribute("aria-label", resultText);
-                      if (isError) {
-                        span.appendChild(document.createTextNode("⚠️"));
-                      }
                       container.appendChild(span);
                       wrapper.appendChild(container);
                       // Ensure one visible space outside the result container after '=>'
@@ -207,9 +204,6 @@ export const ResultsDecoratorExtension = Extension.create({
                     span.setAttribute("data-result", resultText);
                     span.setAttribute("title", resultText);
                     span.setAttribute("aria-label", resultText);
-                    if (isError) {
-                      span.appendChild(document.createTextNode("⚠️"));
-                    }
                     container.appendChild(span);
                     wrapper.appendChild(container);
                     return wrapper;
