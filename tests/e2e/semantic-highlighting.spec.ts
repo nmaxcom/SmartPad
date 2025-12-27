@@ -63,6 +63,14 @@ test.describe("Semantic Highlighting", () => {
     await expect(functionElement).toHaveText("sqrt");
   });
 
+  test("highlights percentage keywords", async ({ page }) => {
+    await page.keyboard.type("20% off $80 =>");
+    await waitForUIRenderComplete(page);
+
+    const keywordElement = await page.locator(".semantic-keyword", { hasText: "off" }).first();
+    await expect(keywordElement).toBeVisible();
+  });
+
   test("highlights results after evaluation", async ({ page }) => {
     await page.keyboard.type("5 + 3 =>");
     await waitForUIRenderComplete(page);

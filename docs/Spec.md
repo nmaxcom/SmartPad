@@ -30,8 +30,7 @@ Behavior and criteria
 Behavior and criteria
 - Form: `name = value` or `name = expression`.
 - Names may include spaces and underscores; must start with a letter; consist of letters, numbers, spaces, and underscores.
-- Assignment‑only lines show a value widget only when the right‑hand side is a literal numeric/quantity/currency/percentage; expressions store variables without a widget unless `=>` is used.
-- Literal assignment widgets render in `.semantic-assignment-display` with a stable `data-result` attribute.
+- Assignment‑only lines store variables without rendering a widget; results appear only when `=>` is used.
 - Assignments take effect immediately and can be referenced by later lines.
 
 Examples
@@ -179,7 +178,7 @@ Behavior and criteria
 
 Behavior and criteria
 - Displays current variables and values; updates after each evaluation cycle.
-- Assignment‑only lines affect the panel; only literal values render a value widget, while expressions remain widget‑free unless `=>` is used.
+- Assignment‑only lines affect the panel; widgets render only for lines that use `=>`.
 
 ## 6. Templates and insertion
 

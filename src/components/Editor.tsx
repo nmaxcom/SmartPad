@@ -23,6 +23,7 @@ import {
 import { NumberScrubberExtension } from "./NumberScrubberExtension";
 import { ResultsDecoratorExtension } from "./ResultsDecoratorExtension";
 import { VariableHoverExtension } from "./VariableHoverExtension";
+import { normalizePastedHTML } from "./pasteTransforms";
 // Import helper to identify combined assignment nodes (e.g. "speed = slider(...)")
 import { parseLine } from "../parsing/astParser";
 import type { ASTNode } from "../parsing/ast";
@@ -323,7 +324,8 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       SemanticHighlightExtension.configure({
         getVariableContext: () => {
           // Use semantic values directly - no legacy conversion needed
-          return reactiveStore.getAllVariables();
+          const variables = reactiveStore.getAllVariables();
+          return new Map(variables.map((variable) => [variable.name, variable]));
         },
       }),
       // The ResultsDecoratorExtension is responsible for rendering the results of calculations.
@@ -332,11 +334,15 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       VariableHoverExtension.configure({
         getVariableContext: () => {
           // Use semantic values directly - no legacy conversion needed
-          return reactiveStore.getAllVariables();
+          const variables = reactiveStore.getAllVariables();
+          return new Map(variables.map((variable) => [variable.name, variable]));
         },
       }),
     ],
     content: "<p></p>",
+    editorProps: {
+      transformPastedHTML: (html) => normalizePastedHTML(html),
+    },
     onUpdate: ({ editor }) => {
       handleUpdateV2({ editor }); // Always use AST pipeline
       // Mark the end of a user-initiated update for tests that rely on it

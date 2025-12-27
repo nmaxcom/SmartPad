@@ -271,15 +271,19 @@ function extractTokensFromASTNode(
       const valueText = text.substring(valueStart).trim();
       const valueStartPos = text.indexOf(valueText, valueStart);
 
-      if (astNode.parsedValue?.isNumeric()) {
+      const isSimpleNumber = /^-?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(
+        valueText.trim()
+      );
+
+      if (astNode.parsedValue?.isNumeric() && isSimpleNumber) {
         tokens.push({
           type: "scrubbableNumber",
           start: valueStartPos,
-          end: text.length,
+          end: valueStartPos + valueText.length,
           text: valueText,
         });
       } else {
-        // It's an expression - tokenize it
+        // It's an expression or includes units/currency/percent - tokenize it
         const exprTokens = tokenizeExpression(valueText, valueStartPos, variableContext);
         tokens.push(...exprTokens);
       }
@@ -402,7 +406,7 @@ export function tokenizeExpression(
   const parenRegex = /^[\(\)]/;
   const triggerRegex = /^=>/;
   const unitRegex = /^[a-zA-Z°]+(?:\/[a-zA-Z°]+)?(?:\^?\d+)?/;
-  const toKeywordRegex = /^to\b/;
+  const keywordRegex = /^(to|of|on|off|as|is)\b/;
   const constantRegex = /^(PI|E)\b/;
 
   // Get all variable names sorted by length (longest first for greedy matching)
@@ -496,17 +500,17 @@ export function tokenizeExpression(
       }
     }
 
-    // Check for "to" keyword (unit conversion)
+    // Check for keywords (unit conversion and percentage operators)
     if (!matched) {
-      const toMatch = expr.substring(pos).match(toKeywordRegex);
-      if (toMatch) {
+      const keywordMatch = expr.substring(pos).match(keywordRegex);
+      if (keywordMatch) {
         tokens.push({
           type: "keyword",
           start: baseOffset + pos,
-          end: baseOffset + pos + toMatch[0].length,
-          text: toMatch[0],
+          end: baseOffset + pos + keywordMatch[0].length,
+          text: keywordMatch[0],
         });
-        pos += toMatch[0].length;
+        pos += keywordMatch[0].length;
         matched = true;
       }
     }

@@ -160,13 +160,12 @@ It serves as a comprehensive reference for all supported syntax patterns in Smar
 ## Variables
 
 3 syntax patterns available.
-Names may include underscores.
 
 ### 1. `name = value`
 
 **Description:** Simple variable assignment
 
-**Output:** variable stored (literal values show a value widget)
+**Output:** variable stored
 
 **Examples:**
 
@@ -463,4 +462,4 @@ npm test -- --testNamePattern="x% of y"
 
 ---
 
-*Last generated: 2025-08-18T01:56:04.146Z*
+*Last generated: 2025-12-27T00:23:47.118Z*

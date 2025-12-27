@@ -18,6 +18,7 @@
 
 import {
   ASTNode,
+  ExpressionComponent,
   ExpressionNode,
   CombinedAssignmentNode,
   VariableAssignmentNode,
@@ -34,7 +35,7 @@ import {
 import { NodeEvaluator, EvaluationContext } from "../eval/registry";
 import { evaluateUnitsNetExpression, expressionContainsUnitsNet } from "./unitsnetEvaluator";
 import { SmartPadQuantity } from "./unitsnetAdapter";
-import { UnitValue, NumberValue } from "../types";
+import { CurrencyValue, UnitValue, NumberValue, PercentageValue } from "../types";
 import { Variable } from "../state/types";
 
 function rewriteSimpleTimeLiterals(expression: string): string {
@@ -202,10 +203,17 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     return null;
   }
 
-  private evaluateUnitsNetExpression(node: ExpressionNode, context: EvaluationContext): RenderNode {
+  private evaluateUnitsNetExpression(
+    node: ExpressionNode,
+    context: EvaluationContext
+  ): RenderNode | null {
     const { variableContext, decimalPlaces } = context;
 
     try {
+      if (this.shouldDeferToSemanticEvaluator(node.components, node.expression, context)) {
+        return null;
+      }
+
       const variables = convertVariablesToUnitsNetQuantities(variableContext);
       const rewritten = rewritePercentVariableAddition(
         rewriteSimpleTimeLiterals(node.expression),
@@ -265,10 +273,14 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
   private evaluateUnitsNetCombinedAssignment(
     node: CombinedAssignmentNode,
     context: EvaluationContext
-  ): RenderNode {
+  ): RenderNode | null {
     const { variableContext, variableStore, decimalPlaces } = context;
 
     try {
+      if (this.shouldDeferToSemanticEvaluator(node.components, node.expression, context)) {
+        return null;
+      }
+
       const variables = convertVariablesToUnitsNetQuantities(variableContext);
       const rewritten = rewritePercentVariableAddition(
         rewriteSimpleTimeLiterals(node.expression),
@@ -475,25 +487,62 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
   }
 
   private resolveUnitsPrecision(unit: string, value: number, defaultPlaces: number): number {
-    const abs = Math.abs(value);
-    // Length (meters): more precision for sub-meter values
-    if (unit === "m") {
-      // Keep higher precision for meters to match expected unit conversion detail
-      return abs < 1 ? Math.max(defaultPlaces, 4) : Math.max(defaultPlaces, 3);
-    }
-    // Area (square meters): show at least 3 decimals for readability in examples
-    if (unit === "m^2") {
-      return Math.max(defaultPlaces, 3);
-    }
-    // Temperature (Kelvin): two decimals in examples
-    if (unit === "K") {
-      return Math.max(defaultPlaces, 2);
-    }
-    // Force (Newtons): one decimal often shown (e.g., 19.6 N); integers remain integers naturally
-    if (unit === "N") {
-      return Math.max(defaultPlaces, 1);
-    }
-    // Default: keep configured precision
+    // Follow the configured decimalPlaces consistently for all units.
     return defaultPlaces;
+  }
+
+  private shouldDeferToSemanticEvaluator(
+    components: ExpressionComponent[],
+    expression: string,
+    context: EvaluationContext
+  ): boolean {
+    if (expressionContainsUnitsNet(expression) || this.containsMathematicalConstants(expression)) {
+      return false;
+    }
+
+    const variableNames = this.collectVariableNames(components);
+    if (variableNames.size === 0) {
+      return false;
+    }
+
+    let hasCurrency = false;
+    let hasUnit = false;
+    let hasPercentage = false;
+
+    variableNames.forEach((name) => {
+      const variable = context.variableContext.get(name);
+      const value = variable?.value;
+      if (value instanceof UnitValue) {
+        hasUnit = true;
+      }
+      if (value instanceof PercentageValue) {
+        hasPercentage = true;
+      }
+      if (value instanceof CurrencyValue) {
+        hasCurrency = true;
+      }
+    });
+
+    if (hasUnit || hasPercentage) {
+      return false;
+    }
+
+    return hasCurrency;
+  }
+
+  private collectVariableNames(components: ExpressionComponent[]): Set<string> {
+    const names = new Set<string>();
+    const visit = (items: ExpressionComponent[]) => {
+      items.forEach((component) => {
+        if (component.type === "variable") {
+          names.add(component.value);
+        }
+        if (component.children && component.children.length > 0) {
+          visit(component.children);
+        }
+      });
+    };
+    visit(components);
+    return names;
   }
 }

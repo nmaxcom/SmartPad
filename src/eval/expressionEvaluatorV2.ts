@@ -19,9 +19,6 @@ import {
 import { 
   SemanticValue,
   NumberValue, 
-  PercentageValue,
-  CurrencyValue,
-  UnitValue,
   ErrorValue,
   SemanticValueTypes,
   SemanticParsers,
@@ -32,7 +29,7 @@ import { parseAndEvaluateExpression } from "../parsing/expressionParser";
 /**
  * Simple expression parser for basic arithmetic
  */
-class SimpleExpressionParser {
+export class SimpleExpressionParser {
   /**
    * Parse simple arithmetic expressions like "100 + 20" or "$100 * 2"
    */
@@ -61,24 +58,33 @@ class SimpleExpressionParser {
    * Parse an operand (variable, literal, or parenthesized expression)
    */
   private static parseOperand(operand: string, context: EvaluationContext): SemanticValue {
-    const trimmed = operand.trim();
+    const normalized = operand.replace(/\s+/g, " ").trim();
     
     // Check for variable
-    const variable = context.variableContext.get(trimmed);
+    const variable = context.variableContext.get(normalized);
     if (variable) {
-      // Create a NumberValue from the legacy numeric value
-      if (typeof variable.value === 'number') {
-        return NumberValue.from(variable.value);
+      const value = (variable as any).value;
+      if (value instanceof SemanticValue) {
+        return value;
+      }
+      if (typeof value === 'number') {
+        return NumberValue.from(value);
+      }
+      if (typeof value === 'string') {
+        const parsed = SemanticParsers.parse(value.trim());
+        if (parsed) {
+          return parsed;
+        }
       }
     }
     
     // Try to parse as literal
-    const parsed = SemanticParsers.parse(trimmed);
+    const parsed = SemanticParsers.parse(normalized);
     if (parsed) {
       return parsed;
     }
     
-    return ErrorValue.semanticError(`Cannot resolve: "${trimmed}"`);
+    return ErrorValue.semanticError(`Cannot resolve: "${normalized}"`);
   }
   
   /**
@@ -153,14 +159,22 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       }
       // Try simple arithmetic
       else if (this.isSimpleArithmetic(exprNode.expression)) {
-        const evalResult = parseAndEvaluateExpression(
+        const semanticResult = SimpleExpressionParser.parseArithmetic(
           exprNode.expression,
-          context.variableContext
+          context
         );
-        if (evalResult.error) {
-          result = ErrorValue.semanticError(evalResult.error);
+        if (semanticResult) {
+          result = semanticResult;
         } else {
-          result = NumberValue.from(evalResult.value);
+          const evalResult = parseAndEvaluateExpression(
+            exprNode.expression,
+            context.variableContext
+          );
+          if (evalResult.error) {
+            result = ErrorValue.semanticError(evalResult.error);
+          } else {
+            result = NumberValue.from(evalResult.value);
+          }
         }
       }
       // Fallback
@@ -168,6 +182,14 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
         result = ErrorValue.semanticError(`Unsupported expression: "${exprNode.expression}"`);
       }
       
+      if (SemanticValueTypes.isError(result)) {
+        return this.createErrorNode(
+          (result as ErrorValue).getMessage(),
+          exprNode.expression,
+          context.lineNumber
+        );
+      }
+
       // Create render node
       return this.createMathResultNode(exprNode.expression, result, context.lineNumber);
       
@@ -224,19 +246,28 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
    * Evaluate a variable reference
    */
   private evaluateVariableReference(expr: string, context: EvaluationContext): SemanticValue {
-    const trimmed = expr.trim();
-    const variable = context.variableContext.get(trimmed);
+    const normalized = expr.replace(/\s+/g, " ").trim();
+    const variable = context.variableContext.get(normalized);
     
     if (!variable) {
-      return ErrorValue.semanticError(`Undefined variable: "${trimmed}"`);
+      return ErrorValue.semanticError(`Undefined variable: "${normalized}"`);
     }
     
-    // Convert legacy numeric value to SemanticValue
-    if (typeof variable.value === 'number') {
-      return NumberValue.from(variable.value);
+    const value = (variable as any).value;
+    if (value instanceof SemanticValue) {
+      return value;
     }
-    
-    return ErrorValue.semanticError(`Variable "${trimmed}" has unsupported type`);
+    if (typeof value === "number") {
+      return NumberValue.from(value);
+    }
+    if (typeof value === "string") {
+      const parsed = SemanticParsers.parse(value.trim());
+      if (parsed) {
+        return parsed;
+      }
+    }
+
+    return ErrorValue.semanticError(`Variable "${normalized}" has unsupported type`);
   }
   
   /**

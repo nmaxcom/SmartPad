@@ -14,7 +14,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 555039082
+              "duration": 530778875
             }
           },
           {
@@ -23,11 +23,11 @@
             "line": 15,
             "name": "I am using the SmartPad editor",
             "match": {
-              "location": "tests/features/step_definitions/variable_assignments.steps.ts:41"
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:38"
             },
             "result": {
               "status": "passed",
-              "duration": 49688167
+              "duration": 51215208
             }
           },
           {
@@ -36,11 +36,11 @@
             "line": 16,
             "name": "the editor is ready for input",
             "match": {
-              "location": "tests/features/step_definitions/variable_assignments.steps.ts:46"
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:43"
             },
             "result": {
               "status": "passed",
-              "duration": 128556749
+              "duration": 127326667
             }
           },
           {
@@ -49,11 +49,11 @@
             "line": 19,
             "name": "I type \"Hello World\"",
             "match": {
-              "location": "tests/features/step_definitions/variable_assignments.steps.ts:82"
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:79"
             },
             "result": {
               "status": "passed",
-              "duration": 62992292
+              "duration": 46358582
             }
           },
           {
@@ -66,7 +66,7 @@
             },
             "result": {
               "status": "passed",
-              "duration": 3151583
+              "duration": 3659333
             }
           },
           {
@@ -74,7 +74,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 2913583
+              "duration": 2954083
             }
           }
         ],
@@ -93,7 +93,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 214639833
+              "duration": 219915207
             }
           },
           {
@@ -102,11 +102,11 @@
             "line": 15,
             "name": "I am using the SmartPad editor",
             "match": {
-              "location": "tests/features/step_definitions/variable_assignments.steps.ts:41"
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:38"
             },
             "result": {
               "status": "passed",
-              "duration": 39374707
+              "duration": 35545082
             }
           },
           {
@@ -115,11 +115,11 @@
             "line": 16,
             "name": "the editor is ready for input",
             "match": {
-              "location": "tests/features/step_definitions/variable_assignments.steps.ts:46"
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:43"
             },
             "result": {
               "status": "passed",
-              "duration": 126632541
+              "duration": 124399417
             }
           },
           {
@@ -128,11 +128,11 @@
             "line": 23,
             "name": "I type \"2 + 3 =>\"",
             "match": {
-              "location": "tests/features/step_definitions/variable_assignments.steps.ts:82"
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:79"
             },
             "result": {
               "status": "passed",
-              "duration": 66635791
+              "duration": 61766832
             }
           },
           {
@@ -141,12 +141,11 @@
             "line": 24,
             "name": "I should see \"2 + 3 => 5\" in the editor",
             "match": {
-              "location": "tests/features/step_definitions/variable_assignments.steps.ts:110"
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:107"
             },
             "result": {
-              "status": "failed",
-              "duration": 5008922125,
-              "error_message": "Error: Content \"2 + 3 => 5\" not found within 5000ms. Editor content: \"2 + 3 => \", Widget content: \"\", Body content (first 500 chars): \"\n    SmartPadText-based calculator with real-time mathematical calculations⚙️2 + 3 => VariablesNo variables defined yet.Load ExampleQuick Templates🏠Rent Calculator🍕Pizza Party⛽Road Trip📱Phone Bill🏋️Fitness Goal⚗️Physics Units🧪Units Quick Check\n    \n  \n \"\n    at waitForContent (/Users/nm4/STUFF/Coding/smartpad/SmartPad/tests/features/support/playwright-setup.ts:360:11)\n    at async World.<anonymous> (/Users/nm4/STUFF/Coding/smartpad/SmartPad/tests/features/step_definitions/variable_assignments.steps.ts:114:3)"
+              "status": "passed",
+              "duration": 2440083
             }
           },
           {
@@ -154,7 +153,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 4205374
+              "duration": 1943959
             }
           }
         ],
@@ -173,7 +172,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 228799042
+              "duration": 223866958
             }
           },
           {
@@ -182,11 +181,11 @@
             "line": 15,
             "name": "I am using the SmartPad editor",
             "match": {
-              "location": "tests/features/step_definitions/variable_assignments.steps.ts:41"
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:38"
             },
             "result": {
               "status": "passed",
-              "duration": 29466291
+              "duration": 34864999
             }
           },
           {
@@ -195,11 +194,11 @@
             "line": 16,
             "name": "the editor is ready for input",
             "match": {
-              "location": "tests/features/step_definitions/variable_assignments.steps.ts:46"
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:43"
             },
             "result": {
               "status": "passed",
-              "duration": 125438208
+              "duration": 126381541
             }
           },
           {
@@ -208,11 +207,11 @@
             "line": 27,
             "name": "I type \"price = 125\"",
             "match": {
-              "location": "tests/features/step_definitions/variable_assignments.steps.ts:82"
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:79"
             },
             "result": {
               "status": "passed",
-              "duration": 53855124
+              "duration": 67354917
             }
           },
           {
@@ -221,11 +220,11 @@
             "line": 28,
             "name": "the variable \"price\" should be stored with value 125",
             "match": {
-              "location": "tests/features/step_definitions/variable_assignments.steps.ts:317"
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:319"
             },
             "result": {
               "status": "passed",
-              "duration": 2306249
+              "duration": 3430875
             }
           },
           {
@@ -233,7 +232,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 1576457
+              "duration": 1632541
             }
           }
         ],
@@ -252,7 +251,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 230503749
+              "duration": 238252915
             }
           },
           {
@@ -261,11 +260,11 @@
             "line": 15,
             "name": "I am using the SmartPad editor",
             "match": {
-              "location": "tests/features/step_definitions/variable_assignments.steps.ts:41"
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:38"
             },
             "result": {
               "status": "passed",
-              "duration": 35072791
+              "duration": 29825459
             }
           },
           {
@@ -274,11 +273,11 @@
             "line": 16,
             "name": "the editor is ready for input",
             "match": {
-              "location": "tests/features/step_definitions/variable_assignments.steps.ts:46"
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:43"
             },
             "result": {
               "status": "passed",
-              "duration": 125306875
+              "duration": 126580999
             }
           },
           {
@@ -287,11 +286,11 @@
             "line": 31,
             "name": "I type \"line one\"",
             "match": {
-              "location": "tests/features/step_definitions/variable_assignments.steps.ts:82"
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:79"
             },
             "result": {
               "status": "passed",
-              "duration": 55603000
+              "duration": 35513457
             }
           },
           {
@@ -304,7 +303,7 @@
             },
             "result": {
               "status": "passed",
-              "duration": 3450666
+              "duration": 3546417
             }
           },
           {
@@ -313,11 +312,11 @@
             "line": 33,
             "name": "I type \"line two\"",
             "match": {
-              "location": "tests/features/step_definitions/variable_assignments.steps.ts:82"
+              "location": "tests/features/step_definitions/variable_assignments.steps.ts:79"
             },
             "result": {
               "status": "passed",
-              "duration": 41593417
+              "duration": 44800583
             }
           },
           {
@@ -330,7 +329,7 @@
             },
             "result": {
               "status": "passed",
-              "duration": 1792416
+              "duration": 1771665
             }
           },
           {
@@ -338,7 +337,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 1665458
+              "duration": 1807416
             }
           }
         ],

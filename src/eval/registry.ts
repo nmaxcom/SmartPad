@@ -113,7 +113,29 @@ export class EvaluatorRegistry {
           });
 
           try {
-            result = evaluator.evaluate(node, context);
+            const evalResult = evaluator.evaluate(node, context);
+
+            if (evalResult === null) {
+              tracer.addStep(traceId, {
+                step: "evaluation_skipped",
+                evaluator: evaluatorName,
+                input: {
+                  node,
+                  context: {
+                    lineNumber: context.lineNumber,
+                    variableCount: context.variableContext.size,
+                  },
+                },
+                output: null,
+                preConditions: ["evaluate method called successfully"],
+                postConditions: ["Evaluator returned null to decline handling"],
+                metadata: { evaluatorIndex: this.evaluators.indexOf(evaluator) },
+              });
+              tracer.markEvaluatorSkipped(traceId, evaluatorName, "evaluate returned null");
+              continue;
+            }
+
+            result = evalResult;
             evaluatorUsed = true;
 
             // Trace successful evaluation

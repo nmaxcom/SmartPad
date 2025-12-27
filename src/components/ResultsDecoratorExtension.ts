@@ -52,29 +52,6 @@ export const ResultsDecoratorExtension = Extension.create({
             const normalize = (s: string | undefined | null): string =>
               (s || "").replace(/\s+/g, "").trim();
 
-            const isLiteralAssignmentValue = (value: string): boolean => {
-              const trimmed = value.trim();
-              if (!trimmed) return false;
-
-              const numberLiteral =
-                /^-?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?:[eE][+-]?\d+)?$/;
-              const percentLiteral = /^-?\d+(?:\.\d+)?%$/;
-              const currencySymbolLiteral =
-                /^[\$€£¥₹₿]\s*\d{1,3}(?:,\d{3})*(?:\.\d+)?$/;
-              const currencyCodeLiteral =
-                /^\d{1,3}(?:,\d{3})*(?:\.\d+)?\s+(CHF|CAD|AUD)$/;
-              const unitLiteral =
-                /^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\s*[a-zA-Z°][a-zA-Z0-9°\/\^\-\*\·]*$/;
-
-              return (
-                numberLiteral.test(trimmed) ||
-                percentLiteral.test(trimmed) ||
-                currencySymbolLiteral.test(trimmed) ||
-                currencyCodeLiteral.test(trimmed) ||
-                unitLiteral.test(trimmed)
-              );
-            };
-
             // Only eligible node types should create widgets
             const isWidgetEligible = (rn: any) =>
               rn && (rn.type === "mathResult" || rn.type === "combined" || rn.type === "error");
@@ -166,16 +143,12 @@ export const ResultsDecoratorExtension = Extension.create({
 
                 const renderNode = renderMap.get(i);
                 const isError = renderNode?.type === "error";
-                if (!isError && !isLiteralAssignmentValue(assignment.rawValue)) continue;
+                if (!isError) continue;
 
                 let resultText = assignment.rawValue.trim();
                 if (renderNode) {
                   const rn: any = renderNode;
-                  if (rn.type === "combined" && rn.result !== undefined) {
-                    resultText = String(rn.result);
-                  } else if (rn.type === "variable" && rn.value !== undefined) {
-                    resultText = String(rn.value);
-                  } else if (rn.type === "error" && rn.displayText) {
+                  if (rn.type === "error" && rn.displayText) {
                     const displayText = String(rn.displayText || "");
                     if (displayText.includes("=>")) {
                       resultText = displayText.replace(/^.*=>\s*/, "");
@@ -198,9 +171,7 @@ export const ResultsDecoratorExtension = Extension.create({
                     const container = document.createElement("span");
                     container.className = "semantic-result-container";
                     const span = document.createElement("span");
-                    span.className = isError
-                      ? "semantic-error-result"
-                      : "semantic-assignment-display";
+                    span.className = "semantic-error-result";
                     span.setAttribute("data-result", resultText);
                     span.setAttribute("title", resultText);
                     span.setAttribute("aria-label", resultText);

@@ -18,8 +18,15 @@ import {
   CombinedRenderNode,
   ErrorRenderNode,
 } from "./renderNodes";
-import { NumberValue, SemanticParsers } from "../types";
+import {
+  ErrorValue,
+  NumberValue,
+  SemanticParsers,
+  SemanticValue,
+  SemanticValueTypes,
+} from "../types";
 import { parseAndEvaluateExpression } from "../parsing/expressionParser";
+import { SimpleExpressionParser } from "./expressionEvaluatorV2";
 
 /**
  * Evaluator for combined assignment operations with semantic types
@@ -53,12 +60,22 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
       });
       
       // Parse the expression as a semantic value when it's a literal,
-      // otherwise fall back to numeric evaluation with variable substitution.
-      let semanticValue = SemanticParsers.parse(combNode.expression);
+      // otherwise fall back to semantic arithmetic or numeric evaluation.
+      let semanticValue =
+        SemanticParsers.parse(combNode.expression) ||
+        this.resolveVariableReference(combNode.expression, context) ||
+        SimpleExpressionParser.parseArithmetic(combNode.expression, context);
+
       if (!semanticValue) {
-        const evalResult = parseAndEvaluateExpression(combNode.expression, context.variableContext);
+        const evalResult = parseAndEvaluateExpression(
+          combNode.expression,
+          context.variableContext
+        );
         if (evalResult.error) {
-          console.warn('CombinedAssignmentEvaluatorV2: Expression evaluation error:', evalResult.error);
+          console.warn(
+            "CombinedAssignmentEvaluatorV2: Expression evaluation error:",
+            evalResult.error
+          );
           return this.createErrorNode(
             evalResult.error,
             combNode.variableName,
@@ -67,6 +84,16 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
           );
         }
         semanticValue = NumberValue.from(evalResult.value);
+      }
+
+      if (SemanticValueTypes.isError(semanticValue)) {
+        const errorMessage = (semanticValue as ErrorValue).getMessage();
+        return this.createErrorNode(
+          errorMessage,
+          combNode.variableName,
+          combNode.expression,
+          context.lineNumber
+        );
       }
       
       // Store the variable with its semantic value
@@ -141,6 +168,40 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
       line: lineNumber,
       originalRaw: `${variableName} = ${expression} =>`,
     };
+  }
+
+  private resolveVariableReference(
+    expression: string,
+    context: EvaluationContext
+  ): SemanticValue | null {
+    const trimmed = expression.trim();
+    if (!/^[a-zA-Z_][a-zA-Z0-9_\s]*$/.test(trimmed)) {
+      return null;
+    }
+
+    const normalized = trimmed.replace(/\s+/g, " ").trim();
+    const variable = context.variableContext.get(normalized);
+    if (!variable) {
+      return null;
+    }
+
+    const value = (variable as any).value;
+    if (value instanceof SemanticValue) {
+      return value;
+    }
+
+    if (typeof value === "number") {
+      return NumberValue.from(value);
+    }
+
+    if (typeof value === "string") {
+      const parsed = SemanticParsers.parse(value.trim());
+      if (parsed) {
+        return parsed;
+      }
+    }
+
+    return ErrorValue.semanticError(`Variable "${normalized}" has unsupported type`);
   }
 }
 

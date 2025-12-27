@@ -5,6 +5,21 @@ import "./TemplatePanel.css";
 // Template data with modern variable names (spaces and phrases)
 const templates = [
   {
+    id: "syntax-tour",
+    emoji: "✨",
+    name: "Syntax Tour",
+    content: `// Quick tour of SmartPad syntax
+base price = $120.50
+discount_rate = 15%
+final price = discount_rate off base price =>
+20 / 80 as % =>
+distance = 12.5 km
+time = 25 min
+speed = distance / time =>
+speed to m/s =>
+sqrt(16) + 2.5 =>`,
+  },
+  {
     id: "rent",
     emoji: "🏠",
     name: "Rent Calculator",
@@ -109,6 +124,35 @@ bar = 5
 foo =>
 3 m + 2 s =>
 5 m / 0 s =>`,
+  },
+  {
+    id: "event-profit",
+    emoji: "🎟️",
+    name: "Event Profit",
+    content: `ticket price = $45
+attendees = 180
+discount = 15%
+discounted ticket = discount off ticket price =>
+gross revenue = discounted ticket * attendees =>
+platform fee = 3%
+net revenue = platform fee off gross revenue =>
+venue fee = $250
+profit = net revenue - venue fee =>
+profit margin = profit / gross revenue as % =>`,
+  },
+  {
+    id: "commute-planner",
+    emoji: "🚲",
+    name: "Commute Planner",
+    content: `commute distance = 18 km
+average speed = 45 km/h
+travel time = commute distance / average speed =>
+travel time to min =>
+
+slowdown = 20%
+slow speed = slowdown off average speed =>
+slow travel time = commute distance / slow speed =>
+slow travel time to min =>`,
   },
   {
     id: "stress-test",

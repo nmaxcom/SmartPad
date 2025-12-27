@@ -190,7 +190,7 @@ export async function getEditorDisplayLines(): Promise<string[]> {
     return paragraphs.map((p) => {
       const rawText = (p.textContent || "").replace(/\s+/g, " ").trim();
       const widget = p.querySelector(
-        ".semantic-result-display, .semantic-assignment-display, .semantic-error-result"
+        ".semantic-result-display, .semantic-error-result"
       ) as HTMLElement | null;
       if (!widget) return rawText;
 
@@ -299,7 +299,7 @@ export async function waitForSmartPadIdle(
 
     if (requiresWidget) {
       await global.page.waitForSelector(
-        ".semantic-result-display, .semantic-assignment-display, .semantic-error-result",
+        ".semantic-result-display, .semantic-error-result",
         {
           state: "attached",
           timeout,
@@ -326,7 +326,7 @@ export async function waitForSmartPadIdle(
     const debugInfo = await global.page.evaluate(() => {
       const editor = document.querySelector(".ProseMirror");
       const widgets = document.querySelectorAll(
-        ".semantic-result-display, .semantic-assignment-display, .semantic-error-result"
+        ".semantic-result-display, .semantic-error-result"
       );
       const panel = document.querySelector('[data-testid="variable-panel"]');
 
@@ -355,7 +355,7 @@ export async function waitForContent(content: string, timeout: number = 3000): P
         const lines = paragraphs.map((p) => {
           const rawText = (p.textContent || "").replace(/\s+/g, " ").trim();
           const widget = p.querySelector(
-            ".semantic-result-display, .semantic-assignment-display, .semantic-error-result"
+            ".semantic-result-display, .semantic-error-result"
           );
           if (!widget) return rawText;
 
@@ -386,7 +386,7 @@ export async function waitForContent(content: string, timeout: number = 3000): P
       const displayLines = paragraphs.map((p) => {
         const rawText = (p.textContent || "").replace(/\s+/g, " ").trim();
         const widget = p.querySelector(
-          ".semantic-result-display, .semantic-assignment-display, .semantic-error-result"
+          ".semantic-result-display, .semantic-error-result"
         );
         if (!widget) return rawText;
 
@@ -403,7 +403,7 @@ export async function waitForContent(content: string, timeout: number = 3000): P
 
       const bodyText = document.body.textContent || "";
       const widgets = document.querySelectorAll(
-        ".semantic-result-display, .semantic-assignment-display, .semantic-error-result"
+        ".semantic-result-display, .semantic-error-result"
       );
       const widgetData = Array.from(widgets)
         .map((w) => w.getAttribute("data-result") || w.getAttribute("aria-label") || "")
@@ -435,7 +435,7 @@ export async function waitForWidgetDecoration(
     await global.page.waitForFunction(
       (text) => {
         const widgets = document.querySelectorAll(
-          ".semantic-result-display, .semantic-assignment-display, .semantic-error-result"
+          ".semantic-result-display, .semantic-error-result"
         );
         return Array.from(widgets).some((widget) => widget.textContent?.includes(text));
       },
@@ -446,7 +446,7 @@ export async function waitForWidgetDecoration(
     // If the wait fails, provide detailed debugging information
     const actualWidgets = await global.page.evaluate(() => {
       const widgets = document.querySelectorAll(
-        ".semantic-result-display, .semantic-assignment-display, .semantic-error-result"
+        ".semantic-result-display, .semantic-error-result"
       );
       return Array.from(widgets).map((w) => ({
         text: w.textContent,

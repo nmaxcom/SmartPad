@@ -30,11 +30,9 @@ import {
   SemanticValue,
   PercentageValue, 
   NumberValue, 
-  CurrencyValue,
-  UnitValue,
   ErrorValue,
   SemanticValueTypes,
-  SemanticArithmetic
+  SemanticParsers
 } from "../types";
 import { evaluateMath } from "../parsing/mathEvaluator";
 
@@ -143,6 +141,8 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
       /\bas\s+%\s*$/.test(expr) ||
       // Implicit "X of Y" where X is a percent-like value
       /\bof\b/.test(expr) ||
+      // "discount on/off 100" where discount is a percentage variable
+      /\b(on|off)\b/.test(expr) ||
       // Contains percentage values that need special handling
       /%/.test(expr)
     );
@@ -157,10 +157,36 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
       const expression = isExpr
         ? (node as ExpressionNode).expression
         : (node as CombinedAssignmentNode).expression;
+
+      if (this.shouldSkipDueToPhraseVariable(expression, context)) {
+        return null;
+      }
+
+      const directValue = this.resolveDirectVariableReference(expression, context);
+      if (directValue) {
+        if (SemanticValueTypes.isError(directValue)) {
+          return this.createErrorNode(
+            (directValue as ErrorValue).getMessage(),
+            expression,
+            context.lineNumber
+          );
+        }
+        return isExpr
+          ? this.createMathResultNode(expression, directValue, context.lineNumber)
+          : this.createCombinedNode(node as CombinedAssignmentNode, directValue, context);
+      }
       
       const result = this.evaluatePercentageExpression(expression, context);
       if (!result) {
         return this.createErrorNode("Could not evaluate percentage expression", expression, context.lineNumber);
+      }
+
+      if (SemanticValueTypes.isError(result)) {
+        return this.createErrorNode(
+          (result as ErrorValue).getMessage(),
+          expression,
+          context.lineNumber
+        );
       }
       
       // Create render node
@@ -203,6 +229,11 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
           context
         );
       }
+    }
+
+    // Try "X on/off Y" where X is a percentage variable/expression
+    if (!result) {
+      result = this.evaluatePercentVariableOnOff(expression, context);
     }
 
     // Try "A is what % of B" pattern
@@ -333,6 +364,39 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
       return percentValue.off(baseValue);
     }
   }
+
+  /**
+   * Evaluate "discount on 80" / "discount off 80" where discount is a percentage value
+   */
+  private evaluatePercentVariableOnOff(
+    expression: string,
+    context: EvaluationContext
+  ): SemanticValue | null {
+    const match = expression.match(/^\s*(.+?)\s+(on|off)\s+(.+)$/i);
+    if (!match) return null;
+
+    const leftValue = this.evaluateSubExpression(match[1], context);
+    if (SemanticValueTypes.isError(leftValue)) {
+      return leftValue;
+    }
+
+    if (!SemanticValueTypes.isPercentage(leftValue)) {
+      return ErrorValue.typeError(
+        "Left side of on/off must be a percentage",
+        "percentage",
+        leftValue.getType()
+      );
+    }
+
+    const baseValue = this.evaluateSubExpression(match[3], context);
+    if (SemanticValueTypes.isError(baseValue)) {
+      return baseValue;
+    }
+
+    return match[2].toLowerCase() === "on"
+      ? (leftValue as PercentageValue).on(baseValue)
+      : (leftValue as PercentageValue).off(baseValue);
+  }
   
   /**
    * Evaluate "what percent is 20 of 100" -> 20%
@@ -454,17 +518,17 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     context: EvaluationContext,
     options: { skipPercentVariableChain?: boolean } = {}
   ): SemanticValue {
-    const trimmed = expr.trim();
+    const normalized = expr.replace(/\s+/g, " ").trim();
 
     if (!options.skipPercentVariableChain) {
-      const percentVariableResult = this.evaluatePercentVariableChain(trimmed, context);
+      const percentVariableResult = this.evaluatePercentVariableChain(normalized, context);
       if (percentVariableResult) {
         return percentVariableResult;
       }
     }
     
     // Try to get variable first
-    const variable = context.variableContext.get(trimmed);
+    const variable = context.variableContext.get(normalized);
     if (variable) {
       const value = (variable as any).value;
       if (value instanceof SemanticValue) {
@@ -480,21 +544,21 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     }
 
     // Try nested percentage expressions
-    if (this.containsPercentageSyntax(trimmed)) {
-      const percentResult = this.evaluatePercentageExpression(trimmed, context);
+    if (this.containsPercentageSyntax(normalized)) {
+      const percentResult = this.evaluatePercentageExpression(normalized, context);
       if (percentResult) {
         return percentResult;
       }
     }
     
     // Try to parse as literal
-    const parsed = this.parseLiteral(trimmed);
+    const parsed = this.parseLiteral(normalized);
     if (parsed) {
       return parsed;
     }
 
     // Try to evaluate as arithmetic expression
-    const arithmetic = this.evaluateArithmeticExpression(trimmed, context);
+    const arithmetic = this.evaluateArithmeticExpression(normalized, context);
     if (arithmetic) {
       return arithmetic;
     }
@@ -562,29 +626,8 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
    * Parse a literal value into a SemanticValue
    */
   private parseLiteral(str: string): SemanticValue | null {
-    // Try percentage
-    if (str.match(/^\d+(?:\.\d+)?%$/)) {
-      const match = str.match(/^(\d+(?:\.\d+)?)%$/);
-      if (match) {
-        return new PercentageValue(parseFloat(match[1]));
-      }
-    }
-    
-    // Try currency
-    if (str.match(/^[\$€£]\s*\d{1,3}(?:,\d{3})*(?:\.\d+)?$/)) {
-      try {
-        return CurrencyValue.fromString(str);
-      } catch {
-        return null;
-      }
-    }
-    
-    // Try number
-    if (str.match(/^-?\d+(?:\.\d+)?$/)) {
-      return new NumberValue(parseFloat(str));
-    }
-    
-    return null;
+    const parsed = SemanticParsers.parse(str);
+    return parsed && !SemanticValueTypes.isError(parsed) ? parsed : null;
   }
   
   /**
@@ -611,7 +654,11 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     const displayText = `${node.variableName} = ${node.expression} => ${result.toString()}`;
     
     // Store the result in the variable store
-    context.variableStore.setVariable(node.variableName, result.toString());
+    context.variableStore.setVariableWithSemanticValue(
+      node.variableName,
+      result,
+      node.expression
+    );
     
     return {
       type: "combined",
@@ -633,5 +680,66 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
       line: lineNumber,
       originalRaw: expression,
     };
+  }
+
+  private resolveDirectVariableReference(
+    expression: string,
+    context: EvaluationContext
+  ): SemanticValue | null {
+    const trimmed = expression.trim();
+    if (!/^[a-zA-Z_][a-zA-Z0-9_\s]*$/.test(trimmed)) {
+      return null;
+    }
+
+    const normalized = trimmed.replace(/\s+/g, " ").trim();
+    const variable = context.variableContext.get(normalized);
+    if (!variable) {
+      return null;
+    }
+
+    const value = (variable as any).value;
+    if (value instanceof SemanticValue) {
+      return value;
+    }
+
+    if (typeof value === "number") {
+      return NumberValue.from(value);
+    }
+
+    if (typeof value === "string") {
+      const parsed = SemanticParsers.parse(value.trim());
+      if (parsed) {
+        return parsed;
+      }
+    }
+
+    return ErrorValue.semanticError(`Variable "${normalized}" has unsupported type`);
+  }
+
+  private shouldSkipDueToPhraseVariable(
+    expression: string,
+    context: EvaluationContext
+  ): boolean {
+    const normalized = expression.replace(/\s+/g, " ").trim();
+    if (!normalized.includes(" of ")) {
+      return false;
+    }
+
+    const hasExplicitPercentSyntax =
+      /%/.test(normalized) ||
+      /\b(on|off)\b/.test(normalized) ||
+      /\bwhat\s+%\b/.test(normalized) ||
+      /\b(as|is)\s+%\b/.test(normalized);
+    if (hasExplicitPercentSyntax) {
+      return false;
+    }
+
+    const variableNames = Array.from(context.variableContext.keys()).map((name) =>
+      name.replace(/\s+/g, " ").trim()
+    );
+
+    return variableNames.some(
+      (name) => name.includes(" of ") && normalized.includes(name)
+    );
   }
 }
