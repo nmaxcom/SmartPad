@@ -229,8 +229,8 @@ export class ReactiveVariableStore {
     
     // Try to parse as currency
     const trimmed = rawValue.trim();
-    const currencySymbolPattern = /^[\$€£¥₹₿]\s*\d{1,3}(?:,\d{3})*(?:\.\d+)?$/;
-    const currencyCodePattern = /^\d{1,3}(?:,\d{3})*(?:\.\d+)?\s+(CHF|CAD|AUD)$/;
+    const currencySymbolPattern = /^[\$€£¥₹₿]\s*(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?$/;
+    const currencyCodePattern = /^(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?\s+(CHF|CAD|AUD)$/;
     if (currencySymbolPattern.test(trimmed) || currencyCodePattern.test(trimmed)) {
       try {
         return CurrencyValue.fromString(trimmed);

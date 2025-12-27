@@ -71,6 +71,19 @@ test.describe("Semantic Highlighting", () => {
     await expect(keywordElement).toBeVisible();
   });
 
+  test("highlights currency symbols", async ({ page }) => {
+    await page.keyboard.type("usd = $1000");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("eur = €25.5");
+    await waitForUIRenderComplete(page);
+
+    const line1 = page.locator(".ProseMirror p").nth(0);
+    await expect(line1.locator(".semantic-currency", { hasText: "$" })).toBeVisible();
+
+    const line2 = page.locator(".ProseMirror p").nth(1);
+    await expect(line2.locator(".semantic-currency", { hasText: "€" })).toBeVisible();
+  });
+
   test("highlights underscore variables and numbers in expressions", async ({ page }) => {
     await page.keyboard.type("pa_s = 2");
     await page.keyboard.press("Enter");

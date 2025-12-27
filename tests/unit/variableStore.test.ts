@@ -93,6 +93,13 @@ describe("Variable Store", () => {
     expect(variable?.value.getNumericValue()).toBeCloseTo(3.14159, 5);
   });
 
+  test("should parse currency values without commas as currency", () => {
+    store.setVariable("bill total", "$1000");
+    const variable = store.getVariable("bill total");
+    expect(variable?.value.getType()).toBe("currency");
+    expect(variable?.value.toString()).toBe("$1000");
+  });
+
   test("should handle large, small, and zero values", () => {
     store.setVariable("large", Number.MAX_SAFE_INTEGER.toString());
     store.setVariable("small", Number.MIN_SAFE_INTEGER.toString());

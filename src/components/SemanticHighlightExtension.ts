@@ -31,6 +31,7 @@ export type TokenType =
   | "trigger"
   | "constant"
   | "keyword"
+  | "currency"
   | "unit";
 
 export interface Token {
@@ -414,6 +415,8 @@ export function tokenizeExpression(
   const parenRegex = /^[\(\)]/;
   const triggerRegex = /^=>/;
   const unitRegex = /^[a-zA-Z°]+(?:\/[a-zA-Z°]+)?(?:\^?\d+)?/;
+  const currencySymbolRegex = /^[\$€£¥₹₿]/;
+  const currencyCodeRegex = /^(CHF|CAD|AUD)\b/;
   const keywordRegex = /^(to|of|on|off|as|is)\b/;
   const constantRegex = /^(PI|E)\b/;
 
@@ -493,6 +496,21 @@ export function tokenizeExpression(
       }
     }
 
+    // Check for currency symbols
+    if (!matched) {
+      const currencyMatch = expr.substring(pos).match(currencySymbolRegex);
+      if (currencyMatch) {
+        pushToken({
+          type: "currency",
+          start: baseOffset + pos,
+          end: baseOffset + pos + currencyMatch[0].length,
+          text: currencyMatch[0],
+        });
+        pos += currencyMatch[0].length;
+        matched = true;
+      }
+    }
+
     // Check for mathematical constants (PI, E)
     if (!matched) {
       const constantMatch = expr.substring(pos).match(constantRegex);
@@ -529,7 +547,19 @@ export function tokenizeExpression(
         lastTokenType === "scrubbableNumber" ||
         (lastTokenType === "keyword" && lastTokenText === "to");
       if (shouldParseUnit) {
-        const unitMatch = expr.substring(pos).match(unitRegex);
+        const currencyCodeMatch = expr.substring(pos).match(currencyCodeRegex);
+        if (currencyCodeMatch) {
+          pushToken({
+            type: "currency",
+            start: baseOffset + pos,
+            end: baseOffset + pos + currencyCodeMatch[0].length,
+            text: currencyCodeMatch[0],
+          });
+          pos += currencyCodeMatch[0].length;
+          matched = true;
+        }
+
+        const unitMatch = !matched ? expr.substring(pos).match(unitRegex) : null;
         if (unitMatch) {
           // Make sure it's not a variable name
           const unitText = unitMatch[0];

@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SmartPad V8 - Orbit UI</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap");
+
+      :root {
+        --bg: #060910;
+        --panel: #101826;
+        --panel-2: #0d141f;
+        --text: #e8eef6;
+        --muted: #92a2b4;
+        --accent: #3bd6a0;
+        --accent-2: #7dd3fc;
+        --danger: #ff6b6b;
+        --line: rgba(232, 238, 246, 0.08);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: "Space Grotesk", system-ui, sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(900px 500px at 10% -10%, rgba(59, 214, 160, 0.22), transparent 55%),
+          radial-gradient(800px 500px at 90% 0%, rgba(125, 211, 252, 0.2), transparent 55%),
+          var(--bg);
+        min-height: 100vh;
+      }
+
+      .shell {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 22px;
+        display: grid;
+        gap: 14px;
+      }
+
+      header {
+        display: grid;
+        grid-template-columns: 220px 1fr 260px;
+        gap: 14px;
+        align-items: center;
+      }
+
+      .brand {
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+      }
+
+      .command {
+        border: 1px solid var(--line);
+        background: var(--panel);
+        border-radius: 12px;
+        padding: 10px 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .command strong { color: var(--text); }
+
+      .status {
+        text-align: right;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 240px 1fr 320px;
+        gap: 14px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 12px;
+        animation: rise 0.6s ease both;
+      }
+
+      .panel h4 {
+        margin: 0 0 10px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: var(--muted);
+      }
+
+      .lane {
+        padding: 10px;
+        border-radius: 12px;
+        background: var(--panel-2);
+        border: 1px solid var(--line);
+        margin-bottom: 8px;
+        font-size: 12px;
+        color: var(--muted);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .lane::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(120px 60px at -10% 50%, rgba(59, 214, 160, 0.25), transparent 70%);
+        opacity: 0;
+        transition: opacity 200ms ease;
+      }
+
+      .lane:hover::after {
+        opacity: 1;
+      }
+
+      .canvas {
+        background: linear-gradient(180deg, rgba(16, 24, 38, 0.95), rgba(7, 10, 16, 0.9));
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 16px;
+        position: relative;
+        overflow: hidden;
+        min-height: 520px;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+      }
+
+      .canvas::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          repeating-linear-gradient(
+            180deg,
+            rgba(232, 238, 246, 0.03),
+            rgba(232, 238, 246, 0.03) 1px,
+            transparent 1px,
+            transparent 30px
+          );
+        pointer-events: none;
+      }
+
+      .line {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 0;
+        position: relative;
+        z-index: 1;
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 14px;
+        animation: fade 0.5s ease both;
+      }
+
+      .line:nth-child(2) { animation-delay: 80ms; }
+      .line:nth-child(3) { animation-delay: 120ms; }
+      .line:nth-child(4) { animation-delay: 180ms; }
+
+      .var { color: #7dd3fc; }
+      .op { color: #fbbf24; }
+      .num { color: #fca5a5; }
+      .unit { color: #5eead4; }
+
+      .cursor {
+        width: 8px;
+        height: 18px;
+        background: var(--accent);
+        border-radius: 4px;
+        margin-left: 6px;
+        animation: blink 1.1s infinite;
+      }
+
+      .result {
+        margin-left: auto;
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(59, 214, 160, 0.5);
+        background: rgba(59, 214, 160, 0.16);
+        color: #9ff3e8;
+        font-size: 12px;
+        transition: transform 180ms ease, box-shadow 180ms ease;
+      }
+
+      .result:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 0 16px rgba(59, 214, 160, 0.4);
+      }
+
+      .scrub {
+        border-bottom: 2px dotted rgba(125, 211, 252, 0.6);
+        position: relative;
+        cursor: ew-resize;
+      }
+
+      .scrub::after {
+        content: "drag";
+        position: absolute;
+        right: -34px;
+        top: -2px;
+        font-size: 10px;
+        color: var(--muted);
+        opacity: 0;
+        transition: opacity 150ms ease;
+      }
+
+      .scrub:hover::after {
+        opacity: 1;
+      }
+
+      .inline-chart {
+        margin-top: 14px;
+        border-radius: 14px;
+        background: var(--panel-2);
+        border: 1px solid var(--line);
+        padding: 10px;
+      }
+
+      .inline-chart svg {
+        width: 100%;
+        height: 110px;
+      }
+
+      .spark {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent-2);
+        box-shadow: 0 0 12px rgba(125, 211, 252, 0.6);
+        animation: ping 1.4s infinite;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.02);
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .idea-card {
+        border: 1px dashed var(--line);
+        border-radius: 12px;
+        padding: 10px;
+        font-size: 12px;
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.02);
+        margin-bottom: 10px;
+      }
+
+      .error-chip {
+        border: 1px solid rgba(255, 107, 107, 0.6);
+        background: rgba(255, 107, 107, 0.12);
+        color: #ffbdbd;
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+      }
+
+      .timeline {
+        margin-top: 10px;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(232, 238, 246, 0.1);
+        position: relative;
+      }
+
+      .timeline::after {
+        content: "";
+        position: absolute;
+        left: 64%;
+        top: -4px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--accent-2);
+        box-shadow: 0 0 12px rgba(125, 211, 252, 0.6);
+      }
+
+      @keyframes blink {
+        0%, 45% { opacity: 1; }
+        50%, 100% { opacity: 0; }
+      }
+
+      @keyframes ping {
+        0% { transform: scale(1); opacity: 0.9; }
+        70% { transform: scale(2.2); opacity: 0; }
+        100% { opacity: 0; }
+      }
+
+      @keyframes rise {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      @keyframes fade {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      @media (max-width: 980px) {
+        header,
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        .status {
+          text-align: left;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header>
+        <div class="brand">SmartPad V8 Orbit</div>
+        <div class="command">
+          <div><strong>Cmd + K</strong> ask, simulate, or import data</div>
+          <div class="pill">Scenario: Family Plan</div>
+        </div>
+        <div class="status">
+          Model health: 97%<br />
+          Autotests: <span class="error-chip">1 warning</span>
+        </div>
+      </header>
+
+      <section class="layout">
+        <aside class="panel">
+          <h4>Scenario Lanes</h4>
+          <div class="lane">Base Plan</div>
+          <div class="lane">Promo Shock</div>
+          <div class="lane">Intl Travel</div>
+          <div class="lane">AI Suggested Lane</div>
+          <div class="idea-card">Idea: drag a lane onto another to blend scenarios.</div>
+        </aside>
+
+        <section class="canvas">
+          <div class="spark"></div>
+          <div class="line">
+            <span class="var">base plan</span>
+            <span class="op">=</span>
+            <span class="num">$45</span>
+          </div>
+          <div class="line">
+            <span class="var">line access</span>
+            <span class="op">=</span>
+            <span class="num scrub">$10</span>
+          </div>
+          <div class="line">
+            <span class="var">data overage fee</span>
+            <span class="op">=</span>
+            <span class="num">$12.5</span>
+            <span class="op">*</span>
+            <span class="num">1.5</span>
+            <span class="op">=></span>
+            <span class="result">$18.75</span>
+          </div>
+          <div class="line">
+            <span class="var">subtotal</span>
+            <span class="op">=</span>
+            <span class="var">base plan</span>
+            <span class="op">+</span>
+            <span class="var">line access</span>
+            <span class="op">+</span>
+            <span class="var">data overage fee</span>
+            <span class="op">=></span>
+            <span class="result">$73.75</span>
+            <span class="cursor"></span>
+          </div>
+          <div class="line">
+            <span class="var">promo discount</span>
+            <span class="op">=</span>
+            <span class="num">15%</span>
+            <span class="op">off</span>
+            <span class="var">subtotal</span>
+            <span class="op">=></span>
+            <span class="result">$62.69</span>
+          </div>
+
+          <div class="inline-chart">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);">
+              <span>Inline chart: 12-month forecast</span>
+              <span>Drag to add anomaly</span>
+            </div>
+            <svg viewBox="0 0 240 110" fill="none">
+              <path d="M6 84 L40 70 L80 74 L120 58 L160 64 L200 50 L232 40" stroke="#3bd6a0" stroke-width="3" />
+              <path d="M6 84 L232 84" stroke="rgba(232,238,246,0.12)" />
+              <path d="M120 58 L120 20" stroke="rgba(125,211,252,0.35)" stroke-dasharray="4 4" />
+            </svg>
+          </div>
+        </section>
+
+        <aside class="panel">
+          <h4>Insight Stack</h4>
+          <div class="idea-card">
+            Inline graph nodes: every line can pin a chart or KPI.
+          </div>
+          <div class="idea-card">
+            Model guardrails: attach asserts and auto-fix suggestions.
+          </div>
+          <div class="idea-card">
+            Explain a line: narrative and provenance per token.
+          </div>
+          <div class="idea-card">
+            Scenario scrubber: preview diffs as you drag the timeline.
+          </div>
+          <div class="timeline"></div>
+        </aside>
+      </section>
+    </div>
+  </body>
+</html>

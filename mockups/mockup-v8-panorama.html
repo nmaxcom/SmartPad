@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SmartPad V8 - Panorama Studio</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Urbanist:wght@400;600&display=swap");
+
+      :root {
+        --bg: #fef3e2;
+        --ink: #1f2937;
+        --muted: #6b7280;
+        --panel: #ffffff;
+        --panel-2: #fff7ed;
+        --accent: #f97316;
+        --accent-2: #06b6d4;
+        --line: rgba(31, 41, 55, 0.12);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: "Urbanist", system-ui, sans-serif;
+        background:
+          radial-gradient(600px 300px at 15% 0%, rgba(6, 182, 212, 0.15), transparent 60%),
+          radial-gradient(600px 300px at 85% 0%, rgba(249, 115, 22, 0.18), transparent 60%),
+          var(--bg);
+        color: var(--ink);
+      }
+
+      .shell {
+        max-width: 1300px;
+        margin: 0 auto;
+        padding: 24px;
+        display: grid;
+        gap: 16px;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .title {
+        font-size: 26px;
+        font-weight: 600;
+      }
+
+      .pill {
+        border: 1px solid var(--line);
+        background: var(--panel);
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 16px;
+      }
+
+      .board {
+        background: var(--panel);
+        border: 2px solid var(--ink);
+        border-radius: 24px;
+        padding: 18px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .board:before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(
+          180deg,
+          rgba(31, 41, 55, 0.03),
+          rgba(31, 41, 55, 0.03) 1px,
+          transparent 1px,
+          transparent 30px
+        );
+        pointer-events: none;
+      }
+
+      .line {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: "Space Mono", ui-monospace, monospace;
+        font-size: 13px;
+        padding: 6px 0;
+        position: relative;
+        z-index: 1;
+      }
+
+      .var { color: #0284c7; }
+      .op { color: #f59e0b; }
+      .num { color: #dc2626; }
+
+      .result {
+        margin-left: auto;
+        background: rgba(6, 182, 212, 0.2);
+        border: 1px solid rgba(6, 182, 212, 0.4);
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        color: #0f766e;
+      }
+
+      .dock {
+        display: grid;
+        gap: 12px;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 12px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .card strong { color: var(--ink); }
+
+      .graph {
+        height: 110px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(249, 115, 22, 0.18));
+        display: grid;
+        place-items: center;
+        color: var(--muted);
+        border: 1px solid var(--line);
+        font-size: 12px;
+      }
+
+      .legend {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 10px;
+      }
+
+      @media (max-width: 980px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header>
+        <div class="title">SmartPad Panorama</div>
+        <div style="display:flex;gap:8px;">
+          <div class="pill">Model health: 98%</div>
+          <div class="pill">Scenarios: 6</div>
+        </div>
+      </header>
+
+      <section class="layout">
+        <section class="board">
+          <div class="line"><span class="var">base plan</span> <span class="op">=</span> <span class="num">$45</span></div>
+          <div class="line"><span class="var">line access</span> <span class="op">=</span> <span class="num">$10</span></div>
+          <div class="line">
+            <span class="var">risk buffer</span>
+            <span class="op">=</span>
+            <span class="num">5%</span>
+            <span class="op">on</span>
+            <span class="var">subtotal</span>
+            <span class="op">=></span>
+            <span class="result">$2.75</span>
+          </div>
+          <div class="line">
+            <span class="var">forecast total</span>
+            <span class="op">=</span>
+            <span class="var">subtotal</span>
+            <span class="op">+</span>
+            <span class="var">risk buffer</span>
+            <span class="op">=></span>
+            <span class="result">$57.75</span>
+          </div>
+          <div class="line">
+            <span class="var">auto memo</span>
+            <span class="op">=></span>
+            <span class="result">"Budget within threshold"</span>
+          </div>
+        </section>
+
+        <aside class="dock">
+          <div class="card">
+            <strong>Flow Tape</strong><br />
+            A visual strip of every dependency, with rollback and compare.
+          </div>
+          <div class="card">
+            <strong>Scenario Mixer</strong><br />
+            Blend lane weights to generate a new composite plan.
+          </div>
+          <div class="card">
+            <strong>Inline Graph</strong>
+            <div class="graph">Impact map per variable</div>
+            <div class="legend"><span>Best</span><span>Worst</span></div>
+          </div>
+          <div class="card">
+            <strong>Explainability Ledger</strong><br />
+            Every line has a story, assumptions, and data provenance.
+          </div>
+        </aside>
+      </section>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SmartPad Mockup - Paper Lab</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap");
+
+      :root {
+        --paper: #f5f0e8;
+        --paper-2: #fff9f2;
+        --ink: #171717;
+        --muted: #6f6b63;
+        --accent: #ff7a59;
+        --accent-2: #0ea5e9;
+        --line: rgba(0, 0, 0, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "IBM Plex Sans", system-ui, sans-serif;
+        background: repeating-linear-gradient(
+            90deg,
+            rgba(0, 0, 0, 0.02) 0px,
+            rgba(0, 0, 0, 0.02) 1px,
+            transparent 1px,
+            transparent 16px
+          ),
+          var(--paper);
+        color: var(--ink);
+      }
+
+      .wrap {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 28px 24px 40px;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 22px;
+      }
+
+      .brand {
+        font-family: "Fraunces", serif;
+        font-size: 26px;
+        letter-spacing: 0.02em;
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 10px;
+      }
+
+      .btn {
+        padding: 8px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        background: var(--paper-2);
+        font-size: 12px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 18px;
+      }
+
+      .sheet {
+        background: var(--paper-2);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .sheet:after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-top: 8px solid rgba(0, 0, 0, 0.02);
+        pointer-events: none;
+      }
+
+      .sheet h2 {
+        margin: 0 0 10px;
+        font-family: "Fraunces", serif;
+        font-size: 20px;
+      }
+
+      .line {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 0;
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+      }
+
+      .chip {
+        font-size: 12px;
+        border-radius: 999px;
+        padding: 3px 8px;
+        border: 1px solid var(--line);
+        background: #fff;
+      }
+
+      .result {
+        margin-left: auto;
+        background: rgba(255, 122, 89, 0.15);
+        color: #b9381b;
+        border: 1px solid rgba(255, 122, 89, 0.45);
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+      }
+
+      .sidebar {
+        display: grid;
+        gap: 14px;
+      }
+
+      .card {
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 14px;
+        animation: reveal 0.5s ease both;
+      }
+
+      .card h4 {
+        margin: 0 0 8px;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+      }
+
+      .graph {
+        height: 100px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #ffefe9, #e3f4ff);
+        border: 1px solid var(--line);
+        display: grid;
+        place-items: center;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .setting {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: var(--muted);
+        padding: 6px 0;
+      }
+
+      .setting strong {
+        color: var(--ink);
+      }
+
+      .idea {
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.4;
+      }
+
+      @keyframes reveal {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 960px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="brand">SmartPad</div>
+        <div class="toolbar">
+          <div class="btn">Settings</div>
+          <div class="btn">Export</div>
+        </div>
+      </header>
+
+      <section class="layout">
+        <div class="sheet">
+          <h2>Phone Plan Review</h2>
+          <div class="line"><span class="chip">USD</span> base plan = $45</div>
+          <div class="line">line access = $10</div>
+          <div class="line">
+            data overage fee = $12.5 * 1.5 =>
+            <span class="result">$18.75</span>
+          </div>
+          <div class="line">
+            subtotal = base plan + line access + data overage fee =>
+            <span class="result">$73.75</span>
+          </div>
+          <div class="line">
+            tax = 8% on subtotal =>
+            <span class="result">$79.65</span>
+          </div>
+          <div class="line">
+            euro add on = €12
+          </div>
+          <div class="line">
+            yen add on = ¥1200
+          </div>
+        </div>
+
+        <aside class="sidebar">
+          <div class="card">
+            <h4>Inline Graph</h4>
+            <div class="graph">Monthly bill trend</div>
+          </div>
+          <div class="card">
+            <h4>Settings</h4>
+            <div class="setting"><span>Precision</span><strong>2 decimals</strong></div>
+            <div class="setting"><span>Currency rounding</span><strong>Bankers</strong></div>
+            <div class="setting"><span>Auto color</span><strong>On</strong></div>
+          </div>
+          <div class="card">
+            <h4>Ideas</h4>
+            <div class="idea">
+              Inline graphs per expression, editable currency exchange rates, and a
+              scenario slider to compare bill changes side by side.
+            </div>
+          </div>
+        </aside>
+      </section>
+    </div>
+  </body>
+</html>

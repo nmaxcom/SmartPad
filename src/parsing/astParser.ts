@@ -259,15 +259,32 @@ function createCombinedAssignmentNode(
   line: number
 ): CombinedAssignmentNode | ErrorNode {
   try {
+    const isPercentageExpression =
+      /%/.test(expression) ||
+      /\bof\b/.test(expression) ||
+      /\bon\b/.test(expression) ||
+      /\boff\b/.test(expression) ||
+      /\bas\s+%/.test(expression) ||
+      /\bis\s+%/.test(expression);
+
     // Parse the expression into a component tree
-    const components = parseExpressionComponents(expression);
+    let components: ReturnType<typeof parseExpressionComponents> = [];
+    try {
+      components = parseExpressionComponents(expression);
+    } catch (error) {
+      if (!isPercentageExpression) {
+        throw error;
+      }
+    }
     
     // Validate types early (without variable context yet)
-    const typeError = validateExpressionTypes(components, new Map(), undefined, {
-      allowUnknownVariables: true,
-    });
-    if (typeError) {
-      return createErrorNode(typeError.getMessage(), "semantic", raw, line);
+    if (!isPercentageExpression && components.length > 0) {
+      const typeError = validateExpressionTypes(components, new Map(), undefined, {
+        allowUnknownVariables: true,
+      });
+      if (typeError) {
+        return createErrorNode(typeError.getMessage(), "semantic", raw, line);
+      }
     }
 
     return {

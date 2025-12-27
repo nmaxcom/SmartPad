@@ -160,7 +160,7 @@ function tokenize(expression: string): Token[] {
     }
 
     // Match currency symbols
-    if (!matched && /[$€£]/.test(expression[pos])) {
+    if (!matched && /[$€£¥₹₿]/.test(expression[pos])) {
       tokens.push({ type: 'currency', value: expression[pos], start: pos, end: pos + 1 });
       pos++;
       matched = true;

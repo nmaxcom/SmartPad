@@ -243,6 +243,11 @@ export class CurrencyValue extends SemanticValue {
    * Format currency amount according to currency rules
    */
   private formatCurrencyAmount(amount: number, precision: number): string {
+    const rounded = Math.round(amount);
+    if (Math.abs(amount - rounded) < 1e-9) {
+      return rounded.toString();
+    }
+
     // Special handling for currencies with no decimal places (like JPY)
     if (this.currencyInfo.decimalPlaces === 0) {
       return Math.round(amount).toString();
@@ -251,20 +256,16 @@ export class CurrencyValue extends SemanticValue {
     // For other currencies, format with appropriate decimal places
     const fixed = amount.toFixed(precision);
     
-    // Remove trailing zeros after decimal point, but keep at least the currency's standard decimals
-    const parts = fixed.split('.');
+    // Remove trailing zeros after decimal point
+    const parts = fixed.split(".");
     if (parts.length === 2) {
-      const minDecimals = Math.min(this.currencyInfo.decimalPlaces, precision);
-      const trimmed = parts[1].replace(/0+$/, '');
-      
-      if (trimmed.length === 0 && minDecimals === 0) {
+      const trimmed = parts[1].replace(/0+$/, "");
+      if (!trimmed) {
         return parts[0];
       }
-      
-      const decimals = trimmed.padEnd(minDecimals, '0');
-      return `${parts[0]}.${decimals}`;
+      return `${parts[0]}.${trimmed}`;
     }
-    
+
     return fixed;
   }
 

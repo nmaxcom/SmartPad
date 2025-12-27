@@ -496,12 +496,16 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     expression: string,
     context: EvaluationContext
   ): boolean {
-    if (expressionContainsUnitsNet(expression) || this.containsMathematicalConstants(expression)) {
+    const variableNames = this.collectVariableNames(components);
+    if (variableNames.size === 0) {
       return false;
     }
 
-    const variableNames = this.collectVariableNames(components);
-    if (variableNames.size === 0) {
+    const maskedExpression = this.maskVariableNames(expression, variableNames);
+    if (
+      expressionContainsUnitsNet(maskedExpression) ||
+      this.containsMathematicalConstants(maskedExpression)
+    ) {
       return false;
     }
 
@@ -528,6 +532,42 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     }
 
     return hasCurrency;
+  }
+
+  private maskVariableNames(expression: string, variableNames: Set<string>): string {
+    if (variableNames.size === 0) {
+      return expression;
+    }
+
+    const names = Array.from(variableNames).sort((a, b) => b.length - a.length);
+    const isBoundary = (char: string | undefined) =>
+      !char || /[\s+\-*/^%()=<>!,]/.test(char);
+
+    let result = "";
+    let pos = 0;
+
+    while (pos < expression.length) {
+      let replaced = false;
+      for (const name of names) {
+        if (!expression.startsWith(name, pos)) {
+          continue;
+        }
+        const before = pos > 0 ? expression[pos - 1] : undefined;
+        const after = pos + name.length < expression.length ? expression[pos + name.length] : undefined;
+        if (isBoundary(before) && isBoundary(after)) {
+          result += "__var__";
+          pos += name.length;
+          replaced = true;
+          break;
+        }
+      }
+      if (!replaced) {
+        result += expression[pos];
+        pos++;
+      }
+    }
+
+    return result;
   }
 
   private collectVariableNames(components: ExpressionComponent[]): Set<string> {

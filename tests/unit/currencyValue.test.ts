@@ -12,9 +12,35 @@ describe("CurrencyValue", () => {
     expect(chf.getNumericValue()).toBe(1234);
   });
 
-  test("SemanticParsers detects comma-separated currency", () => {
+  test("parses currency amounts without commas", () => {
+    const usd = CurrencyValue.fromString("$1000");
+    expect(usd.getNumericValue()).toBe(1000);
+
+    const eur = CurrencyValue.fromString("€2500.5");
+    expect(eur.getNumericValue()).toBe(2500.5);
+
+    const chf = CurrencyValue.fromString("1234 CHF");
+    expect(chf.getNumericValue()).toBe(1234);
+  });
+
+  test("formats whole currency amounts without decimals", () => {
+    expect(new CurrencyValue("$", 995).toString()).toBe("$995");
+    expect(new CurrencyValue("$", 1000).toString()).toBe("$1000");
+    expect(new CurrencyValue("€", 1000).toString()).toBe("€1000");
+  });
+
+  test("formats fractional currency amounts without trailing zeros", () => {
+    expect(new CurrencyValue("$", 995.5).toString()).toBe("$995.5");
+    expect(new CurrencyValue("$", 995.25).toString()).toBe("$995.25");
+  });
+
+  test("SemanticParsers detects currency values", () => {
     const parsed = SemanticParsers.parse("$1,000");
     expect(parsed).not.toBeNull();
     expect(parsed?.getType()).toBe("currency");
+
+    const parsedPlain = SemanticParsers.parse("$1000");
+    expect(parsedPlain).not.toBeNull();
+    expect(parsedPlain?.getType()).toBe("currency");
   });
 });

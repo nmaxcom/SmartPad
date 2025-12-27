@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SmartPad V8 - Workbench OS</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter+Tight:wght@400;600&family=Source+Code+Pro:wght@400;500&display=swap");
+
+      :root {
+        --bg: #f4f2ee;
+        --ink: #111827;
+        --muted: #6b7280;
+        --panel: #ffffff;
+        --panel-2: #f8f7f5;
+        --accent: #ff6b4a;
+        --accent-2: #0ea5e9;
+        --line: rgba(17, 24, 39, 0.12);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: "Inter Tight", system-ui, sans-serif;
+        background:
+          radial-gradient(800px 400px at 0% 0%, rgba(255, 107, 74, 0.14), transparent 60%),
+          radial-gradient(800px 400px at 100% 0%, rgba(14, 165, 233, 0.16), transparent 60%),
+          var(--bg);
+        color: var(--ink);
+      }
+
+      .shell {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 22px;
+        display: grid;
+        gap: 16px;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .brand {
+        font-family: "Archivo Black", system-ui, sans-serif;
+        font-size: 24px;
+        letter-spacing: 0.06em;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .header-actions button {
+        border: 1px solid var(--line);
+        background: var(--panel);
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-size: 12px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 250px 1fr 320px;
+        gap: 16px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 14px;
+        animation: rise 0.6s ease both;
+      }
+
+      .panel h4 {
+        margin: 0 0 10px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: var(--muted);
+      }
+
+      .connector {
+        background: var(--panel-2);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 10px;
+        margin-bottom: 10px;
+        font-size: 12px;
+      }
+
+      .connector strong { color: var(--ink); }
+
+      .workspace {
+        background: var(--panel);
+        border: 2px solid var(--ink);
+        border-radius: 20px;
+        padding: 18px;
+        position: relative;
+      }
+
+      .workspace h3 {
+        margin: 0 0 12px;
+        font-size: 18px;
+      }
+
+      .line {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 0;
+        font-family: "Source Code Pro", ui-monospace, monospace;
+        font-size: 13px;
+      }
+
+      .var { color: #0284c7; }
+      .op { color: #f59e0b; }
+      .num { color: #dc2626; }
+
+      .result {
+        margin-left: auto;
+        padding: 4px 8px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 107, 74, 0.4);
+        background: rgba(255, 107, 74, 0.12);
+        font-size: 12px;
+      }
+
+      .callout {
+        margin-top: 12px;
+        border-radius: 12px;
+        border: 1px dashed rgba(17, 24, 39, 0.25);
+        padding: 10px;
+        font-size: 12px;
+        color: var(--muted);
+        background: #fff7f4;
+      }
+
+      .stack .card {
+        background: var(--panel-2);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 10px;
+        margin-bottom: 10px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .stack .card strong { color: var(--ink); }
+
+      .timeline {
+        margin-top: 14px;
+        height: 12px;
+        border-radius: 999px;
+        background: rgba(17, 24, 39, 0.1);
+        position: relative;
+      }
+
+      .timeline::after {
+        content: "";
+        position: absolute;
+        left: 40%;
+        top: -4px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--accent-2);
+      }
+
+      @keyframes rise {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      @media (max-width: 980px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header>
+        <div class="brand">SmartPad Workbench</div>
+        <div class="header-actions">
+          <button>Publish Report</button>
+          <button>Test Suite</button>
+          <button>Settings</button>
+        </div>
+      </header>
+
+      <section class="layout">
+        <aside class="panel">
+          <h4>Data Fabric</h4>
+          <div class="connector"><strong>Billing API</strong><br />Refresh: every hour</div>
+          <div class="connector"><strong>CSV Uploads</strong><br />Auto-clean + schema map</div>
+          <div class="connector"><strong>FX Rates</strong><br />Pinned provider + caching</div>
+          <div class="connector"><strong>Events</strong><br />Webhook triggers on threshold</div>
+        </aside>
+
+        <section class="workspace">
+          <h3>Model Notebook</h3>
+          <div class="line"><span class="var">base plan</span> <span class="op">=</span> <span class="num">$45</span></div>
+          <div class="line"><span class="var">line access</span> <span class="op">=</span> <span class="num">$10</span></div>
+          <div class="line">
+            <span class="var">subtotal</span>
+            <span class="op">=</span>
+            <span class="var">base plan</span>
+            <span class="op">+</span>
+            <span class="var">line access</span>
+            <span class="op">=></span>
+            <span class="result">$55</span>
+          </div>
+          <div class="line">
+            <span class="var">goal seek</span>
+            <span class="op">=</span>
+            <span class="num">$60</span>
+            <span class="op">solve for</span>
+            <span class="var">discount</span>
+            <span class="op">=></span>
+            <span class="result">18.2%</span>
+          </div>
+
+          <div class="callout">
+            Explain mode: shows why totals changed and suggests fixes (rounding, units, missing vars).
+          </div>
+          <div class="timeline"></div>
+        </section>
+
+        <aside class="panel stack">
+          <h4>Insight Stack</h4>
+          <div class="card">
+            <strong>Inline Graphs</strong><br />
+            Auto-render any line into a chart with confidence bands.
+          </div>
+          <div class="card">
+            <strong>Model Guardrails</strong><br />
+            Assertions run on every edit with pass/fail badges.
+          </div>
+          <div class="card">
+            <strong>Scenario Merge</strong><br />
+            Compare multiple lanes and export diffs.
+          </div>
+          <div class="card">
+            <strong>Team Review</strong><br />
+            Comment on any token and lock approved lines.
+          </div>
+        </aside>
+      </section>
+    </div>
+  </body>
+</html>

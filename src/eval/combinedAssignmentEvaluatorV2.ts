@@ -66,6 +66,19 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
         this.resolveVariableReference(combNode.expression, context) ||
         SimpleExpressionParser.parseArithmetic(combNode.expression, context);
 
+      if (!semanticValue && combNode.components.length > 0) {
+        const hasCurrency = SimpleExpressionParser.containsCurrency(
+          combNode.components,
+          context
+        );
+        if (hasCurrency) {
+          semanticValue = SimpleExpressionParser.parseComponents(
+            combNode.components,
+            context
+          );
+        }
+      }
+
       if (!semanticValue) {
         const evalResult = parseAndEvaluateExpression(
           combNode.expression,

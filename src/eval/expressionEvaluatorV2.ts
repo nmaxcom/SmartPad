@@ -8,6 +8,7 @@
 import {
   ASTNode,
   ExpressionNode,
+  ExpressionComponent,
   isExpressionNode,
 } from "../parsing/ast";
 import { NodeEvaluator, EvaluationContext } from "./registry";
@@ -53,6 +54,51 @@ export class SimpleExpressionParser {
     
     return null;
   }
+
+  /**
+   * Parse arithmetic expressions from components (supports chained operators and parentheses)
+   */
+  static parseComponents(
+    components: ExpressionComponent[],
+    context: EvaluationContext
+  ): SemanticValue | null {
+    if (components.length === 0) {
+      return null;
+    }
+
+    try {
+      return this.evaluateComponentList(components, context);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return ErrorValue.semanticError(message);
+    }
+  }
+
+  static containsCurrency(components: ExpressionComponent[], context: EvaluationContext): boolean {
+    const visit = (items: ExpressionComponent[]): boolean => {
+      for (const component of items) {
+        if (component.type === "literal" && component.parsedValue) {
+          if (component.parsedValue.getType() === "currency") {
+            return true;
+          }
+        }
+        if (component.type === "variable") {
+          const variable = context.variableContext.get(component.value);
+          if (variable?.value instanceof SemanticValue && variable.value.getType() === "currency") {
+            return true;
+          }
+        }
+        if (component.children && component.children.length > 0) {
+          if (visit(component.children)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+
+    return visit(components);
+  }
   
   /**
    * Parse an operand (variable, literal, or parenthesized expression)
@@ -85,6 +131,211 @@ export class SimpleExpressionParser {
     }
     
     return ErrorValue.semanticError(`Cannot resolve: "${normalized}"`);
+  }
+
+  private static evaluateComponentList(
+    components: ExpressionComponent[],
+    context: EvaluationContext
+  ): SemanticValue {
+    const values: SemanticValue[] = [];
+    const operators: string[] = [];
+    const precedence: Record<string, number> = {
+      "^": 3,
+      "*": 2,
+      "/": 2,
+      "+": 1,
+      "-": 1,
+    };
+
+    const shouldApplyOperator = (stackOp: string, currentOp: string): boolean => {
+      const stackPrec = precedence[stackOp] ?? 0;
+      const currentPrec = precedence[currentOp] ?? 0;
+      if (stackPrec > currentPrec) return true;
+      if (stackPrec === currentPrec && currentOp !== "^") return true;
+      return false;
+    };
+
+    const applyOperator = (): SemanticValue | null => {
+      const op = operators.pop();
+      const right = values.pop();
+      const left = values.pop();
+      if (!op || !right || !left) {
+        return ErrorValue.semanticError("Invalid expression");
+      }
+
+      switch (op) {
+        case "+":
+          return SemanticArithmetic.add(left, right);
+        case "-":
+          return SemanticArithmetic.subtract(left, right);
+        case "*":
+          return SemanticArithmetic.multiply(left, right);
+        case "/":
+          return SemanticArithmetic.divide(left, right);
+        case "^":
+          if (!right.isNumeric()) {
+            return ErrorValue.typeError("Exponent must be numeric", "number", right.getType());
+          }
+          return SemanticArithmetic.power(left, right.getNumericValue());
+        default:
+          return ErrorValue.semanticError(`Unknown operator: ${op}`);
+      }
+    };
+
+    let expectValue = true;
+    let pendingUnary: "+" | "-" | null = null;
+
+    for (const component of components) {
+      if (component.type === "operator") {
+        const op = component.value;
+        if (expectValue) {
+          if (op === "+" || op === "-") {
+            pendingUnary = op;
+            continue;
+          }
+          return ErrorValue.semanticError(`Unexpected operator: "${op}"`);
+        }
+
+        while (
+          operators.length > 0 &&
+          shouldApplyOperator(operators[operators.length - 1], op)
+        ) {
+          const applied = applyOperator();
+          if (applied && SemanticValueTypes.isError(applied)) {
+            return applied;
+          }
+          if (applied) {
+            values.push(applied);
+          }
+        }
+        operators.push(op);
+        expectValue = true;
+        continue;
+      }
+
+      const value = this.resolveComponentValue(component, context);
+      if (SemanticValueTypes.isError(value)) {
+        return value;
+      }
+
+      let resolved = value;
+      if (pendingUnary === "-") {
+        resolved = SemanticArithmetic.multiply(new NumberValue(-1), resolved);
+        if (SemanticValueTypes.isError(resolved)) {
+          return resolved;
+        }
+      }
+      pendingUnary = null;
+
+      values.push(resolved);
+      expectValue = false;
+    }
+
+    if (expectValue) {
+      return ErrorValue.semanticError("Expression ended unexpectedly");
+    }
+
+    while (operators.length > 0) {
+      const applied = applyOperator();
+      if (applied && SemanticValueTypes.isError(applied)) {
+        return applied;
+      }
+      if (applied) {
+        values.push(applied);
+      }
+    }
+
+    if (values.length !== 1) {
+      return ErrorValue.semanticError("Invalid expression");
+    }
+
+    return values[0];
+  }
+
+  private static resolveComponentValue(
+    component: ExpressionComponent,
+    context: EvaluationContext
+  ): SemanticValue {
+    switch (component.type) {
+      case "literal": {
+        if (component.parsedValue) {
+          return component.parsedValue;
+        }
+        const parsed = SemanticParsers.parse(component.value);
+        return parsed || ErrorValue.semanticError(`Cannot parse literal: "${component.value}"`);
+      }
+      case "variable": {
+        const variable = context.variableContext.get(component.value);
+        if (!variable) {
+          return ErrorValue.semanticError(`Variable "${component.value}" not defined`);
+        }
+        const value = (variable as any).value;
+        if (value instanceof SemanticValue) {
+          return value;
+        }
+        if (typeof value === "number") {
+          return NumberValue.from(value);
+        }
+        if (typeof value === "string") {
+          const parsed = SemanticParsers.parse(value.trim());
+          if (parsed) {
+            return parsed;
+          }
+        }
+        return ErrorValue.semanticError(`Variable "${component.value}" has unsupported type`);
+      }
+      case "parentheses": {
+        if (!component.children || component.children.length === 0) {
+          return ErrorValue.semanticError("Empty parentheses");
+        }
+        return this.evaluateComponentList(component.children, context);
+      }
+      case "function": {
+        if (!component.children || component.children.length === 0) {
+          return ErrorValue.semanticError(`Function "${component.value}" has no arguments`);
+        }
+        const argValue = this.evaluateComponentList(component.children, context);
+        if (SemanticValueTypes.isError(argValue)) {
+          return argValue;
+        }
+        if (!argValue.isNumeric()) {
+          return ErrorValue.typeError(
+            `Function "${component.value}" requires numeric argument`,
+            "number",
+            argValue.getType()
+          );
+        }
+        const num = argValue.getNumericValue();
+        switch (component.value) {
+          case "sqrt":
+            return NumberValue.from(Math.sqrt(num));
+          case "abs":
+            return NumberValue.from(Math.abs(num));
+          case "round":
+            return NumberValue.from(Math.round(num));
+          case "floor":
+            return NumberValue.from(Math.floor(num));
+          case "ceil":
+            return NumberValue.from(Math.ceil(num));
+          case "sin":
+            return NumberValue.from(Math.sin(num));
+          case "cos":
+            return NumberValue.from(Math.cos(num));
+          case "tan":
+            return NumberValue.from(Math.tan(num));
+          case "log":
+            return NumberValue.from(Math.log10(num));
+          case "ln":
+            return NumberValue.from(Math.log(num));
+          case "exp":
+            return NumberValue.from(Math.exp(num));
+          default:
+            return ErrorValue.semanticError(`Unsupported function: "${component.value}"`);
+        }
+      }
+      default:
+        return ErrorValue.semanticError(`Unsupported component: "${component.type}"`);
+    }
   }
   
   /**
@@ -159,10 +410,15 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       }
       // Try simple arithmetic
       else if (this.isSimpleArithmetic(exprNode.expression)) {
-        const semanticResult = SimpleExpressionParser.parseArithmetic(
-          exprNode.expression,
-          context
-        );
+        const hasCurrency =
+          exprNode.components.length > 0 &&
+          SimpleExpressionParser.containsCurrency(exprNode.components, context);
+        const componentResult = hasCurrency
+          ? SimpleExpressionParser.parseComponents(exprNode.components, context)
+          : null;
+        const semanticResult =
+          componentResult || SimpleExpressionParser.parseArithmetic(exprNode.expression, context);
+
         if (semanticResult) {
           result = semanticResult;
         } else {

@@ -97,12 +97,42 @@ cost per mile = total fuel cost / trip distance =>`,
     id: "phone",
     emoji: "📱",
     name: "Phone Bill",
-    content: `base plan cost=45
-data used gb=8.2
-data limit gb=10
-overage rate per gb=10
-data overage = max(0, data used gb - data limit gb) * overage rate per gb =>
-final phone bill = base plan cost + data overage =>`,
+    content: `// Phone bill, focused on currency behavior
+base plan = $45
+line access = $10
+data overage gb = 1.5
+data overage rate = $12.50
+data overage fee = data overage rate * data overage gb =>
+
+subtotal = base plan + line access + data overage fee =>
+promo discount = 15%
+discounted subtotal = promo discount off subtotal =>
+tax = 8%
+total due = tax on discounted subtotal =>
+
+// Percent of currency + ratio as %
+autopay savings = 5% of subtotal =>
+discount share = discounted subtotal / subtotal as % =>
+
+// Currency arithmetic with numbers + ratios
+per line = subtotal / 2 =>
+plan multiple = subtotal / $30 =>
+bundle cost = subtotal * 3 =>
+
+// Formatting examples (whole vs fractional, commas)
+big charge = $1,000
+whole amount = $1000
+small fee = $5.5
+
+// Other currency symbols and codes
+euro add on = €12
+gbp roaming = £9
+yen add on = ¥1200
+inr fee = ₹350
+btc credit = ₿0.0025
+swiss fee = 15 CHF
+canada fee = 20 CAD
+australia fee = 25 AUD`,
   },
   {
     id: "fitness",

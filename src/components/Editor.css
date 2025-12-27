@@ -105,7 +105,7 @@
 
 /* Hover-to-highlight styles */
 .variable-highlight-declaration {
-  background-color: var(--variable-highlight-declaration-bg);
+  background-color: var(mo);
   border-radius: 3px;
   transition: background-color 0.2s ease-in-out;
 }
@@ -162,6 +162,11 @@ body.number-scrubbing * {
 .semantic-unit {
   color: #0969da;
   font-weight: 500;
+}
+
+.semantic-currency {
+  color: #0969da;
+  font-weight: 600;
 }
 
 .semantic-constant {
