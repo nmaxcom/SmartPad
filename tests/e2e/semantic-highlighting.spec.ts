@@ -71,6 +71,31 @@ test.describe("Semantic Highlighting", () => {
     await expect(keywordElement).toBeVisible();
   });
 
+  test("highlights underscore variables and numbers in expressions", async ({ page }) => {
+    await page.keyboard.type("pa_s = 2");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("po = pa_s * 2");
+    await waitForUIRenderComplete(page);
+
+    const line = page.locator(".ProseMirror p").nth(1);
+    await expect(line.locator(".semantic-variable", { hasText: "pa_s" })).toBeVisible();
+    await expect(line.locator(".semantic-scrubbableNumber", { hasText: "2" })).toBeVisible();
+  });
+
+  test("keeps phrase variables and keywords distinct", async ({ page }) => {
+    await page.keyboard.type("base price = 10");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("discount = 5%");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("final price = discount off base price");
+    await waitForUIRenderComplete(page);
+
+    const line = page.locator(".ProseMirror p").nth(2);
+    await expect(line.locator(".semantic-variable", { hasText: "discount" })).toBeVisible();
+    await expect(line.locator(".semantic-variable", { hasText: "base price" })).toBeVisible();
+    await expect(line.locator(".semantic-keyword", { hasText: "off" })).toBeVisible();
+  });
+
   test("highlights results after evaluation", async ({ page }) => {
     await page.keyboard.type("5 + 3 =>");
     await waitForUIRenderComplete(page);

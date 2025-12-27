@@ -398,6 +398,14 @@ export function tokenizeExpression(
   variableContext: Map<string, Variable>
 ): Token[] {
   const tokens: Token[] = [];
+  let lastTokenType: TokenType | null = null;
+  let lastTokenText = "";
+
+  const pushToken = (token: Token) => {
+    tokens.push(token);
+    lastTokenType = token.type;
+    lastTokenText = token.text;
+  };
 
   // Regular expressions for different token types
   const numberRegex = /^-?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?/;
@@ -456,7 +464,7 @@ export function tokenizeExpression(
           // Check if it's a word boundary (not part of a larger word)
           const afterChar = expr[pos + varName.length];
           if (!afterChar || /[\s\+\-\*\/\^\%\(\)]/.test(afterChar)) {
-            tokens.push({
+            pushToken({
               type: "variable",
               start: baseOffset + pos,
               end: baseOffset + pos + varName.length,
@@ -474,7 +482,7 @@ export function tokenizeExpression(
     if (!matched) {
       const numMatch = expr.substring(pos).match(numberRegex);
       if (numMatch) {
-        tokens.push({
+        pushToken({
           type: "scrubbableNumber",
           start: baseOffset + pos,
           end: baseOffset + pos + numMatch[0].length,
@@ -489,7 +497,7 @@ export function tokenizeExpression(
     if (!matched) {
       const constantMatch = expr.substring(pos).match(constantRegex);
       if (constantMatch) {
-        tokens.push({
+        pushToken({
           type: "constant",
           start: baseOffset + pos,
           end: baseOffset + pos + constantMatch[0].length,
@@ -504,7 +512,7 @@ export function tokenizeExpression(
     if (!matched) {
       const keywordMatch = expr.substring(pos).match(keywordRegex);
       if (keywordMatch) {
-        tokens.push({
+        pushToken({
           type: "keyword",
           start: baseOffset + pos,
           end: baseOffset + pos + keywordMatch[0].length,
@@ -517,19 +525,24 @@ export function tokenizeExpression(
 
     // Check for units (after numbers and variables, before operators)
     if (!matched) {
-      const unitMatch = expr.substring(pos).match(unitRegex);
-      if (unitMatch) {
-        // Make sure it's not a variable name
-        const unitText = unitMatch[0];
-        if (!variableContext.has(unitText)) {
-          tokens.push({
-            type: "unit",
-            start: baseOffset + pos,
-            end: baseOffset + pos + unitText.length,
-            text: unitText,
-          });
-          pos += unitText.length;
-          matched = true;
+      const shouldParseUnit =
+        lastTokenType === "scrubbableNumber" ||
+        (lastTokenType === "keyword" && lastTokenText === "to");
+      if (shouldParseUnit) {
+        const unitMatch = expr.substring(pos).match(unitRegex);
+        if (unitMatch) {
+          // Make sure it's not a variable name
+          const unitText = unitMatch[0];
+          if (!variableContext.has(unitText)) {
+            pushToken({
+              type: "unit",
+              start: baseOffset + pos,
+              end: baseOffset + pos + unitText.length,
+              text: unitText,
+            });
+            pos += unitText.length;
+            matched = true;
+          }
         }
       }
     }
@@ -552,13 +565,49 @@ export function tokenizeExpression(
     // Check for operators and parentheses
     if (!matched) {
       if (operatorRegex.test(expr[pos]) || parenRegex.test(expr[pos])) {
-        tokens.push({
+        pushToken({
           type: "operator",
           start: baseOffset + pos,
           end: baseOffset + pos + 1,
           text: expr[pos],
         });
         pos++;
+        matched = true;
+      }
+    }
+
+    // Fallback: treat unknown identifiers as variables
+    if (!matched && /[a-zA-Z_]/.test(expr[pos])) {
+      const start = pos;
+      let value = "";
+      while (pos < expr.length) {
+        const char = expr[pos];
+        if (/[a-zA-Z0-9_]/.test(char)) {
+          value += char;
+          pos++;
+          continue;
+        }
+        if (/\s/.test(char)) {
+          let lookahead = pos;
+          while (lookahead < expr.length && /\s/.test(expr[lookahead])) {
+            lookahead++;
+          }
+          if (lookahead < expr.length && /[a-zA-Z0-9_]/.test(expr[lookahead])) {
+            value += " ";
+            pos = lookahead;
+            continue;
+          }
+        }
+        break;
+      }
+      const normalizedValue = value.replace(/\s+/g, " ").trim();
+      if (normalizedValue) {
+        pushToken({
+          type: "variable",
+          start: baseOffset + start,
+          end: baseOffset + pos,
+          text: normalizedValue,
+        });
         matched = true;
       }
     }

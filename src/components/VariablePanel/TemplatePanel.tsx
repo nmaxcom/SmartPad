@@ -8,16 +8,58 @@ const templates = [
     id: "syntax-tour",
     emoji: "✨",
     name: "Syntax Tour",
-    content: `// Quick tour of SmartPad syntax
+    content: `// Welcome to SmartPad: type lines, add "=>" to evaluate
+
+// Variables: spaces and underscores both work
+monthly rent = 1250
+utilities = 185
+internet = 75
+monthly total = monthly rent + utilities + internet =>
+yearly total = monthly total * 12 =>
+
+// Phrase variables (with "of" inside the name)
+pizza total cost = 18.99
+number of friends = 6
+cost per friend = pizza total cost / number of friends =>
+
+// Currency + percentages
 base price = $120.50
-discount_rate = 15%
-final price = discount_rate off base price =>
+discount = 15%
+final price = discount off base price =>
+tax_rate = 8%
+total = tax_rate on final price =>
+tip = 10% of total =>
+
+// Percentage operators and queries
 20 / 80 as % =>
-distance = 12.5 km
-time = 25 min
-speed = distance / time =>
+20 of 80 is % =>
+25% off $80 =>
+25% on $80 =>
+10% of 155 N =>
+
+// Units + conversion
+trip distance = 12.5 km
+trip time = 25 min
+speed = trip distance / trip time =>
 speed to m/s =>
-sqrt(16) + 2.5 =>`,
+height = 1.82 m
+height to cm =>
+
+// Temperature conversion (ASCII units)
+temp c = 25 C
+temp c to F =>
+temp c to K =>
+
+// Functions, constants, and powers
+sqrt(16) + 2.5 =>
+abs(-4.2) =>
+max(3, 7) * 2 =>
+PI * 2 =>
+radius = 4 m
+area = PI * radius^2 =>
+
+// Parentheses + decimals
+(3.5 + 2.1) * 4 =>`,
   },
   {
     id: "rent",
