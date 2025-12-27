@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SmartPad - Scenarios & Timeline</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
+      :root {
+        --bg: #fafbfc;
+        --surface: #ffffff;
+        --text: #1a1f36;
+        --muted: #697386;
+        --border: #e3e8ee;
+        --accent: #635bff;
+        --accent-soft: #f0efff;
+        --green: #0cce6b;
+        --green-soft: #e6faf0;
+        --orange: #ff9500;
+        --orange-soft: #fff5e6;
+        --red: #ff4757;
+        --red-soft: #ffe8ea;
+      }
+
+      * { box-sizing: border-box; margin: 0; }
+
+      body {
+        font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      .app {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        min-height: 100vh;
+      }
+
+      /* Header */
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 24px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .brand {
+        font-weight: 700;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .brand-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        background: var(--accent);
+        display: grid;
+        place-items: center;
+        color: white;
+        font-weight: 700;
+        font-size: 14px;
+      }
+
+      .doc-title {
+        font-weight: 600;
+        font-size: 14px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .btn {
+        padding: 8px 14px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+
+      .btn:hover { border-color: var(--accent); color: var(--accent); }
+      .btn-primary { background: var(--accent); border-color: var(--accent); color: white; }
+      .btn-primary:hover { background: #4b44d9; }
+
+      /* Main content */
+      main {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        overflow: hidden;
+      }
+
+      /* Editor with scenario tabs */
+      .editor-area {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .scenario-tabs {
+        display: flex;
+        gap: 4px;
+        padding: 12px 24px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .scenario-tab {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid transparent;
+        transition: all 0.15s;
+      }
+
+      .scenario-tab:hover { background: var(--bg); }
+
+      .scenario-tab.active {
+        background: var(--accent-soft);
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+
+      .scenario-tab .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+
+      .scenario-tab.base .dot { background: var(--accent); }
+      .scenario-tab.optimistic .dot { background: var(--green); }
+      .scenario-tab.pessimistic .dot { background: var(--orange); }
+
+      .add-scenario {
+        padding: 8px 12px;
+        border: 1px dashed var(--border);
+        border-radius: 6px;
+        font-size: 12px;
+        color: var(--muted);
+        cursor: pointer;
+      }
+
+      .add-scenario:hover { border-color: var(--accent); color: var(--accent); }
+
+      /* Split view for comparing */
+      .split-view {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        overflow: hidden;
+      }
+
+      .scenario-pane {
+        padding: 24px;
+        overflow-y: auto;
+        position: relative;
+      }
+
+      .scenario-pane:first-child {
+        border-right: 1px solid var(--border);
+      }
+
+      .scenario-pane::before {
+        content: attr(data-scenario);
+        position: sticky;
+        top: 0;
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+        background: var(--bg);
+        padding: 8px 12px;
+        border-radius: 4px;
+        margin-bottom: 16px;
+      }
+
+      .line {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 0;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 14px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .var { color: var(--accent); font-weight: 500; }
+      .op { color: var(--muted); }
+      .num { color: var(--text); }
+
+      .result {
+        margin-left: auto;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .result.positive { background: var(--green-soft); color: var(--green); }
+      .result.negative { background: var(--red-soft); color: var(--red); }
+      .result.neutral { background: var(--bg); color: var(--text); }
+
+      /* Diff indicator */
+      .diff {
+        font-size: 11px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-left: 4px;
+      }
+
+      .diff.up { background: var(--green-soft); color: var(--green); }
+      .diff.down { background: var(--red-soft); color: var(--red); }
+
+      /* Changed value highlight */
+      .changed {
+        background: var(--orange-soft);
+        padding: 2px 6px;
+        border-radius: 4px;
+        position: relative;
+      }
+
+      .changed::after {
+        content: "modified";
+        position: absolute;
+        top: -18px;
+        left: 0;
+        font-size: 9px;
+        color: var(--orange);
+        text-transform: uppercase;
+      }
+
+      /* Sidebar - Scenario comparison */
+      .sidebar {
+        background: var(--surface);
+        border-left: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .sidebar-section {
+        padding: 20px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .sidebar-title {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+        margin-bottom: 16px;
+      }
+
+      /* Comparison chart */
+      .comparison-chart {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .chart-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .chart-label {
+        font-size: 12px;
+        color: var(--muted);
+        min-width: 80px;
+      }
+
+      .chart-bars {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .chart-bar {
+        height: 8px;
+        border-radius: 4px;
+        position: relative;
+      }
+
+      .chart-bar.base { background: var(--accent); width: 75%; }
+      .chart-bar.optimistic { background: var(--green); width: 60%; }
+      .chart-bar.pessimistic { background: var(--orange); width: 90%; }
+
+      .chart-value {
+        font-size: 12px;
+        font-weight: 600;
+        min-width: 50px;
+        text-align: right;
+      }
+
+      /* Insights */
+      .insight-card {
+        padding: 14px;
+        border-radius: 8px;
+        background: var(--accent-soft);
+        margin-bottom: 12px;
+      }
+
+      .insight-card h4 {
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: var(--accent);
+      }
+
+      .insight-card p {
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      /* Parameter sliders */
+      .param-control {
+        margin-bottom: 16px;
+      }
+
+      .param-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+
+      .param-name { color: var(--text); font-weight: 500; }
+      .param-value { color: var(--accent); font-family: "JetBrains Mono", monospace; }
+
+      .param-slider {
+        width: 100%;
+        height: 6px;
+        border-radius: 3px;
+        background: var(--border);
+        appearance: none;
+        cursor: pointer;
+      }
+
+      .param-slider::-webkit-slider-thumb {
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--accent);
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(99, 91, 255, 0.3);
+      }
+
+      /* Timeline footer */
+      footer {
+        background: var(--surface);
+        border-top: 1px solid var(--border);
+        padding: 16px 24px;
+      }
+
+      .timeline-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+
+      .timeline-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+
+      .timeline-controls {
+        display: flex;
+        gap: 8px;
+      }
+
+      .timeline-btn {
+        padding: 4px 8px;
+        border: none;
+        background: var(--bg);
+        border-radius: 4px;
+        font-size: 11px;
+        cursor: pointer;
+      }
+
+      .timeline-track {
+        position: relative;
+        height: 40px;
+        background: var(--bg);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .timeline-markers {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 20px;
+        align-items: flex-end;
+        padding-bottom: 6px;
+      }
+
+      .timeline-marker {
+        font-size: 10px;
+        color: var(--muted);
+      }
+
+      .timeline-events {
+        position: absolute;
+        top: 8px;
+        left: 20px;
+        right: 20px;
+        height: 16px;
+      }
+
+      .timeline-event {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        transform: translateX(-50%);
+        cursor: pointer;
+        transition: transform 0.15s;
+      }
+
+      .timeline-event:hover { transform: translateX(-50%) scale(1.3); }
+
+      .timeline-event.base { left: 20%; background: var(--accent); }
+      .timeline-event.fork { left: 50%; background: var(--green); }
+      .timeline-event.current { left: 80%; background: var(--orange); box-shadow: 0 0 0 3px var(--orange-soft); }
+
+      .timeline-scrubber {
+        position: absolute;
+        top: 4px;
+        left: 80%;
+        width: 4px;
+        height: 32px;
+        background: var(--text);
+        border-radius: 2px;
+        cursor: ew-resize;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header>
+        <div class="brand">
+          <div class="brand-icon">=</div>
+          SmartPad
+        </div>
+        <input class="doc-title" value="Q4 Budget Forecast" />
+        <div class="actions">
+          <button class="btn">Share</button>
+          <button class="btn">History</button>
+          <button class="btn btn-primary">Compare All</button>
+        </div>
+      </header>
+
+      <main>
+        <div class="editor-area">
+          <div class="scenario-tabs">
+            <div class="scenario-tab base active">
+              <span class="dot"></span>
+              Base Case
+            </div>
+            <div class="scenario-tab optimistic">
+              <span class="dot"></span>
+              Optimistic
+            </div>
+            <div class="scenario-tab pessimistic">
+              <span class="dot"></span>
+              Conservative
+            </div>
+            <div class="add-scenario">+ New Scenario</div>
+          </div>
+
+          <div class="split-view">
+            <div class="scenario-pane" data-scenario="Base Case">
+              <div class="line">
+                <span class="var">revenue</span>
+                <span class="op">=</span>
+                <span class="num">$120,000</span>
+              </div>
+              <div class="line">
+                <span class="var">growth rate</span>
+                <span class="op">=</span>
+                <span class="num">8%</span>
+              </div>
+              <div class="line">
+                <span class="var">operating costs</span>
+                <span class="op">=</span>
+                <span class="num">$45,000</span>
+              </div>
+              <div class="line">
+                <span class="var">projected revenue</span>
+                <span class="op">=</span>
+                <span class="var">revenue</span>
+                <span class="op">×</span>
+                <span class="num">(1 + growth rate)</span>
+                <span class="result neutral">$129,600</span>
+              </div>
+              <div class="line">
+                <span class="var">net profit</span>
+                <span class="op">=</span>
+                <span class="var">projected revenue</span>
+                <span class="op">−</span>
+                <span class="var">operating costs</span>
+                <span class="result positive">$84,600</span>
+              </div>
+              <div class="line">
+                <span class="var">profit margin</span>
+                <span class="op">=</span>
+                <span class="var">net profit</span>
+                <span class="op">/</span>
+                <span class="var">projected revenue</span>
+                <span class="result positive">65.3%</span>
+              </div>
+            </div>
+
+            <div class="scenario-pane" data-scenario="Conservative (comparing)">
+              <div class="line">
+                <span class="var">revenue</span>
+                <span class="op">=</span>
+                <span class="num">$120,000</span>
+              </div>
+              <div class="line">
+                <span class="var">growth rate</span>
+                <span class="op">=</span>
+                <span class="num changed">3%</span>
+                <span class="diff down">−5%</span>
+              </div>
+              <div class="line">
+                <span class="var">operating costs</span>
+                <span class="op">=</span>
+                <span class="num changed">$52,000</span>
+                <span class="diff down">+$7k</span>
+              </div>
+              <div class="line">
+                <span class="var">projected revenue</span>
+                <span class="op">=</span>
+                <span class="var">revenue</span>
+                <span class="op">×</span>
+                <span class="num">(1 + growth rate)</span>
+                <span class="result neutral">$123,600</span>
+                <span class="diff down">−$6k</span>
+              </div>
+              <div class="line">
+                <span class="var">net profit</span>
+                <span class="op">=</span>
+                <span class="var">projected revenue</span>
+                <span class="op">−</span>
+                <span class="var">operating costs</span>
+                <span class="result negative">$71,600</span>
+                <span class="diff down">−$13k</span>
+              </div>
+              <div class="line">
+                <span class="var">profit margin</span>
+                <span class="op">=</span>
+                <span class="var">net profit</span>
+                <span class="op">/</span>
+                <span class="var">projected revenue</span>
+                <span class="result negative">57.9%</span>
+                <span class="diff down">−7.4%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="sidebar">
+          <div class="sidebar-section">
+            <div class="sidebar-title">Scenario Comparison</div>
+            <div class="comparison-chart">
+              <div class="chart-row">
+                <span class="chart-label">Net Profit</span>
+                <div class="chart-bars">
+                  <div class="chart-bar base"></div>
+                  <div class="chart-bar optimistic"></div>
+                  <div class="chart-bar pessimistic"></div>
+                </div>
+                <span class="chart-value">$84.6k</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="sidebar-section">
+            <div class="sidebar-title">AI Insights</div>
+            <div class="insight-card">
+              <h4>🎯 Sensitivity Analysis</h4>
+              <p>A 1% change in growth rate impacts net profit by ~$1,200. Operating costs have a 1:1 impact.</p>
+            </div>
+            <div class="insight-card">
+              <h4>⚠️ Risk Factor</h4>
+              <p>Conservative scenario shows 15% lower profit. Consider hedging strategies if growth drops below 5%.</p>
+            </div>
+          </div>
+
+          <div class="sidebar-section">
+            <div class="sidebar-title">Scenario Parameters</div>
+            <div class="param-control">
+              <div class="param-header">
+                <span class="param-name">Growth Rate</span>
+                <span class="param-value">8%</span>
+              </div>
+              <input type="range" class="param-slider" min="0" max="20" value="8" />
+            </div>
+            <div class="param-control">
+              <div class="param-header">
+                <span class="param-name">Operating Costs</span>
+                <span class="param-value">$45,000</span>
+              </div>
+              <input type="range" class="param-slider" min="30000" max="70000" value="45000" />
+            </div>
+          </div>
+        </aside>
+      </main>
+
+      <footer>
+        <div class="timeline-header">
+          <div class="timeline-title">Version Timeline</div>
+          <div class="timeline-controls">
+            <button class="timeline-btn">← Prev</button>
+            <button class="timeline-btn">Next →</button>
+            <button class="timeline-btn">Fork Here</button>
+          </div>
+        </div>
+        <div class="timeline-track">
+          <div class="timeline-events">
+            <div class="timeline-event base" title="Initial version"></div>
+            <div class="timeline-event fork" title="Created Conservative scenario"></div>
+            <div class="timeline-event current" title="Current"></div>
+          </div>
+          <div class="timeline-scrubber"></div>
+          <div class="timeline-markers">
+            <span class="timeline-marker">Dec 1</span>
+            <span class="timeline-marker">Dec 8</span>
+            <span class="timeline-marker">Dec 15</span>
+            <span class="timeline-marker">Dec 22</span>
+            <span class="timeline-marker">Today</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
+

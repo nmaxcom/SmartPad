@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SmartPad - Spatial Canvas</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap");
+
+      :root {
+        --bg: #1a1a2e;
+        --surface: #252542;
+        --surface-light: #2d2d4a;
+        --text: #eaeaf4;
+        --muted: #9595b2;
+        --border: rgba(255,255,255,0.08);
+        --accent: #7c5dfa;
+        --accent-soft: rgba(124, 93, 250, 0.15);
+        --teal: #00d9c0;
+        --teal-soft: rgba(0, 217, 192, 0.15);
+        --pink: #ff6b9d;
+        --pink-soft: rgba(255, 107, 157, 0.15);
+        --yellow: #ffd93d;
+        --yellow-soft: rgba(255, 217, 61, 0.15);
+      }
+
+      * { box-sizing: border-box; margin: 0; }
+
+      body {
+        font-family: "Sora", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        overflow: hidden;
+      }
+
+      .app {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        min-height: 100vh;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        z-index: 100;
+      }
+
+      .sidebar-header {
+        padding: 20px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .brand {
+        font-weight: 700;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .brand-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, var(--accent), var(--pink));
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        font-size: 16px;
+      }
+
+      .sidebar-section {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .section-title {
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+        margin-bottom: 12px;
+      }
+
+      /* Node palette */
+      .node-palette {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .palette-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        cursor: grab;
+        transition: all 0.15s;
+        border: 1px solid transparent;
+      }
+
+      .palette-item:hover {
+        background: var(--surface-light);
+        border-color: var(--border);
+      }
+
+      .palette-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        display: grid;
+        place-items: center;
+        font-size: 14px;
+      }
+
+      .palette-item.calc .palette-icon { background: var(--accent-soft); }
+      .palette-item.input .palette-icon { background: var(--teal-soft); }
+      .palette-item.output .palette-icon { background: var(--pink-soft); }
+      .palette-item.note .palette-icon { background: var(--yellow-soft); }
+
+      /* Variables list */
+      .var-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .var-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        background: rgba(255,255,255,0.02);
+        cursor: pointer;
+      }
+
+      .var-item:hover { background: rgba(255,255,255,0.05); }
+
+      .var-name {
+        font-family: "IBM Plex Mono", monospace;
+        color: var(--teal);
+      }
+
+      .var-value {
+        font-family: "IBM Plex Mono", monospace;
+        color: var(--muted);
+      }
+
+      /* Canvas area */
+      .canvas-area {
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* Canvas toolbar */
+      .canvas-toolbar {
+        position: absolute;
+        top: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 4px;
+        padding: 6px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        z-index: 100;
+      }
+
+      .toolbar-btn {
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        background: transparent;
+        border: none;
+        color: var(--muted);
+        cursor: pointer;
+        transition: all 0.15s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .toolbar-btn:hover { background: var(--surface-light); color: var(--text); }
+      .toolbar-btn.active { background: var(--accent-soft); color: var(--accent); }
+
+      .toolbar-divider {
+        width: 1px;
+        background: var(--border);
+        margin: 0 4px;
+      }
+
+      /* Zoom controls */
+      .zoom-controls {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 4px;
+        z-index: 100;
+      }
+
+      .zoom-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        background: transparent;
+        border: none;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.15s;
+      }
+
+      .zoom-btn:hover { background: var(--surface-light); color: var(--text); }
+
+      .zoom-level {
+        text-align: center;
+        font-size: 11px;
+        color: var(--muted);
+        padding: 4px;
+      }
+
+      /* Canvas grid */
+      .canvas {
+        width: 100%;
+        height: 100%;
+        background:
+          radial-gradient(circle at center, rgba(124, 93, 250, 0.03), transparent 70%),
+          linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+        background-size: 100% 100%, 40px 40px, 40px 40px;
+        position: relative;
+      }
+
+      /* Connection lines */
+      .connections {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .connection {
+        stroke: var(--accent);
+        stroke-width: 2;
+        fill: none;
+        opacity: 0.5;
+      }
+
+      .connection.active {
+        opacity: 1;
+        stroke-width: 3;
+        filter: drop-shadow(0 0 4px var(--accent));
+      }
+
+      /* Nodes */
+      .node {
+        position: absolute;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        cursor: move;
+        transition: box-shadow 0.2s, transform 0.2s;
+      }
+
+      .node:hover {
+        box-shadow: 0 12px 48px rgba(0,0,0,0.3);
+        z-index: 10;
+      }
+
+      .node.selected {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px var(--accent-soft), 0 12px 48px rgba(0,0,0,0.3);
+      }
+
+      .node-header {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .node-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        display: grid;
+        place-items: center;
+        font-size: 12px;
+      }
+
+      .node.calc .node-icon { background: var(--accent-soft); color: var(--accent); }
+      .node.input .node-icon { background: var(--teal-soft); color: var(--teal); }
+      .node.output .node-icon { background: var(--pink-soft); color: var(--pink); }
+      .node.group .node-icon { background: var(--yellow-soft); color: var(--yellow); }
+
+      .node-body {
+        padding: 16px;
+      }
+
+      .node-line {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 13px;
+        padding: 8px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .node-var { color: var(--teal); }
+      .node-op { color: var(--muted); }
+      .node-num { color: var(--text); }
+
+      .node-result {
+        margin-top: 12px;
+        padding: 10px 14px;
+        border-radius: 8px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 14px;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      /* Input node */
+      .node-input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface-light);
+        color: var(--text);
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 14px;
+        text-align: center;
+      }
+
+      .node-input:focus {
+        outline: none;
+        border-color: var(--teal);
+      }
+
+      .node-slider {
+        width: 100%;
+        margin-top: 12px;
+        appearance: none;
+        height: 6px;
+        border-radius: 3px;
+        background: var(--surface-light);
+      }
+
+      .node-slider::-webkit-slider-thumb {
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--teal);
+        cursor: pointer;
+      }
+
+      /* Port connectors */
+      .port {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--surface-light);
+        border: 2px solid var(--border);
+        cursor: crosshair;
+        transition: all 0.15s;
+      }
+
+      .port:hover {
+        transform: scale(1.3);
+        border-color: var(--accent);
+        background: var(--accent);
+      }
+
+      .port.input { left: -6px; top: 50%; transform: translateY(-50%); }
+      .port.output { right: -6px; top: 50%; transform: translateY(-50%); }
+
+      .port.connected {
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+
+      /* Note node */
+      .node.note {
+        min-width: 200px;
+      }
+
+      .node.note .node-body {
+        font-size: 13px;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+
+      /* Group container */
+      .node.group {
+        min-width: 400px;
+        min-height: 300px;
+        background: rgba(37, 37, 66, 0.5);
+        backdrop-filter: blur(8px);
+      }
+
+      .group-label {
+        position: absolute;
+        top: -28px;
+        left: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--yellow);
+        background: var(--surface);
+        padding: 4px 10px;
+        border-radius: 4px;
+      }
+
+      /* Minimap */
+      .minimap {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        width: 180px;
+        height: 120px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        z-index: 100;
+      }
+
+      .minimap-viewport {
+        position: absolute;
+        border: 2px solid var(--accent);
+        border-radius: 2px;
+        background: rgba(124, 93, 250, 0.1);
+        width: 60px;
+        height: 40px;
+        top: 30px;
+        left: 50px;
+      }
+
+      .minimap-nodes {
+        position: absolute;
+        inset: 8px;
+      }
+
+      .minimap-node {
+        position: absolute;
+        width: 20px;
+        height: 12px;
+        border-radius: 2px;
+        background: var(--surface-light);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="brand">
+            <div class="brand-icon">=</div>
+            SmartPad
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="section-title">Add Nodes</div>
+          <div class="node-palette">
+            <div class="palette-item calc" draggable="true">
+              <div class="palette-icon">fx</div>
+              <span>Calculation</span>
+            </div>
+            <div class="palette-item input" draggable="true">
+              <div class="palette-icon">→</div>
+              <span>Input / Slider</span>
+            </div>
+            <div class="palette-item output" draggable="true">
+              <div class="palette-icon">◎</div>
+              <span>Output / Display</span>
+            </div>
+            <div class="palette-item note" draggable="true">
+              <div class="palette-icon">✎</div>
+              <span>Note / Comment</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="section-title">Variables</div>
+          <div class="var-list">
+            <div class="var-item">
+              <span class="var-name">price</span>
+              <span class="var-value">$45.00</span>
+            </div>
+            <div class="var-item">
+              <span class="var-name">quantity</span>
+              <span class="var-value">12</span>
+            </div>
+            <div class="var-item">
+              <span class="var-name">discount</span>
+              <span class="var-value">15%</span>
+            </div>
+            <div class="var-item">
+              <span class="var-name">subtotal</span>
+              <span class="var-value">$540.00</span>
+            </div>
+            <div class="var-item">
+              <span class="var-name">total</span>
+              <span class="var-value">$459.00</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-section" style="margin-top: auto;">
+          <div class="section-title">Canvas Stats</div>
+          <div style="font-size: 12px; color: var(--muted); line-height: 1.8;">
+            Nodes: 5<br>
+            Connections: 4<br>
+            Variables: 5
+          </div>
+        </div>
+      </aside>
+
+      <div class="canvas-area">
+        <div class="canvas-toolbar">
+          <button class="toolbar-btn active">
+            <span>↖</span> Select
+          </button>
+          <button class="toolbar-btn">
+            <span>✋</span> Pan
+          </button>
+          <div class="toolbar-divider"></div>
+          <button class="toolbar-btn">
+            <span>⬚</span> Group
+          </button>
+          <button class="toolbar-btn">
+            <span>↝</span> Connect
+          </button>
+          <div class="toolbar-divider"></div>
+          <button class="toolbar-btn">
+            <span>⟳</span> Auto Layout
+          </button>
+        </div>
+
+        <div class="canvas">
+          <!-- SVG for connections -->
+          <svg class="connections" width="100%" height="100%">
+            <path class="connection active" d="M 230 220 C 280 220, 320 180, 370 180" />
+            <path class="connection" d="M 230 280 C 280 280, 320 320, 370 320" />
+            <path class="connection" d="M 570 250 C 620 250, 660 350, 710 350" />
+            <path class="connection" d="M 570 250 C 640 250, 680 450, 750 450" />
+          </svg>
+
+          <!-- Input Node: Price -->
+          <div class="node input" style="left: 80px; top: 160px; width: 160px;">
+            <div class="port output connected"></div>
+            <div class="node-header">
+              <div class="node-icon">→</div>
+              Price
+            </div>
+            <div class="node-body">
+              <input class="node-input" value="$45.00" />
+              <input type="range" class="node-slider" min="0" max="100" value="45" />
+            </div>
+          </div>
+
+          <!-- Input Node: Quantity -->
+          <div class="node input" style="left: 80px; top: 340px; width: 160px;">
+            <div class="port output connected"></div>
+            <div class="node-header">
+              <div class="node-icon">→</div>
+              Quantity
+            </div>
+            <div class="node-body">
+              <input class="node-input" value="12" />
+              <input type="range" class="node-slider" min="1" max="50" value="12" />
+            </div>
+          </div>
+
+          <!-- Calc Node: Subtotal -->
+          <div class="node calc selected" style="left: 360px; top: 220px; width: 220px;">
+            <div class="port input connected" style="top: 30%;"></div>
+            <div class="port input connected" style="top: 70%;"></div>
+            <div class="port output connected"></div>
+            <div class="node-header">
+              <div class="node-icon">fx</div>
+              Subtotal
+            </div>
+            <div class="node-body">
+              <div class="node-line">
+                <span class="node-var">subtotal</span>
+                <span class="node-op">=</span>
+                <span class="node-var">price</span>
+                <span class="node-op">×</span>
+                <span class="node-var">quantity</span>
+              </div>
+              <div class="node-result">$540.00</div>
+            </div>
+          </div>
+
+          <!-- Output Node: Total -->
+          <div class="node output" style="left: 700px; top: 300px; width: 200px;">
+            <div class="port input connected"></div>
+            <div class="node-header">
+              <div class="node-icon">◎</div>
+              Final Total
+            </div>
+            <div class="node-body">
+              <div class="node-line">
+                <span class="node-var">total</span>
+                <span class="node-op">=</span>
+                <span class="node-var">subtotal</span>
+                <span class="node-op">−</span>
+                <span class="node-num">15%</span>
+              </div>
+              <div class="node-result" style="background: var(--pink-soft); color: var(--pink);">$459.00</div>
+            </div>
+          </div>
+
+          <!-- Note Node -->
+          <div class="node note" style="left: 700px; top: 460px; width: 220px;">
+            <div class="node-header">
+              <div class="node-icon" style="background: var(--yellow-soft); color: var(--yellow);">✎</div>
+              Note
+            </div>
+            <div class="node-body">
+              Remember to adjust the discount rate after the holiday season ends.
+            </div>
+          </div>
+
+          <!-- Group container -->
+          <div class="node group" style="left: 60px; top: 120px; width: 280px; height: 340px; z-index: -1;">
+            <div class="group-label">Inputs</div>
+          </div>
+        </div>
+
+        <div class="zoom-controls">
+          <button class="zoom-btn">+</button>
+          <div class="zoom-level">100%</div>
+          <button class="zoom-btn">−</button>
+          <button class="zoom-btn" style="font-size: 12px;">⊡</button>
+        </div>
+
+        <div class="minimap">
+          <div class="minimap-nodes">
+            <div class="minimap-node" style="left: 10px; top: 30px; background: var(--teal);"></div>
+            <div class="minimap-node" style="left: 10px; top: 60px; background: var(--teal);"></div>
+            <div class="minimap-node" style="left: 60px; top: 45px; background: var(--accent);"></div>
+            <div class="minimap-node" style="left: 120px; top: 50px; background: var(--pink);"></div>
+            <div class="minimap-node" style="left: 120px; top: 75px; background: var(--yellow);"></div>
+          </div>
+          <div class="minimap-viewport"></div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+

@@ -1,7 +1,5 @@
 /* 
-  App.css - Minimal app-level styles.
-  Most styling is now handled in component-specific CSS files 
-  or defined in globals.css and variables.css.
+  App.css - App-level styles for the Spatial Canvas theme.
 */
 
 .app {
@@ -16,8 +14,7 @@
 }
 
 /* 
-  This class is applied to the AppContainer that wraps the editor 
-  to give it the card-like appearance.
+  Editor card container - the main editing area
 */
 .editor-card-container {
   background-color: var(--color-surface);
@@ -28,6 +25,21 @@
   min-height: 500px;
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle gradient glow effect */
+.editor-card-container::before {
+  content: "";
+  position: absolute;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 400px;
+  height: 200px;
+  background: radial-gradient(ellipse, rgba(124, 93, 250, 0.08), transparent 70%);
+  pointer-events: none;
 }
 
 /* Container for the sidebar elements (VariablePanel and ExampleButton) */

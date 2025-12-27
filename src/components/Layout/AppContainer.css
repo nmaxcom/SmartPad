@@ -1,8 +1,8 @@
-/* AppContainer.css */
+/* AppContainer.css - Spatial Canvas Theme */
 
 .app-container {
   width: 100%;
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: var(--spacing-8) var(--spacing-6);
 }
@@ -17,4 +17,4 @@
   .app-container {
     padding: var(--spacing-4) var(--spacing-2);
   }
-} 
+}

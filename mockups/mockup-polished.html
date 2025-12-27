@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SmartPad - Polished</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap");
+
+      :root {
+        --bg: #f6f7f9;
+        --surface: #ffffff;
+        --surface-raised: #ffffff;
+        --text: #1a1d23;
+        --text-secondary: #6b7280;
+        --accent: #2563eb;
+        --accent-soft: #dbeafe;
+        --success: #059669;
+        --success-soft: #d1fae5;
+        --border: #e5e7eb;
+        --border-subtle: #f3f4f6;
+        --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+        --shadow-md: 0 4px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+        --shadow-lg: 0 12px 40px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+      }
+
+      * { box-sizing: border-box; margin: 0; }
+
+      body {
+        font-family: "DM Sans", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        line-height: 1.5;
+      }
+
+      .app {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      /* Header */
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 0;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .brand-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, var(--accent) 0%, #7c3aed 100%);
+        display: grid;
+        place-items: center;
+      }
+
+      .brand-icon::after {
+        content: "=";
+        color: white;
+        font-weight: 700;
+        font-size: 16px;
+      }
+
+      .brand-name {
+        font-weight: 600;
+        font-size: 18px;
+        letter-spacing: -0.02em;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .btn {
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+
+      .btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #1d4ed8;
+        border-color: #1d4ed8;
+        color: white;
+      }
+
+      /* Layout */
+      .layout {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 20px;
+        align-items: start;
+      }
+
+      /* Editor Card */
+      .editor-card {
+        background: var(--surface);
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-lg);
+        overflow: hidden;
+      }
+
+      .editor-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .doc-title {
+        font-weight: 600;
+        font-size: 15px;
+        color: var(--text);
+      }
+
+      .doc-meta {
+        font-size: 12px;
+        color: var(--text-secondary);
+      }
+
+      .editor-body {
+        padding: 24px;
+        min-height: 480px;
+      }
+
+      .line {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 0;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 14px;
+        line-height: 1.6;
+        border-bottom: 1px solid var(--border-subtle);
+        transition: background 0.15s ease;
+      }
+
+      .line:last-child {
+        border-bottom: none;
+      }
+
+      .line:hover {
+        background: var(--border-subtle);
+        margin: 0 -24px;
+        padding-left: 24px;
+        padding-right: 24px;
+      }
+
+      .line-number {
+        width: 24px;
+        font-size: 11px;
+        color: var(--text-secondary);
+        opacity: 0.5;
+        text-align: right;
+        margin-right: 12px;
+        user-select: none;
+      }
+
+      .var { color: #2563eb; font-weight: 500; }
+      .op { color: #9333ea; }
+      .num { color: var(--text); }
+      .unit { color: #059669; font-weight: 500; }
+      .comment { color: var(--text-secondary); font-style: italic; }
+
+      .result {
+        margin-left: auto;
+        background: var(--success-soft);
+        color: var(--success);
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+
+      .cursor {
+        width: 2px;
+        height: 18px;
+        background: var(--accent);
+        border-radius: 1px;
+        animation: blink 1s infinite;
+        margin-left: 2px;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .card {
+        background: var(--surface);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-md);
+        padding: 16px;
+      }
+
+      .card-title {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
+      }
+
+      .var-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 0;
+        font-size: 13px;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+
+      .var-row:last-child { border-bottom: none; }
+
+      .var-name {
+        color: var(--accent);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .var-value {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        color: var(--text);
+      }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .stat {
+        text-align: center;
+        padding: 12px;
+        border-radius: 8px;
+        background: var(--border-subtle);
+      }
+
+      .stat-value {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      .stat-label {
+        font-size: 11px;
+        color: var(--text-secondary);
+        margin-top: 2px;
+      }
+
+      .graph-placeholder {
+        height: 80px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, var(--accent-soft) 0%, #fae8ff 100%);
+        display: grid;
+        place-items: center;
+        font-size: 12px;
+        color: var(--text-secondary);
+      }
+
+      .tip {
+        padding: 12px;
+        border-radius: 8px;
+        background: #fffbeb;
+        border: 1px solid #fcd34d;
+        font-size: 12px;
+        color: #92400e;
+        line-height: 1.5;
+      }
+
+      @keyframes blink {
+        0%, 50% { opacity: 1; }
+        51%, 100% { opacity: 0; }
+      }
+
+      @media (max-width: 900px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header>
+        <div class="brand">
+          <div class="brand-icon"></div>
+          <span class="brand-name">SmartPad</span>
+        </div>
+        <div class="header-actions">
+          <button class="btn">Templates</button>
+          <button class="btn">Settings</button>
+          <button class="btn btn-primary">Export</button>
+        </div>
+      </header>
+
+      <section class="layout">
+        <main class="editor-card">
+          <div class="editor-header">
+            <span class="doc-title">Monthly Budget Review</span>
+            <span class="doc-meta">Last saved 2 min ago</span>
+          </div>
+          <div class="editor-body">
+            <div class="line">
+              <span class="line-number">1</span>
+              <span class="comment">// Phone plan calculation</span>
+            </div>
+            <div class="line">
+              <span class="line-number">2</span>
+              <span class="var">base plan</span>
+              <span class="op">=</span>
+              <span class="num">$45</span>
+            </div>
+            <div class="line">
+              <span class="line-number">3</span>
+              <span class="var">line access</span>
+              <span class="op">=</span>
+              <span class="num">$10</span>
+            </div>
+            <div class="line">
+              <span class="line-number">4</span>
+              <span class="var">data overage</span>
+              <span class="op">=</span>
+              <span class="num">$12.50</span>
+              <span class="op">×</span>
+              <span class="num">1.5</span>
+              <span class="result">$18.75</span>
+            </div>
+            <div class="line">
+              <span class="line-number">5</span>
+              <span class="var">subtotal</span>
+              <span class="op">=</span>
+              <span class="var">base plan</span>
+              <span class="op">+</span>
+              <span class="var">line access</span>
+              <span class="op">+</span>
+              <span class="var">data overage</span>
+              <span class="result">$73.75</span>
+            </div>
+            <div class="line">
+              <span class="line-number">6</span>
+            </div>
+            <div class="line">
+              <span class="line-number">7</span>
+              <span class="comment">// Apply discount</span>
+            </div>
+            <div class="line">
+              <span class="line-number">8</span>
+              <span class="var">discount</span>
+              <span class="op">=</span>
+              <span class="num">15%</span>
+              <span class="op">of</span>
+              <span class="var">subtotal</span>
+              <span class="result">$11.06</span>
+            </div>
+            <div class="line">
+              <span class="line-number">9</span>
+              <span class="var">final total</span>
+              <span class="op">=</span>
+              <span class="var">subtotal</span>
+              <span class="op">−</span>
+              <span class="var">discount</span>
+              <span class="result">$62.69</span>
+              <span class="cursor"></span>
+            </div>
+          </div>
+        </main>
+
+        <aside class="sidebar">
+          <div class="card">
+            <div class="card-title">Variables</div>
+            <div class="var-row">
+              <span class="var-name">base plan</span>
+              <span class="var-value">$45.00</span>
+            </div>
+            <div class="var-row">
+              <span class="var-name">line access</span>
+              <span class="var-value">$10.00</span>
+            </div>
+            <div class="var-row">
+              <span class="var-name">data overage</span>
+              <span class="var-value">$18.75</span>
+            </div>
+            <div class="var-row">
+              <span class="var-name">subtotal</span>
+              <span class="var-value">$73.75</span>
+            </div>
+            <div class="var-row">
+              <span class="var-name">final total</span>
+              <span class="var-value">$62.69</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Summary</div>
+            <div class="stat-grid">
+              <div class="stat">
+                <div class="stat-value">5</div>
+                <div class="stat-label">Variables</div>
+              </div>
+              <div class="stat">
+                <div class="stat-value">9</div>
+                <div class="stat-label">Lines</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Trend</div>
+            <div class="graph-placeholder">Monthly comparison</div>
+          </div>
+
+          <div class="tip">
+            <strong>Tip:</strong> Drag any number to scrub its value and see results update live.
+          </div>
+        </aside>
+      </section>
+    </div>
+  </body>
+</html>
+

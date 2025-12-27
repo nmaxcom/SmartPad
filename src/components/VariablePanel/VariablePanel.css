@@ -1,3 +1,5 @@
+/* VariablePanel.css - Spatial Canvas Theme */
+
 .variable-panel {
   background-color: var(--color-surface);
   border-radius: var(--border-radius-xl);
@@ -10,9 +12,11 @@
 }
 
 .panel-title {
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-sm);
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   margin-bottom: var(--spacing-4);
   padding-bottom: var(--spacing-2);
   border-bottom: 1px solid var(--color-border);
@@ -22,12 +26,20 @@
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-4);
+  gap: var(--spacing-2);
 }
 
 .variable-item {
   font-family: var(--font-family-mono);
   font-size: var(--font-size-sm);
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--border-radius-md);
+  background: rgba(255, 255, 255, 0.02);
+  transition: background-color 0.15s ease;
+}
+
+.variable-item:hover {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .variable-info {
@@ -39,7 +51,7 @@
 }
 
 .variable-name {
-  color: var(--color-text-primary);
+  color: var(--color-teal);
   font-weight: 500;
 }
 
@@ -79,7 +91,7 @@
   text-transform: lowercase;
 }
 
-/* Type-specific colors */
+/* Type-specific colors - dark theme friendly */
 .variable-type-number {
   background-color: var(--color-blue-100);
   color: var(--color-blue-700);

@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SmartPad - Neon Terminal Concept</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Share+Tech+Mono&display=swap");
+
+      :root {
+        --void: #0a0a0f;
+        --surface: #12121a;
+        --surface-2: #1a1a26;
+        --text: #e4e4f0;
+        --dim: #6e6e8a;
+        --cyan: #00fff2;
+        --magenta: #ff00ea;
+        --yellow: #ffd500;
+        --green: #00ff88;
+        --glow-cyan: 0 0 20px rgba(0, 255, 242, 0.5), 0 0 40px rgba(0, 255, 242, 0.2);
+        --glow-magenta: 0 0 20px rgba(255, 0, 234, 0.5), 0 0 40px rgba(255, 0, 234, 0.2);
+      }
+
+      * { box-sizing: border-box; margin: 0; }
+
+      body {
+        font-family: "Share Tech Mono", monospace;
+        background: var(--void);
+        color: var(--text);
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      /* Scanline effect */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 0, 0, 0.15) 2px,
+          rgba(0, 0, 0, 0.15) 4px
+        );
+        z-index: 1000;
+      }
+
+      /* Vignette */
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(ellipse at center, transparent 0%, transparent 50%, rgba(0,0,0,0.6) 100%);
+        z-index: 999;
+      }
+
+      .app {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        position: relative;
+        z-index: 1;
+      }
+
+      /* Floating orbs */
+      .orb {
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(100px);
+        opacity: 0.3;
+        pointer-events: none;
+        animation: float 20s ease-in-out infinite;
+      }
+
+      .orb-1 {
+        width: 600px;
+        height: 600px;
+        background: var(--cyan);
+        top: -200px;
+        left: -200px;
+      }
+
+      .orb-2 {
+        width: 400px;
+        height: 400px;
+        background: var(--magenta);
+        bottom: -100px;
+        right: -100px;
+        animation-delay: -10s;
+      }
+
+      /* Header */
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 24px;
+        border: 1px solid rgba(0, 255, 242, 0.2);
+        background: rgba(18, 18, 26, 0.8);
+        backdrop-filter: blur(12px);
+        border-radius: 4px;
+      }
+
+      .brand {
+        font-family: "Orbitron", sans-serif;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        color: var(--cyan);
+        text-shadow: var(--glow-cyan);
+      }
+
+      .status-bar {
+        display: flex;
+        gap: 24px;
+        font-size: 12px;
+        color: var(--dim);
+      }
+
+      .status-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--green);
+        box-shadow: 0 0 8px var(--green);
+        animation: pulse 2s infinite;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .btn {
+        padding: 10px 16px;
+        border: 1px solid rgba(0, 255, 242, 0.3);
+        background: transparent;
+        color: var(--cyan);
+        font-family: "Orbitron", sans-serif;
+        font-size: 10px;
+        letter-spacing: 0.15em;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-transform: uppercase;
+      }
+
+      .btn:hover {
+        background: rgba(0, 255, 242, 0.1);
+        box-shadow: var(--glow-cyan);
+      }
+
+      /* Main Layout */
+      .layout {
+        display: grid;
+        grid-template-columns: 260px 1fr 280px;
+        gap: 16px;
+      }
+
+      /* Panels */
+      .panel {
+        border: 1px solid rgba(0, 255, 242, 0.15);
+        background: rgba(18, 18, 26, 0.6);
+        backdrop-filter: blur(12px);
+        border-radius: 4px;
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .panel::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--cyan), var(--magenta));
+        opacity: 0.6;
+      }
+
+      .panel-title {
+        font-family: "Orbitron", sans-serif;
+        font-size: 10px;
+        letter-spacing: 0.2em;
+        color: var(--dim);
+        text-transform: uppercase;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .panel-title::before {
+        content: "▸";
+        color: var(--cyan);
+      }
+
+      /* File browser */
+      .file-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .file-item {
+        padding: 12px 14px;
+        font-size: 13px;
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .file-item::before {
+        content: "◇";
+        color: var(--dim);
+        font-size: 10px;
+      }
+
+      .file-item:hover {
+        background: rgba(0, 255, 242, 0.05);
+        border-color: rgba(0, 255, 242, 0.2);
+      }
+
+      .file-item.active {
+        background: rgba(0, 255, 242, 0.1);
+        border-color: var(--cyan);
+        color: var(--cyan);
+      }
+
+      .file-item.active::before {
+        content: "◆";
+        color: var(--cyan);
+      }
+
+      /* Editor */
+      .editor {
+        min-height: 520px;
+      }
+
+      .editor::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 100px;
+        background: linear-gradient(0deg, rgba(18, 18, 26, 0.9), transparent);
+        pointer-events: none;
+      }
+
+      .line {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        font-size: 14px;
+        transition: all 0.15s ease;
+      }
+
+      .line:hover {
+        background: rgba(0, 255, 242, 0.02);
+      }
+
+      .line-num {
+        font-size: 11px;
+        color: var(--dim);
+        min-width: 32px;
+        text-align: right;
+        opacity: 0.5;
+      }
+
+      .code {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .var {
+        color: var(--cyan);
+        text-shadow: 0 0 8px rgba(0, 255, 242, 0.3);
+      }
+
+      .op {
+        color: var(--magenta);
+        text-shadow: 0 0 8px rgba(255, 0, 234, 0.3);
+      }
+
+      .num {
+        color: var(--yellow);
+        text-shadow: 0 0 8px rgba(255, 213, 0, 0.3);
+      }
+
+      .comment {
+        color: var(--dim);
+        font-style: italic;
+      }
+
+      .result {
+        padding: 6px 14px;
+        background: rgba(0, 255, 136, 0.1);
+        border: 1px solid rgba(0, 255, 136, 0.4);
+        color: var(--green);
+        border-radius: 2px;
+        font-weight: 500;
+        text-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
+        box-shadow: 0 0 16px rgba(0, 255, 136, 0.15);
+      }
+
+      .cursor {
+        display: inline-block;
+        width: 10px;
+        height: 20px;
+        background: var(--cyan);
+        box-shadow: var(--glow-cyan);
+        animation: blink 1s step-end infinite;
+        vertical-align: middle;
+      }
+
+      /* Right panel - variables */
+      .var-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .var-card {
+        padding: 14px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(0, 255, 242, 0.1);
+        border-radius: 2px;
+      }
+
+      .var-name {
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        color: var(--dim);
+        text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+
+      .var-value {
+        font-family: "Orbitron", sans-serif;
+        font-size: 18px;
+        color: var(--cyan);
+        text-shadow: var(--glow-cyan);
+      }
+
+      /* Stats */
+      .stats-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 20px;
+      }
+
+      .stat-box {
+        text-align: center;
+        padding: 16px;
+        background: rgba(255, 0, 234, 0.05);
+        border: 1px solid rgba(255, 0, 234, 0.2);
+        border-radius: 2px;
+      }
+
+      .stat-value {
+        font-family: "Orbitron", sans-serif;
+        font-size: 24px;
+        color: var(--magenta);
+        text-shadow: var(--glow-magenta);
+      }
+
+      .stat-label {
+        font-size: 9px;
+        letter-spacing: 0.15em;
+        color: var(--dim);
+        margin-top: 4px;
+        text-transform: uppercase;
+      }
+
+      /* Graph visualization */
+      .graph-box {
+        margin-top: 20px;
+        padding: 16px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(0, 255, 242, 0.1);
+        border-radius: 2px;
+      }
+
+      .graph-box svg {
+        width: 100%;
+        height: 60px;
+      }
+
+      /* Animations */
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+      }
+
+      @keyframes blink {
+        0%, 50% { opacity: 1; }
+        51%, 100% { opacity: 0; }
+      }
+
+      @keyframes float {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(30px, -20px); }
+      }
+
+      @media (max-width: 1100px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="app">
+      <header>
+        <div class="brand">SMARTPAD</div>
+        <div class="status-bar">
+          <div class="status-item">
+            <span class="status-dot"></span>
+            <span>SYSTEM ONLINE</span>
+          </div>
+          <div class="status-item">VARS: 5</div>
+          <div class="status-item">LINES: 8</div>
+        </div>
+        <div class="header-actions">
+          <button class="btn">Templates</button>
+          <button class="btn">Export</button>
+          <button class="btn">Config</button>
+        </div>
+      </header>
+
+      <section class="layout">
+        <aside class="panel">
+          <div class="panel-title">Files</div>
+          <div class="file-list">
+            <div class="file-item active">monthly_budget.sp</div>
+            <div class="file-item">trip_expenses.sp</div>
+            <div class="file-item">salary_calc.sp</div>
+            <div class="file-item">investment.sp</div>
+            <div class="file-item">unit_convert.sp</div>
+          </div>
+        </aside>
+
+        <main class="panel editor">
+          <div class="panel-title">monthly_budget.sp</div>
+
+          <div class="line">
+            <span class="line-num">01</span>
+            <span class="code">
+              <span class="comment">// Phone plan calculation</span>
+            </span>
+          </div>
+          <div class="line">
+            <span class="line-num">02</span>
+            <span class="code">
+              <span class="var">base_plan</span>
+              <span class="op">=</span>
+              <span class="num">$45</span>
+            </span>
+          </div>
+          <div class="line">
+            <span class="line-num">03</span>
+            <span class="code">
+              <span class="var">line_access</span>
+              <span class="op">=</span>
+              <span class="num">$10</span>
+            </span>
+          </div>
+          <div class="line">
+            <span class="line-num">04</span>
+            <span class="code">
+              <span class="var">data_overage</span>
+              <span class="op">=</span>
+              <span class="num">$12.50</span>
+              <span class="op">*</span>
+              <span class="num">1.5</span>
+            </span>
+            <span class="result">$18.75</span>
+          </div>
+          <div class="line">
+            <span class="line-num">05</span>
+            <span class="code">
+              <span class="var">subtotal</span>
+              <span class="op">=</span>
+              <span class="var">base_plan</span>
+              <span class="op">+</span>
+              <span class="var">line_access</span>
+              <span class="op">+</span>
+              <span class="var">data_overage</span>
+            </span>
+            <span class="result">$73.75</span>
+          </div>
+          <div class="line">
+            <span class="line-num">06</span>
+            <span class="code">
+              <span class="var">discount</span>
+              <span class="op">=</span>
+              <span class="num">15%</span>
+              <span class="op">of</span>
+              <span class="var">subtotal</span>
+            </span>
+            <span class="result">$11.06</span>
+          </div>
+          <div class="line">
+            <span class="line-num">07</span>
+            <span class="code">
+              <span class="var">final_total</span>
+              <span class="op">=</span>
+              <span class="var">subtotal</span>
+              <span class="op">-</span>
+              <span class="var">discount</span>
+              <span class="cursor"></span>
+            </span>
+            <span class="result">$62.69</span>
+          </div>
+        </main>
+
+        <aside class="panel">
+          <div class="panel-title">Variables</div>
+          <div class="var-grid">
+            <div class="var-card">
+              <div class="var-name">base_plan</div>
+              <div class="var-value">$45.00</div>
+            </div>
+            <div class="var-card">
+              <div class="var-name">subtotal</div>
+              <div class="var-value">$73.75</div>
+            </div>
+            <div class="var-card">
+              <div class="var-name">final_total</div>
+              <div class="var-value">$62.69</div>
+            </div>
+          </div>
+
+          <div class="stats-row">
+            <div class="stat-box">
+              <div class="stat-value">5</div>
+              <div class="stat-label">Variables</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value">8</div>
+              <div class="stat-label">Lines</div>
+            </div>
+          </div>
+
+          <div class="graph-box">
+            <div class="panel-title" style="margin-bottom: 12px;">Trend</div>
+            <svg viewBox="0 0 200 60" fill="none">
+              <path
+                d="M5 50 L40 40 L80 45 L120 30 L160 35 L195 15"
+                stroke="url(#gradient)"
+                stroke-width="2"
+                stroke-linecap="round"
+                fill="none"
+              />
+              <defs>
+                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#00fff2" />
+                  <stop offset="100%" stop-color="#ff00ea" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+        </aside>
+      </section>
+    </div>
+  </body>
+</html>
+

@@ -1,4 +1,4 @@
-/* SaveLoadButtons.css */
+/* SaveLoadButtons.css - Spatial Canvas Theme */
 
 /* Save/Load Buttons - Modern Multi-Slot System */
 .save-load-buttons {
@@ -9,7 +9,7 @@
 
 .save-button,
 .load-button {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark, #0056b3) 100%);
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-pink) 100%);
   color: white;
   border: none;
   border-radius: var(--border-radius-lg);
@@ -47,7 +47,7 @@
 .save-button:hover,
 .load-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 86, 179, 0.3);
+  box-shadow: 0 8px 25px rgba(124, 93, 250, 0.4);
 }
 
 .save-button:active,
@@ -57,8 +57,8 @@
 
 .save-button:focus,
 .load-button:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-accent-soft);
 }
 
 .button-icon {
@@ -73,8 +73,8 @@
 }
 
 .load-button.active {
-  background: linear-gradient(135deg, var(--color-primary-dark, #0056b3) 0%, var(--color-primary) 100%);
-  box-shadow: 0 4px 15px rgba(0, 86, 179, 0.4);
+  background: linear-gradient(135deg, var(--color-pink) 0%, var(--color-accent) 100%);
+  box-shadow: 0 4px 15px rgba(124, 93, 250, 0.5);
 }
 
 .dropdown-arrow {
@@ -96,7 +96,7 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-lg);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-lg);
   z-index: 1000;
   animation: slideDown 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   max-height: 300px;
@@ -120,7 +120,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--color-surface-light, #f8f9fa);
+  background: var(--color-surface-light);
   border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
 }
 
@@ -133,7 +133,7 @@
 .menu-header small {
   color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
-  background: var(--color-primary-light);
+  background: var(--color-accent-soft);
   padding: var(--spacing-1) var(--spacing-2);
   border-radius: var(--border-radius-md);
 }
@@ -181,8 +181,8 @@
 }
 
 .save-slot:hover {
-  background: var(--color-primary-light);
-  border-color: var(--color-primary);
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
   transform: translateX(4px);
 }
 
@@ -220,8 +220,8 @@
 }
 
 .delete-slot:hover {
-  background: var(--color-error-light, #fee);
-  color: var(--color-error, #dc3545);
+  background: var(--color-pink-soft);
+  color: var(--color-pink);
   opacity: 1;
 }
 
@@ -237,7 +237,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -252,8 +253,9 @@
 
 .save-dialog {
   background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--border-radius-xl);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-lg);
   width: 90%;
   max-width: 400px;
   animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -287,7 +289,7 @@
 
 .close-dialog {
   background: none;
-  border: none;
+  border: 1px solid var(--color-border);
   color: var(--color-text-secondary);
   cursor: pointer;
   padding: var(--spacing-1);
@@ -296,8 +298,9 @@
 }
 
 .close-dialog:hover {
-  background: var(--color-surface-light, #f8f9fa);
-  color: var(--color-text-primary);
+  background: var(--color-surface-light);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .close-dialog svg {
@@ -320,17 +323,19 @@
 .dialog-content input {
   width: 100%;
   padding: var(--spacing-3);
-  border: 2px solid var(--color-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--border-radius-md);
   font-size: var(--font-size-sm);
   transition: all 0.2s ease;
   box-sizing: border-box;
+  background: var(--color-surface-light);
+  color: var(--color-text-primary);
 }
 
 .dialog-content input:focus {
   outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-accent-soft);
 }
 
 .dialog-content input::placeholder {
@@ -358,23 +363,25 @@
 }
 
 .cancel-button {
-  background: var(--color-surface-light, #f8f9fa);
+  background: var(--color-surface-light);
   color: var(--color-text-primary);
   border: 1px solid var(--color-border);
 }
 
 .cancel-button:hover {
-  background: var(--color-border);
+  background: var(--color-surface-hover);
+  border-color: var(--color-text-secondary);
 }
 
 .confirm-button {
-  background: var(--color-primary);
+  background: var(--color-accent);
   color: white;
 }
 
 .confirm-button:hover:not(:disabled) {
-  background: var(--color-primary-dark, #0056b3);
+  background: #6b4ce6;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(124, 93, 250, 0.3);
 }
 
 .confirm-button:disabled {
