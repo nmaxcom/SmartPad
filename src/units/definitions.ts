@@ -132,12 +132,79 @@ export interface UnitDefinition {
   readonly category: string; // "length", "mass", "time", etc.
 }
 
+interface UnitPrefixDefinition {
+  readonly symbol: string;
+  readonly name: string;
+  readonly factor: number;
+}
+
+const SI_PREFIXES: UnitPrefixDefinition[] = [
+  { symbol: "Y", name: "yotta", factor: 1e24 },
+  { symbol: "Z", name: "zetta", factor: 1e21 },
+  { symbol: "E", name: "exa", factor: 1e18 },
+  { symbol: "P", name: "peta", factor: 1e15 },
+  { symbol: "T", name: "tera", factor: 1e12 },
+  { symbol: "G", name: "giga", factor: 1e9 },
+  { symbol: "M", name: "mega", factor: 1e6 },
+  { symbol: "k", name: "kilo", factor: 1e3 },
+  { symbol: "h", name: "hecto", factor: 1e2 },
+  { symbol: "da", name: "deka", factor: 1e1 },
+  { symbol: "d", name: "deci", factor: 1e-1 },
+  { symbol: "c", name: "centi", factor: 1e-2 },
+  { symbol: "m", name: "milli", factor: 1e-3 },
+  { symbol: "u", name: "micro", factor: 1e-6 },
+  { symbol: "µ", name: "micro", factor: 1e-6 },
+  { symbol: "μ", name: "micro", factor: 1e-6 },
+  { symbol: "n", name: "nano", factor: 1e-9 },
+  { symbol: "p", name: "pico", factor: 1e-12 },
+  { symbol: "f", name: "femto", factor: 1e-15 },
+  { symbol: "a", name: "atto", factor: 1e-18 },
+  { symbol: "z", name: "zepto", factor: 1e-21 },
+  { symbol: "y", name: "yocto", factor: 1e-24 },
+];
+
+const SI_PREFIXES_DESC = [...SI_PREFIXES].sort((a, b) => b.symbol.length - a.symbol.length);
+
 /**
  * Registry of all defined units
  */
 export class UnitRegistry {
   private units = new Map<string, UnitDefinition>();
   private aliases = new Map<string, string>(); // symbol -> canonical symbol
+  private prefixedCache = new Map<string, UnitDefinition>();
+
+  private getDirect(symbol: string): UnitDefinition | undefined {
+    const canonical = this.aliases.get(symbol) || symbol;
+    return this.units.get(canonical);
+  }
+
+  private resolvePrefixedUnit(symbol: string): UnitDefinition | undefined {
+    const cached = this.prefixedCache.get(symbol);
+    if (cached) return cached;
+
+    for (const prefix of SI_PREFIXES_DESC) {
+      if (!symbol.startsWith(prefix.symbol)) continue;
+
+      const baseSymbol = symbol.slice(prefix.symbol.length);
+      if (!baseSymbol) continue;
+
+      const baseUnit = this.getDirect(baseSymbol);
+      if (!baseUnit || baseUnit.baseOffset !== undefined) continue;
+
+      const derived: UnitDefinition = {
+        symbol,
+        name: `${prefix.name}${baseUnit.name}`,
+        dimension: baseUnit.dimension,
+        baseMultiplier: baseUnit.baseMultiplier * prefix.factor,
+        category: baseUnit.category,
+      };
+
+      this.prefixedCache.set(symbol, derived);
+      return derived;
+    }
+
+    return undefined;
+  }
 
   /**
    * Register a unit definition
@@ -155,15 +222,17 @@ export class UnitRegistry {
    * Get unit definition by symbol (including aliases)
    */
   get(symbol: string): UnitDefinition | undefined {
-    const canonical = this.aliases.get(symbol) || symbol;
-    return this.units.get(canonical);
+    const direct = this.getDirect(symbol);
+    if (direct) return direct;
+
+    return this.resolvePrefixedUnit(symbol);
   }
 
   /**
    * Check if a unit symbol is defined
    */
   has(symbol: string): boolean {
-    return this.units.has(symbol) || this.aliases.has(symbol);
+    return !!this.get(symbol);
   }
 
   /**
@@ -387,6 +456,28 @@ defaultUnitRegistry.register(
     category: "temperature",
   },
   ["kelvin"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "mol",
+    name: "mole",
+    dimension: DIMENSIONS.AMOUNT,
+    baseMultiplier: 1,
+    category: "amount",
+  },
+  ["mole", "moles"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "cd",
+    name: "candela",
+    dimension: DIMENSIONS.LUMINOSITY,
+    baseMultiplier: 1,
+    category: "luminosity",
+  },
+  ["candela", "candelas"]
 );
 
 // Current units

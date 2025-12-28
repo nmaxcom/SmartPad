@@ -203,6 +203,33 @@ describe("UnitsNet.js Evaluator", () => {
       expect(quantity.getUnit()).toBe("m^2");
     });
 
+    test("should evaluate prefixed square units", () => {
+      const result = evaluateUnitsNetExpression("100 cm^2");
+
+      expect(result.error).toBeUndefined();
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBe(100);
+      expect(quantity.getUnit()).toBe("cm^2");
+    });
+
+    test("should convert composite SI units", () => {
+      const result = evaluateUnitsNetExpression("1 m/s to m/h");
+
+      expect(result.error).toBeUndefined();
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBe(3600);
+      expect(quantity.getUnit()).toBe("m/h");
+    });
+
+    test("should convert between squared units", () => {
+      const result = evaluateUnitsNetExpression("1 m^2 to cm^2");
+
+      expect(result.error).toBeUndefined();
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBe(10000);
+      expect(quantity.getUnit()).toBe("cm^2");
+    });
+
     test("should handle variables", () => {
       const variables = {
         length: new UnitValue(SmartPadQuantity.fromValueAndUnit(10, "m")),
@@ -250,6 +277,7 @@ describe("UnitsNet.js Evaluator", () => {
       expect(expressionContainsUnitsNet("5 kg + 3 m")).toBe(true);
       expect(expressionContainsUnitsNet("100 km/h")).toBe(true);
       expect(expressionContainsUnitsNet("25 C")).toBe(true);
+      expect(expressionContainsUnitsNet("100 cm^2")).toBe(true);
       expect(expressionContainsUnitsNet("100")).toBe(false);
       expect(expressionContainsUnitsNet("x + y")).toBe(false);
       expect(expressionContainsUnitsNet("PI")).toBe(false);

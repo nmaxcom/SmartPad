@@ -155,6 +155,8 @@ time = 12 s
 velocity = distance / time =>
 velocity to km/h =>
 velocity to mph =>
+velocity to m/h =>
+velocity to km/s =>
 
 accel time = 6 s
 initial speed = 4 m/s
@@ -173,6 +175,17 @@ area = 0.4 m^2
 pressure = weight / area =>
 pressure to kPa =>
 pressure to psi =>
+
+// SI prefixes + unit powers
+tile area = 2500 cm^2
+tile area to m^2 =>
+chip volume = 125000 mm^3
+chip volume to cm^3 =>
+beam length = 250 cm
+beam length to m =>
+slab area = 3 m^2
+slab thickness = 2 m
+slab volume = slab area * slab thickness =>
 
 // Work + energy + power
 distance pushed = 10 m

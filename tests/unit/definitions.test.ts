@@ -1,4 +1,4 @@
-/**
+ /**
  * Unit Definitions Tests
  *
  * Tests unit registry and dimension operations including:
@@ -225,5 +225,13 @@ describe("Default Unit Registry", () => {
     expect(km?.baseMultiplier).toBe(1000);
     expect(mi?.baseMultiplier).toBe(1609.344);
     expect(h?.baseMultiplier).toBe(3600);
+  });
+
+  test("should resolve SI prefixes dynamically", () => {
+    const ms = defaultUnitRegistry.get("ms");
+    const kpa = defaultUnitRegistry.get("kPa");
+
+    expect(ms?.baseMultiplier).toBeCloseTo(0.001, 10);
+    expect(kpa?.baseMultiplier).toBe(1000);
   });
 });

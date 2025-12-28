@@ -242,8 +242,7 @@ export class UnitValue extends SemanticValue {
   }
 
   clone(): UnitValue {
-    // SmartPadQuantity constructor should create a proper copy
-    return new UnitValue(new SmartPadQuantity(this.quantity.value, this.quantity.unit, this.quantity.unitsnetValue));
+    return new UnitValue(this.quantity.clone());
   }
 
   /**

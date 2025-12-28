@@ -47,6 +47,7 @@ import {
   RotationalSpeed,
   RotationalSpeedUnits,
 } from "unitsnet-js";
+import { Quantity, UnitParser } from "./quantity";
 
 // Type for any unitsnet-js value - using any for now to avoid complex type issues
 type UnitsNetValue = any;
@@ -57,6 +58,10 @@ export const MATHEMATICAL_CONSTANTS = {
   E: 2.718281828459045,
 };
 
+function normalizeUnitString(unitString: string): string {
+  return unitString.trim().replace(/·/g, "*");
+}
+
 /**
  * SmartPad Quantity adapter that wraps unitsnet-js values
  */
@@ -64,11 +69,13 @@ export class SmartPadQuantity {
   private _value: number;
   private _unit: string;
   private _unitsnetValue?: UnitsNetValue; // The underlying unitsnet-js value
+  private _quantity?: Quantity;
 
-  constructor(value: number, unit: string, unitsnetValue?: UnitsNetValue) {
-    this._value = value;
-    this._unit = unit;
+  constructor(value: number, unit: string, unitsnetValue?: UnitsNetValue, quantity?: Quantity) {
+    this._value = quantity ? quantity.value : value;
+    this._unit = quantity ? quantity.unit.toString() : unit;
     this._unitsnetValue = unitsnetValue;
+    this._quantity = quantity;
   }
 
   get value(): number {
@@ -83,12 +90,31 @@ export class SmartPadQuantity {
     return this._unitsnetValue;
   }
 
+  get quantity(): Quantity | undefined {
+    return this._quantity;
+  }
+
   /**
    * Create a SmartPadQuantity with a specific unit string (preserves original unit)
    */
   static fromValueAndUnit(value: number, unit: string): SmartPadQuantity {
-    const unitsnetValue = UnitsNetParser.parse(value, unit);
-    return new SmartPadQuantity(value, unit, unitsnetValue);
+    const normalizedUnit = normalizeUnitString(unit);
+    if (normalizedUnit === "" || normalizedUnit === "1") {
+      return SmartPadQuantity.dimensionless(value);
+    }
+
+    try {
+      const unitsnetValue = UnitsNetParser.parse(value, normalizedUnit);
+      return new SmartPadQuantity(value, normalizedUnit, unitsnetValue);
+    } catch {
+      const compositeUnit = UnitParser.parse(normalizedUnit);
+      const quantity = new Quantity(value, compositeUnit);
+      return SmartPadQuantity.fromQuantity(quantity);
+    }
+  }
+
+  static fromQuantity(quantity: Quantity): SmartPadQuantity {
+    return new SmartPadQuantity(quantity.value, quantity.unit.toString(), undefined, quantity);
   }
 
   /**
@@ -175,57 +201,96 @@ export class SmartPadQuantity {
     return new SmartPadQuantity(value, "");
   }
 
+  clone(): SmartPadQuantity {
+    if (this._quantity) {
+      return SmartPadQuantity.fromQuantity(this._quantity);
+    }
+    return new SmartPadQuantity(this._value, this._unit, this._unitsnetValue);
+  }
+
+  private toQuantity(): Quantity | null {
+    if (this._quantity) return this._quantity;
+    if (this.isDimensionless()) {
+      return Quantity.dimensionless(this._value);
+    }
+    try {
+      const parsedUnit = UnitParser.parse(this._unit);
+      return new Quantity(this._value, parsedUnit);
+    } catch {
+      return null;
+    }
+  }
+
   /**
    * Convert to a different unit
    */
   convertTo(targetUnit: string): SmartPadQuantity {
-    if (!this._unitsnetValue) {
-      throw new Error("Cannot convert dimensionless quantity");
+    const normalizedTarget = normalizeUnitString(targetUnit);
+    if (normalizedTarget === "" || normalizedTarget === "1") {
+      if (this.isDimensionless()) {
+        return SmartPadQuantity.dimensionless(this._value);
+      }
+      throw new Error(`Cannot convert ${this._unit} to ${targetUnit}`);
     }
 
-    // Convert using unitsnet-js based on the type
-    let convertedValue: number;
+    if (this._unitsnetValue) {
+      // Convert using unitsnet-js based on the type
+      let convertedValue: number;
+
+      try {
+        if (this._unitsnetValue instanceof Length) {
+          convertedValue = this.convertLength(this._unitsnetValue, normalizedTarget);
+        } else if (this._unitsnetValue instanceof Mass) {
+          convertedValue = this.convertMass(this._unitsnetValue, normalizedTarget);
+        } else if (this._unitsnetValue instanceof Duration) {
+          convertedValue = this.convertDuration(this._unitsnetValue, normalizedTarget);
+        } else if (this._unitsnetValue instanceof Temperature) {
+          convertedValue = this.convertTemperature(this._unitsnetValue, normalizedTarget);
+        } else if (this._unitsnetValue instanceof Area) {
+          convertedValue = this.convertArea(this._unitsnetValue, normalizedTarget);
+        } else if (this._unitsnetValue instanceof Volume) {
+          convertedValue = this.convertVolume(this._unitsnetValue, normalizedTarget);
+        } else if (this._unitsnetValue instanceof Speed) {
+          convertedValue = this.convertSpeed(this._unitsnetValue, normalizedTarget);
+        } else if (this._unitsnetValue instanceof Force) {
+          convertedValue = this.convertForce(this._unitsnetValue, normalizedTarget);
+        } else if (this._unitsnetValue instanceof Pressure) {
+          convertedValue = this.convertPressure(this._unitsnetValue, normalizedTarget);
+        } else if (this._unitsnetValue instanceof Energy) {
+          convertedValue = this.convertEnergy(this._unitsnetValue, normalizedTarget);
+        } else if (this._unitsnetValue instanceof Power) {
+          convertedValue = this.convertPower(this._unitsnetValue, normalizedTarget);
+        } else if (this._unitsnetValue instanceof ElectricCurrent) {
+          convertedValue = this.convertElectricCurrent(this._unitsnetValue, normalizedTarget);
+        } else if (this._unitsnetValue instanceof ElectricPotential) {
+          convertedValue = this.convertElectricPotential(this._unitsnetValue, normalizedTarget);
+        } else if (this._unitsnetValue instanceof ElectricResistance) {
+          convertedValue = this.convertElectricResistance(this._unitsnetValue, normalizedTarget);
+        } else if (this._unitsnetValue instanceof RotationalSpeed) {
+          convertedValue = this.convertRotationalSpeed(this._unitsnetValue, normalizedTarget);
+        } else if (this._unitsnetValue instanceof Acceleration) {
+          convertedValue = this.convertAcceleration(this._unitsnetValue, normalizedTarget);
+        } else {
+          throw new Error(`Cannot convert ${this._unit} to ${normalizedTarget}`);
+        }
+
+        // Create a new UnitsNet value in the target unit
+        const newUnitsNetValue = UnitsNetParser.parse(convertedValue, normalizedTarget);
+        return new SmartPadQuantity(convertedValue, normalizedTarget, newUnitsNetValue);
+      } catch {
+        // Fall back to composite unit conversion below
+      }
+    }
+
+    const sourceQuantity = this.toQuantity();
+    if (!sourceQuantity) {
+      throw new Error(`Cannot convert ${this._unit} to ${targetUnit}`);
+    }
 
     try {
-      if (this._unitsnetValue instanceof Length) {
-        convertedValue = this.convertLength(this._unitsnetValue, targetUnit);
-      } else if (this._unitsnetValue instanceof Mass) {
-        convertedValue = this.convertMass(this._unitsnetValue, targetUnit);
-      } else if (this._unitsnetValue instanceof Duration) {
-        convertedValue = this.convertDuration(this._unitsnetValue, targetUnit);
-      } else if (this._unitsnetValue instanceof Temperature) {
-        convertedValue = this.convertTemperature(this._unitsnetValue, targetUnit);
-      } else if (this._unitsnetValue instanceof Area) {
-        convertedValue = this.convertArea(this._unitsnetValue, targetUnit);
-      } else if (this._unitsnetValue instanceof Volume) {
-        convertedValue = this.convertVolume(this._unitsnetValue, targetUnit);
-      } else if (this._unitsnetValue instanceof Speed) {
-        convertedValue = this.convertSpeed(this._unitsnetValue, targetUnit);
-      } else if (this._unitsnetValue instanceof Force) {
-        convertedValue = this.convertForce(this._unitsnetValue, targetUnit);
-      } else if (this._unitsnetValue instanceof Pressure) {
-        convertedValue = this.convertPressure(this._unitsnetValue, targetUnit);
-      } else if (this._unitsnetValue instanceof Energy) {
-        convertedValue = this.convertEnergy(this._unitsnetValue, targetUnit);
-      } else if (this._unitsnetValue instanceof Power) {
-        convertedValue = this.convertPower(this._unitsnetValue, targetUnit);
-      } else if (this._unitsnetValue instanceof ElectricCurrent) {
-        convertedValue = this.convertElectricCurrent(this._unitsnetValue, targetUnit);
-      } else if (this._unitsnetValue instanceof ElectricPotential) {
-        convertedValue = this.convertElectricPotential(this._unitsnetValue, targetUnit);
-      } else if (this._unitsnetValue instanceof ElectricResistance) {
-        convertedValue = this.convertElectricResistance(this._unitsnetValue, targetUnit);
-      } else if (this._unitsnetValue instanceof RotationalSpeed) {
-        convertedValue = this.convertRotationalSpeed(this._unitsnetValue, targetUnit);
-      } else if (this._unitsnetValue instanceof Acceleration) {
-        convertedValue = this.convertAcceleration(this._unitsnetValue, targetUnit);
-      } else {
-        throw new Error(`Cannot convert ${this._unit} to ${targetUnit}`);
-      }
-
-      // Create a new UnitsNet value in the target unit
-      const newUnitsNetValue = UnitsNetParser.parse(convertedValue, targetUnit);
-      return new SmartPadQuantity(convertedValue, targetUnit, newUnitsNetValue);
+      const targetComposite = UnitParser.parse(normalizedTarget);
+      const converted = sourceQuantity.convertToUnit(targetComposite);
+      return SmartPadQuantity.fromQuantity(converted);
     } catch (error) {
       throw new Error(
         `Cannot convert ${this._unit} to ${targetUnit}: ${error instanceof Error ? error.message : String(error)}`
@@ -501,12 +566,22 @@ export class SmartPadQuantity {
     // Strict physics policy: mixing unitless with units only allowed when the unitless value is zero
     if (this.isDimensionless() && !other.isDimensionless()) {
       if (this._value === 0)
-        return new SmartPadQuantity(this._value + other._value, other._unit, other._unitsnetValue);
+        return new SmartPadQuantity(this._value + other._value, other._unit, other._unitsnetValue, other._quantity);
       throw new Error(`Cannot add incompatible units: ${this._unit} and ${other._unit}`);
     } else if (!this.isDimensionless() && other.isDimensionless()) {
       if (other._value === 0)
-        return new SmartPadQuantity(this._value + other._value, this._unit, this._unitsnetValue);
+        return new SmartPadQuantity(this._value + other._value, this._unit, this._unitsnetValue, this._quantity);
       throw new Error(`Cannot add incompatible units: ${this._unit} and ${other._unit}`);
+    }
+
+    if (this._quantity || other._quantity) {
+      const leftQuantity = this.toQuantity();
+      const rightQuantity = other.toQuantity();
+      if (!leftQuantity || !rightQuantity) {
+        throw new Error(`Cannot add incompatible units: ${this._unit} and ${other._unit}`);
+      }
+      const result = leftQuantity.add(rightQuantity);
+      return SmartPadQuantity.fromQuantity(result);
     }
 
     // Both have units - use unitsnet-js for proper unit conversion and addition
@@ -551,12 +626,22 @@ export class SmartPadQuantity {
     // Strict physics policy: mixing unitless with units only allowed when the unitless value is zero
     if (this.isDimensionless() && !other.isDimensionless()) {
       if (this._value === 0)
-        return new SmartPadQuantity(this._value - other._value, other._unit, other._unitsnetValue);
+        return new SmartPadQuantity(this._value - other._value, other._unit, other._unitsnetValue, other._quantity);
       throw new Error(`Cannot subtract incompatible units: ${this._unit} and ${other._unit}`);
     } else if (!this.isDimensionless() && other.isDimensionless()) {
       if (other._value === 0)
-        return new SmartPadQuantity(this._value - other._value, this._unit, this._unitsnetValue);
+        return new SmartPadQuantity(this._value - other._value, this._unit, this._unitsnetValue, this._quantity);
       throw new Error(`Cannot subtract incompatible units: ${this._unit} and ${other._unit}`);
+    }
+
+    if (this._quantity || other._quantity) {
+      const leftQuantity = this.toQuantity();
+      const rightQuantity = other.toQuantity();
+      if (!leftQuantity || !rightQuantity) {
+        throw new Error(`Cannot subtract incompatible units: ${this._unit} and ${other._unit}`);
+      }
+      const result = leftQuantity.subtract(rightQuantity);
+      return SmartPadQuantity.fromQuantity(result);
     }
 
     // Both have units - use unitsnet-js for proper unit conversion and subtraction
@@ -613,11 +698,25 @@ export class SmartPadQuantity {
     }
 
     if (this.isDimensionless()) {
-      return new SmartPadQuantity(resultValue, other._unit, other._unitsnetValue);
+      return other._quantity
+        ? SmartPadQuantity.fromQuantity(new Quantity(resultValue, other._quantity.unit))
+        : new SmartPadQuantity(resultValue, other._unit, other._unitsnetValue);
     }
 
     if (other.isDimensionless()) {
-      return new SmartPadQuantity(resultValue, this._unit, this._unitsnetValue);
+      return this._quantity
+        ? SmartPadQuantity.fromQuantity(new Quantity(resultValue, this._quantity.unit))
+        : new SmartPadQuantity(resultValue, this._unit, this._unitsnetValue);
+    }
+
+    if (this._quantity || other._quantity) {
+      const leftQuantity = this.toQuantity();
+      const rightQuantity = other.toQuantity();
+      if (!leftQuantity || !rightQuantity) {
+        throw new Error(`Cannot multiply incompatible units: ${this._unit} and ${other._unit}`);
+      }
+      const result = leftQuantity.multiply(rightQuantity);
+      return SmartPadQuantity.fromQuantity(result);
     }
 
     // Use unitsnet multiplication where possible
@@ -748,7 +847,19 @@ export class SmartPadQuantity {
     }
 
     if (other.isDimensionless()) {
-      return new SmartPadQuantity(resultValue, this._unit, this._unitsnetValue);
+      return this._quantity
+        ? SmartPadQuantity.fromQuantity(new Quantity(resultValue, this._quantity.unit))
+        : new SmartPadQuantity(resultValue, this._unit, this._unitsnetValue);
+    }
+
+    if (this._quantity || other._quantity) {
+      const leftQuantity = this.toQuantity();
+      const rightQuantity = other.toQuantity();
+      if (!leftQuantity || !rightQuantity) {
+        throw new Error(`Cannot divide incompatible units: ${this._unit} and ${other._unit}`);
+      }
+      const result = leftQuantity.divide(rightQuantity);
+      return SmartPadQuantity.fromQuantity(result);
     }
 
     // Unitsnet-aware derivations
@@ -807,6 +918,11 @@ export class SmartPadQuantity {
       return SmartPadQuantity.dimensionless(resultValue);
     }
 
+    if (this._quantity) {
+      const result = this._quantity.power(exponent);
+      return SmartPadQuantity.fromQuantity(result);
+    }
+
     // Handle square root specially
     if (exponent === 0.5) {
       if (this._unit === "m^2") {
@@ -853,6 +969,9 @@ export class SmartPadQuantity {
    * Check if this is dimensionless
    */
   isDimensionless(): boolean {
+    if (this._quantity) {
+      return this._quantity.isDimensionless();
+    }
     return this._unit === "" || this._unit === "1";
   }
 
@@ -948,6 +1067,13 @@ export class SmartPadQuantity {
    * Check equality with tolerance
    */
   equals(other: SmartPadQuantity, tolerance = 1e-10): boolean {
+    if (this._quantity || other._quantity) {
+      const left = this.toQuantity();
+      const right = other.toQuantity();
+      if (!left || !right) return false;
+      return left.equals(right, tolerance);
+    }
+
     // Check units match
     if (this._unit !== other._unit) {
       return false;
@@ -1141,28 +1267,37 @@ export class UnitsNetParser {
    * Normalize unit string for parsing
    */
   private static normalizeUnitString(unitString: string): string {
-    return unitString.trim(); // Don't convert to lowercase to preserve case-sensitive units like 'C' vs 'c'
+    return normalizeUnitString(unitString); // Preserve case for units like 'C' vs 'c'
+  }
+
+  private static isKnownUnitString(unitString: string): boolean {
+    const normalized = this.normalizeUnitString(unitString);
+    if (normalized === "" || normalized === "1") return false;
+    if (this.unitMappings[normalized]) return true;
+    try {
+      UnitParser.parse(normalized);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /**
    * Check if a string contains units
    */
   static containsUnits(expression: string): boolean {
-    const unitPatterns = Object.keys(this.unitMappings);
+    const unitPattern =
+      /(?:^|[^\w.])\d+(?:\.\d+)?\s*([a-zA-Z°µμΩ][a-zA-Z0-9°µμΩ\/\^\-\*\·]*)/g;
+    let match: RegExpExecArray | null;
 
-    // Create regex patterns for whole word matching or units preceded by numbers
-    return unitPatterns.some((unit) => {
-      // Escape special regex characters in unit names
-      const escapedUnit = unit.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    while ((match = unitPattern.exec(expression))) {
+      const unitStr = match[1];
+      if (this.isKnownUnitString(unitStr)) {
+        return true;
+      }
+    }
 
-      // Check for patterns like: "5 m", "10.5kg", "25 C", etc.
-      // Look for the unit as a whole word preceded by a number/space or at word boundaries
-      const pattern = new RegExp(
-        `\\b\\d+(?:\\.\\d+)?\\s*${escapedUnit}\\b|\\b${escapedUnit}(?:/\\w+|\\^\\d+)?\\b`,
-        "i"
-      );
-      return pattern.test(expression);
-    });
+    return false;
   }
 }
 

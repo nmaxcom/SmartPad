@@ -125,6 +125,8 @@ function aliasVariablesInExpression(
 export function tokenizeWithUnitsNet(expression: string): UnitsNetToken[] {
   const tokens: UnitsNetToken[] = [];
   let position = 0;
+  const unitStartRe = /[a-zA-Z°µμΩ]/;
+  const unitBodyRe = /[a-zA-Z0-9°µμΩ\/\^\-\*\·]/;
 
   const skipWhitespace = () => {
     while (position < expression.length && /\s/.test(expression[position])) {
@@ -160,10 +162,10 @@ export function tokenizeWithUnitsNet(expression: string): UnitsNetToken[] {
       const unitStart = position;
 
       // Check for unit patterns like "m", "km/h", "°C", "m/s^2", "N*m", etc.
-      if (position < expression.length && /[a-zA-Z°]/.test(expression[position])) {
+      if (position < expression.length && unitStartRe.test(expression[position])) {
         while (
           position < expression.length &&
-          /[a-zA-Z0-9°\/\^\-\*\·]/.test(expression[position])
+          unitBodyRe.test(expression[position])
         ) {
           unitStr += expression[position];
           position++;
@@ -172,24 +174,13 @@ export function tokenizeWithUnitsNet(expression: string): UnitsNetToken[] {
         // Check if this is a valid unit or unit combination
         try {
           const value = parseFloat(numberStr);
-          const unitsnetValue = UnitsNetAdapterParser.parse(value, unitStr);
-
-          if (unitsnetValue) {
-            const quantity = new UnitValue(SmartPadQuantity.fromValueAndUnit(value, unitStr));
-            tokens.push({
-              type: UnitsNetTokenType.QUANTITY,
-              value: `${numberStr} ${unitStr}`,
-              position: numberStart,
-              quantity,
-            });
-          } else {
-            // No unit found, treat as regular number
-            tokens.push({
-              type: UnitsNetTokenType.NUMBER,
-              value: numberStr,
-              position: numberStart,
-            });
-          }
+          const quantity = new UnitValue(SmartPadQuantity.fromValueAndUnit(value, unitStr));
+          tokens.push({
+            type: UnitsNetTokenType.QUANTITY,
+            value: `${numberStr} ${unitStr}`,
+            position: numberStart,
+            quantity,
+          });
         } catch (error) {
           // Unit parsing failed, treat as regular number
           tokens.push({
@@ -401,7 +392,8 @@ export class UnitsNetParser {
         const t = this.currentToken();
         if (
           t.type === UnitsNetTokenType.IDENTIFIER ||
-          (t.type === UnitsNetTokenType.OPERATOR && (t.value === "/" || t.value === "^")) ||
+          (t.type === UnitsNetTokenType.OPERATOR &&
+            (t.value === "/" || t.value === "^" || t.value === "*")) ||
           t.type === UnitsNetTokenType.NUMBER
         ) {
           unitStr += t.value;
@@ -480,13 +472,8 @@ export class UnitsNetParser {
     while (this.currentToken().type === UnitsNetTokenType.IDENTIFIER && left instanceof NumberValue) {
       const unitId = this.consume().value;
       try {
-        const unitsnetValue = UnitsNetAdapterParser.parse(left.getNumericValue(), unitId);
-        if (unitsnetValue) {
-          left = new UnitValue(SmartPadQuantity.fromUnitsNet(unitsnetValue));
-        } else {
-          // Not a unit; put back behavior not supported, so break
-          break;
-        }
+        const quantity = SmartPadQuantity.fromValueAndUnit(left.getNumericValue(), unitId);
+        left = new UnitValue(quantity);
       } catch {
         break;
       }
@@ -531,10 +518,8 @@ export class UnitsNetParser {
       ) {
         this.consume();
         try {
-          const unitsnetValue = UnitsNetAdapterParser.parse(value.getNumericValue(), t.value);
-          if (unitsnetValue) {
-            value = new UnitValue(SmartPadQuantity.fromUnitsNet(unitsnetValue));
-          }
+          const quantity = SmartPadQuantity.fromValueAndUnit(value.getNumericValue(), t.value);
+          value = new UnitValue(quantity);
         } catch {}
       }
     }
