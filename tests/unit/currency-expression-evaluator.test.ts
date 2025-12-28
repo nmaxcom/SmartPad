@@ -91,4 +91,38 @@ describe("Currency Expression Evaluation", () => {
       expect(result.result).toBe("$60");
     }
   });
+
+  test("combined assignment preserves currency from trailing symbols", () => {
+    const variableStore = new ReactiveVariableStore();
+    variableStore.setVariable("pc", "13$");
+    variableStore.setVariable("fr", "14");
+
+    const pcVar = variableStore.getVariable("pc");
+    const frVar = variableStore.getVariable("fr");
+    if (!pcVar || !frVar) {
+      throw new Error("Failed to seed variable context for currency test");
+    }
+
+    const variableContext = new Map<string, Variable>([
+      ["pc", pcVar],
+      ["fr", frVar],
+    ]);
+
+    const astNode = parseLine("subt = pc * fr =>", 1);
+    const evaluator = new CombinedAssignmentEvaluatorV2();
+    const result = evaluator.evaluate(astNode, {
+      variableStore,
+      variableContext,
+      lineNumber: 1,
+      decimalPlaces: 6,
+    });
+
+    expect(result?.type).toBe("combined");
+    if (result?.type === "combined") {
+      expect(result.result).toBe("$182");
+    }
+
+    const stored = variableStore.getVariable("subt");
+    expect(stored?.value.toString()).toBe("$182");
+  });
 });

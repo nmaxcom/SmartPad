@@ -23,6 +23,14 @@ describe("CurrencyValue", () => {
     expect(chf.getNumericValue()).toBe(1234);
   });
 
+  test("parses currency amounts with trailing symbols", () => {
+    const usd = CurrencyValue.fromString("100$");
+    expect(usd.getNumericValue()).toBe(100);
+
+    const eur = CurrencyValue.fromString("250.5€");
+    expect(eur.getNumericValue()).toBe(250.5);
+  });
+
   test("formats whole currency amounts without decimals", () => {
     expect(new CurrencyValue("$", 995).toString()).toBe("$995");
     expect(new CurrencyValue("$", 1000).toString()).toBe("$1000");
@@ -42,5 +50,9 @@ describe("CurrencyValue", () => {
     const parsedPlain = SemanticParsers.parse("$1000");
     expect(parsedPlain).not.toBeNull();
     expect(parsedPlain?.getType()).toBe("currency");
+
+    const parsedSuffix = SemanticParsers.parse("100$");
+    expect(parsedSuffix).not.toBeNull();
+    expect(parsedSuffix?.getType()).toBe("currency");
   });
 });

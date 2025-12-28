@@ -215,6 +215,14 @@ export function parseExpressionComponents(expression: string): ExpressionCompone
             parsedValue: SemanticParsers.parseOrError(value + nextToken.value),
           });
           pos += 2;
+        } else if (nextToken?.type === 'currency') {
+          // Handle currency literals with suffix symbols (e.g., 100$)
+          components.push({
+            type: 'literal',
+            value: value + nextToken.value,
+            parsedValue: SemanticParsers.parseOrError(value + nextToken.value),
+          });
+          pos += 2;
         } else {
           // Plain number
           components.push({

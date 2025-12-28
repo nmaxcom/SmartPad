@@ -100,6 +100,13 @@ describe("Variable Store", () => {
     expect(variable?.value.toString()).toBe("$1000");
   });
 
+  test("should parse trailing currency symbols as currency", () => {
+    store.setVariable("pc", "13$");
+    const variable = store.getVariable("pc");
+    expect(variable?.value.getType()).toBe("currency");
+    expect(variable?.value.toString()).toBe("$13");
+  });
+
   test("should handle large, small, and zero values", () => {
     store.setVariable("large", Number.MAX_SAFE_INTEGER.toString());
     store.setVariable("small", Number.MIN_SAFE_INTEGER.toString());

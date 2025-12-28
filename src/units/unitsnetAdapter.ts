@@ -195,6 +195,10 @@ export class SmartPadQuantity {
         convertedValue = this.convertDuration(this._unitsnetValue, targetUnit);
       } else if (this._unitsnetValue instanceof Temperature) {
         convertedValue = this.convertTemperature(this._unitsnetValue, targetUnit);
+      } else if (this._unitsnetValue instanceof Area) {
+        convertedValue = this.convertArea(this._unitsnetValue, targetUnit);
+      } else if (this._unitsnetValue instanceof Volume) {
+        convertedValue = this.convertVolume(this._unitsnetValue, targetUnit);
       } else if (this._unitsnetValue instanceof Speed) {
         convertedValue = this.convertSpeed(this._unitsnetValue, targetUnit);
       } else if (this._unitsnetValue instanceof Force) {
@@ -292,6 +296,30 @@ export class SmartPadQuantity {
         return temperature.DegreesFahrenheit;
       default:
         throw new Error(`Unknown temperature unit: ${targetUnit}`);
+    }
+  }
+
+  private convertArea(area: Area, targetUnit: string): number {
+    switch (targetUnit) {
+      case "m^2":
+      case "sqm":
+        return area.SquareMeters;
+      case "ft^2":
+      case "sqft":
+        return area.SquareFeet;
+      default:
+        throw new Error(`Unknown area unit: ${targetUnit}`);
+    }
+  }
+
+  private convertVolume(volume: Volume, targetUnit: string): number {
+    switch (targetUnit) {
+      case "m^3":
+        return volume.CubicMeters;
+      case "ft^3":
+        return volume.CubicFeet;
+      default:
+        throw new Error(`Unknown volume unit: ${targetUnit}`);
     }
   }
 
@@ -679,6 +707,16 @@ export class SmartPadQuantity {
       } catch {}
     }
 
+    // Mass * speed^2 => Energy (J)
+    if (this._unitsnetValue instanceof Mass && other._unit === "m^2/s^2") {
+      const joules = this._unitsnetValue.Kilograms * other._value;
+      return SmartPadQuantity.fromUnitsNet(Energy.FromJoules(joules));
+    }
+    if (other._unitsnetValue instanceof Mass && this._unit === "m^2/s^2") {
+      const joules = other._unitsnetValue.Kilograms * this._value;
+      return SmartPadQuantity.fromUnitsNet(Energy.FromJoules(joules));
+    }
+
     // If same basic unit, compress to power form (e.g., m*m => m^2)
     if (this._unit && this._unit === other._unit) {
       return new SmartPadQuantity(resultValue, `${this._unit}^2`);
@@ -720,10 +758,22 @@ export class SmartPadQuantity {
         if (this._unitsnetValue instanceof Length && other._unitsnetValue instanceof Duration) {
           return SmartPadQuantity.deriveSpeed(this, other);
         }
+        // Speed / Time = Acceleration
+        if (this._unitsnetValue instanceof Speed && other._unitsnetValue instanceof Duration) {
+          const accel = Acceleration.FromMetersPerSecondSquared(
+            this._unitsnetValue.MetersPerSecond / other._unitsnetValue.Seconds
+          );
+          return SmartPadQuantity.fromUnitsNet(accel);
+        }
         // Energy / Length = Force
         if (this._unitsnetValue instanceof Energy && other._unitsnetValue instanceof Length) {
           const force = Force.FromNewtons(this._unitsnetValue.Joules / other._unitsnetValue.Meters);
           return SmartPadQuantity.fromUnitsNet(force);
+        }
+        // Energy / Time = Power
+        if (this._unitsnetValue instanceof Energy && other._unitsnetValue instanceof Duration) {
+          const watts = this._unitsnetValue.Joules / other._unitsnetValue.Seconds;
+          return SmartPadQuantity.fromUnitsNet(Power.FromWatts(watts));
         }
         // ElectricPotential / ElectricCurrent = Resistance (ohm)
         if (
@@ -774,7 +824,24 @@ export class SmartPadQuantity {
           return SmartPadQuantity.fromUnitsNet(area);
         }
       } catch {}
-      return new SmartPadQuantity(resultValue, this._unit + "^2");
+      const applyExponent = (part: string, power: number): string => {
+        const match = part.match(/^(.+?)\^(\d+)$/);
+        if (match) {
+          const base = match[1];
+          const current = parseInt(match[2], 10);
+          return `${base}^${current * power}`;
+        }
+        return `${part}^${power}`;
+      };
+
+      if (this._unit.includes("/")) {
+        const [numerator, denominator] = this._unit.split("/");
+        const poweredNumerator = applyExponent(numerator, exponent);
+        const poweredDenominator = applyExponent(denominator, exponent);
+        return new SmartPadQuantity(resultValue, `${poweredNumerator}/${poweredDenominator}`);
+      }
+
+      return new SmartPadQuantity(resultValue, applyExponent(this._unit, exponent));
     }
 
     // General case

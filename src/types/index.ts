@@ -100,9 +100,10 @@ export const SemanticParsers = {
       }
     }
     
-    // Try currency ($100, €50, $1,000)
+    // Try currency ($100, €50, $1,000, 100$)
     if (
       trimmed.match(/^[\$€£¥₹₿]\s*(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?$/) ||
+      trimmed.match(/^(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?\s*[\$€£¥₹₿]$/) ||
       trimmed.match(/^(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?\s+(CHF|CAD|AUD)$/)
     ) {
       try {

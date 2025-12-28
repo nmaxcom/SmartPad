@@ -149,20 +149,61 @@ weekly calorie deficit = 500 * 7 =>`,
     id: "physics",
     emoji: "⚗️",
     name: "Physics Units",
-    content: `distance = 150 m
+    content: `// Motion + speed
+distance = 150 m
 time = 12 s
+velocity = distance / time =>
+velocity to km/h =>
+velocity to mph =>
+
+accel time = 6 s
+initial speed = 4 m/s
+final speed = 28 m/s
+acceleration = (final speed - initial speed) / accel time =>
+acceleration to ft/s^2 =>
+
+// Forces
 mass = 2.5 kg
 gravity = 9.8 m/s^2
+weight = mass * gravity =>
+weight to lbf =>
 
-velocity = distance / time =>
-force = mass * gravity =>
-area = 10 m^2
-pressure = force / area =>
-work = force * distance =>
+// Area + pressure
+area = 0.4 m^2
+pressure = weight / area =>
+pressure to kPa =>
+pressure to psi =>
 
-temp celsius = 25 °C
+// Work + energy + power
+distance pushed = 10 m
+work = weight * distance pushed =>
+work to kWh =>
+power = work / 30 s =>
+power to kW =>
+
+// Energy from motion
+car mass = 1200 kg
+car speed = 22 m/s
+kinetic energy = 0.5 * car mass * car speed^2 =>
+kinetic energy to kWh =>
+
+// Length, area, volume
+length = 5 m
+length to ft =>
+area square = 12 m^2
+area square to ft^2 =>
+volume cube = 2 m^3
+volume cube to ft^3 =>
+
+// Mass conversion
+payload = 25 kg
+payload to lb =>
+
+// Temperature
+temp celsius = 25 C
 temp fahrenheit = temp celsius =>
-temp kelvin = temp celsius =>`,
+temp kelvin = temp celsius =>
+temp fahrenheit to C =>`,
   },
   {
     id: "units-quick-check",

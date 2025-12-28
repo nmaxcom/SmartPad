@@ -61,8 +61,8 @@ describe("UnitsNet Integration Plan - Comprehensive Feature Tests", () => {
     // Always sync variables from variableStore to variableContext after any evaluation
     // This ensures that variables are available for future evaluations
     const allVariables = context.variableStore.getAllVariables();
-    allVariables.forEach((variable, name) => {
-      context.variableContext.set(name.toString(), variable);
+    allVariables.forEach((variable) => {
+      context.variableContext.set(variable.name, variable);
     });
 
     // If this was a variable assignment, update the variable context for future evaluations
@@ -109,6 +109,75 @@ describe("UnitsNet Integration Plan - Comprehensive Feature Tests", () => {
       expect(result2?.type).toBe("mathResult");
       if (result2?.type === "mathResult") {
         expect((result2 as any).result).toMatch(/3048\s*cm/);
+      }
+    });
+  });
+
+  describe("Derived Units and Conversions", () => {
+    test("speed per time yields acceleration and converts", () => {
+      evaluateExpression("accel time = 6 s");
+      evaluateExpression("initial speed = 4 m/s");
+      evaluateExpression("final speed = 28 m/s");
+
+      const accel = evaluateExpression(
+        "acceleration = (final speed - initial speed) / accel time"
+      );
+      expect(accel?.type).toBe("combined");
+      if (accel?.type === "combined") {
+        expect((accel as any).result).toMatch(/m\/s\^2/);
+      }
+
+      const accelConv = evaluateExpression("acceleration to ft/s^2");
+      expect(accelConv?.type).toBe("mathResult");
+      if (accelConv?.type === "mathResult") {
+        expect((accelConv as any).result).toMatch(/ft\/s\^2/);
+      }
+    });
+
+    test("energy over time yields power", () => {
+      evaluateExpression("work = 150 J");
+      const power = evaluateExpression("power = work / 30 s");
+      expect(power?.type).toBe("combined");
+      if (power?.type === "combined") {
+        expect((power as any).result).toMatch(/\sW|W$/);
+      }
+
+      const powerConv = evaluateExpression("power to kW =>");
+      expect(powerConv?.type).toBe("mathResult");
+      if (powerConv?.type === "mathResult") {
+        expect((powerConv as any).result).toMatch(/kW/);
+      }
+    });
+
+    test("area and volume conversions", () => {
+      evaluateExpression("area square = 12 m^2");
+      const areaConv = evaluateExpression("area square to ft^2");
+      expect(areaConv?.type).toBe("mathResult");
+      if (areaConv?.type === "mathResult") {
+        expect((areaConv as any).result).toMatch(/ft\^2|square\s*feet/i);
+      }
+
+      evaluateExpression("volume cube = 2 m^3");
+      const volumeConv = evaluateExpression("volume cube to ft^3");
+      expect(volumeConv?.type).toBe("mathResult");
+      if (volumeConv?.type === "mathResult") {
+        expect((volumeConv as any).result).toMatch(/ft\^3|cubic\s*feet/i);
+      }
+    });
+
+    test("kinetic energy from mass and speed squared", () => {
+      evaluateExpression("car mass = 1200 kg");
+      evaluateExpression("car speed = 22 m/s");
+      const kinetic = evaluateExpression("kinetic energy = 0.5 * car mass * car speed^2");
+      expect(kinetic?.type).toBe("combined");
+      if (kinetic?.type === "combined") {
+        expect((kinetic as any).result).toMatch(/J|kWh/);
+      }
+
+      const kineticConv = evaluateExpression("kinetic energy to kWh =>");
+      expect(kineticConv?.type).toBe("mathResult");
+      if (kineticConv?.type === "mathResult") {
+        expect((kineticConv as any).result).toMatch(/kWh/);
       }
     });
   });

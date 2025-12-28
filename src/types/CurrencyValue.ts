@@ -280,6 +280,14 @@ export class CurrencyValue extends SemanticValue {
       const amount = parseFloat(match[2].replace(/,/g, ""));
       return new CurrencyValue(symbol, amount);
     }
+
+    // Try symbol-last format: "100$", "50.25€"
+    match = str.match(/^(\d{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)\s*([\$€£¥₹₿])$/);
+    if (match) {
+      const amount = parseFloat(match[1].replace(/,/g, ""));
+      const symbol = match[2] as CurrencySymbol;
+      return new CurrencyValue(symbol, amount);
+    }
     
     // Try symbol-last format: "100 CHF", "50.25 CAD"
     match = str.match(/^(\d{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)\s+(CHF|CAD|AUD)$/);
