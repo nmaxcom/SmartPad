@@ -35,6 +35,14 @@ export class SimpleExpressionParser {
    * Parse simple arithmetic expressions like "100 + 20" or "$100 * 2"
    */
   static parseArithmetic(expr: string, context: EvaluationContext): SemanticValue | null {
+    const trimmed = expr.trim();
+    if (
+      /[()]/.test(trimmed) ||
+      /\b(sqrt|abs|round|floor|ceil|max|min|sin|cos|tan|log|ln|exp)\s*\(/.test(trimmed)
+    ) {
+      return null;
+    }
+
     // Handle basic operators
     const operators = ['+', '-', '*', '/', '^'];
     

@@ -521,7 +521,7 @@ export class UnitsNetParser {
   }
 
   private parsePower(): UnitValue | NumberValue {
-    let value = this.parsePrimary();
+    let value = this.parseUnary();
     // Attach simple time units after bare numbers (e.g., '1 h')
     if (value instanceof NumberValue) {
       const t = this.currentToken();
@@ -539,6 +539,31 @@ export class UnitsNetParser {
       }
     }
     return value;
+  }
+
+  private parseUnary(): UnitValue | NumberValue {
+    if (
+      this.currentToken().type === UnitsNetTokenType.OPERATOR &&
+      (this.currentToken().value === "+" || this.currentToken().value === "-")
+    ) {
+      const operator = this.consume().value;
+      const operand = this.parseUnary();
+      if (operator === "+") {
+        return operand;
+      }
+
+      if (operand instanceof NumberValue) {
+        return new NumberValue(-operand.getNumericValue());
+      }
+
+      const negated = operand.multiply(new NumberValue(-1));
+      if (negated instanceof UnitValue || negated instanceof NumberValue) {
+        return negated;
+      }
+      throw new Error("Invalid unary result type");
+    }
+
+    return this.parsePrimary();
   }
 
   private parsePrimary(): UnitValue | NumberValue {

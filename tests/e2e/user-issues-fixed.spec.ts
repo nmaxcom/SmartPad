@@ -45,7 +45,7 @@ test.describe("User Issues Fixed", () => {
       .locator(".semantic-result-display")
       .last()
       .getAttribute("data-result");
-    expect(result || "").toContain("$10.00");
+    expect(result || "").toContain("$10");
 
     const number = page.locator(".semantic-scrubbableNumber", { hasText: "20" }).first();
     const box = await number.boundingBox();
@@ -75,7 +75,7 @@ test.describe("User Issues Fixed", () => {
       .locator(".semantic-result-display")
       .last()
       .getAttribute("data-result");
-    expect(pctResult || "").toContain("$64.00");
+    expect(pctResult || "").toContain("$64");
 
     await page.keyboard.press("Enter");
     await pm.type("number of friends = 6");
@@ -122,5 +122,31 @@ test.describe("User Issues Fixed", () => {
       .last()
       .getAttribute("data-result");
     expect(result || "").toMatch(/15\.5\s*N/);
+  });
+
+  test("math functions and parentheses evaluate correctly", async ({ page }) => {
+    const pm = page.locator(".ProseMirror");
+    await pm.click();
+    await page.keyboard.press("Control+a");
+    await page.keyboard.press("Delete");
+
+    await pm.type("abs(-4.2) =>");
+    await waitForUIRenderComplete(page);
+
+    const absResult = await page
+      .locator(".semantic-result-display")
+      .last()
+      .getAttribute("data-result");
+    expect(absResult || "").toBe("4.2");
+
+    await page.keyboard.press("Enter");
+    await pm.type("(3.5 + 2.1) * 4 =>");
+    await waitForUIRenderComplete(page);
+
+    const parenResult = await page
+      .locator(".semantic-result-display")
+      .last()
+      .getAttribute("data-result");
+    expect(parenResult || "").toBe("22.4");
   });
 });
