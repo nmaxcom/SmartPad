@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Editor, { EditorProvider } from "./components/Editor";
 import { VariableProvider } from "./state";
-import { SettingsProvider } from "./state/SettingsContext";
+import { SettingsProvider, useSettingsContext } from "./state/SettingsContext";
 import AppHeader from "./components/Layout/AppHeader";
 import AppContainer from "./components/Layout/AppContainer";
 import VariablePanel from "./components/VariablePanel/VariablePanel";
@@ -52,35 +52,51 @@ window.smartpadTracer = {
   }
 };
 
-function App() {
+function AppContent() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { settings } = useSettingsContext();
 
   const handleOpenSettings = () => setIsSettingsOpen(true);
   const handleCloseSettings = () => setIsSettingsOpen(false);
 
+  // Show sidebar only if at least one panel is enabled
+  const showSidebar = settings.showVariablePanel || settings.showTemplatePanel;
+
   return (
     <div className="app">
-      <SettingsProvider>
-        <VariableProvider>
-          <EditorProvider>
-            <AppHeader onSettingsClick={handleOpenSettings} />
-            <main className="app-main">
-              <AppContainer className="main-grid-layout">
-                <div className="editor-card-container">
-                  <Editor />
-                </div>
+      <VariableProvider>
+        <EditorProvider>
+          <AppHeader onSettingsClick={handleOpenSettings} />
+          <main className="app-main">
+            <AppContainer className="main-grid-layout">
+              <div className="editor-card-container">
+                <Editor />
+              </div>
+              {showSidebar && (
                 <div className="sidebar-container">
-                  <VariablePanel />
-                  <SaveLoadButtons />
-                  <TemplatePanel />
+                  {settings.showVariablePanel && (
+                    <>
+                      <VariablePanel />
+                      <SaveLoadButtons />
+                    </>
+                  )}
+                  {settings.showTemplatePanel && <TemplatePanel />}
                 </div>
-              </AppContainer>
-            </main>
-            <SettingsModal isOpen={isSettingsOpen} onClose={handleCloseSettings} />
-          </EditorProvider>
-        </VariableProvider>
-      </SettingsProvider>
+              )}
+            </AppContainer>
+          </main>
+          <SettingsModal isOpen={isSettingsOpen} onClose={handleCloseSettings} />
+        </EditorProvider>
+      </VariableProvider>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <SettingsProvider>
+      <AppContent />
+    </SettingsProvider>
   );
 }
 

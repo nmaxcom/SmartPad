@@ -10,6 +10,7 @@
 export { EvaluatorRegistry, defaultRegistry } from "./registry";
 export type { NodeEvaluator, EvaluationContext } from "./registry";
 export { PlainTextEvaluator, defaultPlainTextEvaluator } from "./plainTextEvaluator";
+export { CommentEvaluator, defaultCommentEvaluator } from "./commentEvaluator";
 export { ErrorEvaluator, defaultErrorEvaluator } from "./errorEvaluator";
 
 
@@ -19,6 +20,7 @@ export * from "./renderNodes";
 // Import everything for setup
 import { defaultRegistry } from "./registry";
 import { defaultPlainTextEvaluator } from "./plainTextEvaluator";
+import { defaultCommentEvaluator } from "./commentEvaluator";
 import { defaultErrorEvaluator } from "./errorEvaluator";
 
 
@@ -35,6 +37,9 @@ import { UnitsNetExpressionEvaluator } from "../units/unitsnetAstEvaluator";
  */
 export function setupDefaultEvaluators(): void {
   defaultRegistry.clear();
+
+  // Register comment evaluator first - comments should be handled before any parsing
+  defaultRegistry.register(defaultCommentEvaluator);
 
   // Create V2 evaluator instances (semantic-aware)
   const percentageEvaluatorV2 = new PercentageExpressionEvaluatorV2();

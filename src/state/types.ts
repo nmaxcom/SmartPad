@@ -67,6 +67,8 @@ export type VariableAction =
 // Settings Types
 export interface SettingsState {
   decimalPlaces: number;
+  showVariablePanel: boolean;
+  showTemplatePanel: boolean;
   // Future: theme, fontSize, autoSave, etc.
 }
 

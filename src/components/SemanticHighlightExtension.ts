@@ -13,6 +13,7 @@ import { parseLine } from "../parsing/astParser";
 import type { ASTNode } from "../parsing/ast";
 import {
   isPlainTextNode,
+  isCommentNode,
   isVariableAssignmentNode,
   isExpressionNode,
   isCombinedAssignmentNode,
@@ -32,7 +33,8 @@ export type TokenType =
   | "constant"
   | "keyword"
   | "currency"
-  | "unit";
+  | "unit"
+  | "comment";
 
 export interface Token {
   type: TokenType;
@@ -119,6 +121,16 @@ export const TriggerMark = Mark.create({
   },
   renderHTML() {
     return ["span", { class: "semantic-trigger" }, 0];
+  },
+});
+
+export const CommentMark = Mark.create({
+  name: "comment",
+  parseHTML() {
+    return [{ tag: "span.semantic-comment" }];
+  },
+  renderHTML() {
+    return ["span", { class: "semantic-comment" }, 0];
   },
 });
 
@@ -244,6 +256,18 @@ function extractTokensFromASTNode(
   const leadingWhitespace = text.indexOf(trimmedText);
 
   // Handle different AST node types with structured data (no more complex parsing!)
+  
+  // Comments: lines starting with //
+  if (isCommentNode(astNode)) {
+    tokens.push({
+      type: "comment",
+      start: 0,
+      end: text.length,
+      text: text,
+    });
+    return tokens;
+  }
+  
   if (isVariableAssignmentNode(astNode)) {
     // Variable assignment: x = 10
     const varName = astNode.variableName;

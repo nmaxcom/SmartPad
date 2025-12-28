@@ -75,6 +75,13 @@
   font-weight: 500;
 }
 
+.token-comment,
+.semantic-comment {
+  color: var(--color-text-primary);
+  font-style: normal;
+  opacity: 1;
+}
+
 .token-result {
   color: var(--color-accent);
   font-weight: 600;
@@ -188,10 +195,10 @@ body.number-scrubbing * {
 .semantic-assignment-display {
   color: var(--color-accent);
   background-color: var(--color-accent-soft);
-  padding: 3px 10px;
+  padding: 1px 5px;
   border-radius: 6px;
   font-weight: 600;
-  margin-left: 4px;
+  /* No margin-left needed - the wrapper already has a space text node */
   border: 1px solid rgba(124, 93, 250, 0.25);
 }
 
@@ -204,10 +211,10 @@ body.number-scrubbing * {
 .semantic-error-result {
   color: var(--color-pink);
   background-color: var(--color-pink-soft);
-  padding: 3px 10px;
+  padding: 1px 5px;
   border-radius: 6px;
   font-weight: 600;
-  margin-left: 4px;
+  /* No margin-left needed - the wrapper already has a space text node */
   user-select: text !important;
   display: inline-flex;
   align-items: center;

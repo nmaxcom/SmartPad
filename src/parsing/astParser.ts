@@ -11,6 +11,7 @@
 import {
   ASTNode,
   PlainTextNode,
+  CommentNode,
   VariableAssignmentNode,
   ExpressionNode,
   CombinedAssignmentNode,
@@ -37,6 +38,11 @@ export function parseLine(line: string, lineNumber: number = 1): ASTNode {
   // Handle empty lines as plain text
   if (trimmedLine === "") {
     return createPlainTextNode(line, lineNumber);
+  }
+
+  // Handle comments: lines starting with # (markdown-style)
+  if (trimmedLine.startsWith("#")) {
+    return createCommentNode(line, lineNumber);
   }
 
   try {
@@ -175,6 +181,15 @@ function parseExpression(line: string, lineNumber: number): ExpressionNode | Err
 function createPlainTextNode(raw: string, line: number): PlainTextNode {
   return {
     type: "plainText",
+    line,
+    raw,
+    content: raw,
+  };
+}
+
+function createCommentNode(raw: string, line: number): CommentNode {
+  return {
+    type: "comment",
     line,
     raw,
     content: raw,

@@ -172,7 +172,7 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
           );
         }
         return isExpr
-          ? this.createMathResultNode(expression, directValue, context.lineNumber)
+          ? this.createMathResultNode(expression, directValue, context.lineNumber, context)
           : this.createCombinedNode(node as CombinedAssignmentNode, directValue, context);
       }
       
@@ -191,7 +191,7 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
       
       // Create render node
       if (isExpr) {
-        return this.createMathResultNode(expression, result, context.lineNumber);
+        return this.createMathResultNode(expression, result, context.lineNumber, context);
       } else {
         return this.createCombinedNode(
           node as CombinedAssignmentNode,
@@ -633,13 +633,14 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
   /**
    * Create render nodes
    */
-  private createMathResultNode(expression: string, result: SemanticValue, lineNumber: number): MathResultRenderNode {
-    const displayText = `${expression} => ${result.toString()}`;
+  private createMathResultNode(expression: string, result: SemanticValue, lineNumber: number, context: EvaluationContext): MathResultRenderNode {
+    const resultString = result.toString({ precision: context.decimalPlaces });
+    const displayText = `${expression} => ${resultString}`;
     
     return {
       type: "mathResult",
       expression,
-      result: result.toString(),
+      result: resultString,
       displayText,
       line: lineNumber,
       originalRaw: expression,
@@ -651,7 +652,8 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     result: SemanticValue,
     context: EvaluationContext
   ): CombinedRenderNode {
-    const displayText = `${node.variableName} = ${node.expression} => ${result.toString()}`;
+    const resultString = result.toString({ precision: context.decimalPlaces });
+    const displayText = `${node.variableName} = ${node.expression} => ${resultString}`;
     
     // Store the result in the variable store
     context.variableStore.setVariableWithSemanticValue(
@@ -664,7 +666,7 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
       type: "combined",
       variableName: node.variableName,
       expression: node.expression,
-      result: result.toString(),
+      result: resultString,
       displayText,
       line: context.lineNumber,
       originalRaw: `${node.variableName} = ${node.expression}`,

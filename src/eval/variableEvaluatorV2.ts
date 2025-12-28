@@ -112,7 +112,8 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
         varNode.variableName,
         semanticValue,
         context.lineNumber,
-        varNode.raw
+        varNode.raw,
+        context.decimalPlaces
       );
       
     } catch (error) {
@@ -128,9 +129,10 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
     variableName: string,
     value: import("../types").SemanticValue,
     lineNumber: number,
-    originalRaw: string
+    originalRaw: string,
+    decimalPlaces: number
   ): VariableRenderNode {
-    const valueString = value.toString();
+    const valueString = value.toString({ precision: decimalPlaces });
     const displayText = `${variableName} = ${valueString}`;
     
     return {

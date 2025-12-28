@@ -30,6 +30,14 @@ export interface PlainTextNode extends BaseASTNode {
 }
 
 /**
+ * Represents a comment line starting with //
+ */
+export interface CommentNode extends BaseASTNode {
+  readonly type: "comment";
+  readonly content: string;
+}
+
+/**
  * Represents a variable assignment: `variableName = value`
  * Value is now parsed as a SemanticValue during parsing phase
  */
@@ -110,6 +118,7 @@ export interface ErrorNode extends BaseASTNode {
  */
 export type ASTNode =
   | PlainTextNode
+  | CommentNode
   | VariableAssignmentNode
   | ExpressionNode
   | CombinedAssignmentNode
@@ -120,6 +129,10 @@ export type ASTNode =
  */
 export function isPlainTextNode(node: ASTNode): node is PlainTextNode {
   return node.type === "plainText";
+}
+
+export function isCommentNode(node: ASTNode): node is CommentNode {
+  return node.type === "comment";
 }
 
 export function isVariableAssignmentNode(node: ASTNode): node is VariableAssignmentNode {

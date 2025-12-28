@@ -131,7 +131,8 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
         combNode.expression,
         semanticValue,
         context.lineNumber,
-        combNode.raw
+        combNode.raw,
+        context.decimalPlaces
       );
       
     } catch (error) {
@@ -148,9 +149,10 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
     expression: string,
     value: import("../types").SemanticValue,
     lineNumber: number,
-    originalRaw: string
+    originalRaw: string,
+    decimalPlaces: number
   ): CombinedRenderNode {
-    const valueString = value.toString();
+    const valueString = value.toString({ precision: decimalPlaces });
     const displayText = `${variableName} = ${expression} => ${valueString}`;
     
     return {

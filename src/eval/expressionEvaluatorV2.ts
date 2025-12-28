@@ -455,7 +455,7 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       }
 
       // Create render node
-      return this.createMathResultNode(exprNode.expression, result, context.lineNumber);
+      return this.createMathResultNode(exprNode.expression, result, context.lineNumber, context.decimalPlaces);
       
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -540,9 +540,10 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
   private createMathResultNode(
     expression: string, 
     result: SemanticValue, 
-    lineNumber: number
+    lineNumber: number,
+    decimalPlaces: number
   ): MathResultRenderNode {
-    const resultString = result.toString();
+    const resultString = result.toString({ precision: decimalPlaces });
     const displayText = `${expression} => ${resultString}`;
     
     return {

@@ -118,6 +118,54 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </div>
             </div>
           </div>
+
+          <div className="settings-section">
+            <h3 className="settings-section-title">Layout</h3>
+
+            <div className="settings-item">
+              <div className="settings-item-info">
+                <label htmlFor="show-variable-panel" className="settings-label">
+                  Show Variable Panel
+                </label>
+                <p className="settings-description">
+                  Display the panel showing all defined variables and their current values
+                </p>
+              </div>
+              <div className="settings-control">
+                <label className="toggle-switch">
+                  <input
+                    id="show-variable-panel"
+                    type="checkbox"
+                    checked={settings.showVariablePanel}
+                    onChange={(e) => updateSetting("showVariablePanel", e.target.checked)}
+                  />
+                  <span className="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div className="settings-item">
+              <div className="settings-item-info">
+                <label htmlFor="show-template-panel" className="settings-label">
+                  Show Template Panel
+                </label>
+                <p className="settings-description">
+                  Display the panel with quick template examples to get started
+                </p>
+              </div>
+              <div className="settings-control">
+                <label className="toggle-switch">
+                  <input
+                    id="show-template-panel"
+                    type="checkbox"
+                    checked={settings.showTemplatePanel}
+                    onChange={(e) => updateSetting("showTemplatePanel", e.target.checked)}
+                  />
+                  <span className="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Footer */}
