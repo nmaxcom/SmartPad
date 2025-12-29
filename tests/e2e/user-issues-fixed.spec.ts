@@ -149,4 +149,68 @@ test.describe("User Issues Fixed", () => {
       .getAttribute("data-result");
     expect(parenResult || "").toBe("22.4");
   });
+
+  test("results are selectable text and copyable", async ({ page }) => {
+    const pm = page.locator(".ProseMirror");
+    await pm.click();
+    await page.keyboard.press("Control+a");
+    await page.keyboard.press("Delete");
+
+    await pm.type("2 + 3 =>");
+    await waitForUIRenderComplete(page);
+
+    await expect(page.locator(".semantic-result-display").last()).toContainText("5");
+
+    await page.evaluate(() => {
+      const paragraph = document.querySelector(".ProseMirror p");
+      if (!paragraph) return;
+      const range = document.createRange();
+      range.selectNodeContents(paragraph);
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    });
+
+    const selectionText = await page.evaluate(() => window.getSelection()?.toString() || "");
+    expect(selectionText).toContain("5");
+  });
+
+  test("unit conversions show the correct result for the line", async ({ page }) => {
+    const pm = page.locator(".ProseMirror");
+    await pm.click();
+    await page.keyboard.press("Control+a");
+    await page.keyboard.press("Delete");
+
+    await pm.type("distance = 150 m");
+    await page.keyboard.press("Enter");
+    await pm.type("time = 28 s");
+    await page.keyboard.press("Enter");
+    await pm.type("velocity = distance / time =>");
+    await page.keyboard.press("Enter");
+    await pm.type("velocity to km/h =>");
+    await waitForUIRenderComplete(page);
+
+    const line = page.locator(".ProseMirror p", { hasText: "velocity to km/h" }).first();
+    const result = await line.locator(".semantic-result-display").getAttribute("data-result");
+    expect(result || "").toContain("km/h");
+    expect(result || "").not.toContain("time =");
+  });
+
+  test("incomplete unit errors clear once the unit is completed", async ({ page }) => {
+    await page.evaluate(() => {
+      (window as any).tiptapEditor?.commands?.setContent("<p>len = missingVar</p>");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    await expect(page.locator(".semantic-error-result")).toHaveCount(1);
+
+    await page.evaluate(() => {
+      (window as any).tiptapEditor?.commands?.setContent("<p>len = 23 km</p>");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    await expect(page.locator(".semantic-error-result")).toHaveCount(0);
+  });
 });

@@ -39,8 +39,18 @@ export const ResultsDecoratorExtension = Extension.create({
           },
         },
         view(view) {
+          const normalize = (s: string | undefined | null): string =>
+            (s || "").replace(/\s+/g, "").trim();
+
+          // Only eligible node types should create widgets
+          const isWidgetEligible = (rn: any) =>
+            rn && (rn.type === "mathResult" || rn.type === "combined" || rn.type === "error");
+
           // Helper to rebuild decorations from render nodes
-          const buildDecorations = (renderNodes: RenderNode[]): DecorationSet => {
+          const buildDecorations = (
+            doc: ProseMirrorNode,
+            renderNodes: RenderNode[]
+          ): DecorationSet => {
             const decorations: Decoration[] = [];
 
             // Build a map from line number to render node for quick lookup
@@ -49,94 +59,25 @@ export const ResultsDecoratorExtension = Extension.create({
               renderMap.set(rn.line, rn);
             });
 
-            const normalize = (s: string | undefined | null): string =>
-              (s || "").replace(/\s+/g, "").trim();
-
-            // Only eligible node types should create widgets
-            const isWidgetEligible = (rn: any) =>
-              rn && (rn.type === "mathResult" || rn.type === "combined" || rn.type === "error");
-
-            // Derive positions by scanning paragraphs and matching expressions to render nodes
+            // Derive positions by scanning paragraphs for assignment errors (no =>)
             if (renderNodes.length > 0) {
               // Build paragraph index: 1-based line numbers
               const paragraphIndex: Array<{ start: number; text: string }> = [
                 /*1-based*/
               ];
               let line = 0;
-              view.state.doc.forEach((node: ProseMirrorNode, offset: number) => {
+              doc.forEach((node: ProseMirrorNode, offset: number) => {
                 if (!node.isTextblock) return;
                 line += 1;
                 const start = offset + 1;
                 const text = String(node.textContent || "");
                 paragraphIndex[line] = { start, text };
               });
-              const normalize = (s: string) => (s || "").replace(/\s+/g, "").trim();
-              const eligibleNodes = (renderNodes as any[]).filter((rn) => isWidgetEligible(rn));
+
               for (let i = 1; i < paragraphIndex.length; i++) {
                 const info = paragraphIndex[i];
                 if (!info) continue;
-                const arrowIdx = info.text.indexOf("=>");
-                if (arrowIdx >= 0) {
-                  const exprText = info.text.substring(0, arrowIdx).trim();
-                  // Find best matching eligible render node by comparing left-of-arrow text
-                  let matched: any | null = null;
-                  for (const rn of eligibleNodes) {
-                    const displayText = String((rn as any).displayText || "");
-                    if (!displayText) continue;
-                    if (displayText.includes("=>")) {
-                      const leftOfArrow = displayText.split("=>")[0].trim();
-                      if (normalize(leftOfArrow) === normalize(exprText)) {
-                        matched = rn;
-                        break;
-                      }
-                    } else if ((rn as any).originalRaw) {
-                      const orig = String((rn as any).originalRaw)
-                        .replace(/\s*=>\s*$/, "")
-                        .trim();
-                      if (normalize(orig) === normalize(exprText)) {
-                        matched = rn;
-                        break;
-                      }
-                    }
-                  }
-                  if (!matched) continue;
-                  const displayText = String(matched.displayText || "");
-                  let resultText: string = "";
-                  if (displayText.includes("=>")) {
-                    resultText = displayText.replace(/^.*=>\s*/, "");
-                  } else if (displayText.includes("⚠️")) {
-                    resultText = displayText.substring(displayText.indexOf("⚠️")).trim();
-                  } else {
-                    resultText = displayText;
-                  }
-                  const anchor = info.start + arrowIdx + 2; // after =>
-                  const isError = matched.type === "error";
-
-                  const widget = Decoration.widget(
-                    anchor,
-                    () => {
-                      const wrapper = document.createElement("span");
-                      wrapper.className = "semantic-wrapper";
-                      wrapper.setAttribute("contenteditable", "false");
-                      wrapper.appendChild(document.createTextNode(" "));
-                      const container = document.createElement("span");
-                      container.className = "semantic-result-container";
-                      const span = document.createElement("span");
-                      span.className = isError ? "semantic-error-result" : "semantic-result-display";
-                      span.setAttribute("data-result", resultText);
-                      span.setAttribute("title", resultText);
-                      span.setAttribute("aria-label", resultText);
-                      container.appendChild(span);
-                      wrapper.appendChild(container);
-                      // Ensure one visible space outside the result container after '=>'
-                      // The wrapper itself begins with a text node " "; no trailing text content needed
-                      return wrapper;
-                    },
-                    { side: 1 }
-                  );
-                  decorations.push(widget);
-                  continue;
-                }
+                if (info.text.includes("=>")) continue;
 
                 const assignment = parseVariableAssignment(info.text);
                 if (!assignment.isValid || !assignment.rawValue) continue;
@@ -166,8 +107,6 @@ export const ResultsDecoratorExtension = Extension.create({
                   () => {
                     const wrapper = document.createElement("span");
                     wrapper.className = "semantic-wrapper";
-                    wrapper.setAttribute("contenteditable", "false");
-                    wrapper.appendChild(document.createTextNode(" "));
                     const container = document.createElement("span");
                     container.className = "semantic-result-container";
                     const span = document.createElement("span");
@@ -175,6 +114,7 @@ export const ResultsDecoratorExtension = Extension.create({
                     span.setAttribute("data-result", resultText);
                     span.setAttribute("title", resultText);
                     span.setAttribute("aria-label", resultText);
+                    span.textContent = resultText;
                     container.appendChild(span);
                     wrapper.appendChild(container);
                     return wrapper;
@@ -185,26 +125,136 @@ export const ResultsDecoratorExtension = Extension.create({
               }
             }
 
-            return DecorationSet.create(view.state.doc, decorations);
+            return DecorationSet.create(doc, decorations);
           };
 
           // Global event listener
           const listener = (e: Event) => {
             const custom = e as CustomEvent<{ renderNodes: RenderNode[]; sequence?: number }>;
             const renderNodes = custom.detail?.renderNodes ?? [];
-            const decoSet = buildDecorations(renderNodes);
-            // If no decorations were produced, keep the existing ones mapped to the current doc
-            let finalSet: DecorationSet = decoSet;
-            try {
-              const count = (decoSet as any).find ? (decoSet as any).find().length : 0;
-              if (count === 0) {
-                const current = pluginKey.getState(view.state) as DecorationSet;
-                finalSet = current ? current.map(view.state.tr.mapping, view.state.doc) : decoSet;
-              }
-            } catch {}
 
-            // Dispatch transaction with meta to update decorations
-            view.dispatch(view.state.tr.setMeta(pluginKey, finalSet));
+            const resultNodeType = view.state.schema.nodes.resultToken;
+            const tr = view.state.tr;
+            let changed = false;
+
+            // Build paragraph index for matching results (1-based line numbers)
+            const paragraphIndex: Array<{ start: number; text: string; node: ProseMirrorNode }> = [
+              /*1-based*/
+            ];
+            let line = 0;
+            view.state.doc.forEach((node: ProseMirrorNode, offset: number) => {
+              if (!node.isTextblock) return;
+              line += 1;
+              const start = offset + 1;
+              const text = String(node.textContent || "");
+              paragraphIndex[line] = { start, text, node };
+            });
+
+          const eligibleNodes = (renderNodes as any[]).filter((rn) => isWidgetEligible(rn));
+          const eligibleNodesByLine = new Map<number, any[]>();
+          eligibleNodes.forEach((rn) => {
+            const list = eligibleNodesByLine.get(rn.line) || [];
+            list.push(rn);
+            eligibleNodesByLine.set(rn.line, list);
+          });
+
+          // Update inline result nodes from bottom to top so positions stay valid
+          for (let i = paragraphIndex.length - 1; i >= 1; i--) {
+            const info = paragraphIndex[i];
+            if (!info) continue;
+            const arrowIdx = info.text.indexOf("=>");
+            if (arrowIdx < 0) continue;
+
+            if (!resultNodeType) {
+              continue;
+            }
+
+            const exprText = info.text.substring(0, arrowIdx).trim();
+            // Find best matching eligible render node by comparing left-of-arrow text
+            let matched: any | null = null;
+            const matchByExpression = (candidates: any[]): any | null => {
+              for (const rn of candidates) {
+                const displayText = String((rn as any).displayText || "");
+                if (displayText.includes("=>")) {
+                  const leftOfArrow = displayText.split("=>")[0].trim();
+                  if (normalize(leftOfArrow) === normalize(exprText)) {
+                    return rn;
+                  }
+                }
+                if ((rn as any).originalRaw) {
+                  const orig = String((rn as any).originalRaw)
+                    .replace(/\s*=>\s*$/, "")
+                    .trim();
+                  if (normalize(orig) === normalize(exprText)) {
+                    return rn;
+                  }
+                }
+              }
+              return null;
+            };
+
+            const lineCandidates = eligibleNodesByLine.get(i) || [];
+            matched = matchByExpression(lineCandidates);
+            if (!matched) {
+              matched = matchByExpression(eligibleNodes);
+            }
+
+              const afterArrowPos = info.start + arrowIdx + 2;
+              const lineEndPos = info.start + info.node.content.size;
+              const slice = tr.doc.slice(afterArrowPos, lineEndPos).content;
+
+              if (!matched) {
+                if (slice.childCount > 0) {
+                  tr.delete(afterArrowPos, lineEndPos);
+                  changed = true;
+                }
+                continue;
+              }
+
+              const displayText = String(matched.displayText || "");
+              let resultText: string = "";
+              if (displayText.includes("=>")) {
+                resultText = displayText.replace(/^.*=>\s*/, "");
+              } else if (displayText.includes("⚠️")) {
+                resultText = displayText.substring(displayText.indexOf("⚠️")).trim();
+              } else {
+                resultText = displayText;
+              }
+
+              const isError = matched.type === "error";
+              const normalizedResult = resultText.trim();
+              const renderText = normalizedResult;
+              const schemaText = renderText ? view.state.schema.text(renderText) : undefined;
+              const hasExpected =
+                slice.childCount === 1 &&
+                slice.child(0).type === resultNodeType &&
+                slice.child(0).attrs.value === normalizedResult &&
+                !!slice.child(0).attrs.isError === isError &&
+                slice.child(0).textContent === renderText;
+
+              if (!hasExpected) {
+                tr.delete(afterArrowPos, lineEndPos);
+                tr.insert(
+                  afterArrowPos,
+                  resultNodeType.create({ value: normalizedResult, isError }, schemaText)
+                );
+                changed = true;
+              }
+            }
+
+            const decoSet = buildDecorations(tr.doc, renderNodes);
+            const finalSet: DecorationSet = decoSet;
+
+            const currentSet = pluginKey.getState(view.state) as DecorationSet | undefined;
+            const decoChanged = currentSet ? !currentSet.eq(finalSet) : true;
+
+            if (decoChanged) {
+              tr.setMeta(pluginKey, finalSet);
+            }
+
+            if (changed || decoChanged) {
+              view.dispatch(tr);
+            }
 
             // Dispatch uiRenderComplete event AFTER decorations are applied and update a global sequence flag
             // This makes the pipeline end deterministic for tests

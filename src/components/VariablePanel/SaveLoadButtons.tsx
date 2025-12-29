@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useEditorContext } from "../Editor";
+import { getSmartPadText } from "../editorText";
 import "./SaveLoadButtons.css";
 
 const STORAGE_KEY = "smartpad-saves";
@@ -65,7 +66,7 @@ export default function SaveLoadButtons() {
   const handleSave = () => {
     if (!editor) return;
     
-    const content = editor.getText();
+    const content = getSmartPadText(editor);
     if (!content.trim()) return;
 
     setIsSaveDialogOpen(true);
@@ -74,7 +75,7 @@ export default function SaveLoadButtons() {
   const confirmSave = () => {
     if (!editor || !saveName.trim()) return;
     
-    const content = editor.getText();
+    const content = getSmartPadText(editor);
     const now = Date.now();
     const newSave: SaveSlot = {
       id: `${now}-${Math.random().toString(36).substr(2, 9)}`,

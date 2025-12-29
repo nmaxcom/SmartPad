@@ -331,18 +331,7 @@ function extractTokensFromASTNode(
         text: "=>",
       });
 
-      // Check for result or error after =>
-      const afterArrow = text.substring(arrowIndex + 2).trim();
-      if (afterArrow) {
-        const resultStart = text.indexOf(afterArrow, arrowIndex + 2);
-        const isError = afterArrow.includes("⚠️");
-        tokens.push({
-          type: isError ? "error" : "result",
-          start: resultStart,
-          end: text.length,
-          text: afterArrow,
-        });
-      }
+      // Results are rendered separately, so don't tokenize text after =>
     } else {
       // Unit expression without => (e.g., "100 ft to m", "PI")
       const exprTokens = tokenizeExpression(trimmedText, leadingWhitespace, variableContext);
@@ -388,18 +377,7 @@ function extractTokensFromASTNode(
           text: "=>",
         });
 
-        // Check for result or error after =>
-        const afterArrow = text.substring(arrowIndex + 2).trim();
-        if (afterArrow) {
-          const resultStart = text.indexOf(afterArrow, arrowIndex + 2);
-          const isError = afterArrow.includes("⚠️");
-          tokens.push({
-            type: isError ? "error" : "result",
-            start: resultStart,
-            end: text.length,
-            text: afterArrow,
-          });
-        }
+        // Results are rendered separately, so don't tokenize text after =>
       }
     }
   } else if (isErrorNode(astNode)) {

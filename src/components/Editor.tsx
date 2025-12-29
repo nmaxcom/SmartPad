@@ -24,6 +24,8 @@ import { NumberScrubberExtension } from "./NumberScrubberExtension";
 import { ResultsDecoratorExtension } from "./ResultsDecoratorExtension";
 import { VariableHoverExtension } from "./VariableHoverExtension";
 import { normalizePastedHTML } from "./pasteTransforms";
+import { ResultInlineNode } from "./ResultInlineNode";
+import { getSmartPadText } from "./editorText";
 // Import helper to identify combined assignment nodes (e.g. "speed = slider(...)")
 import { parseLine } from "../parsing/astParser";
 import type { ASTNode } from "../parsing/ast";
@@ -123,7 +125,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
 
       try {
         // PROPER TipTap approach: Never modify user input text, only use decorations
-        const content = editor.getText();
+        const content = getSmartPadText(editor);
         const lines = content.split("\n");
 
         // STAGE 1: Parse user input as-is (no cleaning, no text manipulation)
@@ -318,6 +320,8 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       ResultMark,
       ErrorMark,
       TriggerMark,
+      // Inline node for computed results (selectable, non-editable)
+      ResultInlineNode,
       // Number scrubber for interactive dragging
       NumberScrubberExtension,
       // Semantic highlighting extension with variable context

@@ -6,6 +6,11 @@ parsify.app, figr.app, aybo.app, calca.io, numi.app, Soulver 3, notepadcalculato
 # UI inspiration
 https://dribbble.com/shots/24984990-Deposit-Calculator-UI-Kit-Widgets
 
+# nuevas ideas
+mostrar ventanita/prediccion al empezar a escribir variable name
+left panel con "my sheets"
+copiar del editor a otro lado muestra empty lines in between each line
+
 # discarded bugs/ideas
 - very hard to select text to delete or copy (specially results): not worth it atm (easiest solution: Intercept the copy event and synthesise the clipboard text)
 

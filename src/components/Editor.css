@@ -198,15 +198,10 @@ body.number-scrubbing * {
   padding: 1px 5px;
   border-radius: 6px;
   font-weight: 600;
-  /* No margin-left needed - the wrapper already has a space text node */
   border: 1px solid rgba(124, 93, 250, 0.25);
 }
 
-/* Display result text using data-result attribute so paragraph textContent stays clean */
-.semantic-result-display::after,
-.semantic-assignment-display::after {
-  content: attr(data-result);
-}
+/* Result text is inserted as real text nodes in the widget for selection/copy */
 
 .semantic-error-result {
   color: var(--color-pink);
@@ -214,7 +209,6 @@ body.number-scrubbing * {
   padding: 1px 5px;
   border-radius: 6px;
   font-weight: 600;
-  /* No margin-left needed - the wrapper already has a space text node */
   user-select: text !important;
   display: inline-flex;
   align-items: center;
@@ -222,10 +216,7 @@ body.number-scrubbing * {
   border: 1px solid rgba(255, 107, 157, 0.25);
 }
 
-/* Display error text using data-result attribute */
-.semantic-error-result::after {
-  content: attr(data-result);
-}
+/* Error text is inserted as real text nodes in the widget for selection/copy */
 
 /* Override ProseMirror-widget user-select for error messages */
 .semantic-error-result.ProseMirror-widget {
@@ -305,4 +296,21 @@ body.number-scrubbing * {
 .semantic-error-result,
 .semantic-trigger {
   transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out;
+}
+
+.semantic-wrapper,
+.semantic-result-container,
+.semantic-result-display,
+.semantic-assignment-display,
+.semantic-error-result {
+  user-select: text;
+  pointer-events: auto;
+}
+
+.semantic-wrapper {
+  cursor: text;
+}
+
+.semantic-result-container {
+  margin-left: 6px;
 }
