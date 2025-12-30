@@ -3,6 +3,8 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import { Extension } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
+import { Slice } from "@tiptap/pm/model";
+import { TextSelection } from "@tiptap/pm/state";
 import "./Editor.css";
 import { useVariables } from "../state/useVariables";
 import { useVariableContext } from "../state/VariableContext";
@@ -25,6 +27,7 @@ import { ResultsDecoratorExtension } from "./ResultsDecoratorExtension";
 import { VariableHoverExtension } from "./VariableHoverExtension";
 import { normalizePastedHTML } from "./pasteTransforms";
 import { ResultInlineNode } from "./ResultInlineNode";
+import { ResultInteractionExtension } from "./ResultInteractionExtension";
 import { getSmartPadText } from "./editorText";
 // Import helper to identify combined assignment nodes (e.g. "speed = slider(...)")
 import { parseLine } from "../parsing/astParser";
@@ -47,7 +50,7 @@ const createEnterKeyExtension = () =>
     addKeyboardShortcuts() {
       return {
         Enter: () => {
-          const { state } = this.editor;
+          const { state, view } = this.editor;
           const { selection } = state;
           const { $from, from } = selection;
 
@@ -65,18 +68,20 @@ const createEnterKeyExtension = () =>
 
           // Find cursor position relative to the start of the node
           const nodeStartPos = $from.start();
+          const nodeEndPos = $from.end();
           const cursorInNode = from - nodeStartPos;
 
           if (cursorInNode > arrowIndex + 1) {
             // Cursor is after the '=>' but not at the very end
             // Check if cursor is at the end of the line
-            if (cursorInNode >= lineText.length) {
+            if (from >= nodeEndPos) {
               // Cursor is at the end of the line, allow new line creation
               return false;
             }
-            // Default behavior: move cursor to end of line before creating new line
-            const endOfLinePos = nodeStartPos + lineText.length;
-            return this.editor.commands.setTextSelection(endOfLinePos);
+            // Move cursor to end so Enter creates a new line after the result
+            const tr = state.tr.setSelection(TextSelection.create(state.doc, nodeEndPos));
+            view.dispatch(tr);
+            return false;
           }
 
           // Otherwise, allow default "Enter" behavior
@@ -322,6 +327,8 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       TriggerMark,
       // Inline node for computed results (selectable, non-editable)
       ResultInlineNode,
+      // Keyboard/selection behavior for result tokens
+      ResultInteractionExtension,
       // Number scrubber for interactive dragging
       NumberScrubberExtension,
       // Semantic highlighting extension with variable context
@@ -346,6 +353,13 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
     content: "<p></p>",
     editorProps: {
       transformPastedHTML: (html) => normalizePastedHTML(html),
+      clipboardTextSerializer: (slice: Slice) =>
+        slice.content.textBetween(0, slice.content.size, "\n", (node) => {
+          if (node.type?.name === "resultToken") {
+            return node.textContent || node.attrs?.value || "";
+          }
+          return "";
+        }),
     },
     onUpdate: ({ editor }) => {
       handleUpdateV2({ editor }); // Always use AST pipeline

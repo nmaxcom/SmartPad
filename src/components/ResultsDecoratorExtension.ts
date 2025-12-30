@@ -41,6 +41,19 @@ export const ResultsDecoratorExtension = Extension.create({
         view(view) {
           const normalize = (s: string | undefined | null): string =>
             (s || "").replace(/\s+/g, "").trim();
+          const getNodeTextWithoutResults = (node: ProseMirrorNode): string => {
+            let text = "";
+            node.descendants((child) => {
+              if (child.type?.name === "resultToken") {
+                return false;
+              }
+              if (child.isText) {
+                text += child.text;
+              }
+              return undefined;
+            });
+            return text;
+          };
 
           // Only eligible node types should create widgets
           const isWidgetEligible = (rn: any) =>
@@ -70,7 +83,7 @@ export const ResultsDecoratorExtension = Extension.create({
                 if (!node.isTextblock) return;
                 line += 1;
                 const start = offset + 1;
-                const text = String(node.textContent || "");
+                const text = getNodeTextWithoutResults(node);
                 paragraphIndex[line] = { start, text };
               });
 
@@ -146,7 +159,7 @@ export const ResultsDecoratorExtension = Extension.create({
               if (!node.isTextblock) return;
               line += 1;
               const start = offset + 1;
-              const text = String(node.textContent || "");
+              const text = getNodeTextWithoutResults(node);
               paragraphIndex[line] = { start, text, node };
             });
 
@@ -163,7 +176,27 @@ export const ResultsDecoratorExtension = Extension.create({
             const info = paragraphIndex[i];
             if (!info) continue;
             const arrowIdx = info.text.indexOf("=>");
-            if (arrowIdx < 0) continue;
+            if (arrowIdx < 0) {
+              if (!resultNodeType) {
+                continue;
+              }
+
+              const removals: Array<{ from: number; to: number }> = [];
+              info.node.nodesBetween(0, info.node.content.size, (node: ProseMirrorNode, pos) => {
+                if (node.type === resultNodeType) {
+                  const from = info.start + pos;
+                  removals.push({ from, to: from + node.nodeSize });
+                  return false;
+                }
+                return undefined;
+              });
+
+              for (let r = removals.length - 1; r >= 0; r--) {
+                tr.delete(removals[r].from, removals[r].to);
+                changed = true;
+              }
+              continue;
+            }
 
             if (!resultNodeType) {
               continue;
@@ -224,19 +257,22 @@ export const ResultsDecoratorExtension = Extension.create({
               const isError = matched.type === "error";
               const normalizedResult = resultText.trim();
               const renderText = normalizedResult;
-              const schemaText = renderText ? view.state.schema.text(renderText) : undefined;
+              const existingResult = slice.childCount === 1 ? slice.child(0) : null;
+              const existingText = existingResult ? existingResult.textContent || "" : "";
               const hasExpected =
-                slice.childCount === 1 &&
-                slice.child(0).type === resultNodeType &&
-                slice.child(0).attrs.value === normalizedResult &&
-                !!slice.child(0).attrs.isError === isError &&
-                slice.child(0).textContent === renderText;
+                !!existingResult &&
+                existingResult.type === resultNodeType &&
+                existingText === normalizedResult &&
+                !!existingResult.attrs.isError === isError;
 
               if (!hasExpected) {
                 tr.delete(afterArrowPos, lineEndPos);
+                const content = normalizedResult
+                  ? view.state.schema.text(normalizedResult)
+                  : undefined;
                 tr.insert(
                   afterArrowPos,
-                  resultNodeType.create({ value: normalizedResult, isError }, schemaText)
+                  resultNodeType.create({ value: normalizedResult, isError }, content)
                 );
                 changed = true;
               }

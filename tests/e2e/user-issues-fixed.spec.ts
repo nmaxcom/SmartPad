@@ -175,6 +175,61 @@ test.describe("User Issues Fixed", () => {
     expect(selectionText).toContain("5");
   });
 
+  test("backspace clears the result by deleting only the >", async ({ page }) => {
+    const pm = page.locator(".ProseMirror");
+    await pm.click();
+    await page.keyboard.press("Control+a");
+    await page.keyboard.press("Delete");
+
+    await pm.type("2 + 3 =>");
+    await waitForUIRenderComplete(page);
+
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      if (!editor) return;
+      editor.commands.setTextSelection(editor.state.doc.content.size);
+    });
+
+    await page.keyboard.press("Delete");
+    await expect(page.locator(".semantic-result-display")).toHaveCount(1);
+
+    await page.keyboard.press("Backspace");
+    await waitForUIRenderComplete(page);
+
+    const lineText = await page.locator(".ProseMirror p").first().innerText();
+    expect(lineText).toContain("2 + 3 =");
+    expect(lineText).not.toContain("=>");
+    await expect(page.locator(".semantic-result-display")).toHaveCount(0);
+  });
+
+  test("clipboard text includes results without extra blank lines", async ({ page }) => {
+    await page.evaluate(() => {
+      (window as any).tiptapEditor?.commands?.setContent("<p>2 + 3 =></p><p>4 + 4 =></p>");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    const clipboardInfo = await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      if (!editor)
+        return { text: "", hasSerializer: false, sliceSize: 0 };
+      editor.commands.focus();
+      editor.commands.selectAll();
+      const slice = editor.state.selection.content();
+      const serializer = editor.view?.someProp?.("clipboardTextSerializer");
+      return {
+        text: typeof serializer === "function" ? serializer(slice) : "",
+        hasSerializer: typeof serializer === "function",
+        sliceSize: slice.content.size,
+      };
+    });
+
+    expect(clipboardInfo.hasSerializer).toBe(true);
+    expect(clipboardInfo.text).toContain("5");
+    expect(clipboardInfo.text).toContain("8");
+    expect(clipboardInfo.text).not.toContain("\n\n");
+  });
+
   test("unit conversions show the correct result for the line", async ({ page }) => {
     const pm = page.locator(".ProseMirror");
     await pm.click();

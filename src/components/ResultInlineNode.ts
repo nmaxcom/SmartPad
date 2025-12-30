@@ -21,11 +21,11 @@ export const ResultInlineNode = Node.create({
   },
 
   renderText({ node }) {
-    return node.textContent || "";
+    return node.textContent || node.attrs.value || "";
   },
 
   renderHTML({ node }) {
-    const value = node.attrs.value || "";
+    const value = node.textContent || node.attrs.value || "";
     const isError = !!node.attrs.isError;
     const resultClass = isError ? "semantic-error-result" : "semantic-result-display";
 
