@@ -17,6 +17,15 @@ abs(-4.2) =>
 max(3, 7) * 2 =>
 PI * 2 =>
 
+# Scientific notation: huge/small values are shown with e-notation (thresholds in Settings)
+
+light speed = 3e8
+light speed =>
+tiny mass = 4.2e-9
+tiny mass =>
+edge tiny = 9.99e-5
+edge tiny =>
+
 # Variables: spaces and phrases are ok
 
 monthly rent = $1250
@@ -57,6 +66,12 @@ floor area to m^2 =>
 tank volume = 2 gal
 tank volume to L =>
 
+# Temperatures (ASCII units)
+
+temp c = 25 C
+temp c to F =>
+temp c to K =>
+
 # Dimensional analysis and derived units
 
 mass = 2 kg
@@ -95,12 +110,6 @@ spin = 1200 rpm
 spin to Hz =>
 mass flow = 1.5 kg/s
 mass flow to lb/min =>
-
-# Temperatures (ASCII units)
-
-temp c = 25 C
-temp c to F =>
-temp c to K =>
 
 # Fuel economy and conversions
 
