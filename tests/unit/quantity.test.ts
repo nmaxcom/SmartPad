@@ -211,6 +211,14 @@ describe("Quantity", () => {
     expect(kilometers.value).toBeCloseTo(1.609344, 6);
   });
 
+  test("should convert composite units across prefixes", () => {
+    const density = new Quantity(2, UnitParser.parse("kg/m^2"));
+    const converted = density.convertToUnit(UnitParser.parse("g/cm^2"));
+
+    expect(converted.value).toBeCloseTo(0.2, 10);
+    expect(converted.unit.toString()).toBe("g/cm^2");
+  });
+
   test("should throw error when converting incompatible units", () => {
     const length = Quantity.fromUnit(10, "m");
 
@@ -268,6 +276,19 @@ describe("UnitParser", () => {
   test("should parse simple compound units", () => {
     const velocity = UnitParser.parse("m/s");
     expect(velocity.getDimension()).toEqual(DIMENSIONS.VELOCITY);
+  });
+
+  test("should parse units with parentheses and multiple divisions", () => {
+    const pressure = UnitParser.parse("kg/(m*s^2)");
+    expect(pressure.getDimension()).toEqual(DIMENSIONS.PRESSURE);
+
+    const pressureAlt = UnitParser.parse("kg/m/s^2");
+    expect(pressureAlt.getDimension()).toEqual(DIMENSIONS.PRESSURE);
+  });
+
+  test("should parse inverse units", () => {
+    const frequency = UnitParser.parse("1/s");
+    expect(frequency.getDimension()).toEqual(DIMENSIONS.FREQUENCY);
   });
 
   test("should throw error for unknown units", () => {

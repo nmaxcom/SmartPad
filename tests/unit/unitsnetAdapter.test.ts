@@ -65,6 +65,48 @@ describe("UnitsNet.js Adapter", () => {
       expect(result.unit).toBe("m/s");
     });
 
+    test("should convert composite units across prefixes", () => {
+      const mass = SmartPadQuantity.fromValueAndUnit(5, "kg");
+      const area = SmartPadQuantity.fromValueAndUnit(2.5, "m^2");
+      const density = mass.divide(area);
+      const converted = density.convertTo("g/cm^2");
+
+      expect(converted.value).toBeCloseTo(0.2, 10);
+      expect(converted.unit).toBe("g/cm^2");
+    });
+
+    test("should convert flow rates to base units", () => {
+      const flow = SmartPadQuantity.fromValueAndUnit(12, "L/min");
+      const converted = flow.convertTo("m^3/s");
+
+      expect(converted.value).toBeCloseTo(0.0002, 10);
+      expect(converted.unit).toBe("m^3/s");
+    });
+
+    test("should convert rpm to Hz", () => {
+      const spin = SmartPadQuantity.fromValueAndUnit(1200, "rpm");
+      const converted = spin.convertTo("Hz");
+
+      expect(converted.value).toBeCloseTo(20, 10);
+      expect(converted.unit).toBe("Hz");
+    });
+
+    test("should convert mpg to km/L", () => {
+      const economy = SmartPadQuantity.fromValueAndUnit(28, "mpg");
+      const converted = economy.convertTo("km/L");
+
+      expect(converted.value).toBeCloseTo(11.904, 3);
+      expect(converted.unit).toBe("km/L");
+    });
+
+    test("should convert energy to kWh", () => {
+      const energy = SmartPadQuantity.fromValueAndUnit(3600000, "J");
+      const converted = energy.convertTo("kWh");
+
+      expect(converted.value).toBeCloseTo(1, 10);
+      expect(converted.unit).toBe("kWh");
+    });
+
     test("should raise quantity to power", () => {
       const q1 = new SmartPadQuantity(5, "m");
       const result = q1.power(2);

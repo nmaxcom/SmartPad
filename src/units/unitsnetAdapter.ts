@@ -47,7 +47,7 @@ import {
   RotationalSpeed,
   RotationalSpeedUnits,
 } from "unitsnet-js";
-import { Quantity, UnitParser } from "./quantity";
+import { CompositeUnit, Quantity, UnitParser } from "./quantity";
 
 // Type for any unitsnet-js value - using any for now to avoid complex type issues
 type UnitsNetValue = any;
@@ -73,7 +73,7 @@ export class SmartPadQuantity {
 
   constructor(value: number, unit: string, unitsnetValue?: UnitsNetValue, quantity?: Quantity) {
     this._value = quantity ? quantity.value : value;
-    this._unit = quantity ? quantity.unit.toString() : unit;
+    this._unit = unit || (quantity ? quantity.unit.toString() : unit);
     this._unitsnetValue = unitsnetValue;
     this._quantity = quantity;
   }
@@ -105,7 +105,8 @@ export class SmartPadQuantity {
 
     try {
       const unitsnetValue = UnitsNetParser.parse(value, normalizedUnit);
-      return new SmartPadQuantity(value, normalizedUnit, unitsnetValue);
+      const quantity = SmartPadQuantity.buildQuantity(value, normalizedUnit);
+      return new SmartPadQuantity(value, normalizedUnit, unitsnetValue, quantity || undefined);
     } catch {
       const compositeUnit = UnitParser.parse(normalizedUnit);
       const quantity = new Quantity(value, compositeUnit);
@@ -191,7 +192,8 @@ export class SmartPadQuantity {
       throw new Error("Unsupported unitsnet-js type");
     }
 
-    return new SmartPadQuantity(value, unit, unitsnetValue);
+    const quantity = SmartPadQuantity.buildQuantity(value, unit);
+    return new SmartPadQuantity(value, unit, unitsnetValue, quantity || undefined);
   }
 
   /**
@@ -221,6 +223,28 @@ export class SmartPadQuantity {
     }
   }
 
+  private static tryParseCompositeUnit(unitString: string): CompositeUnit | null {
+    try {
+      return UnitParser.parse(unitString);
+    } catch {
+      return null;
+    }
+  }
+
+  private static hasTemperatureDimension(unit: CompositeUnit): boolean {
+    return unit.components.some(
+      (component) =>
+        component.unit.baseOffset !== undefined || component.unit.dimension.temperature !== 0
+    );
+  }
+
+  private static buildQuantity(value: number, unitString: string): Quantity | null {
+    const composite = SmartPadQuantity.tryParseCompositeUnit(unitString);
+    if (!composite) return null;
+    if (SmartPadQuantity.hasTemperatureDimension(composite)) return null;
+    return new Quantity(value, composite);
+  }
+
   /**
    * Convert to a different unit
    */
@@ -231,6 +255,18 @@ export class SmartPadQuantity {
         return SmartPadQuantity.dimensionless(this._value);
       }
       throw new Error(`Cannot convert ${this._unit} to ${targetUnit}`);
+    }
+
+    const targetComposite = SmartPadQuantity.tryParseCompositeUnit(normalizedTarget);
+    const sourceQuantity = this.toQuantity();
+    if (
+      targetComposite &&
+      sourceQuantity &&
+      !SmartPadQuantity.hasTemperatureDimension(sourceQuantity.unit) &&
+      !SmartPadQuantity.hasTemperatureDimension(targetComposite)
+    ) {
+      const converted = sourceQuantity.convertToUnit(targetComposite);
+      return SmartPadQuantity.fromQuantity(converted);
     }
 
     if (this._unitsnetValue) {
@@ -282,14 +318,13 @@ export class SmartPadQuantity {
       }
     }
 
-    const sourceQuantity = this.toQuantity();
     if (!sourceQuantity) {
       throw new Error(`Cannot convert ${this._unit} to ${targetUnit}`);
     }
 
     try {
-      const targetComposite = UnitParser.parse(normalizedTarget);
-      const converted = sourceQuantity.convertToUnit(targetComposite);
+      const fallbackTarget = targetComposite || UnitParser.parse(normalizedTarget);
+      const converted = sourceQuantity.convertToUnit(fallbackTarget);
       return SmartPadQuantity.fromQuantity(converted);
     } catch (error) {
       throw new Error(
@@ -826,7 +861,7 @@ export class SmartPadQuantity {
 
     // If same basic unit, compress to power form (e.g., m*m => m^2)
     if (this._unit && this._unit === other._unit) {
-      return new SmartPadQuantity(resultValue, `${this._unit}^2`);
+      return SmartPadQuantity.fromValueAndUnit(resultValue, `${this._unit}^2`);
     }
 
     // Symbolic fallback with normalized ordering for readability
@@ -834,7 +869,7 @@ export class SmartPadQuantity {
     const right = other._unit;
     const containsDivision = left.includes("/") || right.includes("/");
     const unitStr = containsDivision ? `${right}*${left}` : `${left}*${right}`;
-    return new SmartPadQuantity(resultValue, unitStr);
+    return SmartPadQuantity.fromValueAndUnit(resultValue, unitStr);
   }
 
   /**
@@ -922,7 +957,7 @@ export class SmartPadQuantity {
     }
 
     // Symbolic fallback
-    return new SmartPadQuantity(resultValue, `${this._unit}/${other._unit}`);
+    return SmartPadQuantity.fromValueAndUnit(resultValue, `${this._unit}/${other._unit}`);
   }
 
   /**
@@ -971,15 +1006,18 @@ export class SmartPadQuantity {
         const [numerator, denominator] = this._unit.split("/");
         const poweredNumerator = applyExponent(numerator, exponent);
         const poweredDenominator = applyExponent(denominator, exponent);
-        return new SmartPadQuantity(resultValue, `${poweredNumerator}/${poweredDenominator}`);
+        return SmartPadQuantity.fromValueAndUnit(
+          resultValue,
+          `${poweredNumerator}/${poweredDenominator}`
+        );
       }
 
-      return new SmartPadQuantity(resultValue, applyExponent(this._unit, exponent));
+      return SmartPadQuantity.fromValueAndUnit(resultValue, applyExponent(this._unit, exponent));
     }
 
     // General case
     const resultUnit = exponent === 1 ? this._unit : this._unit + "^" + exponent;
-    return new SmartPadQuantity(resultValue, resultUnit);
+    return SmartPadQuantity.fromValueAndUnit(resultValue, resultUnit);
   }
 
   /**

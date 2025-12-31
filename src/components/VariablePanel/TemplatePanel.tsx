@@ -9,7 +9,6 @@ const templates = [
     emoji: "✨",
     name: "Quick Tour",
     content: `# Quick Tour: a guided walkthrough
-# ---
 # Core idea: write a line and add "=>" to evaluate
 
 2 + 3 =>
@@ -18,7 +17,6 @@ abs(-4.2) =>
 max(3, 7) * 2 =>
 PI * 2 =>
 
-# ---
 # Variables: spaces and phrases are ok
 
 monthly rent = $1250
@@ -33,7 +31,6 @@ number of friends = 6
 pizza total cost = $18.99
 cost per friend = pizza total cost / number of friends =>
 
-# ---
 # Percentages: of / on / off / as %
 
 discount = 15%
@@ -46,17 +43,20 @@ total = tax on final price =>
 20 / 80 as % =>
 10% of 155 N =>
 
-# ---
 # Units: arithmetic and conversions
 
 trip distance = 12.5 km
 trip time = 25 min
 speed = trip distance / trip time =>
 speed to m/s =>
+speed to mph =>
 height = 1.82 m
 height to cm =>
+floor area = 300 ft^2
+floor area to m^2 =>
+tank volume = 2 gal
+tank volume to L =>
 
-# ---
 # Dimensional analysis and derived units
 
 mass = 2 kg
@@ -64,27 +64,50 @@ accel = 3 m/s^2
 force = mass * accel =>
 distance = 4 m
 energy = force * distance =>
+energy to kWh =>
+pressure = force / 0.2 m^2 =>
+pressure to kPa =>
+pressure to psi =>
+pressure to bar =>
 
-# ---
 # Powers and geometry
 
 radius = 4 m
 area = PI * radius^2 =>
 volume = area * 2 m =>
+volume to cm^3 =>
 
-# ---
+# Rates, density, and frequency
+
+flow = 12 L/min
+flow to m^3/s =>
+flow2 = 1000 mL/min
+flow2 to L/h =>
+surface mass = 5 kg
+surface area = 2.5 m^2
+surface density = surface mass / surface area =>
+surface density to g/cm^2 =>
+spin = 1200 rpm
+spin to Hz =>
+mass flow = 1.5 kg/s
+mass flow to lb/min =>
+
 # Temperatures (ASCII units)
 
 temp c = 25 C
 temp c to F =>
-temp c to K =>`,
+temp c to K =>
+
+# Fuel economy and conversions
+
+fuel economy = 28 mpg
+fuel economy to km/L =>`,
   },
   {
     id: "event-profit",
     emoji: "🎟️",
     name: "Event Profit",
     content: `# You are planning a small event
-# ---
 
 ticket price = $45
 attendees = 180
@@ -97,7 +120,6 @@ venue fee = $250
 profit = net revenue - venue fee =>
 profit margin = profit / gross revenue as % =>
 
-# ---
 # Now ask: what price hits a target profit?
 
 target profit = $3000
@@ -110,14 +132,12 @@ required ticket to USD =>`,
     emoji: "🚲",
     name: "Commute Planner",
     content: `# Estimate a typical commute
-# ---
 
 commute distance = 18 km
 average speed = 45 km/h
 travel time = commute distance / average speed =>
 travel time to min =>
 
-# ---
 # What if traffic slows you down?
 
 slowdown = 20%
@@ -125,7 +145,6 @@ slow speed = slowdown off average speed =>
 slow travel time = commute distance / slow speed =>
 slow travel time to min =>
 
-# ---
 # Round trip and weekly totals
 
 round trip distance = commute distance * 2 =>
@@ -138,14 +157,12 @@ weekly time to h =>`,
     emoji: "⚗️",
     name: "Physics Lab",
     content: `# Motion and speed
-# ---
 
 distance = 150 m
 time = 12 s
 velocity = distance / time =>
 velocity to km/h =>
 
-# ---
 # Acceleration from a speed change
 
 accel time = 6 s
@@ -153,21 +170,18 @@ initial speed = 4 m/s
 final speed = 28 m/s
 acceleration = (final speed - initial speed) / accel time =>
 
-# ---
 # Force from mass and acceleration
 
 mass = 2.5 kg
 force = mass * acceleration =>
 force to lbf =>
 
-# ---
 # Pressure from force over area
 
 area = 0.4 m^2
 pressure = force / area =>
 pressure to kPa =>
 
-# ---
 # Energy and power
 
 work distance = 10 m

@@ -18,6 +18,10 @@ volume = 3 * 10^6 mm^3
 volume to m^3 =>
 volume2 = 2 m^2 * 3 m
 volume2 =>
+floor area = 300 ft^2
+floor area to m^2 =>
+tank volume = 2 gal
+tank volume to L =>
 
 # Speed + time inference
 trip distance = 150 km
@@ -52,12 +56,36 @@ power to kW =>
 period = 0.5 s
 frequency = 1 / period =>
 frequency to Hz =>
+frequency to 1/s =>
+spin = 1200 rpm
+spin to Hz =>
+
+# Imperial + US customary
+height = 70 in
+height to cm =>
+height to ft =>
+weight = 180 lb
+weight to kg =>
+distance = 3 mi
+distance to km =>
+fuel = 12 gal
+fuel to L =>
+fuel economy = 28 mpg
+fuel economy to km/L =>
 
 # Density
 mass = 2 kg
 volume = 1.5 m^3
 density = mass / volume =>
 density to g/cm^3 =>
+surface mass = 5 kg
+surface area = 2.5 m^2
+surface density = surface mass / surface area =>
+surface density to g/cm^2 =>
+concentration = 250 mg/L
+concentration to g/L =>
+mass flow = 1.5 kg/s
+mass flow to lb/min =>
 
 # Electricity basics
 current = 2 A
@@ -66,6 +94,8 @@ voltage = 12 V
 power = voltage * current =>
 resistance = voltage / current =>
 resistance to ohm =>
+energy = voltage * charge =>
+energy to J =>
 
 # Angles
 angle = 180 deg
@@ -75,6 +105,41 @@ angle to rad =>
 temp = 20 C
 temp to F =>
 temp to K =>
+
+# Flow rate
+flow = 12 L/min
+flow to m^3/s =>
+flow2 = 1000 mL/min
+flow2 to L/h =>
+
+# Momentum + impulse
+mass = 5 kg
+velocity = 12 m/s
+momentum = mass * velocity =>
+momentum =>
+force = 30 N
+impulse = force * 2 s =>
+impulse =>
+
+# Torque + rotational power
+torque = 12 N*m
+torque =>
+frequency = 2 Hz
+angular speed = 2 * PI * frequency =>
+angular speed =>
+rotational power = torque * angular speed =>
+rotational power =>
+
+# Pressure conversions
+pressure = 30 psi
+pressure to kPa =>
+pressure to bar =>
+pressure = 1 atm
+pressure to kPa =>
+pressure = 150 kPa
+volume = 3 m^3
+pv work = pressure * volume =>
+pv work to kJ =>
 
 # Dimensional analysis + derived unit recognition
 energy = 1 kg*m^2/s^2

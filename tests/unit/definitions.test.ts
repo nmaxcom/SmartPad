@@ -199,6 +199,16 @@ describe("Default Unit Registry", () => {
     expect(defaultUnitRegistry.has("day")).toBe(true);
   });
 
+  test("should have volume units", () => {
+    expect(defaultUnitRegistry.has("L")).toBe(true);
+    expect(defaultUnitRegistry.has("gal")).toBe(true);
+  });
+
+  test("should have frequency units", () => {
+    expect(defaultUnitRegistry.has("Hz")).toBe(true);
+    expect(defaultUnitRegistry.has("rpm")).toBe(true);
+  });
+
   test("should have mass units", () => {
     expect(defaultUnitRegistry.has("g")).toBe(true);
     expect(defaultUnitRegistry.has("lb")).toBe(true);
@@ -208,6 +218,22 @@ describe("Default Unit Registry", () => {
     expect(defaultUnitRegistry.has("°C")).toBe(true);
     expect(defaultUnitRegistry.has("°F")).toBe(true);
     expect(defaultUnitRegistry.has("K")).toBe(true);
+  });
+
+  test("should have speed units", () => {
+    expect(defaultUnitRegistry.has("mph")).toBe(true);
+    expect(defaultUnitRegistry.has("kph")).toBe(true);
+    expect(defaultUnitRegistry.has("ft/s")).toBe(true);
+  });
+
+  test("should have pressure units", () => {
+    expect(defaultUnitRegistry.has("bar")).toBe(true);
+    expect(defaultUnitRegistry.has("psi")).toBe(true);
+    expect(defaultUnitRegistry.has("atm")).toBe(true);
+  });
+
+  test("should have electrical resistance units", () => {
+    expect(defaultUnitRegistry.has("ohm")).toBe(true);
   });
 
   test("should support aliases", () => {
@@ -230,8 +256,10 @@ describe("Default Unit Registry", () => {
   test("should resolve SI prefixes dynamically", () => {
     const ms = defaultUnitRegistry.get("ms");
     const kpa = defaultUnitRegistry.get("kPa");
+    const kwh = defaultUnitRegistry.get("kWh");
 
     expect(ms?.baseMultiplier).toBeCloseTo(0.001, 10);
     expect(kpa?.baseMultiplier).toBe(1000);
+    expect(kwh?.baseMultiplier).toBe(3600000);
   });
 });

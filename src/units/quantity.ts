@@ -156,6 +156,15 @@ export class CompositeUnit {
       return "1"; // dimensionless
     }
 
+    if (this.components.length === 1) {
+      const component = this.components[0];
+      const unitStr =
+        Math.abs(component.power) === 1
+          ? component.unit.symbol
+          : `${component.unit.symbol}^${Math.abs(component.power)}`;
+      return component.power < 0 ? `1/${unitStr}` : unitStr;
+    }
+
     // Try to find a derived unit that matches this dimension
     const derivedUnit = this.findDerivedUnit();
     if (derivedUnit) {
@@ -203,10 +212,13 @@ export class CompositeUnit {
 
     // Check common derived units
     const derivedUnits = [
+      { symbol: "Hz", dimension: createDimension(0, 0, -1) }, // Frequency: 1/s
       { symbol: "N", dimension: createDimension(1, 1, -2) }, // Force: kg*m/s^2
       { symbol: "Pa", dimension: createDimension(-1, 1, -2) }, // Pressure: kg/(m*s^2)
       { symbol: "J", dimension: createDimension(2, 1, -2) }, // Energy: kg*m^2/s^2
       { symbol: "W", dimension: createDimension(2, 1, -3) }, // Power: kg*m^2/s^3
+      { symbol: "V", dimension: createDimension(2, 1, -3, -1) }, // Voltage: kg*m^2/(A*s^3)
+      { symbol: "ohm", dimension: createDimension(2, 1, -3, -2) }, // Resistance: kg*m^2/(A^2*s^3)
     ];
 
     for (const unit of derivedUnits) {
@@ -410,70 +422,145 @@ export class UnitParser {
    * Parse a complex unit expression
    */
   private static parseUnitExpression(expr: string): CompositeUnit {
-    // Handle simple single units first
-    const unit = defaultUnitRegistry.get(expr);
-    if (unit) {
-      return CompositeUnit.fromUnit(unit);
-    }
+    const tokens = this.tokenize(expr);
+    let index = 0;
 
-    // Handle division (e.g., "m/s", "m/s^2", "kg*m/s^2")
-    if (expr.includes("/")) {
-      const parts = expr.split("/");
-      if (parts.length === 2) {
-        const numerator = this.parseUnitTerm(parts[0]);
-        const denominator = this.parseUnitTerm(parts[1]);
-        return numerator.divide(denominator);
+    const current = () => tokens[index];
+    const consume = (expectedType?: string, expectedValue?: string) => {
+      const token = current();
+      if (!token) {
+        throw new Error("Unexpected end of unit expression");
       }
-    }
-
-    // Handle just the numerator (no division)
-    return this.parseUnitTerm(expr);
-  }
-
-  /**
-   * Parse a unit term (handles multiplication and powers)
-   */
-  private static parseUnitTerm(term: string): CompositeUnit {
-    // Handle multiplication (e.g., "kg*m")
-    if (term.includes("*")) {
-      const factors = term.split("*");
-      let result = CompositeUnit.dimensionless();
-
-      for (const factor of factors) {
-        const factorUnit = this.parseUnitFactor(factor);
-        result = result.multiply(factorUnit);
+      if (expectedType && token.type !== expectedType) {
+        throw new Error(`Expected ${expectedType}, got ${token.type}`);
       }
+      if (expectedValue && token.value !== expectedValue) {
+        throw new Error(`Expected ${expectedValue}, got ${token.value}`);
+      }
+      index++;
+      return token;
+    };
+    const matchOp = (value: string) =>
+      current()?.type === "op" && current()?.value === value;
 
-      return result;
-    }
+    const parseSignedNumber = (): number => {
+      let sign = 1;
+      if (matchOp("+") || matchOp("-")) {
+        sign = current()?.value === "-" ? -1 : 1;
+        consume("op");
+      }
+      const token = consume("number");
+      const value = parseFloat(token.value);
+      if (Number.isNaN(value)) {
+        throw new Error(`Invalid exponent: ${token.value}`);
+      }
+      return sign * value;
+    };
 
-    // Single factor
-    return this.parseUnitFactor(term);
-  }
-
-  /**
-   * Parse a single unit factor (handles powers)
-   */
-  private static parseUnitFactor(factor: string): CompositeUnit {
-    // Handle powers (e.g., "s^2", "m^3")
-    if (factor.includes("^")) {
-      const parts = factor.split("^");
-      if (parts.length === 2) {
-        const baseUnit = defaultUnitRegistry.get(parts[0]);
-        const power = parseInt(parts[1]);
-
-        if (baseUnit && !isNaN(power)) {
-          return CompositeUnit.fromUnit(baseUnit).power(power);
+    const parsePrimary = (): CompositeUnit => {
+      const token = current();
+      if (!token) {
+        throw new Error("Unexpected end of unit expression");
+      }
+      if (token.type === "unit") {
+        const unitDef = defaultUnitRegistry.get(token.value);
+        if (!unitDef) {
+          throw new Error(`Unknown unit factor: ${token.value}`);
         }
+        consume("unit");
+        return CompositeUnit.fromUnit(unitDef);
       }
+      if (token.type === "number") {
+        if (token.value !== "1") {
+          throw new Error(`Unexpected number in unit expression: ${token.value}`);
+        }
+        consume("number");
+        return CompositeUnit.dimensionless();
+      }
+      if (token.type === "lparen") {
+        consume("lparen");
+        const inner = parseExpression();
+        consume("rparen");
+        return inner;
+      }
+      throw new Error(`Unexpected token: ${token.value}`);
+    };
+
+    const parseFactor = (): CompositeUnit => {
+      let base = parsePrimary();
+      if (matchOp("^")) {
+        consume("op", "^");
+        const exponent = parseSignedNumber();
+        base = base.power(exponent);
+      }
+      return base;
+    };
+
+    const parseExpression = (): CompositeUnit => {
+      let left = parseFactor();
+      while (matchOp("*") || matchOp("/")) {
+        const op = consume("op").value;
+        const right = parseFactor();
+        left = op === "*" ? left.multiply(right) : left.divide(right);
+      }
+      return left;
+    };
+
+    const result = parseExpression();
+    if (index < tokens.length) {
+      throw new Error(`Unexpected token: ${tokens[index].value}`);
+    }
+    return result.simplify();
+  }
+
+  private static tokenize(expr: string): Array<{ type: string; value: string }> {
+    const tokens: Array<{ type: string; value: string }> = [];
+    let pos = 0;
+    const isUnitChar = (ch: string) => /[A-Za-z°µμΩ]/.test(ch);
+    const isNumberChar = (ch: string) => /[\d.]/.test(ch);
+
+    while (pos < expr.length) {
+      const ch = expr[pos];
+      if (/\s/.test(ch)) {
+        pos++;
+        continue;
+      }
+      if (ch === "(") {
+        tokens.push({ type: "lparen", value: ch });
+        pos++;
+        continue;
+      }
+      if (ch === ")") {
+        tokens.push({ type: "rparen", value: ch });
+        pos++;
+        continue;
+      }
+      if ("*/^+-".includes(ch)) {
+        tokens.push({ type: "op", value: ch });
+        pos++;
+        continue;
+      }
+      if (isNumberChar(ch)) {
+        let value = "";
+        while (pos < expr.length && isNumberChar(expr[pos])) {
+          value += expr[pos];
+          pos++;
+        }
+        tokens.push({ type: "number", value });
+        continue;
+      }
+      if (isUnitChar(ch)) {
+        let value = "";
+        while (pos < expr.length && isUnitChar(expr[pos])) {
+          value += expr[pos];
+          pos++;
+        }
+        tokens.push({ type: "unit", value });
+        continue;
+      }
+      throw new Error(`Unexpected character in unit expression: ${ch}`);
     }
 
-    // Simple unit
-    const unit = defaultUnitRegistry.get(factor);
-    if (unit) {
-      return CompositeUnit.fromUnit(unit);
-    }
-
-    throw new Error(`Unknown unit factor: ${factor}`);
+    return tokens;
   }
 }

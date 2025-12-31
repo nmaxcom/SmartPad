@@ -51,6 +51,7 @@ export const DIMENSIONS = {
   VOLUME: createDimension(3), // m^3
   VELOCITY: createDimension(1, 0, -1), // m/s
   ACCELERATION: createDimension(1, 0, -2), // m/s^2
+  FREQUENCY: createDimension(0, 0, -1), // 1/s (Hz)
   FORCE: createDimension(1, 1, -2), // kg*m/s^2 (N)
   ENERGY: createDimension(2, 1, -2), // kg*m^2/s^2 (J)
   POWER: createDimension(2, 1, -3), // kg*m^2/s^3 (W)
@@ -399,6 +400,29 @@ defaultUnitRegistry.register(
   ["days"]
 );
 
+// Frequency units
+defaultUnitRegistry.register(
+  {
+    symbol: "Hz",
+    name: "hertz",
+    dimension: DIMENSIONS.FREQUENCY,
+    baseMultiplier: 1,
+    category: "frequency",
+  },
+  ["hertz"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "rpm",
+    name: "revolutions per minute",
+    dimension: DIMENSIONS.FREQUENCY,
+    baseMultiplier: 1 / 60,
+    category: "frequency",
+  },
+  ["rev/min"]
+);
+
 // Mass units
 defaultUnitRegistry.register(
   {
@@ -420,6 +444,40 @@ defaultUnitRegistry.register(
     category: "mass",
   },
   ["pound", "pounds"]
+);
+
+// Speed units
+defaultUnitRegistry.register(
+  {
+    symbol: "mph",
+    name: "miles per hour",
+    dimension: DIMENSIONS.VELOCITY,
+    baseMultiplier: 1609.344 / 3600,
+    category: "speed",
+  },
+  ["mi/h"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "kph",
+    name: "kilometers per hour",
+    dimension: DIMENSIONS.VELOCITY,
+    baseMultiplier: 1000 / 3600,
+    category: "speed",
+  },
+  ["km/h"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "ft/s",
+    name: "feet per second",
+    dimension: DIMENSIONS.VELOCITY,
+    baseMultiplier: 0.3048,
+    category: "speed",
+  },
+  ["ft/sec"]
 );
 
 // Temperature units (with offsets)
@@ -456,6 +514,29 @@ defaultUnitRegistry.register(
     category: "temperature",
   },
   ["kelvin"]
+);
+
+// Volume units
+defaultUnitRegistry.register(
+  {
+    symbol: "L",
+    name: "liter",
+    dimension: DIMENSIONS.VOLUME,
+    baseMultiplier: 0.001,
+    category: "volume",
+  },
+  ["l", "liter", "liters", "litre", "litres"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "gal",
+    name: "gallon",
+    dimension: DIMENSIONS.VOLUME,
+    baseMultiplier: 0.003785411784,
+    category: "volume",
+  },
+  ["gallon", "gallons"]
 );
 
 defaultUnitRegistry.register(
@@ -539,6 +620,17 @@ defaultUnitRegistry.register(
 
 defaultUnitRegistry.register(
   {
+    symbol: "Wh",
+    name: "watt-hour",
+    dimension: DIMENSIONS.ENERGY,
+    baseMultiplier: 3600,
+    category: "energy",
+  },
+  ["watt-hour", "watt-hours", "Wh"]
+);
+
+defaultUnitRegistry.register(
+  {
     symbol: "N",
     name: "newton",
     dimension: DIMENSIONS.FORCE,
@@ -557,6 +649,61 @@ defaultUnitRegistry.register(
     category: "pressure",
   },
   ["pascal", "pascals"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "bar",
+    name: "bar",
+    dimension: DIMENSIONS.PRESSURE,
+    baseMultiplier: 100000,
+    category: "pressure",
+  },
+  ["bars"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "psi",
+    name: "pound per square inch",
+    dimension: DIMENSIONS.PRESSURE,
+    baseMultiplier: 6894.757,
+    category: "pressure",
+  },
+  ["pounds per square inch"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "atm",
+    name: "standard atmosphere",
+    dimension: DIMENSIONS.PRESSURE,
+    baseMultiplier: 101325,
+    category: "pressure",
+  },
+  ["atmosphere", "atmospheres"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "ohm",
+    name: "ohm",
+    dimension: createDimension(2, 1, -3, -2),
+    baseMultiplier: 1,
+    category: "electrical",
+  },
+  ["Ω"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "mpg",
+    name: "miles per gallon",
+    dimension: createDimension(-2),
+    baseMultiplier: 425143.707430272,
+    category: "fuelEconomy",
+  },
+  ["miles per gallon"]
 );
 
 /**
