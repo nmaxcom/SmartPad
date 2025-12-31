@@ -1,0 +1,91 @@
+# Unit conversion scope draft (SmartPad syntax)
+
+# Prefixes + base units
+length = 2500 mm
+length to m =>
+distance = 3 km
+distance to m =>
+mass = 750 g
+mass to kg =>
+duration = 90 min
+duration to h =>
+duration to s =>
+
+# Areas + volumes with prefixes
+area = 1200 cm^2
+area to m^2 =>
+volume = 3 * 10^6 mm^3
+volume to m^3 =>
+volume2 = 2 m^2 * 3 m
+volume2 =>
+
+# Speed + time inference
+trip distance = 150 km
+trip time = 2 h
+trip speed = trip distance / trip time =>
+trip speed to m/s =>
+trip speed to mph =>
+travel time = 18 km / 45 km/h =>
+travel time to min =>
+
+# Acceleration
+accel = 9.8 m/s^2
+accel to ft/s^2 =>
+
+# Force + pressure
+mass = 12 kg
+accel = 3 m/s^2
+force = mass * accel =>
+force to kg*m/s^2 =>
+area = 0.2 m^2
+pressure = force / area =>
+pressure to kPa =>
+
+# Energy + power
+distance = 30 m
+work = force * distance =>
+work to kWh =>
+power = work / 12 s =>
+power to kW =>
+
+# Frequency
+period = 0.5 s
+frequency = 1 / period =>
+frequency to Hz =>
+
+# Density
+mass = 2 kg
+volume = 1.5 m^3
+density = mass / volume =>
+density to g/cm^3 =>
+
+# Electricity basics
+current = 2 A
+charge = current * 3 s =>
+voltage = 12 V
+power = voltage * current =>
+resistance = voltage / current =>
+resistance to ohm =>
+
+# Angles
+angle = 180 deg
+angle to rad =>
+
+# Temperature
+temp = 20 C
+temp to F =>
+temp to K =>
+
+# Dimensional analysis + derived unit recognition
+energy = 1 kg*m^2/s^2
+energy =>
+force = 10 kg*m/s^2
+force to N =>
+pressure = 1 N / 1 m^2
+pressure =>
+power = 1 J / 1 s
+power =>
+
+# Dimensionless simplification
+ratio = 18 km / 45 km
+ratio =>
