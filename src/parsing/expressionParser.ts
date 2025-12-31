@@ -338,19 +338,22 @@ export function formatResult(value: number, decimalPlaces: number = 6): string {
   if (value === 0) return "0";
   const abs = Math.abs(value);
   // Scientific notation thresholds
-  if (abs >= 1e12 || (abs > 0 && abs < 1e-4)) {
-    const s = value.toExponential(3);
+  const formatScientific = (num: number) => {
+    const s = num.toExponential(3);
     const [mantissa, exp] = s.split("e");
     const parts = mantissa.split(".");
     const intPart = parts[0];
     const fracPart = (parts[1] || "").padEnd(3, "0");
     return `${intPart}.${fracPart}e${exp}`;
+  };
+  if (abs >= 1e12 || (abs > 0 && abs < 1e-4)) {
+    return formatScientific(value);
   }
   if (Number.isInteger(value)) return value.toString();
   const fixed = value.toFixed(decimalPlaces);
   const fixedNumber = parseFloat(fixed);
   if (fixedNumber === 0) {
-    return value.toString();
+    return formatScientific(value);
   }
   return fixedNumber.toString();
 }

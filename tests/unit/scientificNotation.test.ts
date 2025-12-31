@@ -103,7 +103,7 @@ describe("Scientific notation formatting", () => {
     });
     expect(result?.type).toBe("mathResult");
     if (result?.type === "mathResult") {
-      expect(result.result).not.toBe("0");
+      expect(result.result).toMatch(/e-4/);
     }
   });
 

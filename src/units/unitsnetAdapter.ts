@@ -1191,22 +1191,25 @@ export class SmartPadQuantity {
     // Scientific notation for very large/small values to align with plain math formatting
     const upperThreshold = options?.scientificUpperThreshold ?? 1e12;
     const lowerThreshold = options?.scientificLowerThreshold ?? 1e-4;
-    if (
-      abs >= upperThreshold ||
-      (abs > 0 && lowerThreshold > 0 && abs < lowerThreshold)
-    ) {
-      const s = value.toExponential(3);
+    const formatScientific = (num: number) => {
+      const s = num.toExponential(3);
       const [mantissa, exp] = s.split("e");
       const parts = mantissa.split(".");
       const intPart = parts[0];
       const fracPart = (parts[1] || "").padEnd(3, "0");
       return `${intPart}.${fracPart}e${exp}`;
+    };
+    if (
+      abs >= upperThreshold ||
+      (abs > 0 && lowerThreshold > 0 && abs < lowerThreshold)
+    ) {
+      return formatScientific(value);
     }
     if (Number.isInteger(value)) return value.toString();
     const fixed = value.toFixed(precision);
     const fixedNumber = parseFloat(fixed);
     if (fixedNumber === 0) {
-      return value.toString();
+      return formatScientific(value);
     }
     return fixedNumber.toString();
   }

@@ -43,7 +43,8 @@ export function SettingsSections() {
               Decimal Places
             </label>
             <p className="settings-description">
-              Number of decimal places to show in results and variable panel (0-10)
+              Number of decimal places to show in results and variable panel (0-10). If a non-zero
+              value would round to 0, SmartPad forces scientific notation instead.
             </p>
           </div>
           <div className="settings-control">

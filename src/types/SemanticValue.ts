@@ -161,7 +161,7 @@ export abstract class SemanticValue {
     const fixed = value.toFixed(precision);
     const fixedNumber = parseFloat(fixed);
     if (fixedNumber === 0) {
-      return value.toString();
+      return value.toExponential(3);
     }
 
     return fixedNumber.toString();
