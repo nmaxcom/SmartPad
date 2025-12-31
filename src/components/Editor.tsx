@@ -309,7 +309,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        // Other options
+        heading: false,
       }),
       Placeholder.configure({
         placeholder: "Start typing...",

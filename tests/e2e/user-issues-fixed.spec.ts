@@ -311,4 +311,16 @@ test.describe("User Issues Fixed", () => {
 
     await expect(page.locator(".semantic-error-result")).toHaveCount(0);
   });
+
+  test("comments ignore triggers and keep text after =>", async ({ page }) => {
+    const pm = page.locator(".ProseMirror");
+    await pm.click();
+    await page.keyboard.press("Control+a");
+    await page.keyboard.press("Delete");
+
+    await pm.type("# note => keep typing in comments");
+    const editorText = await page.locator(".ProseMirror").innerText();
+    expect(editorText).toContain("# note => keep typing in comments");
+    await expect(page.locator(".semantic-result-display")).toHaveCount(0);
+  });
 });

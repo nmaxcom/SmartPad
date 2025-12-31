@@ -212,6 +212,28 @@ export const ResultsDecoratorExtension = Extension.create({
             for (let i = paragraphIndex.length - 1; i >= 1; i--) {
               const info = paragraphIndex[i];
               if (!info) continue;
+              const trimmedText = info.text.trim();
+              if (trimmedText.startsWith("#")) {
+                if (!resultNodeType) {
+                  continue;
+                }
+
+                const removals: Array<{ from: number; to: number }> = [];
+                info.node.nodesBetween(0, info.node.content.size, (node: ProseMirrorNode, pos) => {
+                  if (node.type === resultNodeType) {
+                    const from = info.start + pos;
+                    removals.push({ from, to: from + node.nodeSize });
+                    return false;
+                  }
+                  return undefined;
+                });
+
+                for (let r = removals.length - 1; r >= 0; r--) {
+                  tr.delete(removals[r].from, removals[r].to);
+                  changed = true;
+                }
+                continue;
+              }
               const arrowIdx = info.text.indexOf("=>");
               if (arrowIdx < 0) {
               if (!resultNodeType) {
