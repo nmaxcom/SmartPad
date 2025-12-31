@@ -25,6 +25,8 @@ export interface EvaluationContext {
   variableContext: Map<string, Variable>;
   lineNumber: number;
   decimalPlaces: number;
+  scientificUpperThreshold?: number;
+  scientificLowerThreshold?: number;
 }
 
 /**

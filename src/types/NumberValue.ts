@@ -50,11 +50,11 @@ export class NumberValue extends SemanticValue {
       // Engineering notation (powers of 3)
       const exp = Math.floor(Math.log10(Math.abs(this.value)) / 3) * 3;
       const mantissa = this.value / Math.pow(10, exp);
-      return `${this.formatNumber(mantissa, precision)}e${exp}`;
+      return `${this.formatNumber(mantissa, precision, options)}e${exp}`;
     }
     
     // Standard notation with smart formatting
-    return this.formatNumber(this.value, precision);
+    return this.formatNumber(this.value, precision, options);
   }
 
   equals(other: SemanticValue, tolerance = 1e-10): boolean {

@@ -67,6 +67,8 @@ export type VariableAction =
 // Settings Types
 export interface SettingsState {
   decimalPlaces: number;
+  scientificUpperExponent: number;
+  scientificLowerExponent: number;
   showVariablePanel: boolean;
   showTemplatePanel: boolean;
   showSettingsPanel: boolean;

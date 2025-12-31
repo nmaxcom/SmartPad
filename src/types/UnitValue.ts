@@ -67,7 +67,7 @@ export class UnitValue extends SemanticValue {
     const precision = options?.precision ?? 6;
     
     // Use SmartPadQuantity's built-in formatting which handles units intelligently
-    const quantityString = this.quantity.toString(precision);
+    const quantityString = this.quantity.toString(precision, options);
     
     if (options?.showType) {
       return `${quantityString} (unit)`;
@@ -307,7 +307,9 @@ export class UnitValue extends SemanticValue {
    */
   static fromString(str: string): UnitValue {
     // Match patterns like "50 m", "100.5 kg", "25 mph"
-    const match = str.match(/^(-?\d+(?:\.\d+)?)\s*([a-zA-Z°]+(?:\/[a-zA-Z°]+)?(?:\^?\d+)?)$/);
+    const match = str.match(
+      /^(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\s*([a-zA-Z°]+(?:\/[a-zA-Z°]+)?(?:\^?\d+)?)$/
+    );
     if (!match) {
       throw new Error(`Invalid unit format: "${str}"`);
     }
@@ -326,8 +328,15 @@ export class UnitValue extends SemanticValue {
    * Check if a string looks like a unit expression
    */
   static isUnitString(str: string): boolean {
+    const trimmed = str.trim();
+    // Avoid misclassifying pure scientific notation as a unit (e.g., "1e6").
+    if (/^-?\d+(?:\.\d+)?[eE][+-]?\d+$/.test(trimmed)) {
+      return false;
+    }
     // Basic pattern matching for unit expressions
-    return /^-?\d+(?:\.\d+)?\s*[a-zA-Z°]+(?:\/[a-zA-Z°]+)?(?:\^?\d+)?$/.test(str.trim());
+    return /^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\s*[a-zA-Z°]+(?:\/[a-zA-Z°]+)?(?:\^?\d+)?$/.test(
+      trimmed
+    );
   }
 
   getMetadata(): Record<string, any> {

@@ -11,6 +11,9 @@ export type SemanticValueType = 'number' | 'percentage' | 'currency' | 'unit' | 
 export interface DisplayOptions {
   precision?: number;
   notation?: 'standard' | 'scientific' | 'engineering';
+  scientificUpperThreshold?: number;
+  scientificLowerThreshold?: number;
+  preferBaseUnit?: boolean;
   showType?: boolean;
 }
 
@@ -135,13 +138,18 @@ export abstract class SemanticValue {
   /**
    * Helper method to format numbers consistently across all semantic values
    */
-  protected formatNumber(value: number, precision = 6): string {
+  protected formatNumber(value: number, precision = 6, options?: DisplayOptions): string {
     if (!isFinite(value)) return "Infinity";
     if (value === 0) return "0";
     
     // Handle very large or very small numbers with scientific notation
     const abs = Math.abs(value);
-    if (abs >= 1e12 || (abs > 0 && abs < 1e-4)) {
+    const upperThreshold = options?.scientificUpperThreshold ?? 1e12;
+    const lowerThreshold = options?.scientificLowerThreshold ?? 1e-4;
+    if (
+      abs >= upperThreshold ||
+      (abs > 0 && lowerThreshold > 0 && abs < lowerThreshold)
+    ) {
       return value.toExponential(3);
     }
     
@@ -149,8 +157,14 @@ export abstract class SemanticValue {
     if (Number.isInteger(value)) {
       return value.toString();
     }
-    
-    return parseFloat(value.toFixed(precision)).toString();
+
+    const fixed = value.toFixed(precision);
+    const fixedNumber = parseFloat(fixed);
+    if (fixedNumber === 0) {
+      return value.toString();
+    }
+
+    return fixedNumber.toString();
   }
 
   /**

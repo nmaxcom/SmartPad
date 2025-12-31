@@ -22,6 +22,7 @@ import {
   NumberValue, 
   ErrorValue,
   SemanticValueTypes,
+  DisplayOptions,
   SemanticParsers,
   SemanticArithmetic
 } from "../types";
@@ -455,7 +456,12 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       }
 
       // Create render node
-      return this.createMathResultNode(exprNode.expression, result, context.lineNumber, context.decimalPlaces);
+      return this.createMathResultNode(
+        exprNode.expression,
+        result,
+        context.lineNumber,
+        this.getDisplayOptions(context)
+      );
       
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -541,9 +547,9 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
     expression: string, 
     result: SemanticValue, 
     lineNumber: number,
-    decimalPlaces: number
+    displayOptions: DisplayOptions
   ): MathResultRenderNode {
-    const resultString = result.toString({ precision: decimalPlaces });
+    const resultString = result.toString(displayOptions);
     const displayText = `${expression} => ${resultString}`;
     
     return {
@@ -553,6 +559,14 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       displayText,
       line: lineNumber,
       originalRaw: expression,
+    };
+  }
+
+  private getDisplayOptions(context: EvaluationContext): DisplayOptions {
+    return {
+      precision: context.decimalPlaces,
+      scientificUpperThreshold: context.scientificUpperThreshold,
+      scientificLowerThreshold: context.scientificLowerThreshold,
     };
   }
   

@@ -3,6 +3,8 @@ import { SettingsState, SettingsAction } from "./types";
 // Default settings configuration
 export const DEFAULT_SETTINGS: SettingsState = {
   decimalPlaces: 2, // Default to 2 decimal places for clean display
+  scientificUpperExponent: 12,
+  scientificLowerExponent: -4,
   showVariablePanel: true,
   showTemplatePanel: true,
   showSettingsPanel: false,
@@ -27,7 +29,24 @@ export function createSettingsState(): SettingsState {
     if (stored) {
       const parsed = JSON.parse(stored);
       // Merge with defaults to handle new settings
-      return { ...DEFAULT_SETTINGS, ...parsed };
+      const merged = { ...DEFAULT_SETTINGS, ...parsed } as SettingsState & Record<string, any>;
+      if (
+        typeof parsed.scientificUpperExponent !== "number" &&
+        typeof parsed.scientificUpperThreshold === "number" &&
+        parsed.scientificUpperThreshold > 0
+      ) {
+        merged.scientificUpperExponent = Math.round(Math.log10(parsed.scientificUpperThreshold));
+      }
+      if (
+        typeof parsed.scientificLowerExponent !== "number" &&
+        typeof parsed.scientificLowerThreshold === "number" &&
+        parsed.scientificLowerThreshold > 0
+      ) {
+        merged.scientificLowerExponent = Math.round(Math.log10(parsed.scientificLowerThreshold));
+      }
+      delete merged.scientificUpperThreshold;
+      delete merged.scientificLowerThreshold;
+      return merged;
     }
   } catch (error) {
     console.warn("Failed to load settings from localStorage:", error);

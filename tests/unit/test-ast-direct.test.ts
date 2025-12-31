@@ -42,6 +42,25 @@ describe("AST Pipeline Direct Testing", () => {
     }
   });
 
+  it("should correctly evaluate scientific notation literals", () => {
+    const node = parseLine("1e9 =>", 1);
+    const reactiveStore = new ReactiveVariableStore();
+    const variableContext = new Map<string, Variable>();
+
+    const evaluationContext = {
+      variableStore: reactiveStore,
+      variableContext,
+      lineNumber: 1,
+      decimalPlaces: 6,
+    };
+
+    const result = defaultRegistry.evaluate(node, evaluationContext);
+    expect(result).toBeDefined();
+    if (result && "displayText" in result) {
+      expect(result.displayText).toContain("1000000000");
+    }
+  });
+
   it("should handle multi-line scenario", () => {
     console.log("=== Testing multi-line scenario ===");
 

@@ -347,7 +347,12 @@ export function formatResult(value: number, decimalPlaces: number = 6): string {
     return `${intPart}.${fracPart}e${exp}`;
   }
   if (Number.isInteger(value)) return value.toString();
-  return parseFloat(value.toFixed(decimalPlaces)).toString();
+  const fixed = value.toFixed(decimalPlaces);
+  const fixedNumber = parseFloat(fixed);
+  if (fixedNumber === 0) {
+    return value.toString();
+  }
+  return fixedNumber.toString();
 }
 
 /**
@@ -374,7 +379,7 @@ function containsUnitsOrMathExpression(line: string): boolean {
 
   // Check for basic unit patterns
   const unitPattern =
-    /\b\d+(?:\.\d+)?\s*[a-zA-Z°]+(?:\/[a-zA-Z°]+)?(?:\^?\d+)?(?:\s+to\s+[a-zA-Z°]+)?\b/;
+    /\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\s*[a-zA-Z°]+(?:\/[a-zA-Z°]+)?(?:\^?\d+)?(?:\s+to\s+[a-zA-Z°]+)?\b/;
   if (unitPattern.test(line)) return true;
 
   // Check for arithmetic with potential units

@@ -1,12 +1,16 @@
 import React from "react";
 import { useVariables } from "../../state";
 import { useSettingsContext } from "../../state/SettingsContext";
-import { formatResult } from "../../parsing/expressionParser";
 import "./VariablePanel.css";
 
 function VariablePanel() {
   const { variables } = useVariables();
   const { settings } = useSettingsContext();
+  const displayOptions = {
+    precision: settings.decimalPlaces,
+    scientificUpperThreshold: Math.pow(10, settings.scientificUpperExponent),
+    scientificLowerThreshold: Math.pow(10, settings.scientificLowerExponent),
+  };
 
   // Convert the Map to an array for easier rendering
   const variableList = Array.from(variables.entries());
@@ -14,7 +18,7 @@ function VariablePanel() {
   // Helper function to format variable values using SemanticValue's toString()
   const formatVariableValue = (variable: any) => {
     if (variable.value?.toString) {
-      return variable.value.toString({ precision: settings.decimalPlaces });
+      return variable.value.toString(displayOptions);
     }
     return String(variable.value);
   };
@@ -22,7 +26,7 @@ function VariablePanel() {
   // Helper function to get the display value for computed values in the panel
   const getComputedDisplayValue = (variable: any) => {
     if (variable.value?.toString) {
-      return variable.value.toString({ precision: settings.decimalPlaces });
+      return variable.value.toString(displayOptions);
     }
     return String(variable.value);
   };
@@ -39,14 +43,15 @@ function VariablePanel() {
                 <div className="variable-info">
                   <span className="variable-name">{name}</span>
                   <div className="variable-values">
-                    {variable.rawValue && variable.rawValue !== variable.value?.toString() ? (
+                    {variable.rawValue &&
+                    variable.rawValue !== variable.value?.toString(displayOptions) ? (
                       <>
                         <span className="variable-raw-value">{variable.rawValue}</span>
                         <span className="variable-equals">=</span>
                         <span className="variable-computed-value">
                           {(() => {
                             if (variable.value?.toString) {
-                              const value = variable.value.toString({ precision: settings.decimalPlaces });
+                              const value = variable.value.toString(displayOptions);
                               const type = variable.value.getType();
                               return (
                                 <>

@@ -69,7 +69,7 @@ test.describe("Settings Integration", () => {
     await expect(page.getByText("Settings")).toBeVisible();
 
     // Find the number input (default should be 2)
-    const numberInput = page.getByRole("spinbutton");
+    const numberInput = page.getByLabel("Decimal Places");
     await expect(numberInput).toHaveValue("2");
 
     // Change the value to 4
@@ -97,7 +97,7 @@ test.describe("Settings Integration", () => {
     await settingsButton.click();
 
     // Check that the number input reflects the loaded setting
-    const numberInput = page.getByRole("spinbutton");
+    const numberInput = page.getByLabel("Decimal Places");
     await expect(numberInput).toHaveValue("5");
   });
 
@@ -109,7 +109,7 @@ test.describe("Settings Integration", () => {
     await expect(page.getByText("Settings")).toBeVisible();
 
     // Find number input for assertions
-    const numberInput = page.getByRole("spinbutton");
+    const numberInput = page.getByLabel("Decimal Places");
 
     // Change the number input to non-default value first
     await numberInput.fill("8");
@@ -176,7 +176,7 @@ test.describe("Settings Integration", () => {
     const settingsButton = page.getByLabel("Open settings");
     await settingsButton.click();
 
-    const numberInput = page.getByRole("spinbutton");
+    const numberInput = page.getByLabel("Decimal Places");
     await numberInput.fill("1");
     await numberInput.press("Enter");
 
@@ -252,7 +252,7 @@ test.describe("Settings Integration", () => {
     const settingsButton = page.getByLabel("Open settings");
     await settingsButton.click();
 
-    const numberInput = page.getByRole("spinbutton");
+    const numberInput = page.getByLabel("Decimal Places");
     await numberInput.fill("3");
     await numberInput.press("Enter");
 

@@ -24,7 +24,7 @@ import { NodeEvaluator, EvaluationContext } from "../eval/registry";
 import { evaluateUnitsExpression, expressionContainsUnits } from "./unitsEvaluator";
 import { Quantity } from "./quantity";
 import { Variable } from "../state/types";
-import { NumberValue } from "../types";
+import { NumberValue, DisplayOptions } from "../types";
 
 /**
  * Convert SmartPad variables to units-aware quantities
@@ -98,7 +98,8 @@ export class UnitsExpressionEvaluator implements NodeEvaluator {
   }
 
   private evaluateUnitsExpression(node: ExpressionNode, context: EvaluationContext): RenderNode {
-    const { variableContext, decimalPlaces } = context;
+    const { variableContext } = context;
+    const displayOptions = this.getDisplayOptions(context);
 
     try {
       // Convert SmartPad variables to quantities
@@ -119,7 +120,7 @@ export class UnitsExpressionEvaluator implements NodeEvaluator {
       }
 
       // Format the result with units
-      const resultText = this.formatQuantity(result.quantity, decimalPlaces);
+      const resultText = this.formatQuantity(result.quantity, displayOptions);
       const displayText = `${node.expression} => ${resultText}`;
 
       return {
@@ -148,7 +149,8 @@ export class UnitsExpressionEvaluator implements NodeEvaluator {
     node: CombinedAssignmentNode,
     context: EvaluationContext
   ): RenderNode {
-    const { variableStore, variableContext, decimalPlaces } = context;
+    const { variableStore, variableContext } = context;
+    const displayOptions = this.getDisplayOptions(context);
 
     try {
       // Convert SmartPad variables to quantities
@@ -171,7 +173,7 @@ export class UnitsExpressionEvaluator implements NodeEvaluator {
       // Store the result as a variable with complete units information
       const now = new Date();
       const existingVariable = variableStore.getVariable(node.variableName);
-      const resultText = this.formatQuantity(result.quantity, decimalPlaces);
+      const resultText = this.formatQuantity(result.quantity, displayOptions);
 
       const variable: Variable = {
         name: node.variableName,
@@ -224,7 +226,8 @@ export class UnitsExpressionEvaluator implements NodeEvaluator {
     node: VariableAssignmentNode,
     context: EvaluationContext
   ): RenderNode {
-    const { variableContext, variableStore, decimalPlaces } = context;
+    const { variableContext, variableStore } = context;
+    const displayOptions = this.getDisplayOptions(context);
 
     try {
       // Convert SmartPad variables to quantities
@@ -248,7 +251,7 @@ export class UnitsExpressionEvaluator implements NodeEvaluator {
       // Store the result as a variable with complete units information
       const now = new Date();
       const existingVariable = variableStore.getVariable(node.variableName);
-      const resultText = this.formatQuantity(result.quantity, decimalPlaces);
+      const resultText = this.formatQuantity(result.quantity, displayOptions);
 
       const variable: Variable = {
         name: node.variableName,
@@ -300,12 +303,9 @@ export class UnitsExpressionEvaluator implements NodeEvaluator {
   /**
    * Format a quantity for display with appropriate precision
    */
-  private formatQuantity(quantity: Quantity, decimalPlaces: number): string {
-    // Format the numeric value
-    const value = Number.isInteger(quantity.value)
-      ? quantity.value
-      : Number(parseFloat(quantity.value.toFixed(decimalPlaces)).toString());
-    const formattedValue = value % 1 === 0 ? value.toString() : value.toString();
+  private formatQuantity(quantity: Quantity, displayOptions: DisplayOptions): string {
+    const precision = displayOptions.precision ?? 6;
+    const formattedValue = this.formatScalarValue(quantity.value, precision, displayOptions);
 
     // Format with units
     const unitStr = quantity.unit.toString();
@@ -315,5 +315,43 @@ export class UnitsExpressionEvaluator implements NodeEvaluator {
     }
 
     return `${formattedValue} ${unitStr}`;
+  }
+
+  private formatScalarValue(
+    value: number,
+    precision: number,
+    displayOptions: DisplayOptions
+  ): string {
+    if (!isFinite(value)) return "Infinity";
+    if (value === 0) return "0";
+    const abs = Math.abs(value);
+    const upperThreshold = displayOptions.scientificUpperThreshold ?? 1e12;
+    const lowerThreshold = displayOptions.scientificLowerThreshold ?? 1e-4;
+    if (
+      abs >= upperThreshold ||
+      (abs > 0 && lowerThreshold > 0 && abs < lowerThreshold)
+    ) {
+      const s = value.toExponential(3);
+      const [mantissa, exp] = s.split("e");
+      const parts = mantissa.split(".");
+      const intPart = parts[0];
+      const fracPart = (parts[1] || "").padEnd(3, "0");
+      return `${intPart}.${fracPart}e${exp}`;
+    }
+    if (Number.isInteger(value)) return value.toString();
+    const fixed = value.toFixed(precision);
+    const fixedNumber = parseFloat(fixed);
+    if (fixedNumber === 0) {
+      return value.toString();
+    }
+    return fixedNumber.toString();
+  }
+
+  private getDisplayOptions(context: EvaluationContext): DisplayOptions {
+    return {
+      precision: context.decimalPlaces,
+      scientificUpperThreshold: context.scientificUpperThreshold,
+      scientificLowerThreshold: context.scientificLowerThreshold,
+    };
   }
 }

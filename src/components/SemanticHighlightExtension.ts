@@ -411,7 +411,7 @@ export function tokenizeExpression(
   };
 
   // Regular expressions for different token types
-  const numberRegex = /^-?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?/;
+  const numberRegex = /^-?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?:[eE][+-]?\d+)?/;
   const functionRegex = /^(sqrt|abs|round|floor|ceil|max|min|sin|cos|tan|log|ln|exp)\s*\(/;
   const operatorRegex = /^[\+\-\*\/\^\%]/;
   const parenRegex = /^[\(\)]/;

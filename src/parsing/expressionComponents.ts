@@ -63,7 +63,7 @@ function tokenize(expression: string): Token[] {
       continue;
     }
 
-    // Match numbers (including decimals)
+    // Match numbers (including decimals and scientific notation)
     if (!matched && /\d/.test(expression[pos])) {
       const start = pos;
       let value = "";
@@ -82,6 +82,25 @@ function tokenize(expression: string): Token[] {
           }
         }
         break;
+      }
+      if (pos < expression.length && (expression[pos] === "e" || expression[pos] === "E")) {
+        const nextChar = expression[pos + 1];
+        const nextNextChar = expression[pos + 2];
+        if (
+          /\d/.test(nextChar) ||
+          ((nextChar === "+" || nextChar === "-") && /\d/.test(nextNextChar))
+        ) {
+          value += expression[pos];
+          pos++;
+          if (expression[pos] === "+" || expression[pos] === "-") {
+            value += expression[pos];
+            pos++;
+          }
+          while (pos < expression.length && /\d/.test(expression[pos])) {
+            value += expression[pos];
+            pos++;
+          }
+        }
       }
       tokens.push({ type: 'number', value: value.replace(/,/g, ""), start, end: pos });
       matched = true;

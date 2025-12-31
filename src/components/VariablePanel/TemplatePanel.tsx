@@ -65,6 +65,10 @@ force = mass * accel =>
 distance = 4 m
 energy = force * distance =>
 energy to kWh =>
+raw energy = 1 kg*m^2/s^2 =>
+raw energy to J =>
+surface load = 5 kg/m^2 =>
+surface load to g/cm^2 =>
 pressure = force / 0.2 m^2 =>
 pressure to kPa =>
 pressure to psi =>

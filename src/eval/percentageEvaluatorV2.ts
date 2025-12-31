@@ -31,6 +31,7 @@ import {
   PercentageValue, 
   NumberValue, 
   ErrorValue,
+  DisplayOptions,
   SemanticValueTypes,
   SemanticParsers
 } from "../types";
@@ -633,8 +634,13 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
   /**
    * Create render nodes
    */
-  private createMathResultNode(expression: string, result: SemanticValue, lineNumber: number, context: EvaluationContext): MathResultRenderNode {
-    const resultString = result.toString({ precision: context.decimalPlaces });
+  private createMathResultNode(
+    expression: string,
+    result: SemanticValue,
+    lineNumber: number,
+    context: EvaluationContext
+  ): MathResultRenderNode {
+    const resultString = result.toString(this.getDisplayOptions(context));
     const displayText = `${expression} => ${resultString}`;
     
     return {
@@ -652,7 +658,7 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     result: SemanticValue,
     context: EvaluationContext
   ): CombinedRenderNode {
-    const resultString = result.toString({ precision: context.decimalPlaces });
+    const resultString = result.toString(this.getDisplayOptions(context));
     const displayText = `${node.variableName} = ${node.expression} => ${resultString}`;
     
     // Store the result in the variable store
@@ -681,6 +687,14 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
       displayText: `${expression} => ⚠️ ${message}`,
       line: lineNumber,
       originalRaw: expression,
+    };
+  }
+
+  private getDisplayOptions(context: EvaluationContext): DisplayOptions {
+    return {
+      precision: context.decimalPlaces,
+      scientificUpperThreshold: context.scientificUpperThreshold,
+      scientificLowerThreshold: context.scientificLowerThreshold,
     };
   }
 

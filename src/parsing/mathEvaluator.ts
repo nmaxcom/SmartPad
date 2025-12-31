@@ -52,7 +52,7 @@ export function tokenize(expression: string): Token[] {
 
     const char = expression[position];
 
-    // Numbers (including decimals)
+    // Numbers (including decimals and scientific notation)
     if (/\d/.test(char) || char === ".") {
       let numberStr = "";
       while (position < expression.length) {
@@ -70,6 +70,25 @@ export function tokenize(expression: string): Token[] {
           }
         }
         break;
+      }
+      if (position < expression.length && (expression[position] === "e" || expression[position] === "E")) {
+        const nextChar = expression[position + 1];
+        const nextNextChar = expression[position + 2];
+        if (
+          /\d/.test(nextChar) ||
+          ((nextChar === "+" || nextChar === "-") && /\d/.test(nextNextChar))
+        ) {
+          numberStr += expression[position];
+          position++;
+          if (expression[position] === "+" || expression[position] === "-") {
+            numberStr += expression[position];
+            position++;
+          }
+          while (position < expression.length && /\d/.test(expression[position])) {
+            numberStr += expression[position];
+            position++;
+          }
+        }
       }
       tokens.push({ type: TokenType.NUMBER, value: numberStr.replace(/,/g, ""), position });
       continue;

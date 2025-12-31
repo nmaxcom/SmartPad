@@ -12,6 +12,26 @@ export function SettingsSections() {
     [updateSetting]
   );
 
+  const handleScientificUpperChange = useCallback(
+    (value: number) => {
+      const safeValue = Number.isFinite(value)
+        ? Math.round(value)
+        : settings.scientificUpperExponent;
+      updateSetting("scientificUpperExponent", safeValue);
+    },
+    [updateSetting, settings.scientificUpperExponent]
+  );
+
+  const handleScientificLowerChange = useCallback(
+    (value: number) => {
+      const safeValue = Number.isFinite(value)
+        ? Math.round(value)
+        : settings.scientificLowerExponent;
+      updateSetting("scientificLowerExponent", safeValue);
+    },
+    [updateSetting, settings.scientificLowerExponent]
+  );
+
   return (
     <>
       <div className="settings-section">
@@ -34,6 +54,48 @@ export function SettingsSections() {
               max="10"
               value={settings.decimalPlaces}
               onChange={(e) => handleDecimalPlacesChange(parseInt(e.target.value) || 0)}
+              className="settings-number-input"
+            />
+          </div>
+        </div>
+
+        <div className="settings-item">
+          <div className="settings-item-info">
+            <label htmlFor="scientific-upper-exponent" className="settings-label">
+              Scientific Upper Exponent (10^N)
+            </label>
+            <p className="settings-description">
+              Use scientific notation when values are at or above 10^N
+            </p>
+          </div>
+          <div className="settings-control">
+            <input
+              id="scientific-upper-exponent"
+              type="number"
+              step="1"
+              value={settings.scientificUpperExponent}
+              onChange={(e) => handleScientificUpperChange(parseFloat(e.target.value))}
+              className="settings-number-input"
+            />
+          </div>
+        </div>
+
+        <div className="settings-item">
+          <div className="settings-item-info">
+            <label htmlFor="scientific-lower-exponent" className="settings-label">
+              Scientific Lower Exponent (10^N)
+            </label>
+            <p className="settings-description">
+              Use scientific notation when values are below 10^N
+            </p>
+          </div>
+          <div className="settings-control">
+            <input
+              id="scientific-lower-exponent"
+              type="number"
+              step="1"
+              value={settings.scientificLowerExponent}
+              onChange={(e) => handleScientificLowerChange(parseFloat(e.target.value))}
               className="settings-number-input"
             />
           </div>

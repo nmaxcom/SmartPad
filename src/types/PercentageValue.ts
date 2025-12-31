@@ -69,7 +69,7 @@ export class PercentageValue extends SemanticValue {
 
   toString(options?: DisplayOptions): string {
     const precision = options?.precision ?? 6;
-    const formattedPercent = this.formatNumber(this.displayPercentage, precision);
+    const formattedPercent = this.formatNumber(this.displayPercentage, precision, options);
     
     if (options?.showType) {
       return `${formattedPercent}% (${this.context})`;

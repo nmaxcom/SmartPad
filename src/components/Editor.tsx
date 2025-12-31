@@ -196,6 +196,8 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
             variableContext: createCurrentVariableContext(),
             lineNumber: index + 1,
             decimalPlaces: settings.decimalPlaces,
+            scientificUpperThreshold: Math.pow(10, settings.scientificUpperExponent),
+            scientificLowerThreshold: Math.pow(10, settings.scientificLowerExponent),
           };
 
           // Evaluate the node ONLY for state updates (variables)
@@ -301,7 +303,13 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         isUpdatingRef.current = false;
       }
     },
-    [replaceAllVariables, reactiveStore, settings.decimalPlaces]
+    [
+      replaceAllVariables,
+      reactiveStore,
+      settings.decimalPlaces,
+      settings.scientificUpperExponent,
+      settings.scientificLowerExponent,
+    ]
   );
 
   // AST pipeline is now the default (no feature flag needed)
@@ -400,7 +408,13 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         handleUpdateV2({ editor });
       }, 100);
     }
-  }, [settings.decimalPlaces, editor, handleUpdateV2]);
+  }, [
+    settings.decimalPlaces,
+    settings.scientificUpperExponent,
+    settings.scientificLowerExponent,
+    editor,
+    handleUpdateV2,
+  ]);
 
   // Legacy forceExpressionUpdate function removed - AST pipeline handles this automatically
 

@@ -84,7 +84,7 @@ export function parseVariableAssignment(line: string): VariableAssignment {
     // CRITICAL FIX: Only treat as simple numeric if the ENTIRE string is numeric
     // This prevents "4+2" from being parsed as "4"
     // Use a regex to check if the string is purely numeric (including decimals and negative numbers)
-    const isNumericOnly = /^-?\d+(\.\d+)?$/.test(singleValue);
+    const isNumericOnly = /^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(singleValue);
     if (!isNaN(numericValue) && isNumericOnly) {
       // Simple numeric assignment - only provide value for backward compatibility
       return {

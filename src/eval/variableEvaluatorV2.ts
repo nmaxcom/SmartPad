@@ -16,7 +16,7 @@ import {
   VariableRenderNode,
   ErrorRenderNode,
 } from "./renderNodes";
-import { ErrorValue, SemanticValueTypes, NumberValue } from "../types";
+import { ErrorValue, SemanticValueTypes, NumberValue, DisplayOptions } from "../types";
 import { parseAndEvaluateExpression } from "../parsing/expressionParser";
 
 /**
@@ -113,7 +113,7 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
         semanticValue,
         context.lineNumber,
         varNode.raw,
-        context.decimalPlaces
+        this.getDisplayOptions(context)
       );
       
     } catch (error) {
@@ -130,9 +130,9 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
     value: import("../types").SemanticValue,
     lineNumber: number,
     originalRaw: string,
-    decimalPlaces: number
+    displayOptions: DisplayOptions
   ): VariableRenderNode {
-    const valueString = value.toString({ precision: decimalPlaces });
+    const valueString = value.toString(displayOptions);
     const displayText = `${variableName} = ${valueString}`;
     
     return {
@@ -160,6 +160,14 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
       displayText: `${variableName} => ⚠️ ${message}`,
       line: lineNumber,
       originalRaw: variableName,
+    };
+  }
+
+  private getDisplayOptions(context: EvaluationContext): DisplayOptions {
+    return {
+      precision: context.decimalPlaces,
+      scientificUpperThreshold: context.scientificUpperThreshold,
+      scientificLowerThreshold: context.scientificLowerThreshold,
     };
   }
 }

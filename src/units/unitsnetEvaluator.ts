@@ -141,7 +141,7 @@ export function tokenizeWithUnitsNet(expression: string): UnitsNetToken[] {
 
     const char = expression[position];
 
-    // Numbers (including decimals) - look ahead for units
+    // Numbers (including decimals and scientific notation) - look ahead for units
     if (/\d/.test(char) || char === ".") {
       let numberStr = "";
       const numberStart = position;
@@ -152,6 +152,25 @@ export function tokenizeWithUnitsNet(expression: string): UnitsNetToken[] {
       ) {
         numberStr += expression[position];
         position++;
+      }
+      if (position < expression.length && (expression[position] === "e" || expression[position] === "E")) {
+        const nextChar = expression[position + 1];
+        const nextNextChar = expression[position + 2];
+        if (
+          /\d/.test(nextChar) ||
+          ((nextChar === "+" || nextChar === "-") && /\d/.test(nextNextChar))
+        ) {
+          numberStr += expression[position];
+          position++;
+          if (expression[position] === "+" || expression[position] === "-") {
+            numberStr += expression[position];
+            position++;
+          }
+          while (position < expression.length && /\d/.test(expression[position])) {
+            numberStr += expression[position];
+            position++;
+          }
+        }
       }
 
       // Skip whitespace after number

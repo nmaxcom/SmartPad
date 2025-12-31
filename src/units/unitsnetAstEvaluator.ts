@@ -35,7 +35,7 @@ import {
 import { NodeEvaluator, EvaluationContext } from "../eval/registry";
 import { evaluateUnitsNetExpression, expressionContainsUnitsNet } from "./unitsnetEvaluator";
 import { SmartPadQuantity } from "./unitsnetAdapter";
-import { CurrencyValue, UnitValue, NumberValue, PercentageValue } from "../types";
+import { CurrencyValue, UnitValue, NumberValue, PercentageValue, DisplayOptions } from "../types";
 import { Variable } from "../state/types";
 
 function rewriteSimpleTimeLiterals(expression: string): string {
@@ -207,7 +207,8 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     node: ExpressionNode,
     context: EvaluationContext
   ): RenderNode | null {
-    const { variableContext, decimalPlaces } = context;
+    const { variableContext } = context;
+    const displayOptions = this.getDisplayOptions(context);
 
     try {
       if (this.shouldDeferToSemanticEvaluator(node.components, node.expression, context)) {
@@ -237,13 +238,14 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
       if (result.value instanceof UnitValue) {
         formattedResult = this.formatQuantityWithSmartThresholds(
           result.value.getQuantity(),
-          decimalPlaces
+          displayOptions,
+          this.shouldPreferBaseUnit(node.expression, result.value.getQuantity())
         );
       } else {
         const numericValue = result.value.getNumericValue();
         formattedResult = this.isMathematicalConstant(numericValue)
           ? numericValue.toString()
-          : result.value.toString({ precision: decimalPlaces });
+          : result.value.toString(displayOptions);
       }
       if (rewritten.currencySymbol && result.value instanceof NumberValue) {
         formattedResult = `${rewritten.currencySymbol}${formattedResult}`;
@@ -274,7 +276,8 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     node: CombinedAssignmentNode,
     context: EvaluationContext
   ): RenderNode | null {
-    const { variableContext, variableStore, decimalPlaces } = context;
+    const { variableContext, variableStore } = context;
+    const displayOptions = this.getDisplayOptions(context);
 
     try {
       if (this.shouldDeferToSemanticEvaluator(node.components, node.expression, context)) {
@@ -315,8 +318,12 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
 
       let valueStr =
         result.value instanceof UnitValue
-          ? this.formatQuantityWithSmartThresholds(result.value.getQuantity(), decimalPlaces)
-          : result.value.toString({ precision: decimalPlaces });
+          ? this.formatQuantityWithSmartThresholds(
+              result.value.getQuantity(),
+              displayOptions,
+              this.shouldPreferBaseUnit(node.expression, result.value.getQuantity())
+            )
+          : result.value.toString(displayOptions);
       if (rewritten.currencySymbol && result.value instanceof NumberValue) {
         valueStr = `${rewritten.currencySymbol}${valueStr}`;
       }
@@ -348,7 +355,8 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     node: VariableAssignmentNode,
     context: EvaluationContext
   ): RenderNode {
-    const { variableStore, decimalPlaces } = context;
+    const { variableStore } = context;
+    const displayOptions = this.getDisplayOptions(context);
 
     try {
       // Parse the value to extract units
@@ -396,8 +404,8 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
 
       const displayValue =
         value instanceof UnitValue
-          ? this.formatQuantity(value.getQuantity(), decimalPlaces)
-          : value.toString({ precision: decimalPlaces });
+          ? this.formatQuantity(value.getQuantity(), displayOptions)
+          : value.toString(displayOptions);
       const displayText = `${node.variableName} = ${displayValue}`;
 
       return {
@@ -422,17 +430,15 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     }
   }
 
-  private formatQuantity(quantity: SmartPadQuantity, decimalPlaces: number): string {
+  private formatQuantity(quantity: SmartPadQuantity, displayOptions: DisplayOptions): string {
+    const precision = displayOptions.precision ?? 6;
     if (quantity.isDimensionless()) {
       // For mathematical constants, preserve full precision
       if (this.isMathematicalConstant(quantity.value)) {
         return quantity.value.toString();
       }
       // If integer, show without decimals
-      if (Number.isInteger(quantity.value)) {
-        return quantity.value.toString();
-      }
-      return parseFloat(quantity.value.toFixed(decimalPlaces)).toString();
+      return this.formatScalarValue(quantity.value, precision, displayOptions);
     }
 
     // For simple assignments, preserve the original unit format
@@ -441,12 +447,10 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     const unit = quantity.unit;
 
     // Apply unit-specific precision overrides to align with UI expectations
-    const resolvedPrecision = this.resolveUnitsPrecision(unit, value, decimalPlaces);
+    const resolvedPrecision = this.resolveUnitsPrecision(unit, value, precision);
 
     // Format number, removing unnecessary trailing zeros
-    const formattedValue = Number.isInteger(value)
-      ? value.toString()
-      : parseFloat(value.toFixed(resolvedPrecision)).toString();
+    const formattedValue = this.formatScalarValue(value, resolvedPrecision, displayOptions);
 
     if (unit === "") {
       return formattedValue;
@@ -463,32 +467,77 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
 
   private formatQuantityWithSmartThresholds(
     quantity: SmartPadQuantity,
-    decimalPlaces: number
+    displayOptions: DisplayOptions,
+    preferBaseUnit: boolean
   ): string {
+    const precision = displayOptions.precision ?? 6;
     if (quantity.isDimensionless()) {
       // For mathematical constants, preserve full precision even in smart thresholds
       if (this.isMathematicalConstant(quantity.value)) {
         return quantity.value.toString();
       }
-      if (Number.isInteger(quantity.value)) {
-        return quantity.value.toString();
-      }
-      return parseFloat(quantity.value.toFixed(decimalPlaces)).toString();
+      return this.formatScalarValue(quantity.value, precision, displayOptions);
     }
 
-    // For expressions, use smart thresholds to convert to more readable units
-    const displayQuantity = quantity.getBestDisplayUnit();
-    const resolvedPrecision = this.resolveUnitsPrecision(
-      displayQuantity.unit,
-      displayQuantity.value,
-      decimalPlaces
-    );
-    return displayQuantity.toString(resolvedPrecision);
+    // For expressions, use smart thresholds and optionally prefer base units
+    return quantity.toString(precision, { ...displayOptions, preferBaseUnit });
+  }
+
+  private shouldPreferBaseUnit(expression: string, quantity: SmartPadQuantity): boolean {
+    if (quantity.unitsnetValue) {
+      return false;
+    }
+    if (/\bto\b/.test(expression)) {
+      return false;
+    }
+    const unit = quantity.unit;
+    if (unit === "C" || unit === "F" || unit === "K") {
+      return false;
+    }
+    return true;
   }
 
   private resolveUnitsPrecision(unit: string, value: number, defaultPlaces: number): number {
     // Follow the configured decimalPlaces consistently for all units.
     return defaultPlaces;
+  }
+
+  private formatScalarValue(
+    value: number,
+    precision: number,
+    displayOptions: DisplayOptions
+  ): string {
+    if (!isFinite(value)) return "Infinity";
+    if (value === 0) return "0";
+    const abs = Math.abs(value);
+    const upperThreshold = displayOptions.scientificUpperThreshold ?? 1e12;
+    const lowerThreshold = displayOptions.scientificLowerThreshold ?? 1e-4;
+    if (
+      abs >= upperThreshold ||
+      (abs > 0 && lowerThreshold > 0 && abs < lowerThreshold)
+    ) {
+      const s = value.toExponential(3);
+      const [mantissa, exp] = s.split("e");
+      const parts = mantissa.split(".");
+      const intPart = parts[0];
+      const fracPart = (parts[1] || "").padEnd(3, "0");
+      return `${intPart}.${fracPart}e${exp}`;
+    }
+    if (Number.isInteger(value)) return value.toString();
+    const fixed = value.toFixed(precision);
+    const fixedNumber = parseFloat(fixed);
+    if (fixedNumber === 0) {
+      return value.toString();
+    }
+    return fixedNumber.toString();
+  }
+
+  private getDisplayOptions(context: EvaluationContext): DisplayOptions {
+    return {
+      precision: context.decimalPlaces,
+      scientificUpperThreshold: context.scientificUpperThreshold,
+      scientificLowerThreshold: context.scientificLowerThreshold,
+    };
   }
 
   private shouldDeferToSemanticEvaluator(

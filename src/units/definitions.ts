@@ -443,7 +443,7 @@ defaultUnitRegistry.register(
     baseMultiplier: 0.45359237,
     category: "mass",
   },
-  ["pound", "pounds"]
+  ["pound", "pounds", "lbs"]
 );
 
 // Speed units

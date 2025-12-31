@@ -21,6 +21,7 @@ import {
 import {
   ErrorValue,
   NumberValue,
+  DisplayOptions,
   SemanticParsers,
   SemanticValue,
   SemanticValueTypes,
@@ -132,7 +133,7 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
         semanticValue,
         context.lineNumber,
         combNode.raw,
-        context.decimalPlaces
+        this.getDisplayOptions(context)
       );
       
     } catch (error) {
@@ -150,9 +151,9 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
     value: import("../types").SemanticValue,
     lineNumber: number,
     originalRaw: string,
-    decimalPlaces: number
+    displayOptions: DisplayOptions
   ): CombinedRenderNode {
-    const valueString = value.toString({ precision: decimalPlaces });
+    const valueString = value.toString(displayOptions);
     const displayText = `${variableName} = ${expression} => ${valueString}`;
     
     return {
@@ -217,6 +218,14 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
     }
 
     return ErrorValue.semanticError(`Variable "${normalized}" has unsupported type`);
+  }
+
+  private getDisplayOptions(context: EvaluationContext): DisplayOptions {
+    return {
+      precision: context.decimalPlaces,
+      scientificUpperThreshold: context.scientificUpperThreshold,
+      scientificLowerThreshold: context.scientificLowerThreshold,
+    };
   }
 }
 

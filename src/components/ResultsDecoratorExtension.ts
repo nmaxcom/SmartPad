@@ -56,7 +56,9 @@ export const ResultsDecoratorExtension = Extension.create({
           };
           const parseNumberParts = (value: string) => {
             const trimmed = value.trim();
-            const match = trimmed.match(/^([^0-9+-]*)([-+]?[0-9.,]*\\.?[0-9]+)(.*)$/);
+            const match = trimmed.match(
+              /^([^0-9+-]*)([-+]?[0-9.,]*\\.?[0-9]+(?:[eE][+-]?\\d+)?)(.*)$/
+            );
             if (!match) return null;
             const rawNumber = match[2].replace(/,/g, "");
             const numberValue = Number(rawNumber);
@@ -69,7 +71,8 @@ export const ResultsDecoratorExtension = Extension.create({
             };
           };
           const countDecimals = (rawNumber: string): number => {
-            const parts = rawNumber.split(".");
+            const mantissa = rawNumber.split(/e/i)[0];
+            const parts = mantissa.split(".");
             if (parts.length < 2) return 0;
             return parts[1].length;
           };
@@ -355,7 +358,9 @@ export const ResultsDecoratorExtension = Extension.create({
             const finalSet: DecorationSet = decoSet;
 
             const currentSet = pluginKey.getState(view.state) as DecorationSet | undefined;
-            const decoChanged = currentSet ? !currentSet.eq(finalSet) : true;
+            const decoChanged = currentSet
+              ? !(currentSet as any).eq?.(finalSet)
+              : true;
 
             if (decoChanged) {
               tr.setMeta(pluginKey, finalSet);
