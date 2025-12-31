@@ -11,6 +11,7 @@ const templates = [
     content: `# Quick Tour: a guided walkthrough
 # ---
 # Core idea: write a line and add "=>" to evaluate
+
 2 + 3 =>
 sqrt(16) + 2.5 =>
 abs(-4.2) =>
@@ -19,11 +20,14 @@ PI * 2 =>
 
 # ---
 # Variables: spaces and phrases are ok
+
 monthly rent = $1250
 utilities = $185
 internet = $75
 monthly total = monthly rent + utilities + internet =>
 yearly total = monthly total * 12 =>
+
+# A shared bill split with a phrase variable
 
 number of friends = 6
 pizza total cost = $18.99
@@ -31,17 +35,20 @@ cost per friend = pizza total cost / number of friends =>
 
 # ---
 # Percentages: of / on / off / as %
+
 discount = 15%
 base price = $120.50
 final price = discount off base price =>
 tax = 8%
 total = tax on final price =>
+
 20 of 80 is % =>
 20 / 80 as % =>
 10% of 155 N =>
 
 # ---
 # Units: arithmetic and conversions
+
 trip distance = 12.5 km
 trip time = 25 min
 speed = trip distance / trip time =>
@@ -51,6 +58,7 @@ height to cm =>
 
 # ---
 # Dimensional analysis and derived units
+
 mass = 2 kg
 accel = 3 m/s^2
 force = mass * accel =>
@@ -59,12 +67,14 @@ energy = force * distance =>
 
 # ---
 # Powers and geometry
+
 radius = 4 m
 area = PI * radius^2 =>
 volume = area * 2 m =>
 
 # ---
 # Temperatures (ASCII units)
+
 temp c = 25 C
 temp c to F =>
 temp c to K =>`,
@@ -75,6 +85,7 @@ temp c to K =>`,
     name: "Event Profit",
     content: `# You are planning a small event
 # ---
+
 ticket price = $45
 attendees = 180
 discount = 15%
@@ -88,6 +99,7 @@ profit margin = profit / gross revenue as % =>
 
 # ---
 # Now ask: what price hits a target profit?
+
 target profit = $3000
 required revenue = target profit + venue fee =>
 required ticket = required revenue / attendees =>
@@ -99,6 +111,7 @@ required ticket to USD =>`,
     name: "Commute Planner",
     content: `# Estimate a typical commute
 # ---
+
 commute distance = 18 km
 average speed = 45 km/h
 travel time = commute distance / average speed =>
@@ -106,6 +119,7 @@ travel time to min =>
 
 # ---
 # What if traffic slows you down?
+
 slowdown = 20%
 slow speed = slowdown off average speed =>
 slow travel time = commute distance / slow speed =>
@@ -113,6 +127,7 @@ slow travel time to min =>
 
 # ---
 # Round trip and weekly totals
+
 round trip distance = commute distance * 2 =>
 weekly distance = round trip distance * 5 =>
 weekly time = slow travel time * 5 =>
@@ -124,6 +139,7 @@ weekly time to h =>`,
     name: "Physics Lab",
     content: `# Motion and speed
 # ---
+
 distance = 150 m
 time = 12 s
 velocity = distance / time =>
@@ -131,6 +147,7 @@ velocity to km/h =>
 
 # ---
 # Acceleration from a speed change
+
 accel time = 6 s
 initial speed = 4 m/s
 final speed = 28 m/s
@@ -138,18 +155,21 @@ acceleration = (final speed - initial speed) / accel time =>
 
 # ---
 # Force from mass and acceleration
+
 mass = 2.5 kg
 force = mass * acceleration =>
 force to lbf =>
 
 # ---
 # Pressure from force over area
+
 area = 0.4 m^2
 pressure = force / area =>
 pressure to kPa =>
 
 # ---
 # Energy and power
+
 work distance = 10 m
 work = force * work distance =>
 power = work / 30 s =>
