@@ -10,6 +10,7 @@ function VariablePanel() {
     precision: settings.decimalPlaces,
     scientificUpperThreshold: Math.pow(10, settings.scientificUpperExponent),
     scientificLowerThreshold: Math.pow(10, settings.scientificLowerExponent),
+    scientificTrimTrailingZeros: settings.scientificTrimTrailingZeros,
   };
 
   // Convert the Map to an array for easier rendering

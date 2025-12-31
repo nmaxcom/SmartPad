@@ -272,13 +272,13 @@ describe("Expression Parser", () => {
     });
 
     test("should handle very small numbers", () => {
-      expect(formatResult(0.00001)).toBe("1.000e-5");
-      expect(formatResult(0.000000123)).toBe("1.230e-7");
+      expect(formatResult(0.00001)).toBe("1e-5");
+      expect(formatResult(0.000000123)).toBe("1.23e-7");
     });
 
     test("should handle very large numbers", () => {
-      expect(formatResult(1e15)).toBe("1.000e+15");
-      expect(formatResult(9.87654321e20)).toBe("9.877e+20");
+      expect(formatResult(1e15)).toBe("1e+15");
+      expect(formatResult(9.87654321e20)).toBe("9.876543e+20");
     });
 
     test("should handle infinite values", () => {

@@ -567,6 +567,7 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       precision: context.decimalPlaces,
       scientificUpperThreshold: context.scientificUpperThreshold,
       scientificLowerThreshold: context.scientificLowerThreshold,
+      scientificTrimTrailingZeros: context.scientificTrimTrailingZeros,
     };
   }
   

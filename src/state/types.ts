@@ -69,6 +69,7 @@ export interface SettingsState {
   decimalPlaces: number;
   scientificUpperExponent: number;
   scientificLowerExponent: number;
+  scientificTrimTrailingZeros: boolean;
   showVariablePanel: boolean;
   showTemplatePanel: boolean;
   showSettingsPanel: boolean;

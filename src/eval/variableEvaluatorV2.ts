@@ -168,6 +168,7 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
       precision: context.decimalPlaces,
       scientificUpperThreshold: context.scientificUpperThreshold,
       scientificLowerThreshold: context.scientificLowerThreshold,
+      scientificTrimTrailingZeros: context.scientificTrimTrailingZeros,
     };
   }
 }

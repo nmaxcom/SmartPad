@@ -101,6 +101,28 @@ export function SettingsSections() {
             />
           </div>
         </div>
+
+        <div className="settings-item">
+          <div className="settings-item-info">
+            <label htmlFor="scientific-trim-zeros" className="settings-label">
+              Trim Scientific Trailing Zeros
+            </label>
+            <p className="settings-description">
+              When enabled, 5.000e+3 renders as 5e+3. Disable to keep fixed mantissa decimals.
+            </p>
+          </div>
+          <div className="settings-control">
+            <label className="toggle-switch">
+              <input
+                id="scientific-trim-zeros"
+                type="checkbox"
+                checked={settings.scientificTrimTrailingZeros}
+                onChange={(e) => updateSetting("scientificTrimTrailingZeros", e.target.checked)}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
       </div>
 
       <div className="settings-section">

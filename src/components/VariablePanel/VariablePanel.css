@@ -108,8 +108,8 @@
 }
 
 .variable-type-unit {
-  background-color: var(--color-purple-100);
-  color: var(--color-purple-700);
+  background-color: transparent;
+  color: #ff6adf;
 }
 
 .variable-type-error {

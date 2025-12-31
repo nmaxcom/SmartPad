@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SmartPad Number Scale Mockups</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap");
+
+      :root {
+        --bg-1: #0e1022;
+        --bg-2: #1b1f3a;
+        --bg-3: #2b2f55;
+        --panel: rgba(20, 24, 48, 0.9);
+        --panel-border: rgba(120, 130, 210, 0.2);
+        --text: #e7e9ff;
+        --muted: #9aa3d6;
+        --accent: #7b6bff;
+        --accent-soft: rgba(123, 107, 255, 0.18);
+        --unit: #ff6adf;
+        --ok: #1fe4c6;
+        --warn: #f7b941;
+        --shadow: 0 24px 50px rgba(5, 8, 26, 0.45);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Space Grotesk", system-ui, -apple-system, sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(1200px 600px at 20% 10%, #242a62 0%, transparent 60%),
+          radial-gradient(900px 500px at 90% 20%, #1c2b6e 0%, transparent 55%),
+          linear-gradient(180deg, var(--bg-1), var(--bg-2) 55%, var(--bg-3));
+        padding: 32px;
+      }
+
+      .page {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+      }
+
+      .header {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .eyebrow {
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        font-weight: 600;
+        font-size: 12px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(28px, 4vw, 40px);
+      }
+
+      .lede {
+        margin: 0;
+        color: var(--muted);
+        font-size: 16px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 20px;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--panel-border);
+        border-radius: 18px;
+        box-shadow: var(--shadow);
+        padding: 20px 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(123, 107, 255, 0.12), transparent 60%);
+        pointer-events: none;
+      }
+
+      .card-title {
+        font-weight: 600;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        z-index: 1;
+      }
+
+      .badge {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: rgba(123, 107, 255, 0.2);
+        color: var(--accent);
+      }
+
+      .editor-line {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 18px;
+        z-index: 1;
+      }
+
+      .expr {
+        color: var(--ok);
+      }
+
+      .arrow {
+        color: var(--warn);
+      }
+
+      .result {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 4px 10px;
+        border-radius: 10px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-weight: 600;
+        position: relative;
+      }
+
+      .unit {
+        color: var(--unit);
+        font-weight: 600;
+      }
+
+      .subtext {
+        color: var(--muted);
+        font-size: 13px;
+        z-index: 1;
+      }
+
+      .ghost {
+        color: rgba(231, 233, 255, 0.55);
+        font-size: 13px;
+      }
+
+      .ghost-inline {
+        color: rgba(231, 233, 255, 0.6);
+      }
+
+      .pill {
+        background: rgba(31, 228, 198, 0.18);
+        color: #1fe4c6;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 999px;
+      }
+
+      .exp-chip {
+        background: rgba(255, 106, 223, 0.18);
+        color: var(--unit);
+        font-size: 12px;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 999px;
+      }
+
+      .stack {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .scale-ruler {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .scale-track {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+      }
+
+      .scale-tick {
+        width: 2px;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 999px;
+      }
+
+      .scale-tick.active {
+        height: 14px;
+        background: #ff6adf;
+      }
+
+      .group-strong {
+        color: #cfd3ff;
+      }
+
+      .group-muted {
+        color: rgba(231, 233, 255, 0.55);
+      }
+
+      .tiny-lead {
+        color: rgba(231, 233, 255, 0.45);
+      }
+
+      .tiny-focus {
+        color: #ffbde9;
+      }
+
+      .tiny-suffix {
+        background: rgba(31, 228, 198, 0.16);
+        color: #1fe4c6;
+        font-weight: 700;
+        padding: 2px 6px;
+        border-radius: 6px;
+        font-size: 12px;
+      }
+
+      .microbar-fill.tiny {
+        width: 18%;
+      }
+
+      .microbar-fill.nano {
+        width: 8%;
+      }
+
+      .tooltip {
+        position: relative;
+        cursor: default;
+      }
+
+      .tooltip::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 10px);
+        transform: translateX(-50%);
+        background: #0b0e24;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: var(--text);
+        font-size: 12px;
+        padding: 6px 8px;
+        border-radius: 8px;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+      }
+
+      .tooltip:hover::after {
+        opacity: 1;
+      }
+
+      .microbar {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .microbar-track {
+        width: 120px;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        overflow: hidden;
+      }
+
+      .microbar-fill {
+        height: 100%;
+        width: 75%;
+        background: linear-gradient(90deg, #7b6bff, #ff6adf);
+        border-radius: 999px;
+      }
+
+      @media (max-width: 720px) {
+        body {
+          padding: 20px;
+        }
+
+        .editor-line {
+          font-size: 16px;
+          flex-wrap: wrap;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="header">
+        <span class="eyebrow">SmartPad mockups</span>
+        <h1>Ways to visualize large numbers</h1>
+        <p class="lede">Each card shows a different way to present scale while keeping the raw value readable.</p>
+      </div>
+
+      <div class="grid">
+        <section class="card">
+          <div class="card-title">
+            Grouped digits
+            <span class="badge">Readable</span>
+          </div>
+          <div class="editor-line">
+            <span class="expr">light speed</span>
+            <span class="arrow">=></span>
+            <span class="result">300 000 000 <span class="unit">m/s</span></span>
+          </div>
+          <div class="subtext">Insert separators (spaces or underscores) to show magnitude at a glance.</div>
+        </section>
+
+        <section class="card">
+          <div class="card-title">
+            Compact suffix
+            <span class="badge">Fast scan</span>
+          </div>
+          <div class="editor-line">
+            <span class="expr">light speed</span>
+            <span class="arrow">=></span>
+            <span class="result">
+              300,000,000 <span class="unit">m/s</span>
+              <span class="pill">300M</span>
+            </span>
+          </div>
+          <div class="subtext">Keep full precision plus a short badge (K, M, B) for quick scanning.</div>
+        </section>
+
+        <section class="card">
+          <div class="card-title">
+            Hover scale hint
+            <span class="badge">On demand</span>
+          </div>
+          <div class="editor-line">
+            <span class="expr">light speed</span>
+            <span class="arrow">=></span>
+            <span class="result tooltip" data-tooltip="3 x 10^8 (three hundred million)">
+              300000000 <span class="unit">m/s</span>
+            </span>
+          </div>
+          <div class="subtext">Keep line clean, show scientific or verbal scale on hover.</div>
+        </section>
+
+        <section class="card">
+          <div class="card-title">
+            Magnitude pill
+            <span class="badge">Context</span>
+          </div>
+          <div class="editor-line">
+            <span class="expr">light speed</span>
+            <span class="arrow">=></span>
+            <span class="result">300000000 <span class="unit">m/s</span></span>
+            <span class="pill">1e8</span>
+          </div>
+          <div class="subtext">Small chip communicates order of magnitude (1e8, 8 digits).</div>
+        </section>
+
+        <section class="card">
+          <div class="card-title">
+            Microbar scale
+            <span class="badge">Visual</span>
+          </div>
+          <div class="editor-line">
+            <span class="expr">light speed</span>
+            <span class="arrow">=></span>
+            <span class="result">
+              300000000 <span class="unit">m/s</span>
+              <span class="microbar">
+                <span class="microbar-track"><span class="microbar-fill"></span></span>
+              </span>
+            </span>
+          </div>
+          <div class="subtext">A logarithmic bar gives a quick sense of scale while preserving the exact value.</div>
+        </section>
+
+        <section class="card">
+          <div class="card-title">
+            Hybrid (suffix + tooltip)
+            <span class="badge">Power user</span>
+          </div>
+          <div class="editor-line">
+            <span class="expr">light speed</span>
+            <span class="arrow">=></span>
+            <span class="result tooltip" data-tooltip="Exact: 300,000,000 m/s">
+              300M <span class="unit">m/s</span>
+            </span>
+          </div>
+          <div class="subtext">Show compact value by default, reveal exact digits on hover.</div>
+        </section>
+
+        <section class="card">
+          <div class="card-title">
+            Mantissa + exponent chips
+            <span class="badge">Math-native</span>
+          </div>
+          <div class="editor-line">
+            <span class="expr">light speed</span>
+            <span class="arrow">=></span>
+            <span class="result">
+              3.00 <span class="ghost-inline">x</span> <span class="exp-chip">10^8</span>
+              <span class="unit">m/s</span>
+            </span>
+          </div>
+          <div class="subtext">Break the number into mantissa + exponent with a focused exponent chip.</div>
+        </section>
+
+        <section class="card">
+          <div class="card-title">
+            Stacked detail line
+            <span class="badge">Clarity</span>
+          </div>
+          <div class="stack">
+            <div class="editor-line">
+              <span class="expr">light speed</span>
+              <span class="arrow">=></span>
+              <span class="result">300,000,000 <span class="unit">m/s</span></span>
+            </div>
+            <span class="ghost">Scientific: 3.00e+8</span>
+          </div>
+          <div class="subtext">Keep the full number but add a quieter scientific readout below.</div>
+        </section>
+
+        <section class="card">
+          <div class="card-title">
+            Digit group emphasis
+            <span class="badge">Chunked</span>
+          </div>
+          <div class="editor-line">
+            <span class="expr">light speed</span>
+            <span class="arrow">=></span>
+            <span class="result">
+              <span class="group-strong">300</span>
+              <span class="group-muted"> 000</span>
+              <span class="group-strong"> 000</span>
+              <span class="unit">m/s</span>
+            </span>
+          </div>
+          <div class="subtext">Alternate group emphasis so your eye snaps to the magnitude blocks.</div>
+        </section>
+
+        <section class="card">
+          <div class="card-title">
+            Log-scale ruler
+            <span class="badge">Scale</span>
+          </div>
+          <div class="stack">
+            <div class="editor-line">
+              <span class="expr">light speed</span>
+              <span class="arrow">=></span>
+              <span class="result">300000000 <span class="unit">m/s</span></span>
+            </div>
+            <div class="scale-ruler">
+              <span>10^4</span>
+              <div class="scale-track">
+                <span class="scale-tick"></span>
+                <span class="scale-tick"></span>
+                <span class="scale-tick"></span>
+                <span class="scale-tick active"></span>
+                <span class="scale-tick"></span>
+              </div>
+              <span>10^8</span>
+            </div>
+          </div>
+          <div class="subtext">A compact ruler reinforces where the value sits on a log scale.</div>
+        </section>
+
+        <section class="card">
+          <div class="card-title">
+            Reference anchor
+            <span class="badge">Comparative</span>
+          </div>
+          <div class="editor-line">
+            <span class="expr">light speed</span>
+            <span class="arrow">=></span>
+            <span class="result">300000000 <span class="unit">m/s</span></span>
+          </div>
+          <div class="subtext">≈ 7.5× Earth circumference per second (Earth ≈ 40,075 km)</div>
+        </section>
+
+        <section class="card">
+          <div class="card-title">
+            Tiny value focus
+            <span class="badge">Micro</span>
+          </div>
+          <div class="editor-line">
+            <span class="expr">particle size</span>
+            <span class="arrow">=></span>
+            <span class="result">
+              <span class="tiny-lead">0.000000</span><span class="tiny-focus">42</span>
+              <span class="unit">m</span>
+            </span>
+          </div>
+          <div class="subtext">Dim the leading zeros, spotlight the first significant digits.</div>
+        </section>
+
+        <section class="card">
+          <div class="card-title">
+            Prefix badge
+            <span class="badge">SI</span>
+          </div>
+          <div class="editor-line">
+            <span class="expr">particle size</span>
+            <span class="arrow">=></span>
+            <span class="result">
+              420 <span class="tiny-suffix">nm</span>
+              <span class="unit">m</span>
+            </span>
+          </div>
+          <div class="subtext">Show a scaled SI prefix badge while keeping the base unit visible.</div>
+        </section>
+
+        <section class="card">
+          <div class="card-title">
+            Scientific hint line
+            <span class="badge">Dual</span>
+          </div>
+          <div class="stack">
+            <div class="editor-line">
+              <span class="expr">particle size</span>
+              <span class="arrow">=></span>
+              <span class="result">0.00000042 <span class="unit">m</span></span>
+            </div>
+            <span class="ghost">= 4.2e-7 m</span>
+          </div>
+          <div class="subtext">Plain decimal + scientific line for quick verification.</div>
+        </section>
+
+        <section class="card">
+          <div class="card-title">
+            Tiny scale microbar
+            <span class="badge">Log</span>
+          </div>
+          <div class="editor-line">
+            <span class="expr">particle size</span>
+            <span class="arrow">=></span>
+            <span class="result">
+              4.2e-7 <span class="unit">m</span>
+              <span class="microbar">
+                <span class="microbar-track"><span class="microbar-fill nano"></span></span>
+              </span>
+            </span>
+          </div>
+          <div class="subtext">Tiny values get a short bar to hint at their order.</div>
+        </section>
+
+        <section class="card">
+          <div class="card-title">
+            Inverse scale label
+            <span class="badge">Context</span>
+          </div>
+          <div class="editor-line">
+            <span class="expr">particle size</span>
+            <span class="arrow">=></span>
+            <span class="result">4.2e-7 <span class="unit">m</span></span>
+            <span class="pill">1 in 2.4M</span>
+          </div>
+          <div class="subtext">Frame tiny values as “one in N” to make scale tangible.</div>
+        </section>
+      </div>
+    </div>
+  </body>
+</html>

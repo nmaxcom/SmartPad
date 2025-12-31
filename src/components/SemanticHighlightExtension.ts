@@ -416,7 +416,7 @@ export function tokenizeExpression(
   const operatorRegex = /^[\+\-\*\/\^\%]/;
   const parenRegex = /^[\(\)]/;
   const triggerRegex = /^=>/;
-  const unitRegex = /^[a-zA-Z°]+(?:\/[a-zA-Z°]+)?(?:\^?\d+)?/;
+  const unitRegex = /^[a-zA-Z°µμΩ][a-zA-Z0-9°µμΩ\/\^\-\*\·]*/;
   const currencySymbolRegex = /^[\$€£¥₹₿]/;
   const currencyCodeRegex = /^(CHF|CAD|AUD)\b/;
   const keywordRegex = /^(to|of|on|off|as|is)\b/;

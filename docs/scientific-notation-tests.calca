@@ -1,85 +1,20 @@
-// Scientific Notation Test Matrix
-// Use each section after applying the listed settings in the UI.
-// Goal: verify scientific notation formatting and live refresh when settings change.
-
-# Settings A (Decimal Places = 6, Upper Exponent = 6, Lower Exponent = -4)
-big_a = 1e9
-big_a =>
-edge_upper_a = 9.99e5
-edge_upper_a =>
-over_upper_a = 1e6
-over_upper_a =>
-edge_lower_a = 1e-4
-edge_lower_a =>
-under_lower_a = 9.99e-5
-under_lower_a =>
-tiny_a = 1e-9
-tiny_a =>
-neg_tiny_a = -1e-7
-neg_tiny_a =>
-caps_a = 1E-3
-caps_a =>
-plus_exp_a = 1e+3
-plus_exp_a =>
-expr_a = 2e4 + 3e3
-expr_a =>
-
-# Settings A (Units + conversions)
-distance_a = 1e6 m
-distance_a =>
-distance_a to km =>
-mass_a = 2.5e-4 kg
-mass_a =>
-mass_a to g =>
-power_a = 1e6 W
-power_a =>
-power_a to kW =>
-
-# Settings B (Decimal Places = 2, Upper Exponent = 6, Lower Exponent = -4)
-big_b = 1e9
-big_b =>
-tiny_b = 1e-7
-tiny_b =>
-round_b = 1.234567e5
-round_b =>
-round_small_b = 1.234567e-3
-round_small_b =>
-
-# Settings C (Decimal Places = 0, Upper Exponent = 6, Lower Exponent = -4)
-tiny_c = 1e-3
-tiny_c =>
-tiny_c2 = 1e-6
-tiny_c2 =>
-tiny_c3 = 1e-9
-tiny_c3 =>
-// Expect: scientific notation for very small values, not 0.
-
-# Settings D (Decimal Places = 6, Upper Exponent = 3, Lower Exponent = -2)
-upper_d = 1e3
-upper_d =>
-over_upper_d = 1.01e3
-over_upper_d =>
-lower_d = 1e-2
-lower_d =>
-under_lower_d = 9.9e-3
-under_lower_d =>
-
-# Settings E (Decimal Places = 6, Upper Exponent = 9, Lower Exponent = -12)
-big_e = 1e9
-big_e =>
-over_big_e = 1.01e9
-over_big_e =>
-tiny_e = 1e-9
-tiny_e =>
-under_tiny_e = 1e-12
-under_tiny_e =>
-// Expect: fewer values in scientific notation with these wider thresholds.
-
-# Refresh Check (do not edit the lines below; only change settings)
-probe = 5e-5
-probe =>
-probe2 = 5e6
-probe2 =>
-probe3 = 5e-9
-probe3 =>
-// Change settings A -> D -> E and confirm these results reformat each time.
+$ '/bin/zsh -lc '"'"'rg -n "semantic-unit|unit" src/components src/styles'"'"
+src/components/VariablePanel/VariablePanel.css:110:.variable-type-unit {
+src/components/SemanticHighlightExtension.ts:36:  | "unit"
+src/components/SemanticHighlightExtension.ts:311:        // It's an expression or includes units/currency/percent - tokenize it
+src/components/SemanticHighlightExtension.ts:317:    // Expression evaluation: 2 + 3 => or unit expressions: 100 ft to m
+src/components/SemanticHighlightExtension.ts:419:  const unitRegex = /^[a-zA-Z°]+(?:\/[a-zA-Z°]+)?(?:\^?\d+)?/;
+src/components/SemanticHighlightExtension.ts:531:    // Check for keywords (unit conversion and percentage operators)
+src/components/SemanticHighlightExtension.ts:546:    // Check for units (after numbers and variables, before operators)
+src/components/SemanticHighlightExtension.ts:564:        const unitMatch = !matched ? expr.substring(pos).match(unitRegex) : null;
+src/components/SemanticHighlightExtension.ts:565:        if (unitMatch) {
+src/components/SemanticHighlightExtension.ts:567:          const unitText = unitMatch[0];
+src/components/SemanticHighlightExtension.ts:568:          if (!variableContext.has(unitText)) {
+src/components/SemanticHighlightExtension.ts:570:              type: "unit",
+src/components/SemanticHighlightExtension.ts:572:              end: baseOffset + pos + unitText.length,
+src/components/SemanticHighlightExtension.ts:573:              text: unitText,
+src/components/SemanticHighlightExtension.ts:575:            pos += unitText.length;
+src/components/SyntaxExplorer.tsx:15:  const categories = ["all", ...getSyntaxByCategory("percentages").map(() => "percentages"), ...getSyntaxByCategory("variables").map(() => "variables"), ...getSyntaxByCategory("units").map(() => "units"), ...getSyntaxByCategory("currency").map(() => "currency")].filter((v, i, a) => a.indexOf(v) === i);
+src/components/Editor.css:159:.semantic-unit {
+src/components/VariablePanel/TemplatePanel.tsx:69:# Temperatures (ASCII units)
+src/components/VariablePanel/TemplatePanel.tsx:75:# Dimensional analysis and derived units

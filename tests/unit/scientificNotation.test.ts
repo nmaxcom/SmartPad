@@ -131,4 +131,23 @@ describe("Scientific notation formatting", () => {
       expect(standard.result).toBe("0.000001 J");
     }
   });
+
+  test("scientific trimming can be disabled for fixed mantissa digits", () => {
+    const trimmed = evaluateExpression("5e3 =>", {
+      decimalPlaces: 2,
+      scientificUpperThreshold: 1e3,
+      scientificTrimTrailingZeros: true,
+    });
+    const fixed = evaluateExpression("5e3 =>", {
+      decimalPlaces: 2,
+      scientificUpperThreshold: 1e3,
+      scientificTrimTrailingZeros: false,
+    });
+    expect(trimmed?.type).toBe("mathResult");
+    expect(fixed?.type).toBe("mathResult");
+    if (trimmed?.type === "mathResult" && fixed?.type === "mathResult") {
+      expect(trimmed.result).toBe("5e+3");
+      expect(fixed.result).toBe("5.00e+3");
+    }
+  });
 });

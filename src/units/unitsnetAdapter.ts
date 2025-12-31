@@ -1140,6 +1140,7 @@ export class SmartPadQuantity {
     options?: {
       scientificUpperThreshold?: number;
       scientificLowerThreshold?: number;
+      scientificTrimTrailingZeros?: boolean;
       preferBaseUnit?: boolean;
     }
   ): string {
@@ -1183,7 +1184,11 @@ export class SmartPadQuantity {
   private formatNumber(
     value: number,
     precision: number,
-    options?: { scientificUpperThreshold?: number; scientificLowerThreshold?: number }
+    options?: {
+      scientificUpperThreshold?: number;
+      scientificLowerThreshold?: number;
+      scientificTrimTrailingZeros?: boolean;
+    }
   ): string {
     if (!isFinite(value)) return "Infinity";
     if (value === 0) return "0";
@@ -1192,12 +1197,13 @@ export class SmartPadQuantity {
     const upperThreshold = options?.scientificUpperThreshold ?? 1e12;
     const lowerThreshold = options?.scientificLowerThreshold ?? 1e-4;
     const formatScientific = (num: number) => {
-      const s = num.toExponential(3);
+      const s = num.toExponential(Math.max(0, precision));
       const [mantissa, exp] = s.split("e");
-      const parts = mantissa.split(".");
-      const intPart = parts[0];
-      const fracPart = (parts[1] || "").padEnd(3, "0");
-      return `${intPart}.${fracPart}e${exp}`;
+      const shouldTrim = options?.scientificTrimTrailingZeros ?? true;
+      const outputMantissa = shouldTrim
+        ? mantissa.replace(/(?:\.0+|(\.\d+?)0+)$/, "$1")
+        : mantissa;
+      return `${outputMantissa}e${exp}`;
     };
     if (
       abs >= upperThreshold ||

@@ -5,6 +5,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
   decimalPlaces: 2, // Default to 2 decimal places for clean display
   scientificUpperExponent: 12,
   scientificLowerExponent: -4,
+  scientificTrimTrailingZeros: true,
   showVariablePanel: true,
   showTemplatePanel: true,
   showSettingsPanel: false,

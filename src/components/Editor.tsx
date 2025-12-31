@@ -198,6 +198,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
             decimalPlaces: settings.decimalPlaces,
             scientificUpperThreshold: Math.pow(10, settings.scientificUpperExponent),
             scientificLowerThreshold: Math.pow(10, settings.scientificLowerExponent),
+            scientificTrimTrailingZeros: settings.scientificTrimTrailingZeros,
           };
 
           // Evaluate the node ONLY for state updates (variables)
@@ -309,6 +310,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       settings.decimalPlaces,
       settings.scientificUpperExponent,
       settings.scientificLowerExponent,
+      settings.scientificTrimTrailingZeros,
     ]
   );
 
@@ -412,6 +414,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
     settings.decimalPlaces,
     settings.scientificUpperExponent,
     settings.scientificLowerExponent,
+    settings.scientificTrimTrailingZeros,
     editor,
     handleUpdateV2,
   ]);

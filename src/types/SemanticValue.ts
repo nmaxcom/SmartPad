@@ -13,6 +13,7 @@ export interface DisplayOptions {
   notation?: 'standard' | 'scientific' | 'engineering';
   scientificUpperThreshold?: number;
   scientificLowerThreshold?: number;
+  scientificTrimTrailingZeros?: boolean;
   preferBaseUnit?: boolean;
   showType?: boolean;
 }
@@ -146,11 +147,20 @@ export abstract class SemanticValue {
     const abs = Math.abs(value);
     const upperThreshold = options?.scientificUpperThreshold ?? 1e12;
     const lowerThreshold = options?.scientificLowerThreshold ?? 1e-4;
+    const formatScientific = (num: number, fracDigits: number) => {
+      const s = num.toExponential(Math.max(0, fracDigits));
+      const [mantissa, exp] = s.split("e");
+      const shouldTrim = options?.scientificTrimTrailingZeros ?? true;
+      const outputMantissa = shouldTrim
+        ? mantissa.replace(/(?:\.0+|(\.\d+?)0+)$/, "$1")
+        : mantissa;
+      return `${outputMantissa}e${exp}`;
+    };
     if (
       abs >= upperThreshold ||
       (abs > 0 && lowerThreshold > 0 && abs < lowerThreshold)
     ) {
-      return value.toExponential(3);
+      return formatScientific(value, precision);
     }
     
     // For regular numbers, remove trailing zeros
@@ -161,7 +171,7 @@ export abstract class SemanticValue {
     const fixed = value.toFixed(precision);
     const fixedNumber = parseFloat(fixed);
     if (fixedNumber === 0) {
-      return value.toExponential(3);
+      return formatScientific(value, precision);
     }
 
     return fixedNumber.toString();

@@ -19,11 +19,11 @@ PI * 2 =>
 
 # Scientific notation: huge/small values are shown with e-notation (thresholds in Settings)
 
-light speed = 3e8
+light speed = 3e8 m/s
 light speed =>
-tiny mass = 4.2e-9
+tiny mass = 4.2e-9 kg
 tiny mass =>
-edge tiny = 9.99e-5
+edge tiny = 9.99e-5 s
 edge tiny =>
 
 # Variables: spaces and phrases are ok

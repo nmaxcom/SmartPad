@@ -27,6 +27,7 @@ export interface EvaluationContext {
   decimalPlaces: number;
   scientificUpperThreshold?: number;
   scientificLowerThreshold?: number;
+  scientificTrimTrailingZeros?: boolean;
 }
 
 /**

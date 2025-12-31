@@ -513,12 +513,13 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     const upperThreshold = displayOptions.scientificUpperThreshold ?? 1e12;
     const lowerThreshold = displayOptions.scientificLowerThreshold ?? 1e-4;
     const formatScientific = (num: number) => {
-      const s = num.toExponential(3);
+      const s = num.toExponential(Math.max(0, precision));
       const [mantissa, exp] = s.split("e");
-      const parts = mantissa.split(".");
-      const intPart = parts[0];
-      const fracPart = (parts[1] || "").padEnd(3, "0");
-      return `${intPart}.${fracPart}e${exp}`;
+      const shouldTrim = displayOptions.scientificTrimTrailingZeros ?? true;
+      const outputMantissa = shouldTrim
+        ? mantissa.replace(/(?:\.0+|(\.\d+?)0+)$/, "$1")
+        : mantissa;
+      return `${outputMantissa}e${exp}`;
     };
     if (
       abs >= upperThreshold ||
@@ -540,6 +541,7 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
       precision: context.decimalPlaces,
       scientificUpperThreshold: context.scientificUpperThreshold,
       scientificLowerThreshold: context.scientificLowerThreshold,
+      scientificTrimTrailingZeros: context.scientificTrimTrailingZeros,
     };
   }
 
