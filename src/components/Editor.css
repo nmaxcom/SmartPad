@@ -269,6 +269,7 @@ body.number-scrubbing * {
   padding: 2px 8px;
   border-radius: 6px;
   user-select: text;
+  border: 1px solid rgba(255, 107, 157, 0.25);
 }
 
 /* Display error text using data-result attribute */
@@ -313,4 +314,66 @@ body.number-scrubbing * {
 
 .semantic-result-container {
   margin-left: 6px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.semantic-result-delta {
+  margin-left: 6px;
+  font-size: 0.75em;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  padding: 1px 6px;
+  user-select: none;
+  pointer-events: none;
+}
+
+.semantic-result-flash {
+  animation: resultFlash 900ms ease-out;
+}
+
+@keyframes resultFlash {
+  0% {
+    color: #e5dcff;
+    text-shadow: 0 0 10px rgba(160, 130, 255, 0.75);
+  }
+  50% {
+    color: #c9b6ff;
+    text-shadow: 0 0 6px rgba(160, 130, 255, 0.45);
+  }
+  100% {
+    color: var(--color-accent);
+    text-shadow: none;
+  }
+}
+
+.results-delta-off .semantic-result-delta {
+  display: none;
+}
+
+.results-pulse-off .semantic-result-flash {
+  animation: none;
+}
+
+.results-borders-off .semantic-result-display,
+.results-borders-off .semantic-assignment-display {
+  border-color: transparent;
+}
+
+.results-bg-off .semantic-result-display,
+.results-bg-off .semantic-assignment-display,
+.results-bg-off .semantic-result {
+  background-color: transparent;
+}
+
+.errors-borders-off .semantic-error-result,
+.errors-borders-off .semantic-error {
+  border-color: transparent;
+}
+
+.errors-bg-off .semantic-error-result,
+.errors-bg-off .semantic-error {
+  background-color: transparent;
 }

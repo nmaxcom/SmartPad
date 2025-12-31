@@ -54,6 +54,43 @@ export const ResultsDecoratorExtension = Extension.create({
             });
             return text;
           };
+          const parseNumberParts = (value: string) => {
+            const trimmed = value.trim();
+            const match = trimmed.match(/^([^0-9+-]*)([-+]?[0-9.,]*\\.?[0-9]+)(.*)$/);
+            if (!match) return null;
+            const rawNumber = match[2].replace(/,/g, "");
+            const numberValue = Number(rawNumber);
+            if (!Number.isFinite(numberValue)) return null;
+            return {
+              prefix: match[1],
+              numberValue,
+              suffix: match[3],
+              rawNumber,
+            };
+          };
+          const countDecimals = (rawNumber: string): number => {
+            const parts = rawNumber.split(".");
+            if (parts.length < 2) return 0;
+            return parts[1].length;
+          };
+          const computeDelta = (prevValue: string, nextValue: string): string | null => {
+            const prev = parseNumberParts(prevValue);
+            const next = parseNumberParts(nextValue);
+            if (!prev || !next) return null;
+            if (prev.prefix !== next.prefix || prev.suffix !== next.suffix) return null;
+            const delta = next.numberValue - prev.numberValue;
+            if (!Number.isFinite(delta) || delta === 0) return null;
+            const decimals = Math.min(
+              6,
+              Math.max(countDecimals(prev.rawNumber), countDecimals(next.rawNumber))
+            );
+            const abs = Math.abs(delta);
+            const formatted = decimals > 0 ? abs.toFixed(decimals) : Math.round(abs).toString();
+            const sign = delta >= 0 ? "+" : "-";
+            return `${sign}${next.prefix}${formatted}${next.suffix}`;
+          };
+
+          const resultHistory = new Map<string, string>();
 
           // Only eligible node types should create widgets
           const isWidgetEligible = (rn: any) =>
@@ -172,11 +209,11 @@ export const ResultsDecoratorExtension = Extension.create({
           });
 
           // Update inline result nodes from bottom to top so positions stay valid
-          for (let i = paragraphIndex.length - 1; i >= 1; i--) {
-            const info = paragraphIndex[i];
-            if (!info) continue;
-            const arrowIdx = info.text.indexOf("=>");
-            if (arrowIdx < 0) {
+            for (let i = paragraphIndex.length - 1; i >= 1; i--) {
+              const info = paragraphIndex[i];
+              if (!info) continue;
+              const arrowIdx = info.text.indexOf("=>");
+              if (arrowIdx < 0) {
               if (!resultNodeType) {
                 continue;
               }
@@ -202,9 +239,10 @@ export const ResultsDecoratorExtension = Extension.create({
               continue;
             }
 
-            const exprText = info.text.substring(0, arrowIdx).trim();
-            // Find best matching eligible render node by comparing left-of-arrow text
-            let matched: any | null = null;
+              const exprText = info.text.substring(0, arrowIdx).trim();
+              const historyKey = `${i}:${normalize(exprText)}`;
+              // Find best matching eligible render node by comparing left-of-arrow text
+              let matched: any | null = null;
             const matchByExpression = (candidates: any[]): any | null => {
               for (const rn of candidates) {
                 const displayText = String((rn as any).displayText || "");
@@ -256,7 +294,13 @@ export const ResultsDecoratorExtension = Extension.create({
 
               const isError = matched.type === "error";
               const normalizedResult = resultText.trim();
-              const renderText = normalizedResult;
+              const previousValue = resultHistory.get(historyKey);
+              const hasChanged =
+                previousValue !== undefined && previousValue !== normalizedResult && !isError;
+              const deltaValue = hasChanged
+                ? computeDelta(previousValue, normalizedResult) || "updated"
+                : "";
+              const flashValue = hasChanged;
               const existingResult = slice.childCount === 1 ? slice.child(0) : null;
               const existingText = existingResult ? existingResult.textContent || "" : "";
               const hasExpected =
@@ -265,16 +309,23 @@ export const ResultsDecoratorExtension = Extension.create({
                 existingText === normalizedResult &&
                 !!existingResult.attrs.isError === isError;
 
-              if (!hasExpected) {
-                tr.delete(afterArrowPos, lineEndPos);
-                const content = normalizedResult
-                  ? view.state.schema.text(normalizedResult)
-                  : undefined;
-                tr.insert(
-                  afterArrowPos,
-                  resultNodeType.create({ value: normalizedResult, isError }, content)
-                );
-                changed = true;
+                if (!hasExpected) {
+                  tr.delete(afterArrowPos, lineEndPos);
+                  const content = normalizedResult
+                    ? view.state.schema.text(normalizedResult)
+                    : undefined;
+                  tr.insert(
+                    afterArrowPos,
+                    resultNodeType.create(
+                      { value: normalizedResult, isError, flash: flashValue, delta: deltaValue },
+                      content
+                    )
+                  );
+                  changed = true;
+                }
+
+              if (!isError) {
+                resultHistory.set(historyKey, normalizedResult);
               }
             }
 

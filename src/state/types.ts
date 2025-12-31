@@ -69,6 +69,13 @@ export interface SettingsState {
   decimalPlaces: number;
   showVariablePanel: boolean;
   showTemplatePanel: boolean;
+  showSettingsPanel: boolean;
+  showResultPulse: boolean;
+  showResultDelta: boolean;
+  showResultBorders: boolean;
+  showResultBackground: boolean;
+  showErrorBorders: boolean;
+  showErrorBackground: boolean;
   // Future: theme, fontSize, autoSave, etc.
 }
 

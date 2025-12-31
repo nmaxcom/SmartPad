@@ -698,15 +698,23 @@ export class SmartPadQuantity {
     }
 
     if (this.isDimensionless()) {
-      return other._quantity
-        ? SmartPadQuantity.fromQuantity(new Quantity(resultValue, other._quantity.unit))
-        : new SmartPadQuantity(resultValue, other._unit, other._unitsnetValue);
+      if (other._quantity) {
+        return SmartPadQuantity.fromQuantity(new Quantity(resultValue, other._quantity.unit));
+      }
+      if (other._unitsnetValue) {
+        return SmartPadQuantity.fromValueAndUnit(resultValue, other._unit);
+      }
+      return new SmartPadQuantity(resultValue, other._unit, other._unitsnetValue);
     }
 
     if (other.isDimensionless()) {
-      return this._quantity
-        ? SmartPadQuantity.fromQuantity(new Quantity(resultValue, this._quantity.unit))
-        : new SmartPadQuantity(resultValue, this._unit, this._unitsnetValue);
+      if (this._quantity) {
+        return SmartPadQuantity.fromQuantity(new Quantity(resultValue, this._quantity.unit));
+      }
+      if (this._unitsnetValue) {
+        return SmartPadQuantity.fromValueAndUnit(resultValue, this._unit);
+      }
+      return new SmartPadQuantity(resultValue, this._unit, this._unitsnetValue);
     }
 
     if (this._quantity || other._quantity) {
@@ -847,9 +855,13 @@ export class SmartPadQuantity {
     }
 
     if (other.isDimensionless()) {
-      return this._quantity
-        ? SmartPadQuantity.fromQuantity(new Quantity(resultValue, this._quantity.unit))
-        : new SmartPadQuantity(resultValue, this._unit, this._unitsnetValue);
+      if (this._quantity) {
+        return SmartPadQuantity.fromQuantity(new Quantity(resultValue, this._quantity.unit));
+      }
+      if (this._unitsnetValue) {
+        return SmartPadQuantity.fromValueAndUnit(resultValue, this._unit);
+      }
+      return new SmartPadQuantity(resultValue, this._unit, this._unitsnetValue);
     }
 
     if (this._quantity || other._quantity) {
@@ -868,6 +880,11 @@ export class SmartPadQuantity {
         // Length / Time = Speed
         if (this._unitsnetValue instanceof Length && other._unitsnetValue instanceof Duration) {
           return SmartPadQuantity.deriveSpeed(this, other);
+        }
+        // Length / Speed = Duration
+        if (this._unitsnetValue instanceof Length && other._unitsnetValue instanceof Speed) {
+          const seconds = this._unitsnetValue.Meters / other._unitsnetValue.MetersPerSecond;
+          return SmartPadQuantity.fromUnitsNet(Duration.FromSeconds(seconds));
         }
         // Speed / Time = Acceleration
         if (this._unitsnetValue instanceof Speed && other._unitsnetValue instanceof Duration) {

@@ -8,6 +8,7 @@ import VariablePanel from "./components/VariablePanel/VariablePanel";
 import TemplatePanel from "./components/VariablePanel/TemplatePanel";
 import SaveLoadButtons from "./components/VariablePanel/SaveLoadButtons";
 import { SettingsModal } from "./components/ui/SettingsModal";
+import { SettingsPanel } from "./components/ui/SettingsPanel";
 import { tracer, setLogLevel, LogLevel } from "./eval/tracing";
 
 // Expose tracing system to browser console for debugging
@@ -60,10 +61,20 @@ function AppContent() {
   const handleCloseSettings = () => setIsSettingsOpen(false);
 
   // Show sidebar only if at least one panel is enabled
-  const showSidebar = settings.showVariablePanel || settings.showTemplatePanel;
+  const showSidebar =
+    settings.showVariablePanel || settings.showTemplatePanel || settings.showSettingsPanel;
+  const appClassName = [
+    "app",
+    settings.showResultPulse ? "results-pulse-on" : "results-pulse-off",
+    settings.showResultDelta ? "results-delta-on" : "results-delta-off",
+    settings.showResultBorders ? "results-borders-on" : "results-borders-off",
+    settings.showResultBackground ? "results-bg-on" : "results-bg-off",
+    settings.showErrorBorders ? "errors-borders-on" : "errors-borders-off",
+    settings.showErrorBackground ? "errors-bg-on" : "errors-bg-off",
+  ].join(" ");
 
   return (
-    <div className="app">
+    <div className={appClassName}>
       <VariableProvider>
         <EditorProvider>
           <AppHeader onSettingsClick={handleOpenSettings} />
@@ -81,6 +92,7 @@ function AppContent() {
                     </>
                   )}
                   {settings.showTemplatePanel && <TemplatePanel />}
+                  {settings.showSettingsPanel && <SettingsPanel />}
                 </div>
               )}
             </AppContainer>

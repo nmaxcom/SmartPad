@@ -251,6 +251,49 @@ test.describe("User Issues Fixed", () => {
     expect(result || "").not.toContain("time =");
   });
 
+  test("commute time stays as duration and percent off speeds work", async ({ page }) => {
+    const pm = page.locator(".ProseMirror");
+    await pm.click();
+    await page.keyboard.press("Control+a");
+    await page.keyboard.press("Delete");
+
+    await pm.type("commute distance = 18 km");
+    await page.keyboard.press("Enter");
+    await pm.type("average speed = 45 km/h");
+    await page.keyboard.press("Enter");
+    await pm.type("travel time = commute distance / average speed =>");
+    await page.keyboard.press("Enter");
+    await pm.type("travel time to min =>");
+    await page.keyboard.press("Enter");
+    await pm.type("slowdown = 20%");
+    await page.keyboard.press("Enter");
+    await pm.type("slow speed = slowdown off average speed =>");
+    await page.keyboard.press("Enter");
+    await pm.type("slow travel time = commute distance / slow speed =>");
+    await page.keyboard.press("Enter");
+    await pm.type("slow travel time to min =>");
+    await waitForUIRenderComplete(page);
+
+    const travelTimeResult = await page
+      .locator(".ProseMirror p", { hasText: "travel time = commute distance / average speed" })
+      .locator(".semantic-result-display")
+      .getAttribute("data-result");
+    expect(travelTimeResult || "").toMatch(/\b(min|h)\b/);
+
+    const travelTimeMinResult = await page
+      .locator(".ProseMirror p", { hasText: /^travel time to min/ })
+      .locator(".semantic-result-display")
+      .getAttribute("data-result");
+    expect(travelTimeMinResult || "").toContain("min");
+
+    const slowSpeedResult = await page
+      .locator(".ProseMirror p", { hasText: /^slow speed =/ })
+      .locator(".semantic-result-display")
+      .getAttribute("data-result");
+    expect(slowSpeedResult || "").toMatch(/\b(km\/h|m\/s)\b/);
+    expect(slowSpeedResult || "").not.toMatch(/^0(?:\.0+)?\s*(km\/h|m\/s)/);
+  });
+
   test("incomplete unit errors clear once the unit is completed", async ({ page }) => {
     await page.evaluate(() => {
       (window as any).tiptapEditor?.commands?.setContent("<p>len = missingVar</p>");

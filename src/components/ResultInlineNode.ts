@@ -17,6 +17,12 @@ export const ResultInlineNode = Node.create({
       isError: {
         default: false,
       },
+      flash: {
+        default: false,
+      },
+      delta: {
+        default: "",
+      },
     };
   },
 
@@ -27,7 +33,38 @@ export const ResultInlineNode = Node.create({
   renderHTML({ node }) {
     const value = node.textContent || node.attrs.value || "";
     const isError = !!node.attrs.isError;
+    const flash = !!node.attrs.flash;
+    const delta = node.attrs.delta || "";
     const resultClass = isError ? "semantic-error-result" : "semantic-result-display";
+
+    const resultClasses = [resultClass];
+    if (!isError && flash) {
+      resultClasses.push("semantic-result-flash");
+    }
+
+    const contentNode: any[] = [
+      "span",
+      {
+        class: resultClasses.join(" "),
+        "data-result": value,
+        title: value,
+        "aria-label": value,
+      },
+      0,
+    ];
+
+    const deltaNode =
+      !isError && delta
+        ? [
+            "span",
+            {
+              class: "semantic-result-delta",
+              "data-delta": delta,
+              "aria-hidden": "true",
+            },
+            delta,
+          ]
+        : null;
 
     return [
       "span",
@@ -38,16 +75,8 @@ export const ResultInlineNode = Node.create({
       [
         "span",
         { class: "semantic-result-container" },
-        [
-          "span",
-          {
-            class: resultClass,
-            "data-result": value,
-            title: value,
-            "aria-label": value,
-          },
-          0,
-        ],
+        contentNode,
+        ...(deltaNode ? [deltaNode] : []),
       ],
     ];
   },

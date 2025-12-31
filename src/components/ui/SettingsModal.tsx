@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef } from "react";
 import { useSettingsContext } from "../../state/SettingsContext";
+import { SettingsSections } from "./SettingsSections";
 import "./SettingsModal.css";
 
 interface SettingsModalProps {
@@ -12,7 +13,7 @@ interface SettingsModalProps {
  * Provides settings configuration interface with modern UI
  */
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
-  const { settings, updateSetting, resetSettings } = useSettingsContext();
+  const { resetSettings } = useSettingsContext();
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Handle Escape key press
@@ -53,15 +54,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     };
   }, [isOpen, handleKeyDown]);
 
-  // Handle decimal places change
-  const handleDecimalPlacesChange = useCallback(
-    (value: number) => {
-      const clampedValue = Math.max(0, Math.min(10, value)); // Limit to 0-10 decimal places
-      updateSetting("decimalPlaces", clampedValue);
-    },
-    [updateSetting]
-  );
-
   // Handle reset settings
   const handleReset = useCallback(() => {
     if (window.confirm("Reset all settings to defaults?")) {
@@ -93,79 +85,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
         {/* Content */}
         <div className="settings-content">
-          <div className="settings-section">
-            <h3 className="settings-section-title">Display Options</h3>
-
-            <div className="settings-item">
-              <div className="settings-item-info">
-                <label htmlFor="decimal-places" className="settings-label">
-                  Decimal Places
-                </label>
-                <p className="settings-description">
-                  Number of decimal places to show in results and variable panel (0-10)
-                </p>
-              </div>
-              <div className="settings-control">
-                <input
-                  id="decimal-places"
-                  type="number"
-                  min="0"
-                  max="10"
-                  value={settings.decimalPlaces}
-                  onChange={(e) => handleDecimalPlacesChange(parseInt(e.target.value) || 0)}
-                  className="settings-number-input"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="settings-section">
-            <h3 className="settings-section-title">Layout</h3>
-
-            <div className="settings-item">
-              <div className="settings-item-info">
-                <label htmlFor="show-variable-panel" className="settings-label">
-                  Show Variable Panel
-                </label>
-                <p className="settings-description">
-                  Display the panel showing all defined variables and their current values
-                </p>
-              </div>
-              <div className="settings-control">
-                <label className="toggle-switch">
-                  <input
-                    id="show-variable-panel"
-                    type="checkbox"
-                    checked={settings.showVariablePanel}
-                    onChange={(e) => updateSetting("showVariablePanel", e.target.checked)}
-                  />
-                  <span className="toggle-slider"></span>
-                </label>
-              </div>
-            </div>
-
-            <div className="settings-item">
-              <div className="settings-item-info">
-                <label htmlFor="show-template-panel" className="settings-label">
-                  Show Template Panel
-                </label>
-                <p className="settings-description">
-                  Display the panel with quick template examples to get started
-                </p>
-              </div>
-              <div className="settings-control">
-                <label className="toggle-switch">
-                  <input
-                    id="show-template-panel"
-                    type="checkbox"
-                    checked={settings.showTemplatePanel}
-                    onChange={(e) => updateSetting("showTemplatePanel", e.target.checked)}
-                  />
-                  <span className="toggle-slider"></span>
-                </label>
-              </div>
-            </div>
-          </div>
+          <SettingsSections />
         </div>
 
         {/* Footer */}

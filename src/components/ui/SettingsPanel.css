@@ -1,0 +1,25 @@
+/* Settings panel - sidebar variant of the modal */
+
+.settings-panel {
+  width: 100%;
+  max-width: none;
+  max-height: 520px;
+  animation: none;
+  overflow: hidden;
+}
+
+.settings-panel-header {
+  padding: var(--spacing-4) var(--spacing-4) var(--spacing-2);
+}
+
+.settings-panel-content {
+  padding: 0 var(--spacing-4);
+}
+
+.settings-panel-footer {
+  padding: var(--spacing-3) var(--spacing-4) var(--spacing-4);
+}
+
+.settings-panel .settings-item {
+  padding: 0.75rem 0;
+}

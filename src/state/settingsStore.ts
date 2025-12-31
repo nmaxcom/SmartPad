@@ -3,8 +3,15 @@ import { SettingsState, SettingsAction } from "./types";
 // Default settings configuration
 export const DEFAULT_SETTINGS: SettingsState = {
   decimalPlaces: 2, // Default to 2 decimal places for clean display
-  showVariablePanel: true, // Show variable panel by default
-  showTemplatePanel: true, // Show template panel by default
+  showVariablePanel: true,
+  showTemplatePanel: true,
+  showSettingsPanel: false,
+  showResultPulse: true,
+  showResultDelta: true,
+  showResultBorders: true,
+  showResultBackground: true,
+  showErrorBorders: true,
+  showErrorBackground: true,
 };
 
 // localStorage key for settings persistence
