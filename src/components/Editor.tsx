@@ -404,26 +404,21 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
 
   // Legacy forceExpressionUpdate function removed - AST pipeline handles this automatically
 
-  // Custom method to properly set multi-line content using TipTap best practices
+  // Custom method to properly set multi-line content while preserving empty lines
   const setSmartPadContent = useCallback(
     (content: string) => {
       if (!editor) return;
 
-      // Clear existing content first
-      editor.commands.clearContent();
-
-      // Split content by newlines
       const lines = content.split("\n");
-
-      // Insert content line by line using proper TipTap patterns
-      lines.forEach((line, index) => {
-        if (index > 0) {
-          // Create a new paragraph for each line to preserve line breaks
-          editor.commands.enter();
-        }
-        // Insert the line content
-        editor.commands.insertContent(line);
-      });
+      const doc = {
+        type: "doc",
+        content: lines.map((line) =>
+          line === ""
+            ? { type: "paragraph" }
+            : { type: "paragraph", content: [{ type: "text", text: line }] }
+        ),
+      };
+      editor.commands.setContent(doc, false);
 
       // Focus and position cursor at the end
       editor.commands.focus();
