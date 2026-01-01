@@ -257,6 +257,51 @@ test.describe("User Issues Fixed", () => {
     await expect(page.locator(".semantic-result-display")).toHaveCount(0);
   });
 
+  test("undo does not get stuck on result updates", async ({ page }) => {
+    const pm = page.locator(".ProseMirror");
+    await pm.click();
+    await page.keyboard.press("Control+a");
+    await page.keyboard.press("Delete");
+
+    await pm.type("2 + 3 =>");
+    await waitForUIRenderComplete(page);
+
+    const getPlainText = async () =>
+      page.evaluate(() => {
+        const editor = (window as any).tiptapEditor;
+        if (!editor) return "";
+        const lines: string[] = [];
+        editor.state.doc.forEach((node: any) => {
+          if (!node.isTextblock) return;
+          let text = "";
+          node.descendants((child: any) => {
+            if (child.type?.name === "resultToken") return false;
+            if (child.isText) text += child.text;
+            return undefined;
+          });
+          lines.push(text);
+        });
+        return lines.join("\n");
+      });
+
+    const beforeUndo = await getPlainText();
+    const undoKey = process.platform === "darwin" ? "Meta+z" : "Control+z";
+    const redoKey = process.platform === "darwin" ? "Meta+Shift+z" : "Control+Shift+z";
+
+    await page.keyboard.press(undoKey);
+    await waitForUIRenderComplete(page);
+
+    const afterUndo = await getPlainText();
+    expect(afterUndo).not.toBe(beforeUndo);
+
+    await page.keyboard.press(redoKey);
+    await waitForUIRenderComplete(page);
+
+    const afterRedo = await getPlainText();
+    expect(afterRedo).toBe(beforeUndo);
+    await expect(page.locator(".semantic-result-display").last()).toContainText("5");
+  });
+
   test("clipboard text includes results without extra blank lines", async ({ page }) => {
     await page.evaluate(() => {
       (window as any).tiptapEditor?.commands?.setContent("<p>2 + 3 =></p><p>4 + 4 =></p>");

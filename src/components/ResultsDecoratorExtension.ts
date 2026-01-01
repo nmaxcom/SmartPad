@@ -367,6 +367,7 @@ export const ResultsDecoratorExtension = Extension.create({
             }
 
             if (changed || decoChanged) {
+              tr.setMeta("addToHistory", false);
               view.dispatch(tr);
             }
 
