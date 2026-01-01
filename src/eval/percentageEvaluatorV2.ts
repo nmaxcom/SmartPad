@@ -128,25 +128,18 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
       ? (node as ExpressionNode).expression
       : (node as CombinedAssignmentNode).expression;
     
-    // Check for percentage operation patterns
-    return (
-      // "20% of 100" 
-      /\d+(?:\.\d+)?\s*%\s*of\s+/.test(expr) ||
-      // "20% on/off 100"
-      /\d+(?:\.\d+)?\s*%\s*(on|off)\s+/.test(expr) ||
-      // "A is what % of B"
-      /\bis\s+what\s+%\s+of\b/.test(expr) ||
-      // "what % is A of B"
-      /^what\s+%\s+is\b/.test(expr) ||
-      // "0.2 as %"
-      /\bas\s+%\s*$/.test(expr) ||
-      // Implicit "X of Y" where X is a percent-like value
-      /\bof\b/.test(expr) ||
-      // "discount on/off 100" where discount is a percentage variable
-      /\b(on|off)\b/.test(expr) ||
-      // Contains percentage values that need special handling
-      /%/.test(expr)
-    );
+    // Check for percentage operation patterns that need special handling
+    if (/\d+(?:\.\d+)?\s*%\s*of\s+/.test(expr)) return true; // "20% of 100"
+    if (/\d+(?:\.\d+)?\s*%\s*(on|off)\s+/.test(expr)) return true; // "20% on/off 100"
+    if (/\bis\s+what\s+%\s+of\b/.test(expr)) return true; // "A is what % of B"
+    if (/^what\s+%\s+is\b/.test(expr)) return true; // "what % is A of B"
+    if (/\bas\s+%\s*$/.test(expr)) return true; // "0.2 as %"
+    if (/\bof\b/.test(expr)) return true; // Implicit "X of Y" patterns
+    if (/\b(on|off)\b/.test(expr)) return true; // "discount on/off 100"
+    if (this.parseTrailingPercentChain(expr)) return true; // "base + 10% - 5%"
+
+    // Let semantic arithmetic handle plain % literals in regular math expressions.
+    return false;
   }
   
   /**

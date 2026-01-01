@@ -61,23 +61,23 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
       });
       
       // Parse the expression as a semantic value when it's a literal,
-      // otherwise fall back to semantic arithmetic or numeric evaluation.
+      // otherwise evaluate via semantic component parsing.
       let semanticValue =
         SemanticParsers.parse(combNode.expression) ||
-        this.resolveVariableReference(combNode.expression, context) ||
-        SimpleExpressionParser.parseArithmetic(combNode.expression, context);
+        this.resolveVariableReference(combNode.expression, context);
 
       if (!semanticValue && combNode.components.length > 0) {
-        const hasCurrency = SimpleExpressionParser.containsCurrency(
+        semanticValue = SimpleExpressionParser.parseComponents(
           combNode.components,
           context
         );
-        if (hasCurrency) {
-          semanticValue = SimpleExpressionParser.parseComponents(
-            combNode.components,
-            context
-          );
-        }
+      }
+
+      if (!semanticValue) {
+        semanticValue = SimpleExpressionParser.parseArithmetic(
+          combNode.expression,
+          context
+        );
       }
 
       if (!semanticValue) {

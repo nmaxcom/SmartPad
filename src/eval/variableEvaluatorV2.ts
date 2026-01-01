@@ -18,6 +18,8 @@ import {
 } from "./renderNodes";
 import { ErrorValue, SemanticValueTypes, NumberValue, DisplayOptions } from "../types";
 import { parseAndEvaluateExpression } from "../parsing/expressionParser";
+import { parseExpressionComponents } from "../parsing/expressionComponents";
+import { SimpleExpressionParser } from "./expressionEvaluatorV2";
 
 /**
  * Semantic-aware variable evaluator
@@ -61,24 +63,42 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
 
         // If this looks like a non-literal expression, try evaluating it numerically
         if (errorValue.getErrorType() === "parse" && varNode.rawValue) {
-          const evalResult = parseAndEvaluateExpression(
-            varNode.rawValue,
-            context.variableContext
-          );
-
-          if (evalResult.error) {
-            console.warn(
-              "VariableEvaluatorV2: Expression evaluation error:",
-              evalResult.error
+          let resolvedValue: import("../types").SemanticValue | null;
+          try {
+            resolvedValue = SimpleExpressionParser.parseComponents(
+              parseExpressionComponents(varNode.rawValue),
+              context
             );
-            return this.createErrorNode(
-              `Invalid variable value: ${evalResult.error}`,
-              varNode.variableName,
-              context.lineNumber
+          } catch (parseError) {
+            resolvedValue = ErrorValue.parseError(
+              parseError instanceof Error ? parseError.message : String(parseError)
             );
           }
 
-          semanticValue = NumberValue.from(evalResult.value);
+          if (!resolvedValue || SemanticValueTypes.isError(resolvedValue)) {
+            const evalResult = parseAndEvaluateExpression(
+              varNode.rawValue,
+              context.variableContext
+            );
+
+            if (evalResult.error) {
+              console.warn(
+                "VariableEvaluatorV2: Expression evaluation error:",
+                evalResult.error
+              );
+              return this.createErrorNode(
+                `Invalid variable value: ${evalResult.error}`,
+                varNode.variableName,
+                context.lineNumber
+              );
+            }
+
+            resolvedValue = NumberValue.from(evalResult.value);
+          }
+
+          if (resolvedValue) {
+            semanticValue = resolvedValue;
+          }
         } else {
           console.warn(
             "VariableEvaluatorV2: Semantic value is an error:",

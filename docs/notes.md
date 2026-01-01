@@ -7,9 +7,15 @@ parsify.app, figr.app, aybo.app, calca.io, numi.app, Soulver 3, notepadcalculato
 https://dribbble.com/shots/24984990-Deposit-Calculator-UI-Kit-Widgets
 
 # nuevas ideas
+undo!
 mostrar ventanita/prediccion al empezar a escribir variable name
 left panel con "my sheets"
-copiar del editor a otro lado muestra empty lines in between each line
+
+percentages:
+Value by percent part	5% of what is 6 EUR
+Value by percent addition	5% on what is 6 EUR
+Value by percent subtraction	5% off what is 6 EUR
+writing 0.05 or 5% should work equally (ej )
 
 # discarded bugs/ideas
 - very hard to select text to delete or copy (specially results): not worth it atm (easiest solution: Intercept the copy event and synthesise the clipboard text)

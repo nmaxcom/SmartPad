@@ -37,6 +37,7 @@ import { evaluateUnitsNetExpression, expressionContainsUnitsNet } from "./unitsn
 import { SmartPadQuantity } from "./unitsnetAdapter";
 import { CurrencyValue, UnitValue, NumberValue, PercentageValue, DisplayOptions } from "../types";
 import { Variable } from "../state/types";
+import { parseExpressionComponents } from "../parsing/expressionComponents";
 
 function rewriteSimpleTimeLiterals(expression: string): string {
   return expression.replace(/(\d+(?:\.\d+)?)\s*(h|min|day)\b/g, (_m, num, unit) => {
@@ -354,13 +355,23 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
   private evaluateUnitsNetVariableAssignment(
     node: VariableAssignmentNode,
     context: EvaluationContext
-  ): RenderNode {
+  ): RenderNode | null {
     const { variableStore } = context;
     const displayOptions = this.getDisplayOptions(context);
 
     try {
       // Parse the value to extract units
       const valueStr = (node.rawValue || node.parsedValue?.toString() || "").trim();
+      let components: ExpressionComponent[] = [];
+      try {
+        components = parseExpressionComponents(valueStr);
+      } catch {
+        components = [];
+      }
+
+      if (components.length > 0 && this.shouldDeferToSemanticEvaluator(components, valueStr, context)) {
+        return null;
+      }
 
       // Check if this is a units expression, mathematical constants, or variables
       const hasUnits = expressionContainsUnitsNet(valueStr);

@@ -4,11 +4,13 @@
  * Ensures chained arithmetic preserves currency semantics.
  */
 
-import { parseLine } from "../../src/parsing/astParser";
+import { parseContent, parseLine } from "../../src/parsing/astParser";
 import { CombinedAssignmentEvaluatorV2 } from "../../src/eval/combinedAssignmentEvaluatorV2";
 import { ExpressionEvaluatorV2 } from "../../src/eval/expressionEvaluatorV2";
+import { VariableEvaluatorV2 } from "../../src/eval/variableEvaluatorV2";
+import { defaultRegistry, setupDefaultEvaluators } from "../../src/eval";
 import { ReactiveVariableStore } from "../../src/state/variableStore";
-import { CurrencyValue } from "../../src/types";
+import { CurrencyValue, NumberValue } from "../../src/types";
 import { Variable } from "../../src/state/types";
 
 describe("Currency Expression Evaluation", () => {
@@ -124,5 +126,123 @@ describe("Currency Expression Evaluation", () => {
 
     const stored = variableStore.getVariable("subt");
     expect(stored?.value.toString()).toBe("$182");
+  });
+
+  test("variable assignment preserves currency for arithmetic without =>", () => {
+    const now = new Date();
+    const variableStore = new ReactiveVariableStore();
+    const variableContext = new Map<string, Variable>([
+      [
+        "HrsPerMonth",
+        {
+          name: "HrsPerMonth",
+          value: NumberValue.from(160),
+          rawValue: "160",
+          createdAt: now,
+          updatedAt: now,
+        },
+      ],
+      [
+        "RatePerHour",
+        {
+          name: "RatePerHour",
+          value: new CurrencyValue("$", 4),
+          rawValue: "$4",
+          createdAt: now,
+          updatedAt: now,
+        },
+      ],
+    ]);
+
+    const astNode = parseLine("Cost = HrsPerMonth * RatePerHour", 1);
+    const evaluator = new VariableEvaluatorV2();
+    const result = evaluator.evaluate(astNode, {
+      variableStore,
+      variableContext,
+      lineNumber: 1,
+      decimalPlaces: 6,
+    });
+
+    expect(result?.type).toBe("variable");
+    const stored = variableStore.getVariable("Cost");
+    expect(stored?.value.toString()).toBe("$640");
+  });
+
+  test("AST pipeline preserves currency across assignment and combined evaluation", () => {
+    setupDefaultEvaluators();
+    const reactiveStore = new ReactiveVariableStore();
+    const lines = [
+      "HrsPerMonth = 160",
+      "RatePerHour = $4",
+      "Cost = HrsPerMonth * RatePerHour",
+      "Total = Cost + Cost * 0.05 =>",
+    ];
+
+    let lastResult: any = null;
+
+    lines.forEach((line, index) => {
+      const nodes = parseContent(line);
+      const node = nodes[0];
+      const variableContext = new Map<string, Variable>();
+      reactiveStore.getAllVariables().forEach((variable) => {
+        variableContext.set(variable.name, variable);
+      });
+
+      const result = defaultRegistry.evaluate(node, {
+        variableStore: reactiveStore,
+        variableContext,
+        lineNumber: index + 1,
+        decimalPlaces: 6,
+      });
+
+      if (result) {
+        lastResult = result;
+      }
+    });
+
+    expect(lastResult?.type).toBe("combined");
+    if (lastResult?.type === "combined") {
+      expect(lastResult.result).toBe("$672");
+    }
+
+    const stored = reactiveStore.getVariable("Total");
+    expect(stored?.value.toString()).toBe("$672");
+  });
+
+  test("percent literal matches decimal literal for currency math", () => {
+    setupDefaultEvaluators();
+    const reactiveStore = new ReactiveVariableStore();
+    const lines = [
+      "HrsPerMonth = 160",
+      "RatePerHour = $4",
+      "Cost = HrsPerMonth * RatePerHour",
+      "TotalA = Cost + Cost * 0.05 =>",
+      "TotalB = Cost + Cost * 5% =>",
+    ];
+
+    const results: Record<string, string> = {};
+
+    lines.forEach((line, index) => {
+      const nodes = parseContent(line);
+      const node = nodes[0];
+      const variableContext = new Map<string, Variable>();
+      reactiveStore.getAllVariables().forEach((variable) => {
+        variableContext.set(variable.name, variable);
+      });
+
+      const result = defaultRegistry.evaluate(node, {
+        variableStore: reactiveStore,
+        variableContext,
+        lineNumber: index + 1,
+        decimalPlaces: 6,
+      });
+
+      if (result && "variableName" in result && "result" in result) {
+        results[result.variableName] = String(result.result);
+      }
+    });
+
+    expect(results.TotalA).toBe("$672");
+    expect(results.TotalB).toBe("$672");
   });
 });
