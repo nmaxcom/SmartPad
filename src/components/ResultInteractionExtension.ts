@@ -1,6 +1,5 @@
 import { Extension } from "@tiptap/core";
-import { Plugin } from "@tiptap/pm/state";
-import { TextSelection } from "@tiptap/pm/state";
+import { Plugin, Selection, TextSelection } from "@tiptap/pm/state";
 
 type ResultRange = { from: number; to: number };
 
@@ -61,7 +60,14 @@ export const ResultInteractionExtension = Extension.create({
         const { selection } = state;
         const range = getResultRangeInSelection(state, selection);
         if (!range) return false;
-        if (!selection.empty) return true;
+        if (!selection.empty) {
+          const tr = state.tr.delete(selection.from, selection.to);
+          const anchor = Math.min(Math.max(selection.from, 0), tr.doc.content.size);
+          const resolved = tr.doc.resolve(anchor);
+          tr.setSelection(Selection.near(resolved, -1));
+          view.dispatch(tr);
+          return true;
+        }
 
         const triggerEnd = getTriggerEndPos(state, range);
         if (!triggerEnd) {

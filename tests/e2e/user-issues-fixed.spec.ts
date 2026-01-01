@@ -175,6 +175,61 @@ test.describe("User Issues Fixed", () => {
     expect(selectionText).toContain("5");
   });
 
+  test("backspace deletes selections that include results", async ({ page }) => {
+    const pm = page.locator(".ProseMirror");
+    await pm.click();
+    await page.keyboard.press("Control+a");
+    await page.keyboard.press("Delete");
+
+    await pm.type("2 + 3 =>");
+    await waitForUIRenderComplete(page);
+
+    await page.evaluate(() => {
+      const paragraph = document.querySelector(".ProseMirror p");
+      if (!paragraph) return;
+      const range = document.createRange();
+      range.selectNodeContents(paragraph);
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    });
+
+    await page.keyboard.press("Backspace");
+    await waitForUIRenderComplete(page);
+
+    const lineText = await page.locator(".ProseMirror p").first().innerText();
+    expect(lineText).not.toContain("2 + 3");
+    expect(lineText).not.toContain("=>");
+    await expect(page.locator(".semantic-result-display")).toHaveCount(0);
+  });
+
+  test("select all + backspace leaves a collapsed selection", async ({ page }) => {
+    const pm = page.locator(".ProseMirror");
+    await pm.click();
+    await page.keyboard.press("Control+a");
+    await page.keyboard.press("Delete");
+
+    await pm.type("2 + 3 =>");
+    await waitForUIRenderComplete(page);
+
+    await page.keyboard.press("Control+a");
+    await page.keyboard.press("Backspace");
+    await waitForUIRenderComplete(page);
+
+    const selectionInfo = await page.evaluate(() => {
+      const selection = window.getSelection();
+      if (!selection) return { isCollapsed: true, text: "" };
+      return { isCollapsed: selection.isCollapsed, text: selection.toString() };
+    });
+
+    expect(selectionInfo.text).toBe("");
+    expect(selectionInfo.isCollapsed).toBe(true);
+
+    await pm.type("1 + 1 =>");
+    await waitForUIRenderComplete(page);
+    await expect(page.locator(".semantic-result-display").last()).toContainText("2");
+  });
+
   test("backspace clears the result by deleting only the >", async ({ page }) => {
     const pm = page.locator(".ProseMirror");
     await pm.click();
