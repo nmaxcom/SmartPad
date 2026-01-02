@@ -149,6 +149,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
 
         // Process nodes one by one in document order for variable state
         const collectedRenderNodes: RenderNode[] = [];
+        const functionStore = new Map<string, import("../parsing/ast").FunctionDefinitionNode>();
         // Pre-compute paragraph text and absolute starts directly from ProseMirror
         const lineToPositions = new Map<number, { exprFrom: number; exprTo: number; from: number; to: number }>();
         const paragraphData: Array<{ start: number; text: string }> = [/* 1-based */];
@@ -194,11 +195,13 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
           const evaluationContext: EvaluationContext = {
             variableStore: reactiveStore,
             variableContext: createCurrentVariableContext(),
+            functionStore,
             lineNumber: index + 1,
             decimalPlaces: settings.decimalPlaces,
             scientificUpperThreshold: Math.pow(10, settings.scientificUpperExponent),
             scientificLowerThreshold: Math.pow(10, settings.scientificLowerExponent),
             scientificTrimTrailingZeros: settings.scientificTrimTrailingZeros,
+            functionCallDepth: 0,
           };
 
           // Evaluate the node ONLY for state updates (variables)
@@ -320,6 +323,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
     extensions: [
       StarterKit.configure({
         heading: false,
+        italic: false,
       }),
       Placeholder.configure({
         placeholder: "Start typing...",

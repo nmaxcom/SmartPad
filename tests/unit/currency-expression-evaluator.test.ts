@@ -245,4 +245,75 @@ describe("Currency Expression Evaluation", () => {
     expect(results.TotalA).toBe("$672");
     expect(results.TotalB).toBe("$672");
   });
+
+  test("currency rates can be assigned and reused", () => {
+    setupDefaultEvaluators();
+    const reactiveStore = new ReactiveVariableStore();
+    const lines = [
+      "price per m2 = $8 / m^2",
+      "area = 3 m * 2.5 m",
+      "total = area * price per m2 =>",
+      "rate per m2 = $8 per m^2",
+      "total2 = area * rate per m2 =>",
+    ];
+
+    const results: Record<string, string> = {};
+
+    lines.forEach((line, index) => {
+      const nodes = parseContent(line);
+      const node = nodes[0];
+      const variableContext = new Map<string, Variable>();
+      reactiveStore.getAllVariables().forEach((variable) => {
+        variableContext.set(variable.name, variable);
+      });
+
+      const result = defaultRegistry.evaluate(node, {
+        variableStore: reactiveStore,
+        variableContext,
+        lineNumber: index + 1,
+        decimalPlaces: 6,
+      });
+
+      if (result && "variableName" in result && "result" in result) {
+        results[result.variableName] = String(result.result);
+      }
+    });
+
+    expect(results.total).toBe("$60");
+    expect(results.total2).toBe("$60");
+  });
+
+  test("unit rates without currency are parsed as units", () => {
+    setupDefaultEvaluators();
+    const reactiveStore = new ReactiveVariableStore();
+    const lines = [
+      "pp = 16 / m^2",
+      "area = 3 m * 2.5 m",
+      "total = area * pp =>",
+    ];
+
+    const results: Record<string, string> = {};
+
+    lines.forEach((line, index) => {
+      const nodes = parseContent(line);
+      const node = nodes[0];
+      const variableContext = new Map<string, Variable>();
+      reactiveStore.getAllVariables().forEach((variable) => {
+        variableContext.set(variable.name, variable);
+      });
+
+      const result = defaultRegistry.evaluate(node, {
+        variableStore: reactiveStore,
+        variableContext,
+        lineNumber: index + 1,
+        decimalPlaces: 6,
+      });
+
+      if (result && "variableName" in result && "result" in result) {
+        results[result.variableName] = String(result.result);
+      }
+    });
+
+    expect(results.total).toBe("120");
+  });
 });

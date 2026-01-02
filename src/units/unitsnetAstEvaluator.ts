@@ -35,7 +35,15 @@ import {
 import { NodeEvaluator, EvaluationContext } from "../eval/registry";
 import { evaluateUnitsNetExpression, expressionContainsUnitsNet } from "./unitsnetEvaluator";
 import { SmartPadQuantity } from "./unitsnetAdapter";
-import { CurrencyValue, UnitValue, NumberValue, PercentageValue, DisplayOptions } from "../types";
+import {
+  CurrencyValue,
+  CurrencyUnitValue,
+  UnitValue,
+  NumberValue,
+  PercentageValue,
+  DisplayOptions,
+  SemanticParsers,
+} from "../types";
 import { Variable } from "../state/types";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
 
@@ -561,6 +569,26 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     expression: string,
     context: EvaluationContext
   ): boolean {
+    const parsedLiteral = SemanticParsers.parse(expression);
+    if (parsedLiteral && parsedLiteral.getType() !== "error") {
+      return true;
+    }
+
+    if (components.some((component) => component.type === "function")) {
+      return true;
+    }
+
+    const hasCurrencyLiteral = components.some(
+      (component) =>
+        component.type === "literal" &&
+        component.parsedValue &&
+        (component.parsedValue.getType() === "currency" ||
+          component.parsedValue.getType() === "currencyUnit")
+    );
+    if (hasCurrencyLiteral) {
+      return true;
+    }
+
     const variableNames = this.collectVariableNames(components);
     if (variableNames.size === 0) {
       return false;
@@ -587,16 +615,20 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
       if (value instanceof PercentageValue) {
         hasPercentage = true;
       }
-      if (value instanceof CurrencyValue) {
+      if (value instanceof CurrencyValue || value instanceof CurrencyUnitValue) {
         hasCurrency = true;
       }
     });
+
+    if (hasCurrency) {
+      return true;
+    }
 
     if (hasUnit || hasPercentage) {
       return false;
     }
 
-    return hasCurrency;
+    return false;
   }
 
   private maskVariableNames(expression: string, variableNames: Set<string>): string {
@@ -642,7 +674,9 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
         if (component.type === "variable") {
           names.add(component.value);
         }
-        if (component.children && component.children.length > 0) {
+        if (component.type === "function" && component.args) {
+          component.args.forEach((arg) => visit(arg.components));
+        } else if (component.children && component.children.length > 0) {
           visit(component.children);
         }
       });

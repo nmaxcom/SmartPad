@@ -160,6 +160,9 @@ export class UnitValue extends SemanticValue {
       try {
         // Use SmartPadQuantity's multiply method which handles derived units
         const result = this.quantity.multiply(otherUnit.quantity);
+        if (result.isDimensionless()) {
+          return new NumberValue(result.value);
+        }
         return new UnitValue(result);
       } catch (error) {
         throw this.createIncompatibilityError(other, 'multiply', (error as Error).message);
@@ -177,6 +180,11 @@ export class UnitValue extends SemanticValue {
       const percentDecimal = other.getNumericValue();
       const result = this.quantity.multiply(SmartPadQuantity.dimensionless(percentDecimal));
       return new UnitValue(result);
+    }
+
+    if (other.getType() === 'currency' || other.getType() === 'currencyUnit') {
+      // Let currency types handle unit multiplication
+      return other.multiply(this);
     }
     
     throw this.createIncompatibilityError(other, 'multiply', 'invalid unit multiplication');

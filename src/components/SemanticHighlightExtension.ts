@@ -18,6 +18,7 @@ import {
   isExpressionNode,
   isCombinedAssignmentNode,
   isErrorNode,
+  isFunctionDefinitionNode,
 } from "../parsing/ast";
 
 // Token types that can be identified in mathematical expressions
@@ -388,6 +389,46 @@ function extractTokensFromASTNode(
       end: text.length,
       text: text,
     });
+  } else if (isFunctionDefinitionNode(astNode)) {
+    const nameStart = leadingWhitespace;
+    const nameEnd = nameStart + astNode.functionName.length;
+    tokens.push({
+      type: "function",
+      start: nameStart,
+      end: nameEnd,
+      text: astNode.functionName,
+    });
+
+    const equalsIndex = text.indexOf("=");
+    if (equalsIndex !== -1) {
+      tokens.push({
+        type: "operator",
+        start: equalsIndex,
+        end: equalsIndex + 1,
+        text: "=",
+      });
+    }
+
+    const openIndex = text.indexOf("(");
+    const closeIndex = text.indexOf(")", openIndex + 1);
+    if (openIndex !== -1 && closeIndex !== -1) {
+      const paramsText = text.substring(openIndex + 1, closeIndex);
+      let searchFrom = openIndex + 1;
+      paramsText.split(",").forEach((param) => {
+        const name = param.split("=")[0].trim();
+        if (!name) return;
+        const index = text.indexOf(name, searchFrom);
+        if (index !== -1) {
+          tokens.push({
+            type: "variable",
+            start: index,
+            end: index + name.length,
+            text: name,
+          });
+          searchFrom = index + name.length;
+        }
+      });
+    }
   }
   // For PlainTextNode, return no tokens (no highlighting)
 
@@ -412,14 +453,14 @@ export function tokenizeExpression(
 
   // Regular expressions for different token types
   const numberRegex = /^-?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?:[eE][+-]?\d+)?/;
-  const functionRegex = /^(sqrt|abs|round|floor|ceil|max|min|sin|cos|tan|log|ln|exp)\s*\(/;
+  const functionRegex = /^([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/;
   const operatorRegex = /^[\+\-\*\/\^\%]/;
   const parenRegex = /^[\(\)]/;
   const triggerRegex = /^=>/;
   const unitRegex = /^[a-zA-Z°µμΩ][a-zA-Z0-9°µμΩ\/\^\-\*\·]*/;
   const currencySymbolRegex = /^[\$€£¥₹₿]/;
   const currencyCodeRegex = /^(CHF|CAD|AUD)\b/;
-  const keywordRegex = /^(to|of|on|off|as|is)\b/;
+  const keywordRegex = /^(to|of|on|off|as|is|per)\b/;
   const constantRegex = /^(PI|E)\b/;
 
   // Get all variable names sorted by length (longest first for greedy matching)
@@ -438,13 +479,14 @@ export function tokenizeExpression(
     // Check for functions
     const funcMatch = expr.substring(pos).match(functionRegex);
     if (funcMatch) {
+      const funcName = funcMatch[1];
       tokens.push({
         type: "function",
         start: baseOffset + pos,
-        end: baseOffset + pos + funcMatch[1].length,
-        text: funcMatch[1],
+        end: baseOffset + pos + funcName.length,
+        text: funcName,
       });
-      pos += funcMatch[1].length;
+      pos += funcName.length;
       // Skip whitespace between function name and parenthesis
       while (pos < expr.length && /\s/.test(expr[pos])) {
         pos++;
@@ -545,9 +587,14 @@ export function tokenizeExpression(
 
     // Check for units (after numbers and variables, before operators)
     if (!matched) {
+      const lastToken = tokens[tokens.length - 1];
+      const prevToken = tokens[tokens.length - 2];
       const shouldParseUnit =
-        lastTokenType === "scrubbableNumber" ||
-        (lastTokenType === "keyword" && lastTokenText === "to");
+        lastToken?.type === "scrubbableNumber" ||
+        (lastToken?.type === "keyword" && (lastToken.text === "to" || lastToken.text === "per")) ||
+        (lastToken?.type === "operator" &&
+          lastToken.text === "/" &&
+          prevToken?.type === "scrubbableNumber");
       if (shouldParseUnit) {
         const currencyCodeMatch = expr.substring(pos).match(currencyCodeRegex);
         if (currencyCodeMatch) {

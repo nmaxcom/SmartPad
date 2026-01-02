@@ -16,11 +16,11 @@ type TokenType =
   | 'identifier'
   | 'parentheses'
   | 'whitespace'
-  | 'function'
   | 'comma'
   | 'unit'
   | 'currency'
-  | 'percentage';
+  | 'percentage'
+  | 'colon';
 
 interface Token {
   type: TokenType;
@@ -35,24 +35,11 @@ interface Token {
 function tokenize(expression: string): Token[] {
   const tokens: Token[] = [];
   let pos = 0;
+  let lastTokenType: TokenType | null = null;
 
   const isWhitespace = (char: string) => /\s/.test(char);
   const isIdentChar = (char: string) => /[a-zA-Z0-9_]/.test(char);
-  const functionNames = [
-    'sqrt',
-    'abs',
-    'round',
-    'floor',
-    'ceil',
-    'max',
-    'min',
-    'sin',
-    'cos',
-    'tan',
-    'log',
-    'ln',
-    'exp',
-  ];
+  const unitPattern = /^[a-zA-Z°µμΩ][a-zA-Z0-9°µμΩ\/\^\-\*\·]*/;
 
   while (pos < expression.length) {
     let matched = false;
@@ -103,6 +90,7 @@ function tokenize(expression: string): Token[] {
         }
       }
       tokens.push({ type: 'number', value: value.replace(/,/g, ""), start, end: pos });
+      lastTokenType = 'number';
       matched = true;
     }
 
@@ -110,6 +98,7 @@ function tokenize(expression: string): Token[] {
     if (!matched && /[+\-*\/^]/.test(expression[pos])) {
       tokens.push({ type: 'operator', value: expression[pos], start: pos, end: pos + 1 });
       pos++;
+      lastTokenType = 'operator';
       matched = true;
     }
 
@@ -117,6 +106,7 @@ function tokenize(expression: string): Token[] {
     if (!matched && /[()]/.test(expression[pos])) {
       tokens.push({ type: 'parentheses', value: expression[pos], start: pos, end: pos + 1 });
       pos++;
+      lastTokenType = 'parentheses';
       matched = true;
     }
 
@@ -124,10 +114,30 @@ function tokenize(expression: string): Token[] {
     if (!matched && expression[pos] === ',') {
       tokens.push({ type: 'comma', value: ',', start: pos, end: pos + 1 });
       pos++;
+      lastTokenType = 'comma';
       matched = true;
     }
 
-    // Match functions and identifiers (including phrase-based variables)
+    // Match colons (named arguments)
+    if (!matched && expression[pos] === ':') {
+      tokens.push({ type: 'colon', value: ':', start: pos, end: pos + 1 });
+      pos++;
+      lastTokenType = 'colon';
+      matched = true;
+    }
+
+    // Match units immediately after numbers (e.g., 10 m, 5 kg*m^2/s^2)
+    if (!matched && lastTokenType === 'number' && /[a-zA-Z°µμΩ]/.test(expression[pos])) {
+      const unitMatch = expression.substring(pos).match(unitPattern);
+      if (unitMatch && unitMatch[0].toLowerCase() !== "per") {
+        tokens.push({ type: 'unit', value: unitMatch[0], start: pos, end: pos + unitMatch[0].length });
+        pos += unitMatch[0].length;
+        lastTokenType = 'unit';
+        matched = true;
+      }
+    }
+
+    // Match identifiers (including phrase-based variables)
     if (!matched && /[a-zA-Z_]/.test(expression[pos])) {
       const start = pos;
       let value = "";
@@ -157,24 +167,8 @@ function tokenize(expression: string): Token[] {
       }
 
       const normalized = value.replace(/\s+/g, " ").trim();
-      let lookahead = pos;
-      while (lookahead < expression.length && isWhitespace(expression[lookahead])) {
-        lookahead++;
-      }
-      const isFunction = functionNames.includes(normalized) && expression[lookahead] === '(';
-      const type = isFunction ? 'function' : 'identifier';
-      tokens.push({ type, value: normalized, start, end: pos });
-      matched = true;
-    }
-
-    // Match units
-    if (!matched && /[°]/.test(expression[pos])) {
-      const start = pos;
-      pos++;
-      while (pos < expression.length && /[A-Za-z]/.test(expression[pos])) {
-        pos++;
-      }
-      tokens.push({ type: 'unit', value: expression.slice(start, pos), start, end: pos });
+      tokens.push({ type: 'identifier', value: normalized, start, end: pos });
+      lastTokenType = 'identifier';
       matched = true;
     }
 
@@ -182,6 +176,7 @@ function tokenize(expression: string): Token[] {
     if (!matched && /[$€£¥₹₿]/.test(expression[pos])) {
       tokens.push({ type: 'currency', value: expression[pos], start: pos, end: pos + 1 });
       pos++;
+      lastTokenType = 'currency';
       matched = true;
     }
 
@@ -189,6 +184,7 @@ function tokenize(expression: string): Token[] {
     if (!matched && expression[pos] === '%') {
       tokens.push({ type: 'percentage', value: '%', start: pos, end: pos + 1 });
       pos++;
+      lastTokenType = 'percentage';
       matched = true;
     }
 
@@ -234,6 +230,45 @@ export function parseExpressionComponents(expression: string): ExpressionCompone
             parsedValue: SemanticParsers.parseOrError(value + nextToken.value),
           });
           pos += 2;
+        } else if (nextToken?.type === 'identifier' && isPerIdentifier(nextToken.value)) {
+          const { unitTokens, nextPos } = collectUnitTokens(tokens, pos + 2);
+          if (unitTokens.length > 0) {
+            const literal = [token, nextToken, ...unitTokens].map((t) => t.value).join(" ");
+            const parsed = SemanticParsers.parse(literal);
+            if (parsed) {
+              components.push({
+                type: 'literal',
+                value: literal,
+                parsedValue: parsed,
+              });
+              pos = nextPos;
+              break;
+            }
+          }
+          components.push({
+            type: 'literal',
+            value,
+            parsedValue: SemanticParsers.parseOrError(value),
+          });
+          pos++;
+        } else if (nextToken?.type === 'identifier') {
+          const combined = `${value} ${nextToken.value}`;
+          const parsed = SemanticParsers.parse(combined);
+          if (parsed) {
+            components.push({
+              type: 'literal',
+              value: combined,
+              parsedValue: parsed,
+            });
+            pos += 2;
+          } else {
+            components.push({
+              type: 'literal',
+              value,
+              parsedValue: SemanticParsers.parseOrError(value),
+            });
+            pos++;
+          }
         } else if (nextToken?.type === 'currency') {
           // Handle currency literals with suffix symbols (e.g., 100$)
           components.push({
@@ -242,6 +277,27 @@ export function parseExpressionComponents(expression: string): ExpressionCompone
             parsedValue: SemanticParsers.parseOrError(value + nextToken.value),
           });
           pos += 2;
+        } else if (nextToken?.type === 'operator' && nextToken.value === '/') {
+          const { unitTokens, nextPos } = collectUnitTokens(tokens, pos + 2);
+          if (unitTokens.length > 0) {
+            const literal = [token, nextToken, ...unitTokens].map((t) => t.value).join(" ");
+            const parsed = SemanticParsers.parse(literal);
+            if (parsed) {
+              components.push({
+                type: 'literal',
+                value: literal,
+                parsedValue: parsed,
+              });
+              pos = nextPos;
+              break;
+            }
+          }
+          components.push({
+            type: 'literal',
+            value,
+            parsedValue: SemanticParsers.parseOrError(value),
+          });
+          pos++;
         } else {
           // Plain number
           components.push({
@@ -255,19 +311,53 @@ export function parseExpressionComponents(expression: string): ExpressionCompone
       }
 
       case 'currency': {
-        // Handle currency literals
+        // Handle currency literals (including currency rates like $8/m^2 or $8 per m^2)
         const value = token.value;
         const nextToken = tokens[pos + 1];
-        if (nextToken?.type === 'number') {
-          components.push({
-            type: 'literal',
-            value: value + nextToken.value,
-            parsedValue: SemanticParsers.parseOrError(value + nextToken.value),
-          });
-          pos += 2;
-        } else {
+        if (!nextToken || nextToken.type !== 'number') {
           throw new Error(`Invalid currency literal: ${value}`);
         }
+
+        const separatorToken = tokens[pos + 2];
+
+        const tryCurrencyUnitLiteral = (unitStart: number): boolean => {
+          const { unitTokens, nextPos } = collectUnitTokens(tokens, unitStart);
+          if (unitTokens.length === 0) {
+            return false;
+          }
+          const literalTokens = tokens.slice(pos, unitStart).concat(unitTokens);
+          const literal = literalTokens.map((t) => t.value).join(" ");
+          const parsed = SemanticParsers.parse(literal);
+          if (parsed && parsed.getType() === "currencyUnit") {
+            components.push({
+              type: 'literal',
+              value: literal,
+              parsedValue: parsed,
+            });
+            pos = nextPos;
+            return true;
+          }
+          return false;
+        };
+
+        if (separatorToken?.type === 'operator' && separatorToken.value === '/') {
+          if (tryCurrencyUnitLiteral(pos + 3)) {
+            break;
+          }
+        }
+
+        if (separatorToken?.type === 'identifier' && isPerIdentifier(separatorToken.value)) {
+          if (tryCurrencyUnitLiteral(pos + 3)) {
+            break;
+          }
+        }
+
+        components.push({
+          type: 'literal',
+          value: value + nextToken.value,
+          parsedValue: SemanticParsers.parseOrError(value + nextToken.value),
+        });
+        pos += 2;
         break;
       }
 
@@ -280,65 +370,21 @@ export function parseExpressionComponents(expression: string): ExpressionCompone
         break;
       }
 
-      case 'function': {
-        // Handle function calls
-        const funcName = token.value;
-        pos++;
-
-        // Expect opening parenthesis
-        if (tokens[pos]?.type !== 'parentheses' || tokens[pos].value !== '(') {
-          throw new Error(`Expected ( after function ${funcName}`);
-        }
-        pos++;
-
-        // Parse function arguments
-        const args: ExpressionComponent[] = [];
-        let depth = 1;
-
-        while (pos < tokens.length && depth > 0) {
-          const current = tokens[pos];
-
-          if (current.type === 'parentheses') {
-            if (current.value === '(') depth++;
-            if (current.value === ')') depth--;
-
-            if (depth === 0) {
-              // End of function call
-              components.push({
-                type: 'function',
-                value: funcName,
-                children: args,
-              });
-              pos++;
-              break;
-            }
-          }
-
-          if (current.type === 'comma' && depth === 1) {
-            pos++;
-            continue;
-          }
-
-          // Parse argument expression
-          const argTokens: Token[] = [];
-          let argDepth = depth;
-          while (pos < tokens.length) {
-            const t = tokens[pos];
-            if (t.type === 'parentheses') {
-              if (t.value === '(') argDepth++;
-              if (t.value === ')') argDepth--;
-            }
-            if ((t.type === 'comma' && argDepth === 1) || argDepth === 0) break;
-            argTokens.push(t);
-            pos++;
-          }
-
-          args.push(...parseExpressionComponents(argTokens.map(t => t.value).join('')));
-        }
-        break;
-      }
-
       case 'identifier': {
+        const nextToken = tokens[pos + 1];
+        if (nextToken?.type === 'parentheses' && nextToken.value === '(') {
+          const funcName = token.value;
+          pos += 2;
+          const { args, nextPos } = parseFunctionArguments(tokens, pos);
+          pos = nextPos;
+          components.push({
+            type: 'function',
+            value: funcName,
+            args,
+          });
+          break;
+        }
+
         components.push({
           type: 'variable',
           value: token.value,
@@ -401,4 +447,140 @@ export function parseExpressionComponents(expression: string): ExpressionCompone
   }
 
   return components;
+}
+
+function isPerIdentifier(value: string): boolean {
+  return /^per\b/i.test(value.trim());
+}
+
+function collectUnitTokens(tokens: Token[], startPos: number): { unitTokens: Token[]; nextPos: number } {
+  const unitTokens: Token[] = [];
+  let pos = startPos;
+  let lastWasExponent = false;
+
+  while (pos < tokens.length) {
+    const token = tokens[pos];
+
+    if (token.type === 'comma' || token.type === 'currency' || token.type === 'percentage') {
+      break;
+    }
+
+    if (token.type === 'operator') {
+      if (token.value === '+' || token.value === '-') {
+        if (lastWasExponent && token.value === '-' && tokens[pos + 1]?.type === 'number') {
+          unitTokens.push(token);
+          pos++;
+          continue;
+        }
+        break;
+      }
+
+      if (token.value === '^') {
+        unitTokens.push(token);
+        lastWasExponent = true;
+        pos++;
+        continue;
+      }
+
+      if (token.value === '*' || token.value === '/') {
+        const next = tokens[pos + 1];
+        if (next && (next.type === 'identifier' || next.type === 'unit' || next.type === 'parentheses')) {
+          unitTokens.push(token);
+          lastWasExponent = false;
+          pos++;
+          continue;
+        }
+        break;
+      }
+
+      break;
+    }
+
+    if (token.type === 'number') {
+      if (!lastWasExponent) {
+        break;
+      }
+      unitTokens.push(token);
+      lastWasExponent = false;
+      pos++;
+      continue;
+    }
+
+    if (token.type === 'identifier' || token.type === 'unit' || token.type === 'parentheses') {
+      unitTokens.push(token);
+      lastWasExponent = false;
+      pos++;
+      continue;
+    }
+
+    break;
+  }
+
+  return { unitTokens, nextPos: pos };
+}
+
+function parseFunctionArguments(
+  tokens: Token[],
+  startPos: number
+): { args: Array<{ name?: string; components: ExpressionComponent[] }>; nextPos: number } {
+  const args: Array<{ name?: string; components: ExpressionComponent[] }> = [];
+  let pos = startPos;
+  let depth = 1;
+  let currentTokens: Token[] = [];
+
+  const flushArg = () => {
+    if (currentTokens.length === 0) return;
+    const { name, valueTokens } = splitNamedArgument(currentTokens);
+    const expression = valueTokens.map((t) => t.value).join(" ");
+    const components = parseExpressionComponents(expression);
+    args.push({ name, components });
+    currentTokens = [];
+  };
+
+  while (pos < tokens.length && depth > 0) {
+    const current = tokens[pos];
+
+    if (current.type === 'parentheses') {
+      if (current.value === '(') depth++;
+      if (current.value === ')') depth--;
+
+      if (depth === 0) {
+        flushArg();
+        pos++;
+        break;
+      }
+    }
+
+    if (current.type === 'comma' && depth === 1) {
+      flushArg();
+      pos++;
+      continue;
+    }
+
+    currentTokens.push(current);
+    pos++;
+  }
+
+  return { args, nextPos: pos };
+}
+
+function splitNamedArgument(tokens: Token[]): { name?: string; valueTokens: Token[] } {
+  let depth = 0;
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    if (token.type === 'parentheses') {
+      if (token.value === '(') depth++;
+      if (token.value === ')') depth = Math.max(0, depth - 1);
+    }
+    if (token.type === 'colon' && depth === 0) {
+      const nameTokens = tokens.slice(0, i);
+      const valueTokens = tokens.slice(i + 1);
+      const nameText = nameTokens.map((t) => t.value).join(" ").trim();
+      if (nameTokens.length !== 1 || nameTokens[0].type !== 'identifier' || !nameText) {
+        throw new Error("Invalid named argument");
+      }
+      return { name: nameText, valueTokens };
+    }
+  }
+  return { valueTokens: tokens };
 }

@@ -27,6 +27,7 @@ import {
   SemanticArithmetic
 } from "../types";
 import { parseAndEvaluateExpression } from "../parsing/expressionParser";
+import { parseExpressionComponents } from "../parsing/expressionComponents";
 
 /**
  * Simple expression parser for basic arithmetic
@@ -87,17 +88,26 @@ export class SimpleExpressionParser {
     const visit = (items: ExpressionComponent[]): boolean => {
       for (const component of items) {
         if (component.type === "literal" && component.parsedValue) {
-          if (component.parsedValue.getType() === "currency") {
+          if (component.parsedValue.getType() === "currency" || component.parsedValue.getType() === "currencyUnit") {
             return true;
           }
         }
         if (component.type === "variable") {
           const variable = context.variableContext.get(component.value);
-          if (variable?.value instanceof SemanticValue && variable.value.getType() === "currency") {
+          if (
+            variable?.value instanceof SemanticValue &&
+            (variable.value.getType() === "currency" || variable.value.getType() === "currencyUnit")
+          ) {
             return true;
           }
         }
-        if (component.children && component.children.length > 0) {
+        if (component.type === "function" && component.args) {
+          for (const arg of component.args) {
+            if (visit(arg.components)) {
+              return true;
+            }
+          }
+        } else if (component.children && component.children.length > 0) {
           if (visit(component.children)) {
             return true;
           }
@@ -137,6 +147,13 @@ export class SimpleExpressionParser {
     const parsed = SemanticParsers.parse(normalized);
     if (parsed) {
       return parsed;
+    }
+
+    if (normalized === "PI") {
+      return NumberValue.from(Math.PI);
+    }
+    if (normalized === "E") {
+      return NumberValue.from(Math.E);
     }
     
     return ErrorValue.semanticError(`Cannot resolve: "${normalized}"`);
@@ -276,6 +293,12 @@ export class SimpleExpressionParser {
       case "variable": {
         const variable = context.variableContext.get(component.value);
         if (!variable) {
+          if (component.value === "PI") {
+            return NumberValue.from(Math.PI);
+          }
+          if (component.value === "E") {
+            return NumberValue.from(Math.E);
+          }
           return ErrorValue.semanticError(`Variable "${component.value}" not defined`);
         }
         const value = (variable as any).value;
@@ -300,51 +323,243 @@ export class SimpleExpressionParser {
         return this.evaluateComponentList(component.children, context);
       }
       case "function": {
-        if (!component.children || component.children.length === 0) {
-          return ErrorValue.semanticError(`Function "${component.value}" has no arguments`);
+        const args = this.evaluateFunctionArgs(component.args || [], context);
+        if (args instanceof ErrorValue) {
+          return args;
         }
-        const argValue = this.evaluateComponentList(component.children, context);
-        if (SemanticValueTypes.isError(argValue)) {
-          return argValue;
-        }
-        if (!argValue.isNumeric()) {
-          return ErrorValue.typeError(
-            `Function "${component.value}" requires numeric argument`,
-            "number",
-            argValue.getType()
-          );
-        }
-        const num = argValue.getNumericValue();
-        switch (component.value) {
-          case "sqrt":
-            return NumberValue.from(Math.sqrt(num));
-          case "abs":
-            return NumberValue.from(Math.abs(num));
-          case "round":
-            return NumberValue.from(Math.round(num));
-          case "floor":
-            return NumberValue.from(Math.floor(num));
-          case "ceil":
-            return NumberValue.from(Math.ceil(num));
-          case "sin":
-            return NumberValue.from(Math.sin(num));
-          case "cos":
-            return NumberValue.from(Math.cos(num));
-          case "tan":
-            return NumberValue.from(Math.tan(num));
-          case "log":
-            return NumberValue.from(Math.log10(num));
-          case "ln":
-            return NumberValue.from(Math.log(num));
-          case "exp":
-            return NumberValue.from(Math.exp(num));
-          default:
-            return ErrorValue.semanticError(`Unsupported function: "${component.value}"`);
-        }
+
+        return this.evaluateFunction(component.value, args, context);
       }
       default:
         return ErrorValue.semanticError(`Unsupported component: "${component.type}"`);
     }
+  }
+
+  private static evaluateFunctionArgs(
+    args: Array<{ name?: string; components: ExpressionComponent[] }>,
+    context: EvaluationContext
+  ): { positional: SemanticValue[]; named: Map<string, SemanticValue> } | ErrorValue {
+    const positional: SemanticValue[] = [];
+    const named = new Map<string, SemanticValue>();
+
+    for (const arg of args) {
+      const value = this.evaluateComponentList(arg.components, context);
+      if (SemanticValueTypes.isError(value)) {
+        return value;
+      }
+      if (arg.name) {
+        named.set(arg.name, value);
+      } else {
+        positional.push(value);
+      }
+    }
+
+    return { positional, named };
+  }
+
+  private static evaluateFunction(
+    name: string,
+    args: { positional: SemanticValue[]; named: Map<string, SemanticValue> },
+    context: EvaluationContext
+  ): SemanticValue {
+    const builtIn = this.evaluateBuiltInFunction(name, args);
+    if (builtIn) {
+      return builtIn;
+    }
+
+    return this.evaluateUserFunction(name, args, context);
+  }
+
+  private static evaluateBuiltInFunction(
+    name: string,
+    args: { positional: SemanticValue[]; named: Map<string, SemanticValue> }
+  ): SemanticValue | null {
+    const funcName = name;
+    const builtIns = new Set([
+      "sqrt",
+      "abs",
+      "round",
+      "floor",
+      "ceil",
+      "sin",
+      "cos",
+      "tan",
+      "log",
+      "ln",
+      "exp",
+      "max",
+      "min",
+    ]);
+
+    if (!builtIns.has(funcName)) {
+      return null;
+    }
+
+    if (args.named.size > 0) {
+      return ErrorValue.semanticError(`Named arguments not supported for ${funcName}`);
+    }
+
+    const numericArgs = args.positional.map((value) => {
+      if (!value.isNumeric()) {
+        throw new Error(
+          `Function "${funcName}" requires numeric argument, got ${value.getType()}`
+        );
+      }
+      return value.getNumericValue();
+    });
+
+    try {
+      switch (funcName) {
+        case "sqrt":
+          if (numericArgs.length !== 1) {
+            return ErrorValue.semanticError(`sqrt expects 1 argument, got ${numericArgs.length}`);
+          }
+          return NumberValue.from(Math.sqrt(numericArgs[0]));
+        case "abs":
+          if (numericArgs.length !== 1) {
+            return ErrorValue.semanticError(`abs expects 1 argument, got ${numericArgs.length}`);
+          }
+          return NumberValue.from(Math.abs(numericArgs[0]));
+        case "round":
+          if (numericArgs.length !== 1) {
+            return ErrorValue.semanticError(`round expects 1 argument, got ${numericArgs.length}`);
+          }
+          return NumberValue.from(Math.round(numericArgs[0]));
+        case "floor":
+          if (numericArgs.length !== 1) {
+            return ErrorValue.semanticError(`floor expects 1 argument, got ${numericArgs.length}`);
+          }
+          return NumberValue.from(Math.floor(numericArgs[0]));
+        case "ceil":
+          if (numericArgs.length !== 1) {
+            return ErrorValue.semanticError(`ceil expects 1 argument, got ${numericArgs.length}`);
+          }
+          return NumberValue.from(Math.ceil(numericArgs[0]));
+        case "sin":
+          if (numericArgs.length !== 1) {
+            return ErrorValue.semanticError(`sin expects 1 argument, got ${numericArgs.length}`);
+          }
+          return NumberValue.from(Math.sin(numericArgs[0]));
+        case "cos":
+          if (numericArgs.length !== 1) {
+            return ErrorValue.semanticError(`cos expects 1 argument, got ${numericArgs.length}`);
+          }
+          return NumberValue.from(Math.cos(numericArgs[0]));
+        case "tan":
+          if (numericArgs.length !== 1) {
+            return ErrorValue.semanticError(`tan expects 1 argument, got ${numericArgs.length}`);
+          }
+          return NumberValue.from(Math.tan(numericArgs[0]));
+        case "log":
+          if (numericArgs.length !== 1) {
+            return ErrorValue.semanticError(`log expects 1 argument, got ${numericArgs.length}`);
+          }
+          return NumberValue.from(Math.log10(numericArgs[0]));
+        case "ln":
+          if (numericArgs.length !== 1) {
+            return ErrorValue.semanticError(`ln expects 1 argument, got ${numericArgs.length}`);
+          }
+          return NumberValue.from(Math.log(numericArgs[0]));
+        case "exp":
+          if (numericArgs.length !== 1) {
+            return ErrorValue.semanticError(`exp expects 1 argument, got ${numericArgs.length}`);
+          }
+          return NumberValue.from(Math.exp(numericArgs[0]));
+        case "max":
+          if (numericArgs.length < 1) {
+            return ErrorValue.semanticError(`max expects at least 1 argument, got ${numericArgs.length}`);
+          }
+          return NumberValue.from(Math.max(...numericArgs));
+        case "min":
+          if (numericArgs.length < 1) {
+            return ErrorValue.semanticError(`min expects at least 1 argument, got ${numericArgs.length}`);
+          }
+          return NumberValue.from(Math.min(...numericArgs));
+        default:
+          return null;
+      }
+    } catch (error) {
+      return ErrorValue.semanticError(
+        error instanceof Error ? error.message : String(error)
+      );
+    }
+  }
+
+  private static evaluateUserFunction(
+    name: string,
+    args: { positional: SemanticValue[]; named: Map<string, SemanticValue> },
+    context: EvaluationContext
+  ): SemanticValue {
+    const functionStore = context.functionStore ?? new Map();
+    const definition = functionStore.get(name);
+    if (!definition) {
+      return ErrorValue.semanticError(`Undefined function: ${name}`);
+    }
+
+    const nextDepth = (context.functionCallDepth || 0) + 1;
+    if (nextDepth > 20) {
+      return ErrorValue.semanticError("Maximum call depth exceeded");
+    }
+
+    const boundVariables = new Map(context.variableContext);
+    const usedNamed = new Set<string>();
+
+    definition.params.forEach((param: (typeof definition.params)[number], index: number) => {
+      let value: SemanticValue | null = null;
+
+      if (args.named.has(param.name)) {
+        value = args.named.get(param.name) || null;
+        usedNamed.add(param.name);
+      } else if (args.positional.length > index) {
+        value = args.positional[index];
+      } else if (param.defaultComponents || param.defaultExpression) {
+        const components =
+          param.defaultComponents ||
+          parseExpressionComponents(param.defaultExpression || "");
+        const resolved = this.evaluateComponentList(components, {
+          ...context,
+          variableContext: boundVariables,
+          functionCallDepth: nextDepth,
+        });
+        if (SemanticValueTypes.isError(resolved)) {
+          value = resolved;
+        } else {
+          value = resolved;
+        }
+      }
+
+      if (!value) {
+        value = ErrorValue.semanticError(
+          `Missing argument: ${param.name}`
+        );
+      }
+
+      boundVariables.set(param.name, {
+        name: param.name,
+        value,
+        rawValue: value.toString(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    });
+
+    if (args.named.size > usedNamed.size) {
+      const unknown = Array.from(args.named.keys()).filter((key) => !usedNamed.has(key));
+      return ErrorValue.semanticError(`Unknown argument: ${unknown[0]}`);
+    }
+
+    const result = this.evaluateComponentList(definition.components, {
+      ...context,
+      variableContext: boundVariables,
+      functionCallDepth: nextDepth,
+    });
+
+    if (SemanticValueTypes.isError(result)) {
+      const message = (result as ErrorValue).getMessage();
+      return ErrorValue.semanticError(`Error in ${name}: ${message}`);
+    }
+
+    return result;
   }
   
   /**
@@ -387,13 +602,21 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
     
     const expr = (node as ExpressionNode).expression;
     
+    if (this.containsFunctionCall(expr)) {
+      return true;
+    }
+
     // Don't handle percentage expressions - let the percentage evaluator handle those
     if (this.isPercentageExpression(expr)) {
       return false;
     }
-    
+
     // Handle simple arithmetic expressions
-    return this.isSimpleArithmetic(expr) || this.isSimpleLiteral(expr) || this.isVariableReference(expr);
+    return (
+      this.isSimpleArithmetic(expr) ||
+      this.isSimpleLiteral(expr) ||
+      this.isVariableReference(expr)
+    );
   }
   
   /**
@@ -416,6 +639,18 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       // Try variable reference
       else if (this.isVariableReference(exprNode.expression)) {
         result = this.evaluateVariableReference(exprNode.expression, context);
+      }
+      // Function calls or expression components
+      else if (this.containsFunctionCall(exprNode.expression)) {
+        const componentResult = SimpleExpressionParser.parseComponents(
+          exprNode.components,
+          context
+        );
+        if (componentResult) {
+          result = componentResult;
+        } else {
+          result = ErrorValue.semanticError(`Unsupported expression: "${exprNode.expression}"`);
+        }
       }
       // Try simple arithmetic
       else if (this.isSimpleArithmetic(exprNode.expression)) {
@@ -502,6 +737,10 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
    */
   private isVariableReference(expr: string): boolean {
     return /^[a-zA-Z_][a-zA-Z0-9_\s]*$/.test(expr.trim());
+  }
+
+  private containsFunctionCall(expr: string): boolean {
+    return /[a-zA-Z_][a-zA-Z0-9_\s]*\s*\(/.test(expr);
   }
   
   /**

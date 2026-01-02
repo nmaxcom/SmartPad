@@ -11,8 +11,10 @@ import { SemanticValue, type SemanticValueType, type DisplayOptions } from './Se
 import { NumberValue } from './NumberValue';
 import { PercentageValue, type PercentageContext } from './PercentageValue';
 import { CurrencyValue, type CurrencySymbol } from './CurrencyValue';
+import { CurrencyUnitValue } from './CurrencyUnitValue';
 import { UnitValue } from './UnitValue';
 import { ErrorValue, type ErrorType, type ErrorContext } from './ErrorValue';
+import { SmartPadQuantity } from '../units/unitsnetAdapter';
 
 // Re-export base types
 export { SemanticValue, type SemanticValueType, type DisplayOptions };
@@ -21,6 +23,7 @@ export { SemanticValue, type SemanticValueType, type DisplayOptions };
 export { NumberValue };
 export { PercentageValue, type PercentageContext };
 export { CurrencyValue, type CurrencySymbol };
+export { CurrencyUnitValue };
 export { UnitValue };
 export { ErrorValue, type ErrorType, type ErrorContext };
 
@@ -29,6 +32,7 @@ export const SemanticValueTypes = {
   isNumber: (value: SemanticValue): value is NumberValue => value.getType() === 'number',
   isPercentage: (value: SemanticValue): value is PercentageValue => value.getType() === 'percentage',
   isCurrency: (value: SemanticValue): value is CurrencyValue => value.getType() === 'currency',
+  isCurrencyUnit: (value: SemanticValue): value is CurrencyUnitValue => value.getType() === 'currencyUnit',
   isUnit: (value: SemanticValue): value is UnitValue => value.getType() === 'unit',
   isError: (value: SemanticValue): value is ErrorValue => value.getType() === 'error',
 } as const;
@@ -49,6 +53,12 @@ export const SemanticValues = {
    * Create a CurrencyValue from symbol and amount
    */
   currency: (symbol: CurrencySymbol, amount: number): CurrencyValue => new CurrencyValue(symbol, amount),
+
+  /**
+   * Create a CurrencyUnitValue from currency, unit string, and per-unit flag
+   */
+  currencyUnit: (symbol: CurrencySymbol, amount: number, unit: string, perUnit: boolean): CurrencyUnitValue =>
+    new CurrencyUnitValue(symbol, amount, unit, perUnit),
   
   /**
    * Create a UnitValue from value and unit string
@@ -90,6 +100,90 @@ export const SemanticParsers = {
     
     const trimmed = str.trim();
     if (!trimmed) return null;
+
+    const parseCurrencyUnit = (input: string): SemanticValue | null => {
+      const perMatch = input.match(/^(.*?)\bper\b(.+)$/i);
+      let left: string | null = null;
+      let unitPart: string | null = null;
+      if (perMatch) {
+        left = perMatch[1].trim();
+        unitPart = perMatch[2].trim();
+      } else if (input.includes("/")) {
+        const slashIndex = input.indexOf("/");
+        left = input.slice(0, slashIndex).trim();
+        unitPart = input.slice(slashIndex + 1).trim();
+      }
+
+      if (!left || !unitPart) {
+        return null;
+      }
+
+      let currency: CurrencyValue;
+      try {
+        currency = CurrencyValue.fromString(left);
+      } catch {
+        return null;
+      }
+
+      const unitString = unitPart.replace(/\s+/g, "");
+      if (!unitString || !/[a-zA-Z°µμΩ]/.test(unitString)) {
+        return null;
+      }
+
+      try {
+        SmartPadQuantity.fromValueAndUnit(1, unitString);
+      } catch {
+        return null;
+      }
+
+      return new CurrencyUnitValue(currency.getSymbol(), currency.getNumericValue(), unitString, true);
+    };
+
+    // Try currency rate literals ($8/m^2, $8 per m^2)
+    const currencyUnit = parseCurrencyUnit(trimmed);
+    if (currencyUnit) {
+      return currencyUnit;
+    }
+
+    const parseUnitRate = (input: string): SemanticValue | null => {
+      const perMatch = input.match(/^(.*?)\bper\b(.+)$/i);
+      let left: string | null = null;
+      let unitPart: string | null = null;
+      if (perMatch) {
+        left = perMatch[1].trim();
+        unitPart = perMatch[2].trim();
+      } else if (input.includes("/")) {
+        const slashIndex = input.indexOf("/");
+        left = input.slice(0, slashIndex).trim();
+        unitPart = input.slice(slashIndex + 1).trim();
+      }
+
+      if (!left || !unitPart) {
+        return null;
+      }
+
+      if (!left.match(/^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/)) {
+        return null;
+      }
+
+      const unitString = unitPart.replace(/\s+/g, "");
+      if (!unitString || !/[a-zA-Z°µμΩ]/.test(unitString)) {
+        return null;
+      }
+
+      try {
+        SmartPadQuantity.fromValueAndUnit(1, `1/${unitString}`);
+      } catch {
+        return null;
+      }
+
+      return UnitValue.fromValueAndUnit(parseFloat(left), `1/${unitString}`);
+    };
+
+    const unitRate = parseUnitRate(trimmed);
+    if (unitRate) {
+      return unitRate;
+    }
     
     // Try percentage first (20%)
     if (trimmed.match(/^-?\d+(?:\.\d+)?%$/)) {
