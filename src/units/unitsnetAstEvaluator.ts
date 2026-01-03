@@ -248,7 +248,8 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
         formattedResult = this.formatQuantityWithSmartThresholds(
           result.value.getQuantity(),
           displayOptions,
-          this.shouldPreferBaseUnit(node.expression, result.value.getQuantity())
+          this.shouldPreferBaseUnit(node.expression, result.value.getQuantity()),
+          this.hasExplicitConversion(node.expression)
         );
       } else {
         const numericValue = result.value.getNumericValue();
@@ -330,7 +331,8 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
           ? this.formatQuantityWithSmartThresholds(
               result.value.getQuantity(),
               displayOptions,
-              this.shouldPreferBaseUnit(node.expression, result.value.getQuantity())
+              this.shouldPreferBaseUnit(node.expression, result.value.getQuantity()),
+              this.hasExplicitConversion(node.expression)
             )
           : result.value.toString(displayOptions);
       if (rewritten.currencySymbol && result.value instanceof NumberValue) {
@@ -487,7 +489,8 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
   private formatQuantityWithSmartThresholds(
     quantity: SmartPadQuantity,
     displayOptions: DisplayOptions,
-    preferBaseUnit: boolean
+    preferBaseUnit: boolean,
+    preserveUnit: boolean
   ): string {
     const precision = displayOptions.precision ?? 6;
     if (quantity.isDimensionless()) {
@@ -496,6 +499,15 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
         return quantity.value.toString();
       }
       return this.formatScalarValue(quantity.value, precision, displayOptions);
+    }
+
+    if (preserveUnit) {
+      const formattedValue = this.formatScalarValue(
+        quantity.value,
+        precision,
+        displayOptions
+      );
+      return quantity.unit ? `${formattedValue} ${quantity.unit}` : formattedValue;
     }
 
     // For expressions, use smart thresholds and optionally prefer base units
@@ -514,6 +526,10 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
       return false;
     }
     return true;
+  }
+
+  private hasExplicitConversion(expression: string): boolean {
+    return /\b(to|in)\b/.test(expression);
   }
 
   private resolveUnitsPrecision(unit: string, value: number, defaultPlaces: number): number {

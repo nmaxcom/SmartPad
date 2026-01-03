@@ -44,8 +44,10 @@ speed = 9 m/s
 - clicking a variable or expression to reference it at cursor? Like clicking a var name copies it where you are so you don't have to type it again
 
 # cool syntax uses for future docs/templates
-sqrt(9 m^2) to m =>
-(100 kg + 30 lb) in kg =>
+sqrt(9 m^2) to m =>3 m
+(100 kg + 30 lb) in kg =>114 kg
+paint cost(width, height, price per m2) = width * height * price per m2
+paint cost(3m, 5m, $8 per m^2)=>$120
 
 # longterm ideas
 

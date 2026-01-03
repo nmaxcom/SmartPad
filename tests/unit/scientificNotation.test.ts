@@ -132,6 +132,21 @@ describe("Scientific notation formatting", () => {
     }
   });
 
+  test("unit values respect upper threshold changes", () => {
+    const scientific = evaluateExpression("1e+2 kg =>", {
+      scientificUpperThreshold: 1e2,
+    });
+    const standard = evaluateExpression("1e+2 kg =>", {
+      scientificUpperThreshold: 1e6,
+    });
+    expect(scientific?.type).toBe("mathResult");
+    expect(standard?.type).toBe("mathResult");
+    if (scientific?.type === "mathResult" && standard?.type === "mathResult") {
+      expect(scientific.result).toMatch(/e\+?2\s*kg$/);
+      expect(standard.result).toBe("100 kg");
+    }
+  });
+
   test("scientific trimming can be disabled for fixed mantissa digits", () => {
     const trimmed = evaluateExpression("5e3 =>", {
       decimalPlaces: 2,

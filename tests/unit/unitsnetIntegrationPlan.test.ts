@@ -140,6 +140,12 @@ describe("UnitsNet Integration Plan - Comprehensive Feature Tests", () => {
         expect(parseFloat((result4 as any).result)).toBeCloseTo(3, 6);
         expect((result4 as any).result).toMatch(/\bm\b/);
       }
+
+      const result5 = evaluateExpression("1 day to s =>");
+      expect(result5?.type).toBe("mathResult");
+      if (result5?.type === "mathResult") {
+        expect((result5 as any).result).toMatch(/86400\s*s/);
+      }
     });
   });
 
