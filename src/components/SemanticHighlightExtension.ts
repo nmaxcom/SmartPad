@@ -174,11 +174,28 @@ export const SemanticHighlightExtension = Extension.create({
                 const lineNumber = Math.floor(offset / 100); // Approximate line number
                 const astNode = parseLine(text, lineNumber); // Parse text into AST
                 const tokens = extractTokensFromASTNode(astNode, getVariableContext());
+                const resultRanges: Array<{ from: number; to: number }> = [];
+
+                node.descendants((child, pos) => {
+                  if (child.type?.name === "resultToken") {
+                    const from = offset + pos + 1;
+                    const to = from + child.nodeSize - 1;
+                    resultRanges.push({ from, to });
+                    return false;
+                  }
+                  return true;
+                });
 
                 // Apply decorations for each token
                 tokens.forEach((token) => {
                   const from = offset + token.start + 1; // +1 for paragraph node
                   const to = offset + token.end + 1;
+                  const isInResult = resultRanges.some(
+                    (range) => from < range.to && to > range.from
+                  );
+                  if (isInResult) {
+                    return;
+                  }
 
                   // Create inline decoration with appropriate class
                   const decoration = Decoration.inline(from, to, {
