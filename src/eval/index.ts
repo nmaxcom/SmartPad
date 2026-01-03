@@ -30,6 +30,7 @@ import { VariableEvaluatorV2 } from "./variableEvaluatorV2";
 import { ExpressionEvaluatorV2 } from "./expressionEvaluatorV2";
 import { CombinedAssignmentEvaluatorV2 } from "./combinedAssignmentEvaluatorV2";
 import { UnitsNetExpressionEvaluator } from "../units/unitsnetAstEvaluator";
+import { FunctionDefinitionEvaluator } from "./functionDefinitionEvaluator";
 
 /**
  * Sets up the V2 evaluator registry with semantic-aware evaluators.
@@ -47,6 +48,7 @@ export function setupDefaultEvaluators(): void {
   const combinedAssignmentEvaluatorV2 = new CombinedAssignmentEvaluatorV2();
   const variableEvaluatorV2 = new VariableEvaluatorV2();
   const expressionEvaluatorV2 = new ExpressionEvaluatorV2();
+  const functionDefinitionEvaluator = new FunctionDefinitionEvaluator();
 
   // Register V2 evaluators in order of priority
   // Percentage evaluator first - handles complex percentage operations
@@ -57,6 +59,9 @@ export function setupDefaultEvaluators(): void {
 
   // Combined assignment evaluator - handles "x = 100 =>" patterns
   defaultRegistry.register(combinedAssignmentEvaluatorV2);
+
+  // Function definition evaluator - registers user-defined functions
+  defaultRegistry.register(functionDefinitionEvaluator);
   
   // Variable evaluator - handles variable assignments (now much simpler!)
   defaultRegistry.register(variableEvaluatorV2);

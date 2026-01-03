@@ -117,6 +117,64 @@ fuel economy = 28 mpg
 fuel economy to km/L =>`,
   },
   {
+    id: "functions-showcase",
+    emoji: "🧩",
+    name: "Functions Showcase",
+    content: `# Functions: reusable formulas
+# Define recipes (no => on definitions)
+
+// Calculates area of a circle
+area(r) = PI * r^2
+volume(area, height) = area * height
+tip(bill, rate=15%) = bill * rate
+with_tip(bill, rate=15%) = bill + tip(bill, rate)
+
+# Call them like normal math
+
+radius = 4 m
+circle area = area(radius) =>
+cylinder volume = volume(circle area, 2 m) =>
+with_tip($80) =>
+with_tip(bill: $120, rate: 20%) =>
+
+# Named args make intent obvious
+
+tax(amount, rate=8.5%) = amount * rate
+total(amount) = amount + tax(amount)
+total($1200) =>
+
+# Dynamic context: functions use current variables
+
+rate = 10%
+discount(price) = price * rate
+discount($100) =>
+rate = 20%
+discount($100) =>
+
+# Zero-argument functions
+
+magic() = 42
+magic() =>
+
+# Units and conversions inside functions
+
+speed(distance, time) = distance / time
+speed(150 m, 12 s) =>
+speed(1500 m, 2 min) =>
+
+# Currency stays currency
+
+with_fee(price, fee=5%) = price + price * fee
+with_fee($200) =>
+
+# Compose functions for real workflows
+
+paint_area(width, height) = width * height
+paint_cost(width, height, price_per_m2) = paint_area(width, height) * price_per_m2
+paint_cost(3 m, 2.5 m, $8) =>
+paint_cost(width: 4 m, height: 3 m, price_per_m2: $7.5) =>`,
+  },
+  {
     id: "event-profit",
     emoji: "🎟️",
     name: "Event Profit",

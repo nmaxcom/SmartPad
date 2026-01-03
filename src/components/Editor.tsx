@@ -3,7 +3,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import { Extension } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
-import { Slice } from "@tiptap/pm/model";
+import { Fragment, Slice } from "@tiptap/pm/model";
 import { TextSelection } from "@tiptap/pm/state";
 import "./Editor.css";
 import { useVariables } from "../state/useVariables";
@@ -367,6 +367,43 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
     content: "<p></p>",
     editorProps: {
       transformPastedHTML: (html) => normalizePastedHTML(html),
+      handlePaste: (view, event) => {
+        const clipboard = event.clipboardData;
+        if (!clipboard) {
+          return false;
+        }
+
+        const html = clipboard.getData("text/html") || "";
+        const markdown =
+          clipboard.getData("text/markdown") ||
+          clipboard.getData("text/x-vscode-markdown") ||
+          "";
+        const text = clipboard.getData("text/plain") || "";
+        const types = Array.from(clipboard.types || []);
+        const hasCodeHtml = /<(pre|code)\b/i.test(html);
+        const hasVscodeType = types.some((type) => type.includes("vscode"));
+
+        if (!hasCodeHtml && !markdown && !hasVscodeType) {
+          return false;
+        }
+
+        const payload = markdown || text || "";
+        if (!payload) {
+          return false;
+        }
+
+        const lines = payload.replace(/\r\n?/g, "\n").split("\n");
+        const { schema } = view.state;
+        const paragraphs = lines.map((line) =>
+          schema.nodes.paragraph.create(
+            null,
+            line ? schema.text(line) : undefined
+          )
+        );
+        const slice = new Slice(Fragment.fromArray(paragraphs), 0, 0);
+        view.dispatch(view.state.tr.replaceSelection(slice).scrollIntoView());
+        return true;
+      },
       clipboardTextSerializer: (slice: Slice) =>
         slice.content.textBetween(0, slice.content.size, "\n", (node) => {
           if (node.type?.name === "resultToken") {

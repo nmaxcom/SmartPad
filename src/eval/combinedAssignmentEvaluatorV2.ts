@@ -21,12 +21,15 @@ import {
 import {
   ErrorValue,
   NumberValue,
+  UnitValue,
+  CurrencyUnitValue,
   DisplayOptions,
   SemanticParsers,
   SemanticValue,
   SemanticValueTypes,
 } from "../types";
 import { parseAndEvaluateExpression } from "../parsing/expressionParser";
+import { parseExpressionComponents } from "../parsing/expressionComponents";
 import { SimpleExpressionParser } from "./expressionEvaluatorV2";
 
 /**
@@ -51,38 +54,41 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
     }
     
     const combNode = node as CombinedAssignmentNode;
+    const conversion = this.extractConversionSuffix(combNode.expression);
+    const expression = conversion ? conversion.baseExpression : combNode.expression;
+    const components = conversion ? this.parseComponents(expression) : combNode.components;
     
     try {
       // Debug logging
       console.log('CombinedAssignmentEvaluatorV2: Processing combined assignment:', {
         variableName: combNode.variableName,
-        expression: combNode.expression,
+        expression,
         raw: combNode.raw
       });
       
       // Parse the expression as a semantic value when it's a literal,
       // otherwise evaluate via semantic component parsing.
       let semanticValue =
-        SemanticParsers.parse(combNode.expression) ||
-        this.resolveVariableReference(combNode.expression, context);
+        SemanticParsers.parse(expression) ||
+        this.resolveVariableReference(expression, context);
 
-      if (!semanticValue && combNode.components.length > 0) {
+      if (!semanticValue && components.length > 0) {
         semanticValue = SimpleExpressionParser.parseComponents(
-          combNode.components,
+          components,
           context
         );
       }
 
       if (!semanticValue) {
         semanticValue = SimpleExpressionParser.parseArithmetic(
-          combNode.expression,
+          expression,
           context
         );
       }
 
       if (!semanticValue) {
         const evalResult = parseAndEvaluateExpression(
-          combNode.expression,
+          expression,
           context.variableContext
         );
         if (evalResult.error) {
@@ -98,6 +104,10 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
           );
         }
         semanticValue = NumberValue.from(evalResult.value);
+      }
+
+      if (conversion) {
+        semanticValue = this.applyUnitConversion(semanticValue, conversion.target);
       }
 
       if (SemanticValueTypes.isError(semanticValue)) {
@@ -218,6 +228,91 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
     }
 
     return ErrorValue.semanticError(`Variable "${normalized}" has unsupported type`);
+  }
+
+  private extractConversionSuffix(
+    expression: string
+  ): { baseExpression: string; target: string } | null {
+    const match = expression.match(/\b(to|in)\b\s+(.+)$/i);
+    if (!match || match.index === undefined) {
+      return null;
+    }
+    const baseExpression = expression.slice(0, match.index).trim();
+    if (!baseExpression) {
+      return null;
+    }
+    const target = match[2].trim();
+    if (!target) {
+      return null;
+    }
+    return { baseExpression, target };
+  }
+
+  private applyUnitConversion(value: SemanticValue, target: string): SemanticValue {
+    const parsed = this.parseConversionTarget(target);
+    if (!parsed) {
+      return ErrorValue.semanticError("Expected unit after 'to'");
+    }
+
+    if (value.getType() === "unit") {
+      try {
+        return (value as UnitValue).convertTo(parsed.unit);
+      } catch (error) {
+        return ErrorValue.semanticError(
+          error instanceof Error ? error.message : String(error)
+        );
+      }
+    }
+
+    if (value.getType() === "currencyUnit") {
+      const currencyValue = value as CurrencyUnitValue;
+      if (parsed.symbol && parsed.symbol !== currencyValue.getSymbol()) {
+        return ErrorValue.semanticError("Cannot convert between different currencies");
+      }
+      try {
+        return currencyValue.convertTo(parsed.unit);
+      } catch (error) {
+        return ErrorValue.semanticError(
+          error instanceof Error ? error.message : String(error)
+        );
+      }
+    }
+
+    return ErrorValue.semanticError("Cannot convert non-unit value");
+  }
+
+  private parseComponents(expression: string): import("../parsing/ast").ExpressionComponent[] {
+    try {
+      return parseExpressionComponents(expression);
+    } catch {
+      return [];
+    }
+  }
+
+  private parseConversionTarget(
+    target: string
+  ): { unit: string; symbol?: string } | null {
+    let raw = target.trim();
+    if (!raw) {
+      return null;
+    }
+
+    let symbol: string | undefined;
+    const symbolMatch = raw.match(/^([$€£¥₹₿])\s*(.*)$/);
+    if (symbolMatch) {
+      symbol = symbolMatch[1];
+      raw = symbolMatch[2].trim();
+    }
+
+    raw = raw.replace(/^per\b/i, "").trim();
+    raw = raw.replace(/^[/*]+/, "").trim();
+
+    const unit = raw.replace(/\s+/g, "");
+    if (!unit) {
+      return null;
+    }
+
+    return { unit, symbol };
   }
 
   private getDisplayOptions(context: EvaluationContext): DisplayOptions {

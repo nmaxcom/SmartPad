@@ -58,11 +58,17 @@ export interface VariableAssignmentNode extends BaseASTNode {
 /**
  * Represents a semantic component in an expression tree
  */
+export interface FunctionArgument {
+  readonly name?: string;
+  readonly components: ExpressionComponent[];
+}
+
 export interface ExpressionComponent {
   readonly type: "literal" | "variable" | "operator" | "function" | "parentheses";
   readonly value: string;
   readonly parsedValue?: SemanticValue;
   readonly children?: ExpressionComponent[];
+  readonly args?: FunctionArgument[];
 }
 
 /**
@@ -114,6 +120,22 @@ export interface ErrorNode extends BaseASTNode {
 }
 
 /**
+ * Represents a user-defined function definition
+ * Example: area(r) = PI * r^2
+ */
+export interface FunctionDefinitionNode extends BaseASTNode {
+  readonly type: "functionDefinition";
+  readonly functionName: string;
+  readonly params: Array<{
+    name: string;
+    defaultExpression?: string;
+    defaultComponents?: ExpressionComponent[];
+  }>;
+  readonly expression: string;
+  readonly components: ExpressionComponent[];
+}
+
+/**
  * Union type for all possible AST nodes
  */
 export type ASTNode =
@@ -122,6 +144,7 @@ export type ASTNode =
   | VariableAssignmentNode
   | ExpressionNode
   | CombinedAssignmentNode
+  | FunctionDefinitionNode
   | ErrorNode;
 
 /**
@@ -149,4 +172,8 @@ export function isCombinedAssignmentNode(node: ASTNode): node is CombinedAssignm
 
 export function isErrorNode(node: ASTNode): node is ErrorNode {
   return node.type === "error";
+}
+
+export function isFunctionDefinitionNode(node: ASTNode): node is FunctionDefinitionNode {
+  return node.type === "functionDefinition";
 }

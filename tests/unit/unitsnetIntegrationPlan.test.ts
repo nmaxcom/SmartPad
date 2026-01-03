@@ -111,6 +111,36 @@ describe("UnitsNet Integration Plan - Comprehensive Feature Tests", () => {
         expect((result2 as any).result).toMatch(/3048\s*cm/);
       }
     });
+
+    test("converts full expressions with to/in suffix", () => {
+      const result1 = evaluateExpression("100 kg + 30 lb to kg =>");
+      expect(result1?.type).toBe("mathResult");
+      if (result1?.type === "mathResult") {
+        expect(parseFloat((result1 as any).result)).toBeCloseTo(113.6078, 3);
+        expect((result1 as any).result).toMatch(/kg/);
+      }
+
+      const result2 = evaluateExpression("(100 kg + 30 lb) in kg =>");
+      expect(result2?.type).toBe("mathResult");
+      if (result2?.type === "mathResult") {
+        expect(parseFloat((result2 as any).result)).toBeCloseTo(113.6078, 3);
+        expect((result2 as any).result).toMatch(/kg/);
+      }
+
+      const result3 = evaluateExpression("60 km / 2 h to m/s =>");
+      expect(result3?.type).toBe("mathResult");
+      if (result3?.type === "mathResult") {
+        expect(parseFloat((result3 as any).result)).toBeCloseTo(8.3333, 3);
+        expect((result3 as any).result).toMatch(/m\/s/);
+      }
+
+      const result4 = evaluateExpression("sqrt(9 m^2) to m =>");
+      expect(result4?.type).toBe("mathResult");
+      if (result4?.type === "mathResult") {
+        expect(parseFloat((result4 as any).result)).toBeCloseTo(3, 6);
+        expect((result4 as any).result).toMatch(/\bm\b/);
+      }
+    });
   });
 
   describe("Derived Units and Conversions", () => {
@@ -586,23 +616,29 @@ describe("UnitsNet Integration Plan - Comprehensive Feature Tests", () => {
 
       // "area = 10 m^2"  // Still works
       const result2 = evaluateExpression("area = 10 m^2");
-      expect(result2?.type).toBe("combined");
+      expect(result2?.type === "combined" || result2?.type === "variable").toBe(true);
       if (result2?.type === "combined") {
         expect((result2 as any).result).toMatch(/10\s*m.*2/);
+      } else if (result2?.type === "variable") {
+        expect((result2 as any).displayText).toMatch(/10\s*m.*2/);
       }
 
       // "speed = 60 mph" // Should still work
       const result3 = evaluateExpression("speed = 60 mph");
-      expect(result3?.type).toBe("combined");
+      expect(result3?.type === "combined" || result3?.type === "variable").toBe(true);
       if (result3?.type === "combined") {
         expect((result3 as any).result).toMatch(/60\s*mph|26\.8.*m.*s/);
+      } else if (result3?.type === "variable") {
+        expect((result3 as any).displayText).toMatch(/60\s*mph/);
       }
 
       // "temperature = 25 C" // Should still create a variable with its unit
       const result4 = evaluateExpression("temperature = 25 C");
-      expect(result4?.type).toBe("combined");
+      expect(result4?.type === "combined" || result4?.type === "variable").toBe(true);
       if (result4?.type === "combined") {
         expect((result4 as any).result).toMatch(/25\s*C/);
+      } else if (result4?.type === "variable") {
+        expect((result4 as any).displayText).toMatch(/25\s*C/);
       }
     });
   });

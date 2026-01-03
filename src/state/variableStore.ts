@@ -7,6 +7,7 @@ import {
   PercentageValue, 
   CurrencyValue, 
   UnitValue, 
+  SemanticParsers,
   ErrorValue,
   ErrorType 
 } from "../types";
@@ -219,6 +220,11 @@ export class ReactiveVariableStore {
    * Parse a raw value into a SemanticValue
    */
   private parseRawValue(rawValue: string): SemanticValue {
+    const parsed = SemanticParsers.parse(rawValue);
+    if (parsed) {
+      return parsed;
+    }
+
     // Try to parse as percentage
     if (rawValue.trim().match(/^\d+(?:\.\d+)?%$/)) {
       const match = rawValue.trim().match(/^(\d+(?:\.\d+)?)%$/);

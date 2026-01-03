@@ -231,19 +231,15 @@ export function parseExpressionComponents(expression: string): ExpressionCompone
           });
           pos += 2;
         } else if (nextToken?.type === 'identifier' && isPerIdentifier(nextToken.value)) {
-          const { unitTokens, nextPos } = collectUnitTokens(tokens, pos + 2);
-          if (unitTokens.length > 0) {
-            const literal = [token, nextToken, ...unitTokens].map((t) => t.value).join(" ");
-            const parsed = SemanticParsers.parse(literal);
-            if (parsed) {
-              components.push({
-                type: 'literal',
-                value: literal,
-                parsedValue: parsed,
-              });
-              pos = nextPos;
-              break;
-            }
+          const perLiteral = buildPerLiteral(value, nextToken, tokens, pos + 2);
+          if (perLiteral) {
+            components.push({
+              type: 'literal',
+              value: perLiteral.literal,
+              parsedValue: perLiteral.parsed,
+            });
+            pos = perLiteral.nextPos;
+            break;
           }
           components.push({
             type: 'literal',
@@ -347,7 +343,19 @@ export function parseExpressionComponents(expression: string): ExpressionCompone
         }
 
         if (separatorToken?.type === 'identifier' && isPerIdentifier(separatorToken.value)) {
-          if (tryCurrencyUnitLiteral(pos + 3)) {
+          const perLiteral = buildPerLiteral(
+            `${value}${nextToken.value}`,
+            separatorToken,
+            tokens,
+            pos + 3
+          );
+          if (perLiteral && perLiteral.parsed.getType() === "currencyUnit") {
+            components.push({
+              type: 'literal',
+              value: perLiteral.literal,
+              parsedValue: perLiteral.parsed,
+            });
+            pos = perLiteral.nextPos;
             break;
           }
         }
@@ -451,6 +459,35 @@ export function parseExpressionComponents(expression: string): ExpressionCompone
 
 function isPerIdentifier(value: string): boolean {
   return /^per\b/i.test(value.trim());
+}
+
+type ParsedSemantic = NonNullable<ReturnType<typeof SemanticParsers.parse>>;
+
+function buildPerLiteral(
+  baseValue: string,
+  perToken: Token,
+  tokens: Token[],
+  unitStartPos: number
+): { literal: string; parsed: ParsedSemantic; nextPos: number } | null {
+  const perValue = perToken.value.trim();
+  const inlineUnit = perValue.toLowerCase() === "per" ? "" : perValue.replace(/^per\s+/i, "").trim();
+  const { unitTokens, nextPos } = collectUnitTokens(tokens, unitStartPos);
+  const unitParts = [
+    inlineUnit,
+    ...unitTokens.map((token) => token.value),
+  ].filter(Boolean);
+
+  if (unitParts.length === 0) {
+    return null;
+  }
+
+  const literal = `${baseValue} per ${unitParts.join(" ")}`.replace(/\s+/g, " ").trim();
+  const parsed = SemanticParsers.parse(literal);
+  if (!parsed) {
+    return null;
+  }
+
+  return { literal, parsed, nextPos };
 }
 
 function collectUnitTokens(tokens: Token[], startPos: number): { unitTokens: Token[]; nextPos: number } {

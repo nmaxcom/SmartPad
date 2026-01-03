@@ -5,7 +5,7 @@
  * into render nodes. It provides a plugin-based architecture for extensibility.
  */
 
-import { ASTNode } from "../parsing/ast";
+import { ASTNode, FunctionDefinitionNode } from "../parsing/ast";
 import { RenderNode } from "./renderNodes";
 import { ReactiveVariableStore } from "../state/variableStore";
 import { Variable } from "../state/types";
@@ -23,11 +23,13 @@ const logger = {
 export interface EvaluationContext {
   variableStore: ReactiveVariableStore;
   variableContext: Map<string, Variable>;
+  functionStore?: Map<string, FunctionDefinitionNode>;
   lineNumber: number;
   decimalPlaces: number;
   scientificUpperThreshold?: number;
   scientificLowerThreshold?: number;
   scientificTrimTrailingZeros?: boolean;
+  functionCallDepth?: number;
 }
 
 /**

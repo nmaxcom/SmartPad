@@ -16,6 +16,7 @@ import {
   ExpressionNode,
   CombinedAssignmentNode,
   ErrorNode,
+  FunctionDefinitionNode,
 } from "./ast";
 import {
   parseVariableAssignment,
@@ -46,6 +47,12 @@ export function parseLine(line: string, lineNumber: number = 1): ASTNode {
   }
 
   try {
+    // Check for function definitions before variable assignments
+    const functionDef = parseFunctionDefinition(trimmedLine, line, lineNumber);
+    if (functionDef) {
+      return functionDef;
+    }
+
     // Check for variable assignment first (with or without =>)
     // This follows the principle: assignment is assignment, => is just "show result"
     const varParseResult = parseVariableAssignmentWithOptionalEvaluation(trimmedLine);
@@ -230,10 +237,12 @@ function createExpressionNode(expression: string, raw: string, line: number): Ex
       /\bas\s+%/.test(expression) ||
       /\bis\s+%/.test(expression);
 
+    const expressionForComponents = stripConversionSuffix(expression);
+
     // Parse the expression into a component tree
     let components: ReturnType<typeof parseExpressionComponents> = [];
     try {
-      components = parseExpressionComponents(expression);
+      components = parseExpressionComponents(expressionForComponents);
     } catch (error) {
       if (!isPercentageExpression) {
         throw error;
@@ -241,7 +250,8 @@ function createExpressionNode(expression: string, raw: string, line: number): Ex
     }
 
     // Validate types early (without variable context yet)
-    if (!isPercentageExpression && components.length > 0) {
+    const hasFunction = components.some((component) => component.type === "function");
+    if (!isPercentageExpression && !hasFunction && components.length > 0) {
       const typeError = validateExpressionTypes(components, new Map(), undefined, {
         allowUnknownVariables: true,
       });
@@ -282,10 +292,12 @@ function createCombinedAssignmentNode(
       /\bas\s+%/.test(expression) ||
       /\bis\s+%/.test(expression);
 
+    const expressionForComponents = stripConversionSuffix(expression);
+
     // Parse the expression into a component tree
     let components: ReturnType<typeof parseExpressionComponents> = [];
     try {
-      components = parseExpressionComponents(expression);
+      components = parseExpressionComponents(expressionForComponents);
     } catch (error) {
       if (!isPercentageExpression) {
         throw error;
@@ -293,7 +305,8 @@ function createCombinedAssignmentNode(
     }
     
     // Validate types early (without variable context yet)
-    if (!isPercentageExpression && components.length > 0) {
+    const hasFunction = components.some((component) => component.type === "function");
+    if (!isPercentageExpression && !hasFunction && components.length > 0) {
       const typeError = validateExpressionTypes(components, new Map(), undefined, {
         allowUnknownVariables: true,
       });
@@ -333,6 +346,157 @@ function createErrorNode(
     error,
     errorType,
   };
+}
+
+function stripConversionSuffix(expression: string): string {
+  const match = expression.match(/\b(to|in)\b\s+.+$/i);
+  if (!match || match.index === undefined) {
+    return expression;
+  }
+  const base = expression.slice(0, match.index).trim();
+  return base || expression;
+}
+
+function parseFunctionDefinition(
+  trimmedLine: string,
+  raw: string,
+  line: number
+): FunctionDefinitionNode | ErrorNode | null {
+  if (!trimmedLine.includes("(") || !trimmedLine.includes("=") || trimmedLine.includes("=>")) {
+    return null;
+  }
+
+  const assignment = splitTopLevelAssignment(trimmedLine);
+  if (!assignment) return null;
+  const { left, right } = assignment;
+  if (!left || !right) return null;
+
+  const openIndex = left.indexOf("(");
+  const closeIndex = left.lastIndexOf(")");
+  if (openIndex === -1 || closeIndex === -1 || closeIndex < openIndex) {
+    return null;
+  }
+
+  const functionName = left.substring(0, openIndex).trim();
+  const paramsRaw = left.substring(openIndex + 1, closeIndex).trim();
+  const expression = right.trim();
+
+  if (!functionName) {
+    return createErrorNode("Missing function name", "syntax", raw, line);
+  }
+
+  if (!/^[a-zA-Z][a-zA-Z0-9\s_]*$/.test(functionName)) {
+    return createErrorNode(`Invalid function name: ${functionName}`, "syntax", raw, line);
+  }
+
+  if (!expression) {
+    return createErrorNode("Missing function body", "syntax", raw, line);
+  }
+
+  const paramsResult = parseFunctionParams(paramsRaw, raw, line);
+  if (paramsResult && (paramsResult as ErrorNode).type === "error") {
+    return paramsResult as ErrorNode;
+  }
+
+  let components: ReturnType<typeof parseExpressionComponents> = [];
+  try {
+    components = parseExpressionComponents(expression);
+  } catch (error) {
+    return createErrorNode(
+      `Function body parse error: ${error instanceof Error ? error.message : "Unknown error"}`,
+      "parse",
+      raw,
+      line
+    );
+  }
+
+  return {
+    type: "functionDefinition",
+    line,
+    raw,
+    functionName,
+    params: paramsResult as FunctionDefinitionNode["params"],
+    expression,
+    components,
+  };
+}
+
+function splitTopLevelAssignment(line: string): { left: string; right: string } | null {
+  let depth = 0;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === "(") depth += 1;
+    if (char === ")") depth = Math.max(0, depth - 1);
+    if (char === "=" && depth === 0) {
+      return {
+        left: line.substring(0, i).trim(),
+        right: line.substring(i + 1).trim(),
+      };
+    }
+  }
+  return null;
+}
+
+function parseFunctionParams(
+  paramsRaw: string,
+  raw: string,
+  line: number
+): FunctionDefinitionNode["params"] | ErrorNode {
+  if (!paramsRaw) return [];
+
+  const params: FunctionDefinitionNode["params"] = [];
+  const parts: string[] = [];
+  let current = "";
+  let depth = 0;
+
+  for (let i = 0; i < paramsRaw.length; i++) {
+    const char = paramsRaw[i];
+    if (char === "(") depth += 1;
+    if (char === ")") depth = Math.max(0, depth - 1);
+    if (char === "," && depth === 0) {
+      parts.push(current);
+      current = "";
+      continue;
+    }
+    current += char;
+  }
+  if (current.trim()) {
+    parts.push(current);
+  }
+
+  for (const part of parts) {
+    const trimmed = part.trim();
+    if (!trimmed) continue;
+
+    const equalsIndex = trimmed.indexOf("=");
+    const name = (equalsIndex === -1 ? trimmed : trimmed.substring(0, equalsIndex)).trim();
+    const defaultExpression =
+      equalsIndex === -1 ? undefined : trimmed.substring(equalsIndex + 1).trim();
+
+    if (!/^[a-zA-Z][a-zA-Z0-9\s_]*$/.test(name)) {
+      return createErrorNode(`Invalid parameter name: ${name}`, "syntax", raw, line);
+    }
+
+    let defaultComponents: ReturnType<typeof parseExpressionComponents> | undefined;
+    if (defaultExpression) {
+      try {
+        defaultComponents = parseExpressionComponents(defaultExpression);
+      } catch (error) {
+        return createErrorNode(
+          `Invalid default for ${name}: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`,
+          "parse",
+          raw,
+          line
+        );
+      }
+    }
+
+    params.push({ name, defaultExpression, defaultComponents });
+  }
+
+  return params;
 }
 
 /**

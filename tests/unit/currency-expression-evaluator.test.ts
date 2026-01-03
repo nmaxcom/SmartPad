@@ -255,6 +255,21 @@ describe("Currency Expression Evaluation", () => {
       "total = area * price per m2 =>",
       "rate per m2 = $8 per m^2",
       "total2 = area * rate per m2 =>",
+      "price per m = $8 per m",
+      "length = 7.5 m",
+      "total3 = length * price per m =>",
+      "price per m2b = $8/m^2",
+      "total4 = area * price per m2b =>",
+      "rate per km = $2 per km",
+      "distance = 12 km",
+      "total5 = distance * rate per km =>",
+      "rate per kg = $3 per kg",
+      "mass = 4 kg",
+      "total6 = mass * rate per kg =>",
+      "rate per s = $0.5 per s",
+      "time = 8 s",
+      "total7 = time * rate per s =>",
+      "rate per ft = $8/ft",
     ];
 
     const results: Record<string, string> = {};
@@ -281,6 +296,40 @@ describe("Currency Expression Evaluation", () => {
 
     expect(results.total).toBe("$60");
     expect(results.total2).toBe("$60");
+    expect(results.total3).toBe("$60");
+    expect(results.total4).toBe("$60");
+    expect(results.total5).toBe("$24");
+    expect(results.total6).toBe("$12");
+    expect(results.total7).toBe("$4");
+
+    const conversionContext = new Map<string, Variable>();
+    reactiveStore.getAllVariables().forEach((variable) => {
+      conversionContext.set(variable.name, variable);
+    });
+
+    const toNode = parseLine("rate per ft to $/m =>", lines.length + 1);
+    const toResult = defaultRegistry.evaluate(toNode, {
+      variableStore: reactiveStore,
+      variableContext: conversionContext,
+      lineNumber: lines.length + 1,
+      decimalPlaces: 6,
+    });
+
+    expect(toResult?.type).toBe("mathResult");
+    expect((toResult as any).result).toContain("/m");
+    expect((toResult as any).result).toContain("$26.246719");
+
+    const inNode = parseLine("rate per ft in $/m =>", lines.length + 2);
+    const inResult = defaultRegistry.evaluate(inNode, {
+      variableStore: reactiveStore,
+      variableContext: conversionContext,
+      lineNumber: lines.length + 2,
+      decimalPlaces: 6,
+    });
+
+    expect(inResult?.type).toBe("mathResult");
+    expect((inResult as any).result).toContain("/m");
+    expect((inResult as any).result).toContain("$26.246719");
   });
 
   test("unit rates without currency are parsed as units", () => {
@@ -290,6 +339,12 @@ describe("Currency Expression Evaluation", () => {
       "pp = 16 / m^2",
       "area = 3 m * 2.5 m",
       "total = area * pp =>",
+      "freq = 2 per s",
+      "duration = 7 s",
+      "cycles = freq * duration =>",
+      "density = 0.5 per kg",
+      "mass = 8 kg",
+      "unitless = density * mass =>",
     ];
 
     const results: Record<string, string> = {};
@@ -315,5 +370,24 @@ describe("Currency Expression Evaluation", () => {
     });
 
     expect(results.total).toBe("120");
+    expect(results.cycles).toBe("14");
+    expect(results.unitless).toBe("4");
+  });
+
+  test("currency rate converts when multiplied by other units", () => {
+    setupDefaultEvaluators();
+    const reactiveStore = new ReactiveVariableStore();
+    const node = parseLine("4 m * $8/ft =>", 1);
+    const variableContext = new Map<string, Variable>();
+
+    const result = defaultRegistry.evaluate(node, {
+      variableStore: reactiveStore,
+      variableContext,
+      lineNumber: 1,
+      decimalPlaces: 6,
+    });
+
+    expect(result?.type).toBe("mathResult");
+    expect((result as any).result).toContain("$104.986");
   });
 });

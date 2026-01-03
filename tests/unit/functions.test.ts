@@ -117,18 +117,39 @@ describe("User-defined functions", () => {
       context,
       2
     );
+    evaluateLine("speed_cost(speed, rate) = speed * rate", context, 3);
 
-    const compound = evaluateLine("paint_cost(3 m, 2.5 m, $8) =>", context, 3);
+    const compound = evaluateLine("paint_cost(3 m, 2.5 m, $8) =>", context, 4);
     expect(compound?.type).toBe("mathResult");
     expect((compound as any).result).toBe("$60*m^2");
 
-    const perUnit = evaluateLine("paint_cost(3 m, 2.5 m, $8/m^2) =>", context, 4);
+    const perUnit = evaluateLine("paint_cost(3 m, 2.5 m, $8/m^2) =>", context, 5);
     expect((perUnit as any).result).toBe("$60");
 
-    const perKeyword = evaluateLine("paint_cost(3 m, 2.5 m, $8 per m^2) =>", context, 5);
+    const perKeyword = evaluateLine("paint_cost(3 m, 2.5 m, $8 per m^2) =>", context, 6);
     expect((perKeyword as any).result).toBe("$60");
 
-    const unitRate = evaluateLine("paint_cost(3 m, 2.5 m, 16/m^2) =>", context, 6);
+    const unitRate = evaluateLine("paint_cost(3 m, 2.5 m, 16/m^2) =>", context, 7);
     expect((unitRate as any).result).toBe("120");
+
+    const perLinear = evaluateLine("paint_cost(3 m, 2.5, $8 per m) =>", context, 8);
+    expect((perLinear as any).result).toBe("$60");
+
+    const perCmSquared = evaluateLine("paint_cost(3 m, 2.5 m, $0.01 per cm^2) =>", context, 9);
+    expect((perCmSquared as any).result).toBe("$750");
+
+    const perSpeed = evaluateLine("speed_cost(60 km/h, $2 per km/h) =>", context, 10);
+    expect((perSpeed as any).result).toBe("$120");
+  });
+
+  test("functions support unit conversions with to/in", () => {
+    const context = createContext();
+    evaluateLine("calc(met) = met^2", context, 1);
+
+    const toResult = evaluateLine("calc(3 m) to cm^2 =>", context, 2);
+    expect((toResult as any).result).toBe("90000 cm^2");
+
+    const inResult = evaluateLine("calc(3 m) in cm^2 =>", context, 3);
+    expect((inResult as any).result).toBe("90000 cm^2");
   });
 });

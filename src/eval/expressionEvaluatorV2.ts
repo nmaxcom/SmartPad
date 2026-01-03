@@ -20,6 +20,8 @@ import {
 import { 
   SemanticValue,
   NumberValue, 
+  UnitValue,
+  CurrencyUnitValue,
   ErrorValue,
   SemanticValueTypes,
   DisplayOptions,
@@ -399,6 +401,27 @@ export class SimpleExpressionParser {
       return ErrorValue.semanticError(`Named arguments not supported for ${funcName}`);
     }
 
+    const unitArgs = args.positional.filter((value) => value.getType() === "unit");
+    const currencyArgs = args.positional.filter(
+      (value) => value.getType() === "currency" || value.getType() === "currencyUnit"
+    );
+
+    if (unitArgs.length > 0) {
+      if (funcName === "sqrt") {
+        if (args.positional.length !== 1) {
+          return ErrorValue.semanticError(`sqrt expects 1 argument, got ${args.positional.length}`);
+        }
+        const unitValue = args.positional[0] as UnitValue;
+        const resultQuantity = unitValue.getQuantity().power(0.5);
+        return new UnitValue(resultQuantity);
+      }
+      return ErrorValue.semanticError(`Function "${funcName}" does not support unit arguments`);
+    }
+
+    if (currencyArgs.length > 0) {
+      return ErrorValue.semanticError(`Function "${funcName}" does not support currency arguments`);
+    }
+
     const numericArgs = args.positional.map((value) => {
       if (!value.isNumeric()) {
         throw new Error(
@@ -628,46 +651,51 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
     }
     
     const exprNode = node as ExpressionNode;
+    const conversion = this.extractConversionSuffix(exprNode.expression);
+    const expression = conversion ? conversion.baseExpression : exprNode.expression;
+    const components = conversion
+      ? parseExpressionComponents(expression)
+      : exprNode.components;
     
     try {
       let result: SemanticValue;
       
       // Try simple literal first
-      if (this.isSimpleLiteral(exprNode.expression)) {
-        result = this.evaluateLiteral(exprNode.expression);
+      if (this.isSimpleLiteral(expression)) {
+        result = this.evaluateLiteral(expression);
       }
       // Try variable reference
-      else if (this.isVariableReference(exprNode.expression)) {
-        result = this.evaluateVariableReference(exprNode.expression, context);
+      else if (this.isVariableReference(expression)) {
+        result = this.evaluateVariableReference(expression, context);
       }
       // Function calls or expression components
-      else if (this.containsFunctionCall(exprNode.expression)) {
+      else if (this.containsFunctionCall(expression)) {
         const componentResult = SimpleExpressionParser.parseComponents(
-          exprNode.components,
+          components,
           context
         );
         if (componentResult) {
           result = componentResult;
         } else {
-          result = ErrorValue.semanticError(`Unsupported expression: "${exprNode.expression}"`);
+          result = ErrorValue.semanticError(`Unsupported expression: "${expression}"`);
         }
       }
       // Try simple arithmetic
-      else if (this.isSimpleArithmetic(exprNode.expression)) {
+      else if (this.isSimpleArithmetic(expression)) {
         const hasCurrency =
-          exprNode.components.length > 0 &&
-          SimpleExpressionParser.containsCurrency(exprNode.components, context);
+          components.length > 0 &&
+          SimpleExpressionParser.containsCurrency(components, context);
         const componentResult = hasCurrency
-          ? SimpleExpressionParser.parseComponents(exprNode.components, context)
+          ? SimpleExpressionParser.parseComponents(components, context)
           : null;
         const semanticResult =
-          componentResult || SimpleExpressionParser.parseArithmetic(exprNode.expression, context);
+          componentResult || SimpleExpressionParser.parseArithmetic(expression, context);
 
         if (semanticResult) {
           result = semanticResult;
         } else {
           const evalResult = parseAndEvaluateExpression(
-            exprNode.expression,
+            expression,
             context.variableContext
           );
           if (evalResult.error) {
@@ -679,7 +707,11 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       }
       // Fallback
       else {
-        result = ErrorValue.semanticError(`Unsupported expression: "${exprNode.expression}"`);
+        result = ErrorValue.semanticError(`Unsupported expression: "${expression}"`);
+      }
+
+      if (conversion) {
+        result = this.applyUnitConversion(result, conversion.target);
       }
       
       if (SemanticValueTypes.isError(result)) {
@@ -741,6 +773,83 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
 
   private containsFunctionCall(expr: string): boolean {
     return /[a-zA-Z_][a-zA-Z0-9_\s]*\s*\(/.test(expr);
+  }
+
+  private extractConversionSuffix(
+    expression: string
+  ): { baseExpression: string; target: string } | null {
+    const match = expression.match(/\b(to|in)\b\s+(.+)$/i);
+    if (!match || match.index === undefined) {
+      return null;
+    }
+    const baseExpression = expression.slice(0, match.index).trim();
+    if (!baseExpression) {
+      return null;
+    }
+    const target = match[2].trim();
+    if (!target) {
+      return null;
+    }
+    return { baseExpression, target };
+  }
+
+  private applyUnitConversion(value: SemanticValue, target: string): SemanticValue {
+    const parsed = this.parseConversionTarget(target);
+    if (!parsed) {
+      return ErrorValue.semanticError("Expected unit after 'to'");
+    }
+
+    if (value.getType() === "unit") {
+      try {
+        return (value as UnitValue).convertTo(parsed.unit);
+      } catch (error) {
+        return ErrorValue.semanticError(
+          error instanceof Error ? error.message : String(error)
+        );
+      }
+    }
+
+    if (value.getType() === "currencyUnit") {
+      const currencyValue = value as CurrencyUnitValue;
+      if (parsed.symbol && parsed.symbol !== currencyValue.getSymbol()) {
+        return ErrorValue.semanticError("Cannot convert between different currencies");
+      }
+      try {
+        return currencyValue.convertTo(parsed.unit);
+      } catch (error) {
+        return ErrorValue.semanticError(
+          error instanceof Error ? error.message : String(error)
+        );
+      }
+    }
+
+    return ErrorValue.semanticError("Cannot convert non-unit value");
+  }
+
+  private parseConversionTarget(
+    target: string
+  ): { unit: string; symbol?: string } | null {
+    let raw = target.trim();
+    if (!raw) {
+      return null;
+    }
+
+    let symbol: string | undefined;
+    const symbolMatch = raw.match(/^([$€£¥₹₿])\s*(.*)$/);
+    if (symbolMatch) {
+      symbol = symbolMatch[1];
+      raw = symbolMatch[2].trim();
+    }
+
+    raw = raw.replace(/^per\b/i, "").trim();
+    raw = raw.replace(/^[/*]+/, "").trim();
+
+    const unit = raw.replace(/\s+/g, "");
+    if (!unit) {
+      return null;
+    }
+
+    return { unit, symbol };
   }
   
   /**

@@ -55,4 +55,16 @@ describe("CurrencyValue", () => {
     expect(parsedSuffix).not.toBeNull();
     expect(parsedSuffix?.getType()).toBe("currency");
   });
+
+  test("SemanticParsers detects currency rates with units", () => {
+    const parsed = SemanticParsers.parse("$8/m^2");
+    expect(parsed).not.toBeNull();
+    expect(parsed?.getType()).toBe("currencyUnit");
+    expect(parsed?.toString()).toBe("$8/m^2");
+
+    const parsedPer = SemanticParsers.parse("$8 per m^2");
+    expect(parsedPer).not.toBeNull();
+    expect(parsedPer?.getType()).toBe("currencyUnit");
+    expect(parsedPer?.toString()).toBe("$8/m^2");
+  });
 });

@@ -230,6 +230,21 @@ describe("UnitsNet.js Evaluator", () => {
       expect(quantity.getUnit()).toBe("cm^2");
     });
 
+    test("should convert full expressions with trailing to/in", () => {
+      const result = evaluateUnitsNetExpression("100 kg + 30 lb to kg");
+
+      expect(result.error).toBeUndefined();
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBeCloseTo(113.6078, 3);
+      expect(quantity.getUnit()).toBe("kg");
+
+      const aliasResult = evaluateUnitsNetExpression("100 kg + 30 lb in kg");
+      expect(aliasResult.error).toBeUndefined();
+      const aliasQuantity = aliasResult.value as UnitValue;
+      expect(aliasQuantity.getNumericValue()).toBeCloseTo(113.6078, 3);
+      expect(aliasQuantity.getUnit()).toBe("kg");
+    });
+
     test("should handle variables", () => {
       const variables = {
         length: new UnitValue(SmartPadQuantity.fromValueAndUnit(10, "m")),

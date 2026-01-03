@@ -35,6 +35,9 @@ const TYPE_RULES: TypeRule[] = [
   { leftType: 'currency', rightType: 'currency', operator: '-', resultType: 'currency' },
   { leftType: 'currency', rightType: 'number', operator: '*', resultType: 'currency' },
   { leftType: 'currency', rightType: 'number', operator: '/', resultType: 'currency' },
+  { leftType: 'number', rightType: 'currency', operator: '*', resultType: 'currency' },
+  { leftType: 'currency', rightType: 'unit', operator: '*', resultType: 'currencyUnit' },
+  { leftType: 'currency', rightType: 'unit', operator: '/', resultType: 'currencyUnit' },
 
   // Percentage operations
   { leftType: 'percentage', rightType: 'percentage', operator: '+', resultType: 'percentage' },
@@ -44,12 +47,32 @@ const TYPE_RULES: TypeRule[] = [
   { leftType: 'number', rightType: 'percentage', operator: '*', resultType: 'number' },
   { leftType: 'number', rightType: 'percentage', operator: '+', resultType: 'number' },
   { leftType: 'number', rightType: 'percentage', operator: '-', resultType: 'number' },
+  { leftType: 'percentage', rightType: 'currencyUnit', operator: '*', resultType: 'currencyUnit' },
+  { leftType: 'currencyUnit', rightType: 'percentage', operator: '*', resultType: 'currencyUnit' },
 
   // Unit operations
   { leftType: 'unit', rightType: 'unit', operator: '+', resultType: 'unit' },
   { leftType: 'unit', rightType: 'unit', operator: '-', resultType: 'unit' },
+  { leftType: 'unit', rightType: 'unit', operator: '*', resultType: 'unit' },
+  { leftType: 'unit', rightType: 'unit', operator: '/', resultType: 'unit' },
   { leftType: 'unit', rightType: 'number', operator: '*', resultType: 'unit' },
   { leftType: 'unit', rightType: 'number', operator: '/', resultType: 'unit' },
+  { leftType: 'number', rightType: 'unit', operator: '*', resultType: 'unit' },
+  { leftType: 'number', rightType: 'unit', operator: '/', resultType: 'unit' },
+  { leftType: 'unit', rightType: 'percentage', operator: '*', resultType: 'unit' },
+  { leftType: 'unit', rightType: 'percentage', operator: '/', resultType: 'unit' },
+  { leftType: 'percentage', rightType: 'unit', operator: '*', resultType: 'unit' },
+  { leftType: 'unit', rightType: 'currency', operator: '*', resultType: 'currencyUnit' },
+
+  // Currency-unit operations
+  { leftType: 'currencyUnit', rightType: 'currencyUnit', operator: '+', resultType: 'currencyUnit' },
+  { leftType: 'currencyUnit', rightType: 'currencyUnit', operator: '-', resultType: 'currencyUnit' },
+  { leftType: 'currencyUnit', rightType: 'number', operator: '*', resultType: 'currencyUnit' },
+  { leftType: 'currencyUnit', rightType: 'number', operator: '/', resultType: 'currencyUnit' },
+  { leftType: 'number', rightType: 'currencyUnit', operator: '*', resultType: 'currencyUnit' },
+  { leftType: 'currencyUnit', rightType: 'unit', operator: '*', resultType: 'currencyUnit' },
+  { leftType: 'currencyUnit', rightType: 'unit', operator: '/', resultType: 'currencyUnit' },
+  { leftType: 'unit', rightType: 'currencyUnit', operator: '*', resultType: 'currencyUnit' },
 ];
 
 /**

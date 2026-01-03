@@ -506,7 +506,7 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     if (quantity.unitsnetValue) {
       return false;
     }
-    if (/\bto\b/.test(expression)) {
+    if (/\b(to|in)\b/.test(expression)) {
       return false;
     }
     const unit = quantity.unit;

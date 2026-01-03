@@ -6,7 +6,13 @@
  * units, and plain numbers.
  */
 
-export type SemanticValueType = 'number' | 'percentage' | 'currency' | 'unit' | 'error';
+export type SemanticValueType =
+  | 'number'
+  | 'percentage'
+  | 'currency'
+  | 'unit'
+  | 'currencyUnit'
+  | 'error';
 
 export interface DisplayOptions {
   precision?: number;

@@ -255,8 +255,8 @@ export function tokenizeWithUnitsNet(expression: string): UnitsNetToken[] {
         position++;
       }
 
-      // Check if this is the "to" conversion keyword or a unit shorthand (e.g., 'h')
-      if (funcStr === "to") {
+      // Check if this is the "to"/"in" conversion keyword or a unit shorthand (e.g., 'h')
+      if (funcStr === "to" || funcStr === "in") {
         tokens.push({
           type: UnitsNetTokenType.TO,
           value: funcStr,
@@ -402,9 +402,33 @@ export class UnitsNetParser {
   private parseExpression(): UnitValue | NumberValue {
     let left = this.parseTerm();
 
-    // Handle unit conversions (e.g., "100 ft to m")
+    while (
+      this.currentToken().type === UnitsNetTokenType.OPERATOR &&
+      ["+", "-"].includes(this.currentToken().value)
+    ) {
+      const operator = this.consume().value;
+      const right = this.parseTerm();
+
+      if (operator === "+") {
+        const result = left.add(right);
+        if (result instanceof UnitValue || result instanceof NumberValue) {
+          left = result;
+        } else {
+          throw new Error("Invalid addition result type");
+        }
+      } else {
+        const result = left.subtract(right);
+        if (result instanceof UnitValue || result instanceof NumberValue) {
+          left = result;
+        } else {
+          throw new Error("Invalid subtraction result type");
+        }
+      }
+    }
+
+    // Handle unit conversions (e.g., "100 ft + 30 in to m")
     if (this.currentToken().type === UnitsNetTokenType.TO) {
-      this.consume(); // consume "to"
+      this.consume(); // consume "to"/"in"
       // Build full unit string, supporting forms like km/h, m/s^2, etc.
       let unitStr = "";
       while (true) {
@@ -429,30 +453,6 @@ export class UnitsNetParser {
         return left.convertTo(unitStr);
       } else {
         throw new Error("Cannot convert non-unit value");
-      }
-    }
-
-    while (
-      this.currentToken().type === UnitsNetTokenType.OPERATOR &&
-      ["+", "-"].includes(this.currentToken().value)
-    ) {
-      const operator = this.consume().value;
-      const right = this.parseTerm();
-
-      if (operator === "+") {
-        const result = left.add(right);
-        if (result instanceof UnitValue || result instanceof NumberValue) {
-          left = result;
-        } else {
-          throw new Error("Invalid addition result type");
-        }
-      } else {
-        const result = left.subtract(right);
-        if (result instanceof UnitValue || result instanceof NumberValue) {
-          left = result;
-        } else {
-          throw new Error("Invalid subtraction result type");
-        }
       }
     }
 

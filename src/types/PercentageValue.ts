@@ -132,7 +132,7 @@ export class PercentageValue extends SemanticValue {
       return new PercentageValue(resultDecimal * 100);
     }
     
-    if (other.getType() === 'currency' || other.getType() === 'unit') {
+    if (other.getType() === 'currency' || other.getType() === 'unit' || other.getType() === 'currencyUnit') {
       // Let the other type handle this - e.g., $100 * 20% should be handled by CurrencyValue
       return other.multiply(this);
     }
@@ -196,7 +196,7 @@ export class PercentageValue extends SemanticValue {
       return baseValue.multiply(this);
     }
     
-    if (baseValue.getType() === 'unit') {
+    if (baseValue.getType() === 'unit' || baseValue.getType() === 'currencyUnit') {
       // 20% of 50m = 10m - let unit handle this  
       return baseValue.multiply(this);
     }
@@ -215,7 +215,7 @@ export class PercentageValue extends SemanticValue {
       return new NumberValue(baseValue.getNumericValue() + increase);
     }
     
-    if (baseValue.getType() === 'currency' || baseValue.getType() === 'unit') {
+    if (baseValue.getType() === 'currency' || baseValue.getType() === 'unit' || baseValue.getType() === 'currencyUnit') {
       // Let the base value handle the addition
       const increase = baseValue.multiply(this);
       return baseValue.add(increase);
@@ -235,7 +235,7 @@ export class PercentageValue extends SemanticValue {
       return new NumberValue(baseValue.getNumericValue() - decrease);
     }
     
-    if (baseValue.getType() === 'currency' || baseValue.getType() === 'unit') {
+    if (baseValue.getType() === 'currency' || baseValue.getType() === 'unit' || baseValue.getType() === 'currencyUnit') {
       // Let the base value handle the subtraction
       const decrease = baseValue.multiply(this);
       return baseValue.subtract(decrease);

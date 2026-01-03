@@ -7,7 +7,6 @@ parsify.app, figr.app, aybo.app, calca.io, numi.app, Soulver 3, notepadcalculato
 https://dribbble.com/shots/24984990-Deposit-Calculator-UI-Kit-Widgets
 
 # nuevas ideas
-undo!
 mostrar ventanita/prediccion al empezar a escribir variable name
 left panel con "my sheets"
 
@@ -15,44 +14,22 @@ percentages:
 Value by percent part	5% of what is 6 EUR
 Value by percent addition	5% on what is 6 EUR
 Value by percent subtraction	5% off what is 6 EUR
-writing 0.05 or 5% should work equally (ej )
-
-# discarded bugs/ideas
-- very hard to select text to delete or copy (specially results): not worth it atm (easiest solution: Intercept the copy event and synthesise the clipboard text)
 
 # bugs/ideas
-![[Pasted image 20250815184328.png]]
-- does smartpad clearly understand a percentage that's "per cent" (20%) vs one that's "per one" (0.2)? Case in point:
-	 ![[Pasted image 20250818041550.png]]
-- I think variables should hold more information about its content, like type of percentage (20% vs 0.2), currency, dimension (volume, speed ...), unit type (SI prefix + something? currency? just a unit? is it shorthand/derived like N or SI base unit form (kg·m/s^2?)
-- errors are for some reason showing the danger emoji twice
-- support pasting syntax
-- add more units like liter (make sure it can convert to m^3)
-- make sure it understands SI prefixes in general (kilo, milli, centi, mega...)
+- highlight color slides when adding spaces at the beginning of => sentences
+- 100kg + 30lb to kg=> ⚠️ Unexpected token: to
 - 1h to second=> error unkown unit second
 - 1day to s=>24h lol (same with h)
-- discuss precision...has to be a thing to decide how precise to be, no? Add talk about rounding up or truncating. Also, if settings say only show 2 decimal points, are we secretly carrying more to reduce accumulated error?
-- currency!
 - clean/accept pasted content!
 - make smartpad more flexible as a doc? Allow pasting images, embed youtube, links, links to other smartpage "pages" (yeah that'd be a thing to i guess...)
-
-
-
-- highlights: all dependant results flash a color when changed. flash all same variable instances when hovering over one
-- if pasting code from vscode it doesnt interpret it correctly: <code class="language-markdown">sqrt(16) + 2=&gt;</code>
-
-- highlight all same vars when hovering
-- support for notation for **pow10 notation:**
-	3.14e3  => 3,140
-	3.14e-3 => 0.0031
 
 - allow **text content after an expression** as a separated thing like:
 var2= 69 // (or smth other symbols) blabla
 As of now makes var2 undefined.
  
--  The `in` operator, ex:
- £200 in USD          
-  100kg + 20lbs in tonnes
+speed = 30kmh + 2kmh to m/s
+speed = 9 m/s
+
 
 - automatically solve for one variable like:
     f = (9/5)*c + 32
@@ -65,6 +42,10 @@ As of now makes var2 undefined.
 - reliable undo/redo!
 
 - clicking a variable or expression to reference it at cursor? Like clicking a var name copies it where you are so you don't have to type it again
+
+# cool syntax uses for future docs/templates
+sqrt(9 m^2) to m =>
+(100 kg + 30 lb) in kg =>
 
 # longterm ideas
 

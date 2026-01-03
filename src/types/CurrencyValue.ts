@@ -8,6 +8,8 @@
 import { SemanticValue, SemanticValueType, DisplayOptions } from './SemanticValue';
 import { NumberValue } from './NumberValue';
 import { PercentageValue } from './PercentageValue';
+import { UnitValue } from './UnitValue';
+import { CurrencyUnitValue } from './CurrencyUnitValue';
 
 export type CurrencySymbol = '$' | '€' | '£' | '¥' | '₹' | '₿' | 'CHF' | 'CAD' | 'AUD';
 
@@ -177,6 +179,16 @@ export class CurrencyValue extends SemanticValue {
       const percentDecimal = other.getNumericValue();
       return new CurrencyValue(this.symbol, this.amount * percentDecimal);
     }
+
+    if (other.getType() === 'unit') {
+      const unitValue = other as UnitValue;
+      return new CurrencyUnitValue(
+        this.symbol,
+        this.amount * unitValue.getNumericValue(),
+        unitValue.getUnit(),
+        false
+      );
+    }
     
     if (other.getType() === 'currency') {
       throw this.createIncompatibilityError(other, 'multiply', 'cannot multiply two currency amounts');
@@ -199,6 +211,16 @@ export class CurrencyValue extends SemanticValue {
       // $100 / 20% = $500
       const percentDecimal = other.getNumericValue();
       return new CurrencyValue(this.symbol, this.amount / percentDecimal);
+    }
+
+    if (other.getType() === 'unit') {
+      const unitValue = other as UnitValue;
+      return new CurrencyUnitValue(
+        this.symbol,
+        this.amount / unitValue.getNumericValue(),
+        unitValue.getUnit(),
+        true
+      );
     }
     
     if (other.getType() === 'currency') {

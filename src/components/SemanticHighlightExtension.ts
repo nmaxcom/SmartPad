@@ -460,7 +460,7 @@ export function tokenizeExpression(
   const unitRegex = /^[a-zA-Z°µμΩ][a-zA-Z0-9°µμΩ\/\^\-\*\·]*/;
   const currencySymbolRegex = /^[\$€£¥₹₿]/;
   const currencyCodeRegex = /^(CHF|CAD|AUD)\b/;
-  const keywordRegex = /^(to|of|on|off|as|is|per)\b/;
+  const keywordRegex = /^(to|in|of|on|off|as|is|per)\b/;
   const constantRegex = /^(PI|E)\b/;
 
   // Get all variable names sorted by length (longest first for greedy matching)
@@ -591,7 +591,8 @@ export function tokenizeExpression(
       const prevToken = tokens[tokens.length - 2];
       const shouldParseUnit =
         lastToken?.type === "scrubbableNumber" ||
-        (lastToken?.type === "keyword" && (lastToken.text === "to" || lastToken.text === "per")) ||
+        (lastToken?.type === "keyword" &&
+          (lastToken.text === "to" || lastToken.text === "in" || lastToken.text === "per")) ||
         (lastToken?.type === "operator" &&
           lastToken.text === "/" &&
           prevToken?.type === "scrubbableNumber");
