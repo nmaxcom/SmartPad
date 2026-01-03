@@ -253,8 +253,7 @@ function extractTokensFromASTNode(
 
   if (!text.trim()) return tokens;
 
-  const trimmedText = text.trim();
-  const leadingWhitespace = text.indexOf(trimmedText);
+  const leadingWhitespace = text.match(/^\s*/)?.[0].length ?? 0;
 
   // Handle different AST node types with structured data (no more complex parsing!)
   
@@ -320,8 +319,8 @@ function extractTokensFromASTNode(
     if (arrowIndex !== -1) {
       // Traditional expression with =>
       // Tokenize expression before =>
-      const exprText = text.substring(0, arrowIndex).trim();
-      const exprTokens = tokenizeExpression(exprText, leadingWhitespace, variableContext);
+      const exprText = text.substring(0, arrowIndex);
+      const exprTokens = tokenizeExpression(exprText, 0, variableContext);
       tokens.push(...exprTokens);
 
       // Add => trigger
@@ -335,7 +334,7 @@ function extractTokensFromASTNode(
       // Results are rendered separately, so don't tokenize text after =>
     } else {
       // Unit expression without => (e.g., "100 ft to m", "PI")
-      const exprTokens = tokenizeExpression(trimmedText, leadingWhitespace, variableContext);
+      const exprTokens = tokenizeExpression(text, 0, variableContext);
       tokens.push(...exprTokens);
     }
   } else if (isCombinedAssignmentNode(astNode)) {
@@ -365,8 +364,8 @@ function extractTokensFromASTNode(
       const arrowIndex = text.indexOf("=>", equalsIndex);
       if (arrowIndex !== -1) {
         // Tokenize expression between = and =>
-        const exprText = text.substring(equalsIndex + 1, arrowIndex).trim();
-        const exprStart = text.indexOf(exprText, equalsIndex + 1);
+        const exprStart = equalsIndex + 1;
+        const exprText = text.substring(exprStart, arrowIndex);
         const exprTokens = tokenizeExpression(exprText, exprStart, variableContext);
         tokens.push(...exprTokens);
 

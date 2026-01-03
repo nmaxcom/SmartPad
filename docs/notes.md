@@ -16,10 +16,10 @@ Value by percent addition	5% on what is 6 EUR
 Value by percent subtraction	5% off what is 6 EUR
 
 # bugs/ideas
-- highlight color slides when adding spaces at the beginning of => sentences
-- 100kg + 30lb to kg=> ⚠️ Unexpected token: to
-- 1h to second=> error unkown unit second
-- 1day to s=>24h lol (same with h)
+- introduce week, month, year?
+- calendar math?:
+  5 june 2004 + 2 months + 1 year
+  06.08.1995 9:23 pm - 15 feb 1995 3:42 am to days,hours
 - clean/accept pasted content!
 - make smartpad more flexible as a doc? Allow pasting images, embed youtube, links, links to other smartpage "pages" (yeah that'd be a thing to i guess...)
 

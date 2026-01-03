@@ -157,6 +157,7 @@ describe("AST Parser", () => {
         expect(isExpressionNode(result)).toBe(true);
         if (isExpressionNode(result)) {
           expect(result.expression).toBe("2 + 3");
+          expect(result.raw).toBe("  2 + 3  =>  ");
         }
       });
 

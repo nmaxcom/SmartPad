@@ -81,7 +81,7 @@ export function parseLine(line: string, lineNumber: number = 1): ASTNode {
     // Check for expression evaluation (non-assignment expressions)
     // Pattern: expression =>
     if (needsExpressionEvaluation(trimmedLine)) {
-      return parseExpression(trimmedLine, lineNumber);
+      return parseExpression(line, lineNumber);
     }
 
     // Default to plain text
