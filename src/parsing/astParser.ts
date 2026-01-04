@@ -26,6 +26,7 @@ import { needsExpressionEvaluation, isVariableAssignmentWithEvaluation } from ".
 import { SemanticParsers, ErrorValue } from "../types";
 import { validateExpressionTypes } from "./typeResolver";
 import { parseExpressionComponents } from "./expressionComponents";
+import { looksLikeDateExpression } from "../date/dateMath";
 
 /**
  * Parse a single line of text into an AST node
@@ -244,14 +245,14 @@ function createExpressionNode(expression: string, raw: string, line: number): Ex
     try {
       components = parseExpressionComponents(expressionForComponents);
     } catch (error) {
-      if (!isPercentageExpression) {
+      if (!isPercentageExpression && !looksLikeDateExpression(expression)) {
         throw error;
       }
     }
 
     // Validate types early (without variable context yet)
     const hasFunction = components.some((component) => component.type === "function");
-    if (!isPercentageExpression && !hasFunction && components.length > 0) {
+    if (!isPercentageExpression && !hasFunction && components.length > 0 && !looksLikeDateExpression(expression)) {
       const typeError = validateExpressionTypes(components, new Map(), undefined, {
         allowUnknownVariables: true,
       });
@@ -299,14 +300,14 @@ function createCombinedAssignmentNode(
     try {
       components = parseExpressionComponents(expressionForComponents);
     } catch (error) {
-      if (!isPercentageExpression) {
+      if (!isPercentageExpression && !looksLikeDateExpression(expression)) {
         throw error;
       }
     }
     
     // Validate types early (without variable context yet)
     const hasFunction = components.some((component) => component.type === "function");
-    if (!isPercentageExpression && !hasFunction && components.length > 0) {
+    if (!isPercentageExpression && !hasFunction && components.length > 0 && !looksLikeDateExpression(expression)) {
       const typeError = validateExpressionTypes(components, new Map(), undefined, {
         allowUnknownVariables: true,
       });

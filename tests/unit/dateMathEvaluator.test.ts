@@ -1,0 +1,174 @@
+/**
+ * Date Math Evaluator Tests
+ */
+
+import { parseLine } from "../../src/parsing/astParser";
+import { defaultRegistry } from "../../src/eval";
+import { ReactiveVariableStore } from "../../src/state/variableStore";
+import { Variable } from "../../src/state/types";
+
+const createContext = (lineNumber = 1) => {
+  const variableStore = new ReactiveVariableStore();
+  const variableContext = new Map<string, Variable>();
+  return { variableStore, variableContext, lineNumber, decimalPlaces: 6 };
+};
+
+describe("Date Math Evaluator", () => {
+  test("should render a date literal", () => {
+    const node = parseLine("2024-06-05 =>", 1);
+    const result = defaultRegistry.evaluate(node, createContext());
+    expect(result?.type).toBe("mathResult");
+    if (result?.type === "mathResult") {
+      expect(result.displayText).toBe("2024-06-05 => 2024-06-05");
+    }
+  });
+
+  test("should carry end-of-month for month addition", () => {
+    const node = parseLine("2024-01-31 + 1 month =>", 1);
+    const result = defaultRegistry.evaluate(node, createContext());
+    expect(result?.type).toBe("mathResult");
+    if (result?.type === "mathResult") {
+      expect(result.displayText).toBe("2024-01-31 + 1 month => 2024-02-29");
+    }
+  });
+
+  test("should add days exactly", () => {
+    const node = parseLine("2024-01-31 + 30 days =>", 1);
+    const result = defaultRegistry.evaluate(node, createContext());
+    expect(result?.type).toBe("mathResult");
+    if (result?.type === "mathResult") {
+      expect(result.displayText).toBe("2024-01-31 + 30 days => 2024-03-01");
+    }
+  });
+
+  test("should handle business days", () => {
+    const node = parseLine("2024-11-25 + 5 business days =>", 1);
+    const result = defaultRegistry.evaluate(node, createContext());
+    expect(result?.type).toBe("mathResult");
+    if (result?.type === "mathResult") {
+      expect(result.displayText).toBe("2024-11-25 + 5 business days => 2024-12-02");
+    }
+  });
+
+  test("should compute date differences", () => {
+    const node = parseLine("2024-06-30 - 2024-06-01 =>", 1);
+    const result = defaultRegistry.evaluate(node, createContext());
+    expect(result?.type).toBe("mathResult");
+    if (result?.type === "mathResult") {
+      expect(result.displayText).toMatch(/2024-06-30 - 2024-06-01 => 29\s*day/i);
+    }
+  });
+
+  test("should convert time zones with offsets", () => {
+    const node = parseLine("2024-06-05 17:00 UTC in +05:00 =>", 1);
+    const result = defaultRegistry.evaluate(node, createContext());
+    expect(result?.type).toBe("mathResult");
+    if (result?.type === "mathResult") {
+      expect(result.displayText).toBe(
+        "2024-06-05 17:00 UTC in +05:00 => 2024-06-05 22:00 +05:00"
+      );
+    }
+  });
+
+  test("should handle month carry across non-leap year", () => {
+    const node = parseLine("2023-01-31 + 1 month =>", 1);
+    const result = defaultRegistry.evaluate(node, createContext());
+    expect(result?.type).toBe("mathResult");
+    if (result?.type === "mathResult") {
+      expect(result.displayText).toBe("2023-01-31 + 1 month => 2023-02-28");
+    }
+  });
+
+  test("should handle leap day year addition", () => {
+    const node = parseLine("2024-02-29 + 1 year =>", 1);
+    const result = defaultRegistry.evaluate(node, createContext());
+    expect(result?.type).toBe("mathResult");
+    if (result?.type === "mathResult") {
+      expect(result.displayText).toBe("2024-02-29 + 1 year => 2025-02-28");
+    }
+  });
+
+  test("should skip weekends for business days", () => {
+    const node = parseLine("2024-11-29 + 1 business day =>", 1);
+    const result = defaultRegistry.evaluate(node, createContext());
+    expect(result?.type).toBe("mathResult");
+    if (result?.type === "mathResult") {
+      expect(result.displayText).toBe("2024-11-29 + 1 business day => 2024-12-02");
+    }
+  });
+
+  test("should allow negative business days", () => {
+    const node = parseLine("2024-12-02 - 1 business day =>", 1);
+    const result = defaultRegistry.evaluate(node, createContext());
+    expect(result?.type).toBe("mathResult");
+    if (result?.type === "mathResult") {
+      expect(result.displayText).toBe("2024-12-02 - 1 business day => 2024-11-29");
+    }
+  });
+
+  test("should reject time additions on date-only values", () => {
+    const node = parseLine("2024-06-05 + 2 hours =>", 1);
+    const result = defaultRegistry.evaluate(node, createContext());
+    expect(result?.type).toBe("error");
+    if (result?.type === "error") {
+      expect(result.displayText).toContain("Cannot add time to a date-only value");
+    }
+  });
+
+  test("should handle combined assignment with date math", () => {
+    const node = parseLine("deadline = 2024-06-05 + 2 months =>", 1);
+    const result = defaultRegistry.evaluate(node, createContext());
+    expect(result?.type).toBe("combined");
+    if (result?.type === "combined") {
+      expect(result.displayText).toBe(
+        "deadline = 2024-06-05 + 2 months => 2024-08-05"
+      );
+    }
+  });
+
+  test("should parse locale month/day order", () => {
+    const spy = jest.spyOn(Intl, "DateTimeFormat").mockImplementation(() => {
+      return {
+        formatToParts: () => [
+          { type: "month", value: "04" },
+          { type: "literal", value: "/" },
+          { type: "day", value: "23" },
+          { type: "literal", value: "/" },
+          { type: "year", value: "2006" },
+        ],
+      } as Intl.DateTimeFormat;
+    });
+
+    const node = parseLine("06/05/2024 =>", 1);
+    const result = defaultRegistry.evaluate(node, createContext());
+    expect(result?.type).toBe("mathResult");
+    if (result?.type === "mathResult") {
+      expect(result.displayText).toBe("06/05/2024 => 2024-06-05");
+    }
+
+    spy.mockRestore();
+  });
+
+  test("should parse locale day/month order", () => {
+    const spy = jest.spyOn(Intl, "DateTimeFormat").mockImplementation(() => {
+      return {
+        formatToParts: () => [
+          { type: "day", value: "23" },
+          { type: "literal", value: "/" },
+          { type: "month", value: "04" },
+          { type: "literal", value: "/" },
+          { type: "year", value: "2006" },
+        ],
+      } as Intl.DateTimeFormat;
+    });
+
+    const node = parseLine("06/05/2024 =>", 1);
+    const result = defaultRegistry.evaluate(node, createContext());
+    expect(result?.type).toBe("mathResult");
+    if (result?.type === "mathResult") {
+      expect(result.displayText).toBe("06/05/2024 => 2024-05-06");
+    }
+
+    spy.mockRestore();
+  });
+});

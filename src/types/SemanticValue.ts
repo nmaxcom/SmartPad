@@ -12,6 +12,7 @@ export type SemanticValueType =
   | 'currency'
   | 'unit'
   | 'currencyUnit'
+  | 'date'
   | 'error';
 
 export interface DisplayOptions {

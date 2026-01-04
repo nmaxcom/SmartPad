@@ -260,6 +260,50 @@ work = force * work distance =>
 power = work / 30 s =>
 power to kW =>`,
   },
+  {
+    id: "date-math",
+    emoji: "📅",
+    name: "Date Math",
+    content: `# Date Math: calendar-aware calculations
+
+# ISO + month carry vs exact days
+start date = 2024-01-31
+start date + 1 month =>
+start date + 30 days =>
+
+# Natural language dates
+launch day = 5 June 2004
+launch day + 2 months + 1 year =>
+
+# Date/time and zone offsets
+meeting = 2024-06-05 17:00 UTC
+meeting + 2h =>
+meeting in +05:00 =>
+
+# Locale numeric dates (uses your system locale)
+06/05/2024 =>
+
+# Today/now shortcuts
+now =>
+today + 10 days =>
+
+# Business days (Mon-Fri)
+2024-11-25 + 5 business days =>
+2024-12-02 - 1 business day =>
+
+# Relative weekdays
+next Monday =>
+next Monday + 2 weeks =>
+last Friday =>
+
+# Date differences (in days)
+2024-06-30 - 2024-06-01 =>
+
+# Mixed: chain operations
+trip = 2024-09-12 08:00 +05:00
+trip + 3 days + 4 hours =>
+trip in UTC =>`,
+  },
 ];
 
 function TemplatePanel() {

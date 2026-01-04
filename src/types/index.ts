@@ -13,6 +13,7 @@ import { PercentageValue, type PercentageContext } from './PercentageValue';
 import { CurrencyValue, type CurrencySymbol } from './CurrencyValue';
 import { CurrencyUnitValue } from './CurrencyUnitValue';
 import { UnitValue } from './UnitValue';
+import { DateValue } from './DateValue';
 import { ErrorValue, type ErrorType, type ErrorContext } from './ErrorValue';
 import { SmartPadQuantity } from '../units/unitsnetAdapter';
 
@@ -25,6 +26,7 @@ export { PercentageValue, type PercentageContext };
 export { CurrencyValue, type CurrencySymbol };
 export { CurrencyUnitValue };
 export { UnitValue };
+export { DateValue };
 export { ErrorValue, type ErrorType, type ErrorContext };
 
 // Type guards and utilities
@@ -34,6 +36,7 @@ export const SemanticValueTypes = {
   isCurrency: (value: SemanticValue): value is CurrencyValue => value.getType() === 'currency',
   isCurrencyUnit: (value: SemanticValue): value is CurrencyUnitValue => value.getType() === 'currencyUnit',
   isUnit: (value: SemanticValue): value is UnitValue => value.getType() === 'unit',
+  isDate: (value: SemanticValue): value is DateValue => value.getType() === 'date',
   isError: (value: SemanticValue): value is ErrorValue => value.getType() === 'error',
 } as const;
 
@@ -64,6 +67,11 @@ export const SemanticValues = {
    * Create a UnitValue from value and unit string
    */
   unit: (value: number, unit: string): UnitValue => UnitValue.fromValueAndUnit(value, unit),
+
+  /**
+   * Create a DateValue from a Date object
+   */
+  date: (value: Date): DateValue => DateValue.fromDate(value, { type: 'local', label: 'local' }, true),
   
   /**
    * Create an ErrorValue
@@ -214,6 +222,12 @@ export const SemanticParsers = {
       } catch {
         return null;
       }
+    }
+
+    // Try dates (2024-06-05, June 5 2004)
+    const dateValue = DateValue.parse(trimmed);
+    if (dateValue) {
+      return dateValue;
     }
     
     // Try number (last, as it's most permissive)
