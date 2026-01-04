@@ -9,7 +9,7 @@ function AppHeader({ onSettingsClick }: AppHeaderProps) {
   return (
     <header className="app-header">
       <div className="header-content">
-        <div className="header-icon">=</div>
+        <img className="header-icon" src="/smartpad.png" alt="SmartPad" />
         <h1 className="header-title">SmartPad</h1>
       </div>
       {onSettingsClick && (

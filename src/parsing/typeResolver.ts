@@ -144,32 +144,42 @@ function resolveOperationTypes(
   const operatorStack: string[] = [];
   const outputQueue: (string | SemanticValueType)[] = [];
 
-  // Operator precedence map
+  // Operator precedence map (unary operators are treated with higher precedence)
   const precedence: Record<string, number> = {
+    'u+': 4,
+    'u-': 4,
     '^': 3,
     '*': 2,
     '/': 2,
     '+': 1,
     '-': 1,
   };
+  const unaryOperators = new Set(['+', '-']);
+  let prevWasValue = false;
 
   // First pass: Convert to postfix notation while resolving types
   for (const component of components) {
     if (component.type === 'operator') {
+      const isUnary = unaryOperators.has(component.value) && !prevWasValue;
+      const opValue = isUnary ? `u${component.value}` : component.value;
+
       while (
         operatorStack.length > 0 &&
-        precedence[operatorStack[operatorStack.length - 1]] >= precedence[component.value]
+        precedence[operatorStack[operatorStack.length - 1]] >= precedence[opValue]
       ) {
         outputQueue.push(operatorStack.pop()!);
       }
-      operatorStack.push(component.value);
-    } else {
-      const type = resolveComponentType(component, variables);
-      if (type instanceof ErrorValue) {
-        return type;
-      }
-      outputQueue.push(type);
+      operatorStack.push(opValue);
+      prevWasValue = false;
+      continue;
     }
+
+    const type = resolveComponentType(component, variables);
+    if (type instanceof ErrorValue) {
+      return type;
+    }
+    outputQueue.push(type);
+    prevWasValue = true;
   }
 
   // Push remaining operators
@@ -183,6 +193,15 @@ function resolveOperationTypes(
   for (const item of outputQueue) {
     if (typeof item === 'string' && precedence[item] !== undefined) {
       // It's an operator
+      if (item === 'u+' || item === 'u-') {
+        if (typeStack.length < 1) {
+          return ErrorValue.semanticError('Invalid expression', { expression: 'Type Resolution' });
+        }
+        const operandType = typeStack.pop()!;
+        typeStack.push(operandType);
+        continue;
+      }
+
       if (typeStack.length < 2) {
         return ErrorValue.semanticError('Invalid expression', { expression: 'Type Resolution' });
       }

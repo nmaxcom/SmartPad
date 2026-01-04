@@ -682,12 +682,10 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       }
       // Try simple arithmetic
       else if (this.isSimpleArithmetic(expression)) {
-        const hasCurrency =
-          components.length > 0 &&
-          SimpleExpressionParser.containsCurrency(components, context);
-        const componentResult = hasCurrency
-          ? SimpleExpressionParser.parseComponents(components, context)
-          : null;
+        const componentResult =
+          components.length > 0
+            ? SimpleExpressionParser.parseComponents(components, context)
+            : null;
         const semanticResult =
           componentResult || SimpleExpressionParser.parseArithmetic(expression, context);
 

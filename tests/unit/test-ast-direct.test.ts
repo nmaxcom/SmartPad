@@ -61,6 +61,37 @@ describe("AST Pipeline Direct Testing", () => {
     }
   });
 
+  it("should handle unary minus with exponentiation", () => {
+    const reactiveStore = new ReactiveVariableStore();
+    const variableContext = new Map<string, Variable>();
+    const evaluationContext = {
+      variableStore: reactiveStore,
+      variableContext,
+      lineNumber: 1,
+      decimalPlaces: 6,
+    };
+
+    const negBaseNode = parseLine("-5^3 =>", 1);
+    const negBaseResult = defaultRegistry.evaluate(negBaseNode, evaluationContext);
+    expect(negBaseResult).toBeDefined();
+    if (negBaseResult && "type" in negBaseResult) {
+      expect(negBaseResult.type).toBe("mathResult");
+      if ("result" in negBaseResult) {
+        expect(String(negBaseResult.result)).toContain("-125");
+      }
+    }
+
+    const negExpNode = parseLine("5^-3 =>", 2);
+    const negExpResult = defaultRegistry.evaluate(negExpNode, evaluationContext);
+    expect(negExpResult).toBeDefined();
+    if (negExpResult && "type" in negExpResult) {
+      expect(negExpResult.type).toBe("mathResult");
+      if ("result" in negExpResult) {
+        expect(String(negExpResult.result)).toMatch(/0\.008|0\.008000/);
+      }
+    }
+  });
+
   it("should handle multi-line scenario", () => {
     console.log("=== Testing multi-line scenario ===");
 

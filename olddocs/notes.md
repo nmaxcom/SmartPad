@@ -7,6 +7,7 @@ parsify.app, figr.app, aybo.app, calca.io, numi.app, Soulver 3, notepadcalculato
 https://dribbble.com/shots/24984990-Deposit-Calculator-UI-Kit-Widgets
 
 # nuevas ideas
+Instead of just solve, allow a user to right-click a result and say "Make this result 1000 by changing [variable]." The app then writes the solve syntax for them at the bottom of the document.
 mostrar ventanita/prediccion al empezar a escribir variable name
 left panel con "my sheets"
 
@@ -16,11 +17,11 @@ Value by percent addition	5% on what is 6 EUR
 Value by percent subtraction	5% off what is 6 EUR
 
 # bugs/ideas
+- comparar escenarios a la vez, rollo tab partida para ver lado vs lado? q otro formato si no?
 - introduce week, month, year?
 - calendar math?:
   5 june 2004 + 2 months + 1 year
   06.08.1995 9:23 pm - 15 feb 1995 3:42 am to days,hours
-- clean/accept pasted content!
 - make smartpad more flexible as a doc? Allow pasting images, embed youtube, links, links to other smartpage "pages" (yeah that'd be a thing to i guess...)
 
 - allow **text content after an expression** as a separated thing like:
@@ -39,7 +40,6 @@ speed = 9 m/s
 
 - clear style in pasted content 
 - add a text style toolbar
-- reliable undo/redo!
 
 - clicking a variable or expression to reference it at cursor? Like clicking a var name copies it where you are so you don't have to type it again
 
