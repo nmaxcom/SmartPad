@@ -32,6 +32,7 @@ import { CombinedAssignmentEvaluatorV2 } from "./combinedAssignmentEvaluatorV2";
 import { UnitsNetExpressionEvaluator } from "../units/unitsnetAstEvaluator";
 import { FunctionDefinitionEvaluator } from "./functionDefinitionEvaluator";
 import { DateMathEvaluator } from "./dateMathEvaluator";
+import { SolveEvaluator } from "./solveEvaluator";
 
 /**
  * Sets up the V2 evaluator registry with semantic-aware evaluators.
@@ -46,6 +47,7 @@ export function setupDefaultEvaluators(): void {
   // Create V2 evaluator instances (semantic-aware)
   const percentageEvaluatorV2 = new PercentageExpressionEvaluatorV2();
   const dateMathEvaluator = new DateMathEvaluator();
+  const solveEvaluator = new SolveEvaluator();
   const unitsNetEvaluator = new UnitsNetExpressionEvaluator();
   const combinedAssignmentEvaluatorV2 = new CombinedAssignmentEvaluatorV2();
   const variableEvaluatorV2 = new VariableEvaluatorV2();
@@ -58,6 +60,9 @@ export function setupDefaultEvaluators(): void {
 
   // Date math evaluator - handles date/time expressions before units
   defaultRegistry.register(dateMathEvaluator);
+
+  // Solve evaluator - handles explicit solve and implicit unknowns before units
+  defaultRegistry.register(solveEvaluator);
   
   // UnitsNet evaluator - handles unit-aware and identifier-based expressions
   defaultRegistry.register(unitsNetEvaluator);

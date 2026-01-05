@@ -11,43 +11,8 @@ It should feel like "math in text", not a separate tool.
 
 ---
 
-## Planned Syntax (Human)
-These are the intended forms. All examples show expected results.
-
-### Solve a Single Equation (Explicit)
-```
-solve x in 2x + 6 = 18 => x = 6
-solve rate in total = price * (1 + rate) => rate = 0.08
-solve c in f = (9/5)*c + 32 => c = 0
-```
-
-### Solve with a Variable on Both Sides
-```
-solve x in 3x - 4 = 2x + 10 => x = 14
-```
-
-### Solve with Units
-```
-solve v in distance = v * time => v = 25 m/s
-solve t in 10 km = v * t, v = 2 m/s => t = 5000 s
-```
-
-### Solve with Percentages
-```
-solve price in total = price + price * 8% => price = 50
-solve rate in total = base + base * rate => rate = 0.15
-```
-
-### Solve with Functions
-```
-solve r in area = PI * r^2 => r = 3.568
-solve x in sqrt(x) = 7 => x = 49
-```
-
----
-
-## Implicit Solve (Preferred, No `solve` Keyword)
-The idea is to treat a bare variable line as an implicit "solve for this."
+## Implicit Solve (Natural)
+The idea is to treat a bare variable line as "give me the most concrete, specific value of this."
 
 ```
 distance = v * time
@@ -59,34 +24,44 @@ distance = v * time
 v => distance / time
 ```
 
-This allows both numeric solving (when enough data exists) and symbolic rearrangement
-when it doesn’t.
+If a concrete numeric value exists, return it.
+If not, return a symbolic rearrangement of the best available equation.
 
 ---
 
-## Planned Syntax (Formal API - Not Implemented Yet)
-These mirror the explicit syntax but make the structure explicit.
+## Explicit Solve (Pro Layer)
+The `solve` keyword is an explicit layer for power users where constraints, limits, and
+future options can live without overloading the natural syntax.
 
 ```
-solve("2x + 6 = 18", for: "x") => x = 6
-solve("f = (9/5)*c + 32", for: "c") => c = 0
-solve("distance = v * time", for: "v") => v = 25 m/s
+solve v in distance = v * time => distance / time
+solve v in distance = v * time, time = 2 s => 20 m/s
+solve r in area = PI * r^2 => sqrt(area / PI)
+```
+
+### Constraints and Domains (Planned)
+```
+solve x in x^2 = 9 where x > 0 => 3
+solve r in area = PI * r^2 where r > 0 => 3.568
 ```
 
 ---
 
 ## In-document Context
-Solve should use known variables by default.
+Implicit and explicit solve both use known variables by default.
 
 ```
+total = base + base * tax
 tax = 8%
 total = 108
-solve base in total = base + base * tax => base = 100
+base => 100
 ```
 
 Users can override with explicit assumptions:
 ```
-solve base in total = base + base * tax, tax = 5% => base = 102.86
+total = base + base * tax
+tax = 5%
+base => 102.86
 ```
 
 ---
@@ -109,14 +84,17 @@ r => sqrt(area / PI)
 
 ## Non-linear and No-solution Cases
 ```
-solve x in x^2 + 1 = 0 => no real solution
-solve x in x = x + 1 => no solution
+x^2 + 1 = 0
+x => no real solution
+
+x = x + 1
+x => no solution
 ```
 
 ---
 
 ## Error Messaging (Planned)
-- `Cannot solve: unknown variable "x"` (if no target specified)
+- `Cannot solve: no equation found for "x"`
 - `Cannot solve: equation is not valid`
 - `Cannot solve: no real solution`
 - `Cannot solve: multiple solutions, add a constraint`
@@ -125,20 +103,131 @@ solve x in x = x + 1 => no solution
 
 ## UX Ideas (Non-code)
 - Results for implicit solves should prefer the value only: `v => 20 m/s`
-- If multiple solutions exist, show a small "±" or "2" badge next to the result.
-  Clicking allows the user to choose which solution propagates.
-- If assumptions were used, show them on hover.
+- Explicit solve should return the solution directly (value or expression), not `v = ...`.
 
 ---
 
-## Open Decisions
+## Decisions
 - Prefer implicit `x =>` solve whenever possible.
 - Real solutions only (no complex).
-- Enforce unit constraints (solving for time must output time units).
+- Do not enforce unit constraints; allow unit algebra to carry through.
 
 ### Risks With Implicit Solve
-- **Ambiguity:** `v =>` could mean "read variable" or "solve for v" if equations exist.
-- **Circular dependencies:** `v =>` may depend on `v` through other equations.
-- **Multiple candidates:** If multiple equations define `v`, which one is used?
-- **Hidden assumptions:** Implicit solving could choose a default path that surprises users.
-- **Performance:** Auto-solving on every change could be expensive in large documents.
+Below are the major pitfalls with implicit solve, with examples and proposed safeguards.
+
+#### 1) Ambiguity: read vs solve
+**Problem:** `v =>` might mean "show the current value of v" or "derive v from equations."
+If both are possible, users may get a surprising symbolic formula when they expected a number.
+
+Example:
+```
+v = 5 m/s
+distance = v * time
+v =>
+```
+Should it return `5 m/s` or attempt to derive `v` from the equation?
+
+**Decision:** If a concrete value for `v` exists, return it.
+Only fall back to symbolic solving when no concrete value is available.
+This keeps `x =>` feeling like "what is x right now?" first.
+
+---
+
+#### 2) Circular dependencies
+**Problem:** Solving for `v` might depend on `v` through another equation.
+This happens easily when users define related formulas in multiple ways.
+
+Example:
+```
+v = distance / time
+distance = v * time
+v =>
+```
+Both equations reference `v`, creating a loop. A naive solver could recurse forever.
+
+**Decision:** Build a dependency graph and detect cycles. If any cycle is found,
+return a clear error: `Cannot solve: circular dependency (v -> distance -> v)`.
+
+**What "cycle path" means:** list the chain of variables that loops, so the user
+can see exactly which equations are involved.
+
+---
+
+#### 3) Multiple candidate equations
+**Problem:** If multiple equations define the same variable, which one should be used?
+Picking the "wrong" one can feel random and break the story of the document.
+
+Example:
+```
+v = distance / time
+v = 2 * radius * rpm / 60
+v =>
+```
+These are both valid definitions of `v`, but may produce different results.
+
+**Decision:** Use document order: pick the closest equation **above** the `v =>` line.
+This keeps the meaning local to the user's current line.
+
+---
+
+#### 4) Hidden assumptions and substitutions
+**Problem:** Implicit solving can substitute values without the user noticing.
+The result might look "definitive" even if it depends on a value far above.
+
+Example:
+```
+distance = v * time
+time = 2 s
+v =>
+```
+Result should be numeric because there is enough data.
+
+**Decision:** Prefer numeric output when enough data exists.
+If not, return a symbolic rearrangement.
+Explicit `solve` can also return a numeric value when fully determined.
+
+---
+
+#### 5) Dimensional / unit mismatch
+**Problem:** Solving may produce results that look "weird" because units are mixed.
+Users can name variables anything, so enforcing constraints can block valid intent.
+
+Example:
+```
+force = mass * acceleration
+mass = $200
+acceleration = 3 m/s^2
+force =>
+```
+This produces a composite unit.
+
+**Decision:** Allow the algebra and carry units through: `$200 * 3 m/s^2 => $*m/s^2`.
+No unit constraints are enforced at solve time.
+
+---
+
+#### 6) Under-determined equations
+**Problem:** Some equations cannot be solved to a single value, only to a rearranged form.
+Users should see a meaningful formula, not a vague error.
+
+Example:
+```
+price = z * (rate + 1)
+rate =>
+```
+Without values for `price` or `z`, return a symbolic rearrangement.
+
+**Decision:** Return the rearranged formula: `rate = price / z - 1`.
+
+---
+
+#### 7) Performance in large documents
+**Problem:** Solving for many variables on every keystroke could be expensive.
+Slowdowns would make SmartPad feel sluggish or "laggy."
+
+Example:
+```
+// 200+ lines of equations and variables
+```
+
+**Decision:** Cache solutions and only re-solve when dependencies change.

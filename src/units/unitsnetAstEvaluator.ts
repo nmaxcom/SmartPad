@@ -604,10 +604,25 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
   ): boolean {
     const parsedLiteral = SemanticParsers.parse(expression);
     if (parsedLiteral && parsedLiteral.getType() !== "error") {
+      // Let UnitsNet handle unit literals; defer for other semantic literals.
+      if (parsedLiteral.getType() === "unit") {
+        return UnitValue.isUnitString(expression) ? false : true;
+      }
       return true;
     }
 
-    if (components.some((component) => component.type === "function")) {
+    const functionComponents = components.filter((component) => component.type === "function");
+    if (functionComponents.length > 0) {
+      const hasUserFunction = functionComponents.some(
+        (component) => context.functionStore?.has(component.value)
+      );
+      if (hasUserFunction) {
+        return true;
+      }
+      // Allow UnitsNet to handle built-in functions when units are involved.
+      if (expressionContainsUnitsNet(expression)) {
+        return false;
+      }
       return true;
     }
 

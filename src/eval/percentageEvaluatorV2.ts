@@ -33,7 +33,8 @@ import {
   ErrorValue,
   DisplayOptions,
   SemanticValueTypes,
-  SemanticParsers
+  SemanticParsers,
+  CurrencyValue
 } from "../types";
 import { evaluateMath } from "../parsing/mathEvaluator";
 
@@ -137,6 +138,7 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     if (/\bof\b/.test(expr)) return true; // Implicit "X of Y" patterns
     if (/\b(on|off)\b/.test(expr)) return true; // "discount on/off 100"
     if (this.parseTrailingPercentChain(expr)) return true; // "base + 10% - 5%"
+    if (this.maybePercentVariableChain(expr)) return true; // "base + discount"
 
     // Let semantic arithmetic handle plain % literals in regular math expressions.
     return false;
@@ -172,6 +174,9 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
       
       const result = this.evaluatePercentageExpression(expression, context);
       if (!result) {
+        if (!this.containsPercentageSyntax(expression)) {
+          return null;
+        }
         return this.createErrorNode("Could not evaluate percentage expression", expression, context.lineNumber);
       }
 
@@ -210,6 +215,11 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     const percentOf = PercentageExpressionParser.parsePercentOf(expression);
     if (percentOf) {
       result = this.evaluatePercentOf(percentOf.percent, percentOf.baseExpr, context);
+    }
+
+    // Try base +/- percent variable chain (e.g., "price + tax")
+    if (!result) {
+      result = this.evaluatePercentVariableChain(expression, context);
     }
 
     // Try "X% on/off Y" pattern
@@ -270,6 +280,10 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     }
 
     return result;
+  }
+
+  private maybePercentVariableChain(expression: string): boolean {
+    return /[+\-]\s*[a-zA-Z_][a-zA-Z0-9_]*\s*$/.test(expression.trim());
   }
   
   /**
@@ -566,17 +580,17 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     context: EvaluationContext
   ): SemanticValue | null {
     let expr = expression.trim();
-    const ops: Array<{ sign: "+" | "-"; percent: PercentageValue }> = [];
+    const ops: Array<{ sign: "+" | "-"; percent: PercentageValue; symbol?: string }> = [];
     const tailRegex = /([+\-])\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*$/;
 
     while (true) {
       const match = tailRegex.exec(expr);
       if (!match) break;
 
-      const percentValue = this.getPercentValueFromVariable(match[2], context);
-      if (!percentValue) break;
+      const percentInfo = this.getPercentVariableInfo(match[2], context);
+      if (!percentInfo) break;
 
-      ops.push({ sign: match[1] as "+" | "-", percent: percentValue });
+      ops.push({ sign: match[1] as "+" | "-", percent: percentInfo.percent, symbol: percentInfo.symbol });
       expr = expr.slice(0, match.index).trim();
     }
 
@@ -589,28 +603,34 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
 
     let current = baseValue;
     for (const op of ops.reverse()) {
+      if (current instanceof CurrencyValue && op.symbol && op.symbol !== current.getSymbol()) {
+        return ErrorValue.semanticError("Cannot apply percentage with different currency symbol");
+      }
       current = op.sign === "+" ? op.percent.on(current) : op.percent.off(current);
     }
 
     return current;
   }
 
-  private getPercentValueFromVariable(
+  private getPercentVariableInfo(
     variableName: string,
     context: EvaluationContext
-  ): PercentageValue | null {
+  ): { percent: PercentageValue; symbol?: string } | null {
     const variable = context.variableContext.get(variableName);
     if (!variable) return null;
 
     const value = (variable as any).value;
+    const rawValue = (variable as any).rawValue;
+    const symbolMatch = rawValue ? String(rawValue).match(/[$€£¥₹₿]/) : null;
+    const symbol = symbolMatch ? symbolMatch[0] : undefined;
+
     if (value instanceof PercentageValue) {
-      return value;
+      return { percent: value, symbol };
     }
 
-    const rawValue = (variable as any).rawValue;
     const percentMatch = rawValue ? String(rawValue).match(/(\d+(?:\.\d+)?)\s*%/) : null;
     if (percentMatch) {
-      return new PercentageValue(parseFloat(percentMatch[1]));
+      return { percent: new PercentageValue(parseFloat(percentMatch[1])), symbol };
     }
 
     return null;

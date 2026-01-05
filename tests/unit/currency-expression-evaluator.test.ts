@@ -390,4 +390,47 @@ describe("Currency Expression Evaluation", () => {
     expect(result?.type).toBe("mathResult");
     expect((result as any).result).toContain("$104.986");
   });
+
+  test("camelCase variables with currency and percent stay resolvable", () => {
+    setupDefaultEvaluators();
+    const reactiveStore = new ReactiveVariableStore();
+    const lines = [
+      "HrsPerMonth = 160",
+      "RatePerHour = $4",
+      "Cost = HrsPerMonth * RatePerHour",
+      "Total = Cost + Cost * 17% =>",
+      "HrsPerMonth =>",
+    ];
+
+    const results: Record<string, any> = {};
+
+    lines.forEach((line, index) => {
+      const nodes = parseContent(line);
+      const node = nodes[0];
+      const variableContext = new Map<string, Variable>();
+      reactiveStore.getAllVariables().forEach((variable) => {
+        variableContext.set(variable.name, variable);
+      });
+
+      const result = defaultRegistry.evaluate(node, {
+        variableStore: reactiveStore,
+        variableContext,
+        lineNumber: index + 1,
+        decimalPlaces: 6,
+      });
+
+      if (result?.type === "variable") {
+        results[result.variableName] = (result as any).value;
+      } else if (result && "variableName" in result && "result" in result) {
+        results[result.variableName] = result.result;
+      }
+      if (result && result.type === "mathResult") {
+        results.math = result.result;
+      }
+    });
+
+    expect(results.Cost).toBe("$640");
+    expect(results.Total).toBe("$748.8");
+    expect(results.math).toBe("160");
+  });
 });

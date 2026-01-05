@@ -32,6 +32,7 @@ import { getSmartPadText } from "./editorText";
 import { getDateLocaleEffective } from "../types/DateValue";
 // Import helper to identify combined assignment nodes (e.g. "speed = slider(...)")
 import { parseLine } from "../parsing/astParser";
+import { recordEquationFromNode } from "../solve/equationStore";
 import type { ASTNode } from "../parsing/ast";
 import {
   defaultRegistry,
@@ -151,6 +152,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         // Process nodes one by one in document order for variable state
         const collectedRenderNodes: RenderNode[] = [];
         const functionStore = new Map<string, import("../parsing/ast").FunctionDefinitionNode>();
+        const equationStore: import("../solve/equationStore").EquationEntry[] = [];
         // Pre-compute paragraph text and absolute starts directly from ProseMirror
         const lineToPositions = new Map<number, { exprFrom: number; exprTo: number; from: number; to: number }>();
         const paragraphData: Array<{ start: number; text: string }> = [/* 1-based */];
@@ -197,6 +199,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
             variableStore: reactiveStore,
             variableContext: createCurrentVariableContext(),
             functionStore,
+            equationStore,
             lineNumber: index + 1,
             decimalPlaces: settings.decimalPlaces,
             scientificUpperThreshold: Math.pow(10, settings.scientificUpperExponent),
@@ -213,6 +216,8 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
           if (renderNode) {
             collectedRenderNodes.push(renderNode);
           }
+
+          recordEquationFromNode(node, equationStore);
         }
 
         // After evaluation, attach positions by matching paragraph expressions to render nodes' expressions

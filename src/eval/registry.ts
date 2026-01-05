@@ -10,6 +10,7 @@ import { RenderNode } from "./renderNodes";
 import { ReactiveVariableStore } from "../state/variableStore";
 import { Variable } from "../state/types";
 import { tracer, requireContract, ensure } from "./tracing";
+import type { EquationEntry } from "../solve/equationStore";
 
 // Legacy logger - kept for backward compatibility but replaced by tracing system
 const logger = {
@@ -24,6 +25,7 @@ export interface EvaluationContext {
   variableStore: ReactiveVariableStore;
   variableContext: Map<string, Variable>;
   functionStore?: Map<string, FunctionDefinitionNode>;
+  equationStore?: EquationEntry[];
   lineNumber: number;
   decimalPlaces: number;
   scientificUpperThreshold?: number;

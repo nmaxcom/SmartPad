@@ -54,6 +54,13 @@ export function parseLine(line: string, lineNumber: number = 1): ASTNode {
       return functionDef;
     }
 
+    // Check for explicit solve expressions before variable assignments
+    if (/^solve\b/i.test(trimmedLine)) {
+      if (needsExpressionEvaluation(trimmedLine)) {
+        return parseExpression(line, lineNumber);
+      }
+    }
+
     // Check for variable assignment first (with or without =>)
     // This follows the principle: assignment is assignment, => is just "show result"
     const varParseResult = parseVariableAssignmentWithOptionalEvaluation(trimmedLine);

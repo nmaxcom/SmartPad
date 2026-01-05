@@ -393,6 +393,11 @@ energy = heat_capacity * mass_water * temp_change =>
 
     test("should handle invalid expressions gracefully", () => {
       const astNode = parseLine("10 m + =>", 1);
+      if (astNode.type === "error") {
+        expect(astNode.error).toContain("Invalid expression");
+        return;
+      }
+
       const result = unitsNetEvaluator.evaluate(astNode, createContext());
 
       expect(result?.type).toBe("error");

@@ -1,0 +1,902 @@
+import {
+  ASTNode,
+  ExpressionComponent,
+  ExpressionNode,
+  isExpressionNode,
+} from "../parsing/ast";
+import { parseExpressionComponents } from "../parsing/expressionComponents";
+import { parseAndEvaluateExpression } from "../parsing/expressionParser";
+import { EquationEntry, normalizeVariableName } from "../solve/equationStore";
+import { NodeEvaluator, EvaluationContext } from "./registry";
+import {
+  ErrorRenderNode,
+  MathResultRenderNode,
+  RenderNode,
+} from "./renderNodes";
+import {
+  CurrencyUnitValue,
+  DisplayOptions,
+  ErrorValue,
+  NumberValue,
+  SemanticParsers,
+  SemanticValue,
+  SemanticValueTypes,
+  UnitValue,
+} from "../types";
+import { SimpleExpressionParser } from "./expressionEvaluatorV2";
+
+type SolveExpression =
+  | { type: "literal"; value: string; parsed?: SemanticValue }
+  | { type: "variable"; name: string }
+  | { type: "binary"; op: string; left: SolveExpression; right: SolveExpression }
+  | { type: "unary"; op: "+" | "-"; value: SolveExpression }
+  | { type: "function"; name: string; args: SolveExpression[] };
+
+type SolveEquation = {
+  left: string;
+  right: string;
+};
+
+type SolveParseResult = {
+  target: string;
+  equations: SolveEquation[];
+  whereClause?: string;
+};
+
+const operatorPrecedence: Record<string, number> = {
+  "^": 3,
+  "*": 2,
+  "/": 2,
+  "+": 1,
+  "-": 1,
+};
+
+const isSolveExpression = (expr: string): boolean => /^solve\b/i.test(expr.trim());
+const isVariableReferenceExpression = (expr: string): boolean =>
+  /^[a-zA-Z_][a-zA-Z0-9_\s]*$/.test(expr.trim());
+
+const isConstantName = (name: string): boolean =>
+  name === "PI" || name === "E";
+const isErrorValue = (value: unknown): value is ErrorValue => value instanceof ErrorValue;
+
+const findKeywordIndex = (expression: string, keyword: string): number | null => {
+  const lower = expression.toLowerCase();
+  const target = keyword.toLowerCase();
+  let depth = 0;
+
+  for (let i = 0; i < lower.length; i++) {
+    const char = lower[i];
+    if (char === "(") depth += 1;
+    if (char === ")") depth = Math.max(0, depth - 1);
+    if (depth > 0) continue;
+
+    if (lower.startsWith(target, i)) {
+      const before = i === 0 ? "" : lower[i - 1];
+      const after = lower[i + target.length] ?? "";
+      const beforeOk = !/[a-z0-9_]/.test(before);
+      const afterOk = !/[a-z0-9_]/.test(after);
+      if (beforeOk && afterOk) {
+        return i;
+      }
+    }
+  }
+
+  return null;
+};
+
+const splitTopLevelList = (input: string): string[] => {
+  const parts: string[] = [];
+  let current = "";
+  let depth = 0;
+
+  for (let i = 0; i < input.length; i++) {
+    const char = input[i];
+    if (char === "(") depth += 1;
+    if (char === ")") depth = Math.max(0, depth - 1);
+
+    if (char === "," && depth === 0) {
+      parts.push(current.trim());
+      current = "";
+      continue;
+    }
+
+    current += char;
+  }
+
+  if (current.trim()) {
+    parts.push(current.trim());
+  }
+
+  return parts;
+};
+
+const splitTopLevelEquation = (input: string): SolveEquation | null => {
+  let depth = 0;
+  for (let i = 0; i < input.length; i++) {
+    const char = input[i];
+    if (char === "(") depth += 1;
+    if (char === ")") depth = Math.max(0, depth - 1);
+    if (char === "=" && depth === 0) {
+      const left = input.slice(0, i).trim();
+      const right = input.slice(i + 1).trim();
+      if (!left || !right) return null;
+      return { left, right };
+    }
+  }
+  return null;
+};
+
+const parseSolveExpression = (expression: string): SolveParseResult | null => {
+  const trimmed = expression.trim();
+  if (!isSolveExpression(trimmed)) return null;
+
+  const afterSolve = trimmed.replace(/^solve\s+/i, "");
+  const inIndex = findKeywordIndex(afterSolve, "in");
+  if (inIndex === null) {
+    return null;
+  }
+
+  const target = afterSolve.slice(0, inIndex).trim();
+  if (!target) return null;
+
+  const rest = afterSolve.slice(inIndex + 2).trim();
+  if (!rest) return null;
+
+  const whereIndex = findKeywordIndex(rest, "where");
+  const equationSection = (whereIndex === null ? rest : rest.slice(0, whereIndex)).trim();
+  const whereClause = whereIndex === null ? undefined : rest.slice(whereIndex + 5).trim();
+
+  if (!equationSection) return null;
+  if (/,\s*$/.test(equationSection)) return null;
+
+  const rawEquations = splitTopLevelList(equationSection);
+  if (rawEquations.length === 0) return null;
+
+  const equations: SolveEquation[] = [];
+  for (const raw of rawEquations) {
+    if (!raw) {
+      return null;
+    }
+    const eq = splitTopLevelEquation(raw);
+    if (!eq) {
+      return null;
+    }
+    equations.push(eq);
+  }
+
+  return { target, equations, whereClause };
+};
+
+const buildSolveExpression = (components: ExpressionComponent[]): SolveExpression | ErrorValue => {
+  const values: SolveExpression[] = [];
+  const operators: string[] = [];
+  let expectValue = true;
+  let pendingUnary: "+" | "-" | null = null;
+
+  const shouldApplyOperator = (stackOp: string, currentOp: string): boolean => {
+    const stackPrec = operatorPrecedence[stackOp] ?? 0;
+    const currentPrec = operatorPrecedence[currentOp] ?? 0;
+    if (stackPrec > currentPrec) return true;
+    if (stackPrec === currentPrec && currentOp !== "^") return true;
+    return false;
+  };
+
+  const applyOperator = (): SolveExpression | ErrorValue => {
+    const op = operators.pop();
+    const right = values.pop();
+    const left = values.pop();
+    if (!op || !right || !left) {
+      return ErrorValue.semanticError("Invalid expression");
+    }
+    return { type: "binary", op, left, right };
+  };
+
+  for (const component of components) {
+    if (component.type === "operator") {
+      const op = component.value;
+      if (expectValue) {
+        if (op === "+" || op === "-") {
+          pendingUnary = op;
+          continue;
+        }
+        return ErrorValue.semanticError(`Unexpected operator: "${op}"`);
+      }
+
+      while (operators.length > 0 && shouldApplyOperator(operators[operators.length - 1], op)) {
+        const applied = applyOperator();
+        if (isErrorValue(applied)) {
+          return applied;
+        }
+        values.push(applied as SolveExpression);
+      }
+
+      operators.push(op);
+      expectValue = true;
+      continue;
+    }
+
+    let node: SolveExpression | ErrorValue;
+
+    switch (component.type) {
+      case "literal":
+        node = {
+          type: "literal",
+          value: component.value,
+          parsed: component.parsedValue ?? SemanticParsers.parse(component.value) ?? undefined,
+        };
+        break;
+      case "variable":
+        node = { type: "variable", name: normalizeVariableName(component.value) };
+        break;
+      case "parentheses":
+        if (!component.children || component.children.length === 0) {
+          return ErrorValue.semanticError("Empty parentheses");
+        }
+        node = buildSolveExpression(component.children);
+        break;
+      case "function": {
+        const args: SolveExpression[] = [];
+        for (const arg of component.args || []) {
+          const built = buildSolveExpression(arg.components);
+          if (isErrorValue(built)) {
+            return built;
+          }
+          args.push(built as SolveExpression);
+        }
+        node = { type: "function", name: component.value, args };
+        break;
+      }
+      default:
+        return ErrorValue.semanticError(`Unsupported component: "${component.type}"`);
+    }
+
+    if (isErrorValue(node)) {
+      return node;
+    }
+
+    let resolvedNode = node as SolveExpression;
+    if (pendingUnary) {
+      resolvedNode = { type: "unary", op: pendingUnary, value: resolvedNode };
+      pendingUnary = null;
+    }
+
+    values.push(resolvedNode);
+    expectValue = false;
+  }
+
+  if (pendingUnary) {
+    return ErrorValue.semanticError("Dangling unary operator");
+  }
+
+  while (operators.length > 0) {
+    const applied = applyOperator();
+    if (isErrorValue(applied)) {
+      return applied;
+    }
+    values.push(applied as SolveExpression);
+  }
+
+  if (values.length !== 1) {
+    return ErrorValue.semanticError("Invalid expression");
+  }
+
+  return values[0];
+};
+
+const countTarget = (expr: SolveExpression, target: string): number => {
+  const normalized = normalizeVariableName(target);
+  switch (expr.type) {
+    case "variable":
+      return normalizeVariableName(expr.name) === normalized ? 1 : 0;
+    case "binary":
+      return countTarget(expr.left, target) + countTarget(expr.right, target);
+    case "unary":
+      return countTarget(expr.value, target);
+    case "function":
+      return expr.args.reduce((sum, arg) => sum + countTarget(arg, target), 0);
+    default:
+      return 0;
+  }
+};
+
+const containsTarget = (expr: SolveExpression, target: string): boolean =>
+  countTarget(expr, target) > 0;
+
+const formatSolveExpression = (expr: SolveExpression, parentOp: string | null = null, isRight = false): string => {
+  const wrapIfNeeded = (value: string): string =>
+    value.startsWith("(") && value.endsWith(")") ? value : `(${value})`;
+
+  switch (expr.type) {
+    case "literal": {
+      const match = expr.value.match(/^(-?\d+(?:\.\d+)?(?:e[+-]?\d+)?)([a-zA-Z°µμΩ].*)$/i);
+      if (match) {
+        return `${match[1]} ${match[2]}`;
+      }
+      return expr.value;
+    }
+    case "variable":
+      return expr.name;
+    case "function":
+      return `${expr.name}(${expr.args.map((arg) => formatSolveExpression(arg)).join(", ")})`;
+    case "unary": {
+      const child = formatSolveExpression(expr.value, "u");
+      const needsParens = expr.value.type === "binary";
+      return `${expr.op}${needsParens ? `(${child})` : child}`;
+    }
+    case "binary": {
+      const prec = operatorPrecedence[expr.op] ?? 0;
+      const parentPrec = parentOp ? operatorPrecedence[parentOp] ?? 0 : 0;
+      const leftStr = formatSolveExpression(expr.left, expr.op, false);
+      const rightStr = formatSolveExpression(expr.right, expr.op, true);
+
+      const leftNeeds = expr.left.type === "binary" &&
+        ((operatorPrecedence[expr.left.op] ?? 0) < prec || (expr.op === "^" && (operatorPrecedence[expr.left.op] ?? 0) === prec));
+      const rightPrec = expr.right.type === "binary" ? (operatorPrecedence[expr.right.op] ?? 0) : 0;
+      const rightNeeds = expr.right.type === "binary" &&
+        (rightPrec < prec || (rightPrec === prec && (expr.op === "-" || expr.op === "/" || expr.op === "^")));
+
+      const left = leftNeeds ? wrapIfNeeded(leftStr) : leftStr;
+      const right = rightNeeds ? wrapIfNeeded(rightStr) : rightStr;
+      const formatted = `${left} ${expr.op} ${right}`;
+
+      if (!parentOp) return formatted;
+      if (prec < parentPrec) return wrapIfNeeded(formatted);
+      if (prec === parentPrec && isRight && (parentOp === "-" || parentOp === "/")) {
+        return wrapIfNeeded(formatted);
+      }
+      return formatted;
+    }
+    default:
+      return "";
+  }
+};
+
+const makeBinary = (op: string, left: SolveExpression, right: SolveExpression): SolveExpression => ({
+  type: "binary",
+  op,
+  left,
+  right,
+});
+
+const makeUnary = (op: "+" | "-", value: SolveExpression): SolveExpression => ({
+  type: "unary",
+  op,
+  value,
+});
+
+const extractNumericLiteral = (expr: SolveExpression): number | null => {
+  if (expr.type !== "literal") return null;
+  const parsed = expr.parsed ?? SemanticParsers.parse(expr.value);
+  if (!parsed || parsed.getType() !== "number") return null;
+  return parsed.getNumericValue();
+};
+
+const solveForTarget = (
+  expr: SolveExpression,
+  target: string,
+  other: SolveExpression
+): SolveExpression | ErrorValue => {
+  if (expr.type === "variable") {
+    if (normalizeVariableName(expr.name) === normalizeVariableName(target)) {
+      return other;
+    }
+    return ErrorValue.semanticError(`Cannot solve: expected ${target}`);
+  }
+
+  if (expr.type === "unary") {
+    if (expr.op === "+") {
+      return solveForTarget(expr.value, target, other);
+    }
+    if (expr.op === "-") {
+      return solveForTarget(expr.value, target, makeUnary("-", other));
+    }
+  }
+
+  if (expr.type === "function") {
+    return ErrorValue.semanticError("Cannot solve: unsupported function");
+  }
+
+  if (expr.type !== "binary") {
+    return ErrorValue.semanticError("Cannot solve: unsupported expression");
+  }
+
+  const leftHas = containsTarget(expr.left, target);
+  const rightHas = containsTarget(expr.right, target);
+  if (leftHas && rightHas) {
+    return ErrorValue.semanticError("Cannot solve: variable appears on both sides");
+  }
+
+  if (!leftHas && !rightHas) {
+    return ErrorValue.semanticError("Cannot solve: variable not found");
+  }
+
+  const op = expr.op;
+
+  if (leftHas) {
+    switch (op) {
+      case "+":
+        return solveForTarget(expr.left, target, makeBinary("-", other, expr.right));
+      case "-":
+        return solveForTarget(expr.left, target, makeBinary("+", other, expr.right));
+      case "*":
+        return solveForTarget(expr.left, target, makeBinary("/", other, expr.right));
+      case "/":
+        return solveForTarget(expr.left, target, makeBinary("*", other, expr.right));
+      case "^": {
+        const exponent = extractNumericLiteral(expr.right);
+        if (exponent === null) {
+          return ErrorValue.semanticError("Cannot solve: exponent must be numeric");
+        }
+        if (Math.abs(exponent - 2) < 1e-12) {
+          return solveForTarget(expr.left, target, {
+            type: "function",
+            name: "sqrt",
+            args: [other],
+          });
+        }
+        return solveForTarget(
+          expr.left,
+          target,
+          makeBinary("^", other, makeBinary("/", { type: "literal", value: "1" }, { type: "literal", value: String(exponent) }))
+        );
+      }
+      default:
+        return ErrorValue.semanticError("Cannot solve: unsupported operator");
+    }
+  }
+
+  switch (op) {
+    case "+":
+      return solveForTarget(expr.right, target, makeBinary("-", other, expr.left));
+    case "-":
+      return solveForTarget(expr.right, target, makeBinary("-", expr.left, other));
+    case "*":
+      return solveForTarget(expr.right, target, makeBinary("/", other, expr.left));
+    case "/":
+      return solveForTarget(expr.right, target, makeBinary("/", expr.left, other));
+    case "^": {
+      const base = extractNumericLiteral(expr.left);
+      if (base === null) {
+        return ErrorValue.semanticError("Cannot solve: exponent requires constant base");
+      }
+      return solveForTarget(
+        expr.right,
+        target,
+        makeBinary(
+          "/",
+          { type: "function", name: "log", args: [other] },
+          { type: "function", name: "log", args: [{ type: "literal", value: String(base) }] }
+        )
+      );
+    }
+    default:
+      return ErrorValue.semanticError("Cannot solve: unsupported operator");
+  }
+};
+
+const buildSolveTreeFromExpression = (expression: string): SolveExpression | ErrorValue => {
+  try {
+    const components = parseExpressionComponents(expression);
+    return buildSolveExpression(components);
+  } catch (error) {
+    return ErrorValue.semanticError(
+      error instanceof Error ? error.message : String(error)
+    );
+  }
+};
+
+const getEquationCandidates = (
+  target: string,
+  lineNumber: number,
+  equations: EquationEntry[]
+): EquationEntry | null => {
+  for (let i = equations.length - 1; i >= 0; i -= 1) {
+    const equation = equations[i];
+    if (equation.line >= lineNumber) continue;
+    if (normalizeVariableName(equation.variableName) === normalizeVariableName(target)) {
+      return equation;
+    }
+
+    const parsed = buildSolveTreeFromExpression(equation.expression);
+    if (!isErrorValue(parsed) && containsTarget(parsed as SolveExpression, target)) {
+      return equation;
+    }
+  }
+  return null;
+};
+
+const collectVariables = (components: ExpressionComponent[], vars: Set<string>): void => {
+  for (const component of components) {
+    if (component.type === "variable") {
+      vars.add(normalizeVariableName(component.value));
+      continue;
+    }
+    if (component.type === "parentheses" && component.children) {
+      collectVariables(component.children, vars);
+      continue;
+    }
+    if (component.type === "function" && component.args) {
+      component.args.forEach((arg) => collectVariables(arg.components, vars));
+    }
+  }
+};
+
+const findUnresolvedVariables = (
+  expression: string,
+  context: EvaluationContext,
+  localValues?: Map<string, SemanticValue>
+): Set<string> => {
+  const unresolved = new Set<string>();
+  let components: ExpressionComponent[] = [];
+
+  try {
+    components = parseExpressionComponents(expression);
+  } catch {
+    return unresolved;
+  }
+
+  const seen = new Set<string>();
+  collectVariables(components, seen);
+
+  for (const name of seen) {
+    if (isConstantName(name)) continue;
+    if (localValues?.has(name)) continue;
+    if (context.variableContext.has(name)) continue;
+    unresolved.add(name);
+  }
+
+  return unresolved;
+};
+
+const mergeVariableContext = (
+  context: EvaluationContext,
+  localValues: Map<string, SemanticValue>
+): Map<string, import("../state/types").Variable> => {
+  const merged = new Map(context.variableContext);
+  for (const [key, value] of localValues.entries()) {
+    merged.set(key, { name: key, value, rawValue: value.toString(), createdAt: new Date(), updatedAt: new Date() });
+  }
+  return merged;
+};
+
+export class SolveEvaluator implements NodeEvaluator {
+  canHandle(node: ASTNode): boolean {
+    if (!isExpressionNode(node)) return false;
+    const expr = (node as ExpressionNode).expression;
+    if (isSolveExpression(expr)) return true;
+    return isVariableReferenceExpression(expr);
+  }
+
+  evaluate(node: ASTNode, context: EvaluationContext): RenderNode | null {
+    if (!isExpressionNode(node)) return null;
+    const exprNode = node as ExpressionNode;
+    const rawExpression = exprNode.expression.trim();
+    const conversion = isSolveExpression(rawExpression)
+      ? null
+      : this.extractConversionSuffix(rawExpression);
+    const baseExpression = conversion ? conversion.baseExpression : rawExpression;
+
+    if (isSolveExpression(baseExpression)) {
+      return this.evaluateExplicitSolve(exprNode, baseExpression, conversion, context);
+    }
+
+    if (!isVariableReferenceExpression(baseExpression)) {
+      return null;
+    }
+
+    const target = normalizeVariableName(baseExpression);
+    if (isConstantName(target)) {
+      return null;
+    }
+    if (context.variableContext.has(target)) {
+      return null;
+    }
+
+    return this.evaluateImplicitSolve(exprNode, target, conversion, context);
+  }
+
+  private evaluateExplicitSolve(
+    node: ExpressionNode,
+    baseExpression: string,
+    conversion: { baseExpression: string; target: string; keyword: string } | null,
+    context: EvaluationContext
+  ): RenderNode {
+    const parsed = parseSolveExpression(baseExpression);
+    if (!parsed) {
+      return this.createErrorNode("Cannot solve: equation is not valid", node.expression, context.lineNumber);
+    }
+
+    const target = normalizeVariableName(parsed.target);
+    const localValues = new Map<string, SemanticValue>();
+    const assignmentEquations: SolveEquation[] = [];
+    let targetEquation: SolveEquation | null = null;
+
+    for (const eq of parsed.equations) {
+      const leftTree = buildSolveTreeFromExpression(eq.left);
+      const rightTree = buildSolveTreeFromExpression(eq.right);
+      if (isErrorValue(leftTree) || isErrorValue(rightTree)) {
+        return this.createErrorNode("Cannot solve: equation is not valid", node.expression, context.lineNumber);
+      }
+
+      const leftHas = containsTarget(leftTree as SolveExpression, target);
+      const rightHas = containsTarget(rightTree as SolveExpression, target);
+      if (leftHas || rightHas) {
+        if (targetEquation) {
+          return this.createErrorNode("Cannot solve: multiple equations for target", node.expression, context.lineNumber);
+        }
+        targetEquation = eq;
+      } else {
+        assignmentEquations.push(eq);
+      }
+    }
+
+    if (!targetEquation) {
+      return this.createErrorNode(`Cannot solve: no equation found for "${target}"`, node.expression, context.lineNumber);
+    }
+
+    for (const eq of assignmentEquations) {
+      const leftTree = buildSolveTreeFromExpression(eq.left);
+      if (isErrorValue(leftTree)) {
+        return this.createErrorNode("Cannot solve: equation is not valid", node.expression, context.lineNumber);
+      }
+
+      const leftExpression = leftTree as SolveExpression;
+      if (leftExpression.type !== "variable") {
+        return this.createErrorNode("Cannot solve: equation is not valid", node.expression, context.lineNumber);
+      }
+
+      const leftName = normalizeVariableName(leftExpression.name);
+      const value = this.evaluateExpression(eq.right, context, localValues);
+      if (SemanticValueTypes.isError(value)) {
+        return this.createErrorNode((value as ErrorValue).getMessage(), node.expression, context.lineNumber);
+      }
+      localValues.set(leftName, value as SemanticValue);
+    }
+
+    const solved = this.solveEquation(targetEquation, target);
+    if (isErrorValue(solved)) {
+      return this.createErrorNode((solved as ErrorValue).getMessage(), node.expression, context.lineNumber);
+    }
+
+    return this.formatSolveResult(node, solved as SolveExpression, conversion, context, localValues);
+  }
+
+  private evaluateImplicitSolve(
+    node: ExpressionNode,
+    target: string,
+    conversion: { baseExpression: string; target: string; keyword: string } | null,
+    context: EvaluationContext
+  ): RenderNode {
+    const equations = context.equationStore ?? [];
+    const equation = getEquationCandidates(target, context.lineNumber, equations);
+    if (!equation) {
+      return this.createErrorNode(`Cannot solve: no equation found for "${target}"`, node.expression, context.lineNumber);
+    }
+
+    const solved = this.solveEquation({ left: equation.variableName, right: equation.expression }, target);
+    if (isErrorValue(solved)) {
+      return this.createErrorNode((solved as ErrorValue).getMessage(), node.expression, context.lineNumber);
+    }
+
+    return this.formatSolveResult(node, solved as SolveExpression, conversion, context, new Map());
+  }
+
+  private solveEquation(equation: SolveEquation, target: string): SolveExpression | ErrorValue {
+    const leftTree = buildSolveTreeFromExpression(equation.left);
+    const rightTree = buildSolveTreeFromExpression(equation.right);
+
+    if (isErrorValue(leftTree) || isErrorValue(rightTree)) {
+      return ErrorValue.semanticError("Cannot solve: equation is not valid");
+    }
+
+    const left = leftTree as SolveExpression;
+    const right = rightTree as SolveExpression;
+    const leftHas = containsTarget(left, target);
+    const rightHas = containsTarget(right, target);
+
+    if (leftHas && rightHas) {
+      return ErrorValue.semanticError("Cannot solve: variable appears on both sides");
+    }
+
+    if (!leftHas && !rightHas) {
+      return ErrorValue.semanticError(`Cannot solve: no equation found for "${target}"`);
+    }
+
+    if (leftHas) {
+      return solveForTarget(left, target, right);
+    }
+
+    return solveForTarget(right, target, left);
+  }
+
+  private formatSolveResult(
+    node: ExpressionNode,
+    solved: SolveExpression,
+    conversion: { baseExpression: string; target: string; keyword: string } | null,
+    context: EvaluationContext,
+    localValues: Map<string, SemanticValue>
+  ): RenderNode {
+    const expressionText = formatSolveExpression(solved);
+    const unresolved = findUnresolvedVariables(expressionText, context, localValues);
+    const displayOptions = this.getDisplayOptions(context);
+
+    if (unresolved.size > 0) {
+      const resultText = conversion
+        ? `${expressionText} ${conversion.keyword} ${conversion.target}`
+        : expressionText;
+      return this.createMathResultNode(node.expression, resultText, context.lineNumber);
+    }
+
+    const value = this.evaluateExpression(expressionText, context, localValues);
+    if (SemanticValueTypes.isError(value)) {
+      return this.createErrorNode((value as ErrorValue).getMessage(), node.expression, context.lineNumber);
+    }
+
+    let resolved = value as SemanticValue;
+    if (conversion) {
+      resolved = this.applyUnitConversion(resolved, conversion.target, conversion.keyword);
+      if (SemanticValueTypes.isError(resolved)) {
+        return this.createErrorNode((resolved as ErrorValue).getMessage(), node.expression, context.lineNumber);
+      }
+    }
+
+    return this.createMathResultNode(
+      node.expression,
+      resolved.toString(displayOptions),
+      context.lineNumber
+    );
+  }
+
+  private evaluateExpression(
+    expression: string,
+    context: EvaluationContext,
+    localValues: Map<string, SemanticValue>
+  ): SemanticValue {
+    const parsedLiteral = SemanticParsers.parse(expression.trim());
+    if (parsedLiteral && !SemanticValueTypes.isError(parsedLiteral)) {
+      return parsedLiteral;
+    }
+
+    const mergedContext: EvaluationContext = {
+      ...context,
+      variableContext: mergeVariableContext(context, localValues),
+    };
+
+    const components = parseExpressionComponents(expression);
+    const componentResult = SimpleExpressionParser.parseComponents(components, mergedContext);
+    if (componentResult) {
+      return componentResult;
+    }
+
+    const arithmeticResult = SimpleExpressionParser.parseArithmetic(expression, mergedContext);
+    if (arithmeticResult) {
+      return arithmeticResult;
+    }
+
+    const evalResult = parseAndEvaluateExpression(expression, mergedContext.variableContext);
+    if (evalResult.error) {
+      return ErrorValue.semanticError(evalResult.error);
+    }
+    return NumberValue.from(evalResult.value);
+  }
+
+  private extractConversionSuffix(
+    expression: string
+  ): { baseExpression: string; target: string; keyword: string } | null {
+    const match = expression.match(/\b(to|in)\b\s+(.+)$/i);
+    if (!match || match.index === undefined) {
+      return null;
+    }
+    const baseExpression = expression.slice(0, match.index).trim();
+    if (!baseExpression) {
+      return null;
+    }
+    const target = match[2].trim();
+    if (!target) {
+      return null;
+    }
+    return { baseExpression, target, keyword: match[1].toLowerCase() };
+  }
+
+  private applyUnitConversion(value: SemanticValue, target: string, keyword: string): SemanticValue {
+    const parsed = this.parseConversionTarget(target);
+    if (!parsed) {
+      return ErrorValue.semanticError(`Expected unit after '${keyword}'`);
+    }
+
+    if (value.getType() === "unit") {
+      try {
+        return (value as UnitValue).convertTo(parsed.unit);
+      } catch (error) {
+        return ErrorValue.semanticError(
+          error instanceof Error ? error.message : String(error)
+        );
+      }
+    }
+
+    if (value.getType() === "currencyUnit") {
+      const currencyValue = value as CurrencyUnitValue;
+      if (parsed.symbol && parsed.symbol !== currencyValue.getSymbol()) {
+        return ErrorValue.semanticError("Cannot convert between different currencies");
+      }
+      try {
+        return currencyValue.convertTo(parsed.unit);
+      } catch (error) {
+        return ErrorValue.semanticError(
+          error instanceof Error ? error.message : String(error)
+        );
+      }
+    }
+
+    return ErrorValue.semanticError("Cannot convert non-unit value");
+  }
+
+  private parseConversionTarget(
+    target: string
+  ): { unit: string; symbol?: string } | null {
+    let raw = target.trim();
+    if (!raw) {
+      return null;
+    }
+
+    let symbol: string | undefined;
+    const symbolMatch = raw.match(/^([$€£¥₹₿])\s*(.*)$/);
+    if (symbolMatch) {
+      symbol = symbolMatch[1];
+      raw = symbolMatch[2].trim();
+    }
+
+    raw = raw.replace(/^per\b/i, "").trim();
+    raw = raw.replace(/^[/*]+/, "").trim();
+
+    const unit = raw.replace(/\s+/g, "");
+    if (!unit) {
+      return null;
+    }
+
+    return { unit, symbol };
+  }
+
+  private createMathResultNode(
+    expression: string,
+    result: string,
+    lineNumber: number
+  ): MathResultRenderNode {
+    return {
+      type: "mathResult",
+      expression,
+      result,
+      displayText: `${expression} => ${result}`,
+      line: lineNumber,
+      originalRaw: expression,
+    };
+  }
+
+  private createErrorNode(
+    message: string,
+    expression: string,
+    lineNumber: number
+  ): ErrorRenderNode {
+    return {
+      type: "error",
+      error: message,
+      errorType: "runtime",
+      displayText: `${expression} => ⚠️ ${message}`,
+      line: lineNumber,
+      originalRaw: `${expression} =>`,
+    };
+  }
+
+  private getDisplayOptions(context: EvaluationContext): DisplayOptions {
+    return {
+      precision: context.decimalPlaces,
+      scientificUpperThreshold: context.scientificUpperThreshold,
+      scientificLowerThreshold: context.scientificLowerThreshold,
+      scientificTrimTrailingZeros: context.scientificTrimTrailingZeros,
+      dateFormat: context.dateDisplayFormat,
+      dateLocale: context.dateLocale,
+    };
+  }
+}
+
+export const defaultSolveEvaluator = new SolveEvaluator();

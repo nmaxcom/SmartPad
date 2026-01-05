@@ -197,6 +197,27 @@ export class DateValue extends SemanticValue {
       return null;
     }
 
+    if (/[+*/^=%]/.test(trimmed)) {
+      return null;
+    }
+
+    if (/[$€£¥₹₿]/.test(trimmed)) {
+      return null;
+    }
+
+    if (!/\d/.test(trimmed)) {
+      return null;
+    }
+
+    if (/[A-Za-z]/.test(trimmed)) {
+      const lower = trimmed.toLowerCase();
+      const hasMonthName = /\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)\b/.test(lower);
+      const hasKeyword = /\b(today|tomorrow|yesterday|now)\b/.test(lower);
+      if (!hasMonthName && !hasKeyword) {
+        return null;
+      }
+    }
+
     const parsed = new Date(trimmed);
     if (!isNaN(parsed.getTime())) {
       const hasTime = /\d{1,2}:\d{2}/.test(trimmed);
