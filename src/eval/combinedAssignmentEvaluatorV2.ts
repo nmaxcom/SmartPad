@@ -27,6 +27,7 @@ import {
   SemanticParsers,
   SemanticValue,
   SemanticValueTypes,
+  SymbolicValue,
 } from "../types";
 import { parseAndEvaluateExpression } from "../parsing/expressionParser";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
@@ -92,18 +93,24 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
           context.variableContext
         );
         if (evalResult.error) {
-          console.warn(
-            "CombinedAssignmentEvaluatorV2: Expression evaluation error:",
-            evalResult.error
-          );
-          return this.createErrorNode(
-            evalResult.error,
-            combNode.variableName,
-            combNode.expression,
-            context.lineNumber
-          );
+          if (/Undefined variable/i.test(evalResult.error)) {
+            semanticValue = SymbolicValue.from(expression);
+          } else {
+            console.warn(
+              "CombinedAssignmentEvaluatorV2: Expression evaluation error:",
+              evalResult.error
+            );
+            return this.createErrorNode(
+              evalResult.error,
+              combNode.variableName,
+              combNode.expression,
+              context.lineNumber
+            );
+          }
         }
-        semanticValue = NumberValue.from(evalResult.value);
+        if (!semanticValue) {
+          semanticValue = NumberValue.from(evalResult.value);
+        }
       }
 
       if (conversion) {

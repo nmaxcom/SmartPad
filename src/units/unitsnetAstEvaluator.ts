@@ -41,6 +41,8 @@ import {
   UnitValue,
   NumberValue,
   PercentageValue,
+  SymbolicValue,
+  ErrorValue,
   DisplayOptions,
   SemanticParsers,
 } from "../types";
@@ -140,9 +142,16 @@ function convertVariablesToUnitsNetQuantities(
   variableContext.forEach((variable, name) => {
     if (variable.value instanceof UnitValue || variable.value instanceof NumberValue) {
       quantities[name] = variable.value;
-    } else {
-      quantities[name] = new NumberValue(variable.value.getNumericValue());
+      return;
     }
+    if (variable.value instanceof SymbolicValue || variable.value instanceof ErrorValue) {
+      return;
+    }
+    const numericValue = variable.value.getNumericValue();
+    if (!Number.isFinite(numericValue)) {
+      return;
+    }
+    quantities[name] = new NumberValue(numericValue);
   });
 
   return quantities;
@@ -232,6 +241,18 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
       const result = evaluateUnitsNetExpression(rewritten.expression, variables);
 
       if (result.error) {
+        if (/Undefined variable/i.test(result.error)) {
+          const symbolic = SymbolicValue.from(node.expression);
+          const resultString = symbolic.toString(displayOptions);
+          return {
+            type: "mathResult",
+            expression: node.expression,
+            result: resultString,
+            displayText: `${node.expression} => ${resultString}`,
+            line: context.lineNumber,
+            originalRaw: node.expression,
+          } as MathResultRenderNode;
+        }
         return {
           type: "error",
           error: result.error,
@@ -302,6 +323,28 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
       const result = evaluateUnitsNetExpression(rewritten.expression, variables);
 
       if (result.error) {
+        if (/Undefined variable/i.test(result.error)) {
+          const symbolic = SymbolicValue.from(node.expression);
+          const variable: Variable = {
+            name: node.variableName,
+            value: symbolic,
+            rawValue: node.expression,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+          variableStore.setVariableWithMetadata(variable);
+
+          const resultString = symbolic.toString(displayOptions);
+          return {
+            type: "combined",
+            variableName: node.variableName,
+            expression: node.expression,
+            result: resultString,
+            displayText: `${node.variableName} = ${node.expression} => ${resultString}`,
+            line: context.lineNumber,
+            originalRaw: `${node.variableName} = ${node.expression}`,
+          } as CombinedRenderNode;
+        }
         // Debug: surface evaluation error context for failing tests
 
         console.log("UnitsNetCombinedAssignment error:", result.error, "expr:", node.expression);
@@ -388,7 +431,7 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
       const hasConstants = this.containsMathematicalConstants(valueStr);
       const hasVariables = /\b[a-zA-Z_][a-zA-Z0-9_]*\b/.test(valueStr);
 
-      let value: UnitValue | NumberValue;
+      let value: UnitValue | NumberValue | SymbolicValue | undefined;
 
       if (hasUnits || hasConstants || hasVariables) {
         // Parse as units expression with proper variable context
@@ -396,17 +439,23 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
         const result = evaluateUnitsNetExpression(rewriteSimpleTimeLiterals(valueStr), variables);
 
         if (result.error) {
-          return {
-            type: "error",
-            error: result.error,
-            errorType: "parse" as const,
-            displayText: result.error,
-            line: context.lineNumber,
-            originalRaw: valueStr,
-          } as ErrorRenderNode;
+          if (/Undefined variable/i.test(result.error)) {
+            value = SymbolicValue.from(valueStr);
+          } else {
+            return {
+              type: "error",
+              error: result.error,
+              errorType: "parse" as const,
+              displayText: result.error,
+              line: context.lineNumber,
+              originalRaw: valueStr,
+            } as ErrorRenderNode;
+          }
         }
 
-        value = result.value;
+        if (!value) {
+          value = result.value;
+        }
       } else {
         // Parse as regular number
         value = new NumberValue(node.parsedValue.getNumericValue());

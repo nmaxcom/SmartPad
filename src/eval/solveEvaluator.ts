@@ -505,56 +505,30 @@ const getEquationCandidates = (
   return null;
 };
 
-const collectVariables = (components: ExpressionComponent[], vars: Set<string>): void => {
-  for (const component of components) {
-    if (component.type === "variable") {
-      vars.add(normalizeVariableName(component.value));
-      continue;
-    }
-    if (component.type === "parentheses" && component.children) {
-      collectVariables(component.children, vars);
-      continue;
-    }
-    if (component.type === "function" && component.args) {
-      component.args.forEach((arg) => collectVariables(arg.components, vars));
-    }
-  }
-};
-
-const findUnresolvedVariables = (
-  expression: string,
-  context: EvaluationContext,
-  localValues?: Map<string, SemanticValue>
-): Set<string> => {
-  const unresolved = new Set<string>();
-  let components: ExpressionComponent[] = [];
-
-  try {
-    components = parseExpressionComponents(expression);
-  } catch {
-    return unresolved;
-  }
-
-  const seen = new Set<string>();
-  collectVariables(components, seen);
-
-  for (const name of seen) {
-    if (isConstantName(name)) continue;
-    if (localValues?.has(name)) continue;
-    if (context.variableContext.has(name)) continue;
-    unresolved.add(name);
-  }
-
-  return unresolved;
-};
-
 const mergeVariableContext = (
   context: EvaluationContext,
   localValues: Map<string, SemanticValue>
 ): Map<string, import("../state/types").Variable> => {
-  const merged = new Map(context.variableContext);
+  const merged = new Map<string, import("../state/types").Variable>();
+
+  context.variableContext.forEach((variable, key) => {
+    if (variable.value.getType() === "symbolic") {
+      return;
+    }
+    merged.set(key, variable);
+  });
+
   for (const [key, value] of localValues.entries()) {
-    merged.set(key, { name: key, value, rawValue: value.toString(), createdAt: new Date(), updatedAt: new Date() });
+    if (value.getType() === "symbolic") {
+      continue;
+    }
+    merged.set(key, {
+      name: key,
+      value,
+      rawValue: value.toString(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
   }
   return merged;
 };
@@ -589,7 +563,10 @@ export class SolveEvaluator implements NodeEvaluator {
       return null;
     }
     if (context.variableContext.has(target)) {
-      return null;
+      const existing = context.variableContext.get(target);
+      if (existing?.value && existing.value.getType() !== "symbolic") {
+        return null;
+      }
     }
 
     return this.evaluateImplicitSolve(exprNode, target, conversion, context);
@@ -717,15 +694,7 @@ export class SolveEvaluator implements NodeEvaluator {
     localValues: Map<string, SemanticValue>
   ): RenderNode {
     const expressionText = formatSolveExpression(solved);
-    const unresolved = findUnresolvedVariables(expressionText, context, localValues);
     const displayOptions = this.getDisplayOptions(context);
-
-    if (unresolved.size > 0) {
-      const resultText = conversion
-        ? `${expressionText} ${conversion.keyword} ${conversion.target}`
-        : expressionText;
-      return this.createMathResultNode(node.expression, resultText, context.lineNumber);
-    }
 
     const value = this.evaluateExpression(expressionText, context, localValues);
     if (SemanticValueTypes.isError(value)) {
@@ -733,6 +702,12 @@ export class SolveEvaluator implements NodeEvaluator {
     }
 
     let resolved = value as SemanticValue;
+    if (SemanticValueTypes.isSymbolic(resolved)) {
+      const resultText = conversion
+        ? `${expressionText} ${conversion.keyword} ${conversion.target}`
+        : expressionText;
+      return this.createMathResultNode(node.expression, resultText, context.lineNumber);
+    }
     if (conversion) {
       resolved = this.applyUnitConversion(resolved, conversion.target, conversion.keyword);
       if (SemanticValueTypes.isError(resolved)) {

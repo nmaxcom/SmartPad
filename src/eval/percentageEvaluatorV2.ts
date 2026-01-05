@@ -34,7 +34,8 @@ import {
   DisplayOptions,
   SemanticValueTypes,
   SemanticParsers,
-  CurrencyValue
+  CurrencyValue,
+  SymbolicValue
 } from "../types";
 import { evaluateMath } from "../parsing/mathEvaluator";
 
@@ -292,6 +293,10 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
   private evaluatePercentOf(percent: number, baseExpr: string, context: EvaluationContext): SemanticValue {
     const percentValue = new PercentageValue(percent);
     const baseValue = this.evaluateSubExpression(baseExpr, context);
+
+    if (SemanticValueTypes.isSymbolic(baseValue)) {
+      return SymbolicValue.from(`${percent}% of ${baseExpr}`);
+    }
     
     if (SemanticValueTypes.isError(baseValue)) {
       return baseValue;
@@ -308,6 +313,9 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     if (!parsed) return null;
 
     const baseValue = this.evaluateSubExpression(parsed.baseExpr, context);
+    if (SemanticValueTypes.isSymbolic(baseValue)) {
+      return SymbolicValue.from(expression);
+    }
     if (SemanticValueTypes.isError(baseValue)) {
       return baseValue;
     }
@@ -330,6 +338,10 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
 
     const leftValue = this.evaluateSubExpression(match[1], context);
     const rightValue = this.evaluateSubExpression(match[2], context);
+
+    if (SemanticValueTypes.isSymbolic(leftValue) || SemanticValueTypes.isSymbolic(rightValue)) {
+      return SymbolicValue.from(expression);
+    }
 
     if (SemanticValueTypes.isError(leftValue)) return leftValue;
     if (SemanticValueTypes.isError(rightValue)) return rightValue;
@@ -361,6 +373,10 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
   ): SemanticValue {
     const percentValue = new PercentageValue(percent);
     const baseValue = this.evaluateSubExpression(baseExpr, context);
+
+    if (SemanticValueTypes.isSymbolic(baseValue)) {
+      return SymbolicValue.from(`${percent}% ${operation} ${baseExpr}`);
+    }
     
     if (SemanticValueTypes.isError(baseValue)) {
       return baseValue;
@@ -384,6 +400,9 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     if (!match) return null;
 
     const leftValue = this.evaluateSubExpression(match[1], context);
+    if (SemanticValueTypes.isSymbolic(leftValue)) {
+      return SymbolicValue.from(expression);
+    }
     if (SemanticValueTypes.isError(leftValue)) {
       return leftValue;
     }
@@ -397,6 +416,9 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     }
 
     const baseValue = this.evaluateSubExpression(match[3], context);
+    if (SemanticValueTypes.isSymbolic(baseValue)) {
+      return SymbolicValue.from(expression);
+    }
     if (SemanticValueTypes.isError(baseValue)) {
       return baseValue;
     }
@@ -412,6 +434,10 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
   private evaluateWhatPercent(partExpr: string, baseExpr: string, context: EvaluationContext): SemanticValue {
     const partValue = this.evaluateSubExpression(partExpr, context);
     const baseValue = this.evaluateSubExpression(baseExpr, context);
+
+    if (SemanticValueTypes.isSymbolic(partValue) || SemanticValueTypes.isSymbolic(baseValue)) {
+      return SymbolicValue.from(`${partExpr} is what % of ${baseExpr}`);
+    }
     
     if (SemanticValueTypes.isError(partValue)) return partValue;
     if (SemanticValueTypes.isError(baseValue)) return baseValue;
@@ -425,6 +451,9 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
   private evaluateAsPercent(valueExpr: string, context: EvaluationContext): SemanticValue {
     const value = this.evaluateSubExpression(valueExpr, context);
     
+    if (SemanticValueTypes.isSymbolic(value)) {
+      return SymbolicValue.from(`${valueExpr} as %`);
+    }
     if (SemanticValueTypes.isError(value)) {
       return value;
     }
@@ -498,6 +527,9 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     const variables = this.buildNumericContext(context.variableContext);
     const result = evaluateMath(expr, variables);
     if (result.error) {
+      if (/Undefined variable/i.test(result.error)) {
+        return SymbolicValue.from(expr);
+      }
       return ErrorValue.semanticError(result.error);
     }
     return new NumberValue(result.value);
@@ -597,6 +629,9 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     if (ops.length === 0 || !expr) return null;
 
     const baseValue = this.evaluateSubExpression(expr, context, { skipPercentVariableChain: true });
+    if (SemanticValueTypes.isSymbolic(baseValue)) {
+      return SymbolicValue.from(expression);
+    }
     if (SemanticValueTypes.isError(baseValue)) {
       return baseValue;
     }

@@ -22,6 +22,7 @@ import {
   NumberValue, 
   UnitValue,
   CurrencyUnitValue,
+  SymbolicValue,
   ErrorValue,
   SemanticValueTypes,
   DisplayOptions,
@@ -158,7 +159,15 @@ export class SimpleExpressionParser {
       return NumberValue.from(Math.E);
     }
     
-    return ErrorValue.semanticError(`Cannot resolve: "${normalized}"`);
+    return SymbolicValue.from(normalized);
+  }
+
+  private static wrapExpression(expr: string): string {
+    const trimmed = expr.trim();
+    if (!/\s|[+\-*/^]/.test(trimmed)) {
+      return trimmed;
+    }
+    return `(${trimmed})`;
   }
 
   private static evaluateComponentList(
@@ -201,6 +210,11 @@ export class SimpleExpressionParser {
         case "/":
           return SemanticArithmetic.divide(left, right);
         case "^":
+          if (SemanticValueTypes.isSymbolic(right)) {
+            const leftExpr = SimpleExpressionParser.wrapExpression(left.toString());
+            const rightExpr = SimpleExpressionParser.wrapExpression(right.toString());
+            return SymbolicValue.from(`${leftExpr} ^ ${rightExpr}`);
+          }
           if (!right.isNumeric()) {
             return ErrorValue.typeError("Exponent must be numeric", "number", right.getType());
           }
@@ -301,7 +315,7 @@ export class SimpleExpressionParser {
           if (component.value === "E") {
             return NumberValue.from(Math.E);
           }
-          return ErrorValue.semanticError(`Variable "${component.value}" not defined`);
+          return SymbolicValue.from(component.value);
         }
         const value = (variable as any).value;
         if (value instanceof SemanticValue) {
@@ -395,6 +409,17 @@ export class SimpleExpressionParser {
 
     if (!builtIns.has(funcName)) {
       return null;
+    }
+
+    const hasSymbolic =
+      args.positional.some(SemanticValueTypes.isSymbolic) ||
+      Array.from(args.named.values()).some(SemanticValueTypes.isSymbolic);
+    if (hasSymbolic) {
+      const positional = args.positional.map((value) => value.toString());
+      const named = Array.from(args.named.entries()).map(
+        ([key, value]) => `${key}: ${value.toString()}`
+      );
+      return SymbolicValue.from(`${funcName}(${[...positional, ...named].join(", ")})`);
     }
 
     if (args.named.size > 0) {
@@ -599,6 +624,11 @@ export class SimpleExpressionParser {
       case '/':
         return SemanticArithmetic.divide(left, right);
       case '^':
+        if (SemanticValueTypes.isSymbolic(right)) {
+          const leftExpr = SimpleExpressionParser.wrapExpression(left.toString());
+          const rightExpr = SimpleExpressionParser.wrapExpression(right.toString());
+          return SymbolicValue.from(`${leftExpr} ^ ${rightExpr}`);
+        }
         if (!right.isNumeric()) {
           return ErrorValue.typeError("Exponent must be numeric", 'number', right.getType());
         }
@@ -866,7 +896,7 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
     const variable = context.variableContext.get(normalized);
     
     if (!variable) {
-      return ErrorValue.semanticError(`Undefined variable: "${normalized}"`);
+      return SymbolicValue.from(normalized);
     }
     
     const value = (variable as any).value;

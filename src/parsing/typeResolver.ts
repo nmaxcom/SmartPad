@@ -111,7 +111,10 @@ function resolveComponentType(
     case 'variable':
       const variable = variables.get(component.value);
       if (!variable?.value) {
-        return ErrorValue.semanticError(`Undefined variable: ${component.value}`, { expression: 'Type Resolution' });
+        return 'number';
+      }
+      if (variable.value.getType() === 'symbolic') {
+        return 'number';
       }
       return variable.value.getType();
 
@@ -245,6 +248,26 @@ export function validateExpressionTypes(
   expectedType?: SemanticValueType,
   options: { allowUnknownVariables?: boolean } = {}
 ): ErrorValue | undefined {
+  if (options.allowUnknownVariables) {
+    const hasUnknown = (items: ExpressionComponent[]): boolean =>
+      items.some((component) => {
+        if (component.type === "variable") {
+          return !variables.has(component.value);
+        }
+        if (component.type === "parentheses" && component.children) {
+          return hasUnknown(component.children);
+        }
+        if (component.type === "function" && component.args) {
+          return component.args.some((arg) => hasUnknown(arg.components));
+        }
+        return false;
+      });
+
+    if (hasUnknown(components)) {
+      return undefined;
+    }
+  }
+
   const resultType = resolveExpressionType(components, variables);
 
   if (resultType instanceof ErrorValue) {

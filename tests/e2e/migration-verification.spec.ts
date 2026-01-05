@@ -163,11 +163,13 @@ test.describe("Migration Verification", () => {
     await page.keyboard.press("Enter");
     await waitForUIRenderComplete(page);
 
-    // Verify all errors are shown via widgets
+    // Verify undefined variables render as symbolic results, while real errors remain errors
+    const results = page.locator(".semantic-result-display");
+    await expect(results.nth(0)).toHaveAttribute("data-result", /undefined_var \+ 5/);
+
     const errors = page.locator(".semantic-error-result");
-    await expect(errors.nth(0)).toHaveAttribute("data-result", /Undefined variable/);
-    await expect(errors.nth(1)).toHaveAttribute("data-result", /Division by zero/);
-    await expect(errors.nth(2)).toHaveAttribute("data-result", /Square root/);
+    await expect(errors.nth(0)).toHaveAttribute("data-result", /Division by zero/);
+    await expect(errors.nth(1)).toHaveAttribute("data-result", /Square root/);
   });
 
   test("BASELINE: Cascading Error Propagation", async ({ page }) => {
@@ -197,16 +199,10 @@ test.describe("Migration Verification", () => {
     await page.keyboard.type("x", { delay: 50 }); // Changes "a = 10" to "xa = 10"
     await waitForUIRenderComplete(page);
 
-    // Verify cascading errors via widgets
-    const errors = page.locator(".semantic-error-result");
-    await expect(errors.nth(0)).toHaveAttribute(
-      "data-result",
-      /'a' not defined|Undefined variable/i
-    );
-    await expect(errors.nth(1)).toHaveAttribute(
-      "data-result",
-      /'b' not defined|Undefined variable/i
-    );
+    // Verify cascading symbolic results via widgets
+    const results = page.locator(".semantic-result-display");
+    await expect(results.nth(0)).toHaveAttribute("data-result", /a \* 2/);
+    await expect(results.nth(1)).toHaveAttribute("data-result", /a \* 2/);
   });
 
   test("BASELINE: Semantic Highlighting - All Token Types", async ({ page }) => {

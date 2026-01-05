@@ -7,6 +7,7 @@ import {
   PercentageValue, 
   CurrencyValue, 
   UnitValue, 
+  SymbolicValue,
   SemanticParsers,
   ErrorValue,
   ErrorType 
@@ -183,9 +184,15 @@ export class ReactiveVariableStore {
               const context = this.createEvaluationContext();
               const result = evaluateMath(node.rawValue, context);
               if (result.error) {
-                throw new Error(result.error);
+                if (/Undefined variable/i.test(result.error)) {
+                  value = SymbolicValue.from(node.rawValue);
+                } else {
+                  throw new Error(result.error);
+                }
               }
-              value = new NumberValue(result.value);
+              if (!(value instanceof SymbolicValue)) {
+                value = new NumberValue(result.value);
+              }
             } catch (error) {
               value = ErrorValue.runtimeError(error instanceof Error ? error.message : "Unknown error", { expression: node.rawValue });
             }

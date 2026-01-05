@@ -172,18 +172,10 @@ test.describe("Decoration-Based Error Display", () => {
     const textContent = await page.locator(".ProseMirror p").textContent();
     expect(textContent?.trim()).toBe("unknown_var + 5 =>");
 
-    // Error should appear via decoration
-    const errorElements = page.locator(".semantic-error, .semantic-error-result");
-    const errorCount = await errorElements.count();
-
-    if (errorCount > 0) {
-      const errorElement = errorElements.first();
-      const errorData = await errorElement.getAttribute("data-result");
-      expect(errorData).toContain("Undefined variable");
-    } else {
-      console.log("❌ No error decorations for undefined variable");
-      expect(errorCount).toBeGreaterThan(0);
-    }
+    // Symbolic result should appear via decoration
+    const resultElement = page.locator(".semantic-result-display").first();
+    const resultData = await resultElement.getAttribute("data-result");
+    expect(resultData || "").toMatch(/unknown_var \+ 5/);
   });
 
   test("NO ERROR ACCUMULATION: Multiple edits should not accumulate errors", async ({ page }) => {

@@ -9,7 +9,7 @@
  */
 
 import { ReactiveVariableStore } from "../../src/state/variableStore";
-import { ErrorValue } from "../../src/types";
+import { ErrorValue, SymbolicValue } from "../../src/types";
 
 describe("ReactiveVariableStore", () => {
   let store: ReactiveVariableStore;
@@ -89,12 +89,12 @@ describe("ReactiveVariableStore", () => {
     expect(variableC?.value.getNumericValue()).toBe(27); // (10 + 5) * 2 - 3
   });
 
-  it("should handle errors in expressions gracefully", () => {
+  it("should keep symbolic expressions when variables are undefined", () => {
     store.setVariable("a", "undefined_var + 5");
 
     const variable = store.getVariable("a");
-    expect(variable?.value).toBeInstanceOf(ErrorValue);
-    expect((variable?.value as ErrorValue).getMessage()).toContain("Undefined variable");
+    expect(variable?.value).toBeInstanceOf(SymbolicValue);
+    expect(variable?.value.toString()).toContain("undefined_var + 5");
   });
 
   it("should provide correct variable values for calculations", () => {

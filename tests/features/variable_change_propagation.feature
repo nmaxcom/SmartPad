@@ -42,7 +42,7 @@ Feature: Variable Change Propagation
     Given I have defined "temp = 25"
     And I have typed "temp * 1.8 + 32 => 77"
     When I delete the variable definition "temp = 25"
-    Then the expression should show an error: "temp * 1.8 + 32 => ⚠️ Undefined variable: temp"
+    Then the expression should show "temp * 1.8 + 32 => temp * 1.8 + 32"
 
   Scenario: Immediate propagation without manual refresh
     Given I have defined "width = 10"

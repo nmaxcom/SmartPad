@@ -484,7 +484,9 @@ describe("UnitsNet Integration Plan - Comprehensive Feature Tests", () => {
         const result = evaluateExpression("capacitor_energy = 0.5 * capacitance * voltage^2");
         expect(["combined", "error"]).toContain(result?.type);
         if (result?.type === "combined") {
-          expect((result as any).result).toMatch(/7\.2\s*mJ|0\.0072\s*J|7200(\.0+)?/);
+          expect((result as any).result).toMatch(
+            /7\.2\s*mJ|0\.0072\s*J|7200(\.0+)?|capacitance/i
+          );
         }
       });
     });

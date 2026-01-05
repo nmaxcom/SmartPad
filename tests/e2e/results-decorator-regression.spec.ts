@@ -155,19 +155,18 @@ test.describe("Results Decorator Regression Tests", () => {
     // Wait for AST evaluation
     await page.waitForTimeout(300);
 
-    // Error widgets should appear
+    // Symbolic result widget should appear
     const errorCount = await page.locator(".semantic-error-result").count();
     console.log(`Error widgets after evaluation: ${errorCount}`);
 
-    // Should have error widget
-    expect(errorCount).toBe(1);
+    // Should have no error widgets
+    expect(errorCount).toBe(0);
 
-    // Verify error content
-    const errorText = await page
-      .locator(".semantic-error-result")
+    const resultText = await page
+      .locator(".semantic-result-display")
       .first()
       .getAttribute("data-result");
-    expect(errorText || "").toMatch(/⚠️.*Undefined variable/);
+    expect(resultText || "").toMatch(/invalid_variable/);
   });
 
   test("UNITS: Units expressions work correctly", async ({ page }) => {

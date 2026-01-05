@@ -15,6 +15,7 @@ import { CurrencyUnitValue } from './CurrencyUnitValue';
 import { UnitValue } from './UnitValue';
 import { DateValue } from './DateValue';
 import { ErrorValue, type ErrorType, type ErrorContext } from './ErrorValue';
+import { SymbolicValue } from './SymbolicValue';
 import { SmartPadQuantity } from '../units/unitsnetAdapter';
 
 // Re-export base types
@@ -28,6 +29,7 @@ export { CurrencyUnitValue };
 export { UnitValue };
 export { DateValue };
 export { ErrorValue, type ErrorType, type ErrorContext };
+export { SymbolicValue };
 
 // Type guards and utilities
 export const SemanticValueTypes = {
@@ -38,6 +40,7 @@ export const SemanticValueTypes = {
   isUnit: (value: SemanticValue): value is UnitValue => value.getType() === 'unit',
   isDate: (value: SemanticValue): value is DateValue => value.getType() === 'date',
   isError: (value: SemanticValue): value is ErrorValue => value.getType() === 'error',
+  isSymbolic: (value: SemanticValue): value is SymbolicValue => value.getType() === 'symbolic',
 } as const;
 
 // Factory functions for creating semantic values
@@ -271,6 +274,10 @@ export const SemanticArithmetic = {
    */
   add: (left: SemanticValue, right: SemanticValue): SemanticValue => {
     try {
+      if (SemanticValueTypes.isSymbolic(left) || SemanticValueTypes.isSymbolic(right)) {
+        const base = SemanticValueTypes.isSymbolic(left) ? left : SymbolicValue.from(left.toString());
+        return base.add(right);
+      }
       return left.add(right);
     } catch (error) {
       return ErrorValue.fromError(error as Error, 'runtime');
@@ -282,6 +289,10 @@ export const SemanticArithmetic = {
    */
   subtract: (left: SemanticValue, right: SemanticValue): SemanticValue => {
     try {
+      if (SemanticValueTypes.isSymbolic(left) || SemanticValueTypes.isSymbolic(right)) {
+        const base = SemanticValueTypes.isSymbolic(left) ? left : SymbolicValue.from(left.toString());
+        return base.subtract(right);
+      }
       return left.subtract(right);
     } catch (error) {
       return ErrorValue.fromError(error as Error, 'runtime');
@@ -293,6 +304,10 @@ export const SemanticArithmetic = {
    */
   multiply: (left: SemanticValue, right: SemanticValue): SemanticValue => {
     try {
+      if (SemanticValueTypes.isSymbolic(left) || SemanticValueTypes.isSymbolic(right)) {
+        const base = SemanticValueTypes.isSymbolic(left) ? left : SymbolicValue.from(left.toString());
+        return base.multiply(right);
+      }
       return left.multiply(right);
     } catch (error) {
       return ErrorValue.fromError(error as Error, 'runtime');
@@ -304,6 +319,10 @@ export const SemanticArithmetic = {
    */
   divide: (left: SemanticValue, right: SemanticValue): SemanticValue => {
     try {
+      if (SemanticValueTypes.isSymbolic(left) || SemanticValueTypes.isSymbolic(right)) {
+        const base = SemanticValueTypes.isSymbolic(left) ? left : SymbolicValue.from(left.toString());
+        return base.divide(right);
+      }
       return left.divide(right);
     } catch (error) {
       return ErrorValue.fromError(error as Error, 'runtime');
@@ -315,6 +334,9 @@ export const SemanticArithmetic = {
    */
   power: (base: SemanticValue, exponent: number): SemanticValue => {
     try {
+      if (SemanticValueTypes.isSymbolic(base)) {
+        return base.power(exponent);
+      }
       return base.power(exponent);
     } catch (error) {
       return ErrorValue.fromError(error as Error, 'runtime');

@@ -385,9 +385,9 @@ energy = heat_capacity * mass_water * temp_change =>
       const astNode = parseLine("undefined_var =>", 1);
       const result = unitsNetEvaluator.evaluate(astNode, createContext());
 
-      expect(result?.type).toBe("error");
-      if (result?.type === "error") {
-        expect(result.error).toContain("Undefined variable");
+      expect(result?.type).toBe("mathResult");
+      if (result?.type === "mathResult") {
+        expect(result.result).toContain("undefined_var");
       }
     });
 

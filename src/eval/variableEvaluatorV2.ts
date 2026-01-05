@@ -16,7 +16,7 @@ import {
   VariableRenderNode,
   ErrorRenderNode,
 } from "./renderNodes";
-import { ErrorValue, SemanticValueTypes, NumberValue, DisplayOptions } from "../types";
+import { ErrorValue, SemanticValueTypes, NumberValue, DisplayOptions, SymbolicValue } from "../types";
 import { parseAndEvaluateExpression } from "../parsing/expressionParser";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
 import { SimpleExpressionParser } from "./expressionEvaluatorV2";
@@ -82,18 +82,24 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
             );
 
             if (evalResult.error) {
-              console.warn(
-                "VariableEvaluatorV2: Expression evaluation error:",
-                evalResult.error
-              );
-              return this.createErrorNode(
-                `Invalid variable value: ${evalResult.error}`,
-                varNode.variableName,
-                context.lineNumber
-              );
+              if (/Undefined variable/i.test(evalResult.error)) {
+                resolvedValue = SymbolicValue.from(varNode.rawValue);
+              } else {
+                console.warn(
+                  "VariableEvaluatorV2: Expression evaluation error:",
+                  evalResult.error
+                );
+                return this.createErrorNode(
+                  `Invalid variable value: ${evalResult.error}`,
+                  varNode.variableName,
+                  context.lineNumber
+                );
+              }
             }
 
-            resolvedValue = NumberValue.from(evalResult.value);
+            if (!resolvedValue || SemanticValueTypes.isError(resolvedValue)) {
+              resolvedValue = NumberValue.from(evalResult.value);
+            }
           }
 
           if (resolvedValue) {

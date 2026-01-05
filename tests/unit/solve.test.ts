@@ -49,9 +49,9 @@ describe("Solve evaluator", () => {
 
   test("implicit solve returns numeric result when data is available", () => {
     const context = createContext();
-    evaluateLine("distance = 40 m", context, 1);
-    evaluateLine("time = 2 s", context, 2);
-    evaluateLine("distance = v * time", context, 3);
+    evaluateLine("distance = v * time", context, 1);
+    evaluateLine("distance = 40 m", context, 2);
+    evaluateLine("time = 2 s", context, 3);
     const result = evaluateLine("v =>", context, 4);
     expect(result?.type).toBe("mathResult");
     expect((result as any).result).toBe("20 m/s");
@@ -181,9 +181,9 @@ describe("Solve evaluator", () => {
 
   test("implicit solve supports phrase variables", () => {
     const context = createContext();
-    evaluateLine("distance = 100 m", context, 1);
-    evaluateLine("time = 2 s", context, 2);
-    evaluateLine("distance = average speed * time", context, 3);
+    evaluateLine("distance = average speed * time", context, 1);
+    evaluateLine("distance = 100 m", context, 2);
+    evaluateLine("time = 2 s", context, 3);
     const result = evaluateLine("average speed =>", context, 4);
     expect((result as any).result).toBe("50 m/s");
   });

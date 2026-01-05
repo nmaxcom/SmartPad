@@ -107,7 +107,7 @@ Feature: Expression Evaluation
 
   Scenario: Undefined variable error
     When I type "unknown_var + 5 =>"
-    Then I should see "unknown_var + 5 => ⚠️ Undefined variable: unknown_var" in the editor
+    Then I should see "unknown_var + 5 => unknown_var + 5" in the editor
 
   Scenario: Invalid mathematical operation
     When I type "sqrt(-1) =>"

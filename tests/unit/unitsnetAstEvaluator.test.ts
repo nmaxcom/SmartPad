@@ -216,9 +216,9 @@ describe("UnitsNet.js AST Evaluator", () => {
       const context = createContext();
 
       const result = unitsNetEvaluator.evaluate(astNode, context);
-      expect(result?.type).toBe("error");
-      if (result?.type === "error") {
-        expect(result.error).toContain("Undefined variable");
+      expect(result?.type).toBe("mathResult");
+      if (result?.type === "mathResult") {
+        expect(result.result).toContain("undefined_var");
       }
     });
 
