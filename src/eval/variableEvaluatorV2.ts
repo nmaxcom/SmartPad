@@ -82,7 +82,7 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
             );
 
             if (evalResult.error) {
-              if (/Undefined variable/i.test(evalResult.error)) {
+              if (/Undefined variable|not defined/i.test(evalResult.error)) {
                 resolvedValue = SymbolicValue.from(varNode.rawValue);
               } else {
                 console.warn(

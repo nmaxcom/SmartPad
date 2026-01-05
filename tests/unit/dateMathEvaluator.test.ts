@@ -106,6 +106,65 @@ describe("Date Math Evaluator", () => {
     }
   });
 
+  test("should render date variables as dates", () => {
+    const meeting = DateValue.parse("2024-06-05 17:00 UTC");
+    expect(meeting).not.toBeNull();
+    const variableContext = new Map<string, Variable>([
+      [
+        "meeting",
+        {
+          name: "meeting",
+          value: meeting as DateValue,
+          rawValue: "2024-06-05 17:00 UTC",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+    ]);
+
+    const node = parseLine("meeting =>", 1);
+    const result = defaultRegistry.evaluate(node, createContext(1, variableContext));
+    expect(result?.type).toBe("mathResult");
+    if (result?.type === "mathResult") {
+      expect(result.displayText).toBe(
+        "meeting => 2024-06-05 17:00 UTC"
+      );
+    }
+  });
+
+  test("should error on date arithmetic without a duration unit", () => {
+    const dateValue = DateValue.parse("2002-03-02");
+    expect(dateValue).not.toBeNull();
+    const variableContext = new Map<string, Variable>([
+      [
+        "date",
+        {
+          name: "date",
+          value: dateValue as DateValue,
+          rawValue: "2002-03-02",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+    ]);
+
+    const node = parseLine("total = date + 2 =>", 1);
+    const result = defaultRegistry.evaluate(node, createContext(1, variableContext));
+    expect(result?.type).toBe("error");
+    if (result?.type === "error") {
+      expect(result.error).toContain("Cannot add date");
+    }
+  });
+
+  test("should reject invalid date literals", () => {
+    const node = parseLine("3/2/20024 =>", 1);
+    const result = defaultRegistry.evaluate(node, createContext());
+    expect(result?.type).toBe("error");
+    if (result?.type === "error") {
+      expect(result.error).toMatch(/Invalid date/i);
+    }
+  });
+
   test("should handle month carry across non-leap year", () => {
     const node = parseLine("2023-01-31 + 1 month =>", 1);
     const result = defaultRegistry.evaluate(node, createContext());

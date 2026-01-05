@@ -93,7 +93,7 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
           context.variableContext
         );
         if (evalResult.error) {
-          if (/Undefined variable/i.test(evalResult.error)) {
+          if (/Undefined variable|not defined/i.test(evalResult.error)) {
             semanticValue = SymbolicValue.from(expression);
           } else {
             console.warn(
@@ -144,13 +144,18 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
       }
       
       // Create combined render node that shows both assignment and result
+      const displayOptions = this.getDisplayOptions(context);
+      const displayValue = SemanticValueTypes.isSymbolic(semanticValue)
+        ? this.substituteKnownValues(expression, context, displayOptions)
+        : semanticValue.toString(displayOptions);
+
       return this.createCombinedRenderNode(
         combNode.variableName,
         combNode.expression,
         semanticValue,
+        displayValue,
         context.lineNumber,
-        combNode.raw,
-        this.getDisplayOptions(context)
+        combNode.raw
       );
       
     } catch (error) {
@@ -166,18 +171,17 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
     variableName: string,
     expression: string,
     value: import("../types").SemanticValue,
+    displayValue: string,
     lineNumber: number,
-    originalRaw: string,
-    displayOptions: DisplayOptions
+    originalRaw: string
   ): CombinedRenderNode {
-    const valueString = value.toString(displayOptions);
-    const displayText = `${variableName} = ${expression} => ${valueString}`;
+    const displayText = `${variableName} = ${expression} => ${displayValue}`;
     
     return {
       type: "combined",
       variableName,
       expression,
-      result: valueString,
+      result: displayValue,
       displayText,
       line: lineNumber,
       originalRaw,
@@ -320,6 +324,72 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
     }
 
     return { unit, symbol };
+  }
+
+  private substituteKnownValues(
+    expression: string,
+    context: EvaluationContext,
+    displayOptions: DisplayOptions
+  ): string {
+    const substitutions = new Map<string, string>();
+    const formatValue = (value: SemanticValue): string => {
+      const formatted = value.toString(displayOptions);
+      if (/[+\-*/^]/.test(formatted)) {
+        return `(${formatted})`;
+      }
+      return formatted;
+    };
+
+    context.variableContext.forEach((variable, name) => {
+      const value = variable.value;
+      if (!value || SemanticValueTypes.isSymbolic(value) || SemanticValueTypes.isError(value)) {
+        return;
+      }
+      substitutions.set(name.replace(/\s+/g, " ").trim(), formatValue(value));
+    });
+
+    context.variableStore.getAllVariables().forEach((variable) => {
+      const value = variable.value;
+      if (!value || SemanticValueTypes.isSymbolic(value) || SemanticValueTypes.isError(value)) {
+        return;
+      }
+      const normalized = variable.name.replace(/\s+/g, " ").trim();
+      if (!substitutions.has(normalized)) {
+        substitutions.set(normalized, formatValue(value));
+      }
+    });
+
+    if (substitutions.size === 0) {
+      return expression;
+    }
+
+    const names = Array.from(substitutions.keys()).sort((a, b) => b.length - a.length);
+    const isBoundary = (char: string | undefined) => !char || /[\s+\-*/^%()=<>!,]/.test(char);
+
+    let result = "";
+    let pos = 0;
+    while (pos < expression.length) {
+      let replaced = false;
+      for (const name of names) {
+        if (!expression.startsWith(name, pos)) {
+          continue;
+        }
+        const before = pos > 0 ? expression[pos - 1] : undefined;
+        const after = pos + name.length < expression.length ? expression[pos + name.length] : undefined;
+        if (isBoundary(before) && isBoundary(after)) {
+          result += substitutions.get(name);
+          pos += name.length;
+          replaced = true;
+          break;
+        }
+      }
+      if (!replaced) {
+        result += expression[pos];
+        pos += 1;
+      }
+    }
+
+    return result;
   }
 
   private getDisplayOptions(context: EvaluationContext): DisplayOptions {

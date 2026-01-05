@@ -108,6 +108,18 @@ describe("Solve evaluator", () => {
     expect((result as any).error).toContain("exponent must be numeric");
   });
 
+  test("implicit solve handles nested expressions with exponents", () => {
+    const context = createContext();
+    evaluateLine("x = (((z+3)^2)+2)/4 =>", context, 1);
+    const zResult = evaluateLine("z =>", context, 2);
+    expect(zResult?.type).toBe("mathResult");
+    expect((zResult as any).result).toMatch(/sqrt\((?:4\s*\*\s*x|x\s*\*\s*4)\s*-\s*2\)\s*-\s*3/);
+
+    const xResult = evaluateLine("x =>", context, 3);
+    expect(xResult?.type).toBe("mathResult");
+    expect((xResult as any).result).toMatch(/\(.*z\s*\+\s*3.*\)\s*\/\s*4/);
+  });
+
   test("implicit solve errors when variable appears on both sides", () => {
     const context = createContext();
     evaluateLine("v = v + 1", context, 1);
@@ -186,6 +198,22 @@ describe("Solve evaluator", () => {
     evaluateLine("time = 2 s", context, 3);
     const result = evaluateLine("average speed =>", context, 4);
     expect((result as any).result).toBe("50 m/s");
+  });
+
+  test("implicit solve substitutes known scalar values", () => {
+    const context = createContext();
+    evaluateLine("price = 3", context, 1);
+    evaluateLine("total = price * qty =>", context, 2);
+    const result = evaluateLine("qty =>", context, 3);
+    expect((result as any).result).toBe("total / 3");
+  });
+
+  test("implicit solve substitutes known unit values", () => {
+    const context = createContext();
+    evaluateLine("distance = v * time", context, 1);
+    evaluateLine("distance = 40 m", context, 2);
+    const result = evaluateLine("v =>", context, 3);
+    expect((result as any).result).toBe("40 m / time");
   });
 
   test("explicit solve errors on trailing commas", () => {

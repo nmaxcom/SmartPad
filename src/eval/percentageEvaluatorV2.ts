@@ -527,7 +527,7 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     const variables = this.buildNumericContext(context.variableContext);
     const result = evaluateMath(expr, variables);
     if (result.error) {
-      if (/Undefined variable/i.test(result.error)) {
+      if (/Undefined variable|not defined/i.test(result.error)) {
         return SymbolicValue.from(expr);
       }
       return ErrorValue.semanticError(result.error);

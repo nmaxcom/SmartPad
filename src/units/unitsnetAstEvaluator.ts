@@ -42,6 +42,7 @@ import {
   NumberValue,
   PercentageValue,
   SymbolicValue,
+  DateValue,
   ErrorValue,
   DisplayOptions,
   SemanticParsers,
@@ -144,6 +145,9 @@ function convertVariablesToUnitsNetQuantities(
       quantities[name] = variable.value;
       return;
     }
+    if (variable.value instanceof DateValue) {
+      return;
+    }
     if (variable.value instanceof SymbolicValue || variable.value instanceof ErrorValue) {
       return;
     }
@@ -229,6 +233,9 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     const displayOptions = this.getDisplayOptions(context);
 
     try {
+      if (this.containsDateVariable(node.components, context)) {
+        return null;
+      }
       if (this.shouldDeferToSemanticEvaluator(node.components, node.expression, context)) {
         return null;
       }
@@ -311,6 +318,9 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     const displayOptions = this.getDisplayOptions(context);
 
     try {
+      if (this.containsDateVariable(node.components, context)) {
+        return null;
+      }
       if (this.shouldDeferToSemanticEvaluator(node.components, node.expression, context)) {
         return null;
       }
@@ -334,7 +344,11 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
           };
           variableStore.setVariableWithMetadata(variable);
 
-          const resultString = symbolic.toString(displayOptions);
+          const resultString = this.substituteKnownValues(
+            node.expression,
+            context,
+            displayOptions
+          );
           return {
             type: "combined",
             variableName: node.variableName,
@@ -403,6 +417,72 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
         originalRaw: node.expression,
       } as ErrorRenderNode;
     }
+  }
+
+  private substituteKnownValues(
+    expression: string,
+    context: EvaluationContext,
+    displayOptions: DisplayOptions
+  ): string {
+    const substitutions = new Map<string, string>();
+    const formatValue = (value: import("../types").SemanticValue): string => {
+      const formatted = value.toString(displayOptions);
+      if (/[+\-*/^]/.test(formatted)) {
+        return `(${formatted})`;
+      }
+      return formatted;
+    };
+
+    context.variableContext.forEach((variable, name) => {
+      const value = variable.value;
+      if (!value || value instanceof SymbolicValue || value instanceof ErrorValue) {
+        return;
+      }
+      substitutions.set(name.replace(/\s+/g, " ").trim(), formatValue(value));
+    });
+
+    context.variableStore.getAllVariables().forEach((variable) => {
+      const value = variable.value;
+      if (!value || value instanceof SymbolicValue || value instanceof ErrorValue) {
+        return;
+      }
+      const normalized = variable.name.replace(/\s+/g, " ").trim();
+      if (!substitutions.has(normalized)) {
+        substitutions.set(normalized, formatValue(value));
+      }
+    });
+
+    if (substitutions.size === 0) {
+      return expression;
+    }
+
+    const names = Array.from(substitutions.keys()).sort((a, b) => b.length - a.length);
+    const isBoundary = (char: string | undefined) => !char || /[\s+\-*/^%()=<>!,]/.test(char);
+
+    let result = "";
+    let pos = 0;
+    while (pos < expression.length) {
+      let replaced = false;
+      for (const name of names) {
+        if (!expression.startsWith(name, pos)) {
+          continue;
+        }
+        const before = pos > 0 ? expression[pos - 1] : undefined;
+        const after = pos + name.length < expression.length ? expression[pos + name.length] : undefined;
+        if (isBoundary(before) && isBoundary(after)) {
+          result += substitutions.get(name);
+          pos += name.length;
+          replaced = true;
+          break;
+        }
+      }
+      if (!replaced) {
+        result += expression[pos];
+        pos += 1;
+      }
+    }
+
+    return result;
   }
 
   private evaluateUnitsNetVariableAssignment(
@@ -780,5 +860,19 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     };
     visit(components);
     return names;
+  }
+
+  private containsDateVariable(
+    components: ExpressionComponent[],
+    context: EvaluationContext
+  ): boolean {
+    const variableNames = this.collectVariableNames(components);
+    for (const name of variableNames) {
+      const variable = context.variableContext.get(name);
+      if (variable?.value instanceof DateValue) {
+        return true;
+      }
+    }
+    return false;
   }
 }

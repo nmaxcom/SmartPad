@@ -31,7 +31,7 @@ export function looksLikeDateExpression(expression: string): boolean {
   if (!text) return false;
   if (/\b(today|tomorrow|yesterday|now|next|last)\b/i.test(text)) return true;
   if (/\b\d{4}-\d{2}-\d{2}\b/.test(text)) return true;
-  if (/\b\d{1,2}[\/.-]\d{1,2}[\/.-]\d{4}\b/.test(text)) return true;
+  if (/\b\d{1,2}[\/.-]\d{1,2}[\/.-]\d{4,}\b/.test(text)) return true;
   if (/\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\b/i.test(text)) return true;
   if (/\b(years?|months?|weeks?|days?|hours?|minutes?|business\s+days?)\b/i.test(text)) return true;
   if (/\b\d+\s*(h|d|w|y)\b/i.test(text)) return true;
@@ -187,7 +187,12 @@ export function evaluateDateExpression(
   const conversionTarget = conversionMatch ? conversionMatch[2].trim() : null;
 
   const baseResult = parseDateValueAtStart(baseExpr, variableContext);
-  if (!baseResult) return null;
+  if (!baseResult) {
+    if (looksLikeDateLiteral(baseExpr)) {
+      return ErrorValue.semanticError("Invalid date literal");
+    }
+    return null;
+  }
 
   let current = baseResult.value;
   let result: DateValue | UnitValue = current;
@@ -241,6 +246,17 @@ export function evaluateDateExpression(
   }
 
   return result;
+}
+
+function looksLikeDateLiteral(expression: string): boolean {
+  const text = expression.trim();
+  if (!text) return false;
+  if (/\b\d{4}-\d{2}-\d{2}\b/.test(text)) return true;
+  if (/\b\d{1,2}[\/.-]\d{1,2}[\/.-]\d{4,}\b/.test(text)) return true;
+  if (/\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\b/i.test(text)) {
+    return true;
+  }
+  return false;
 }
 
 function applyConversion(

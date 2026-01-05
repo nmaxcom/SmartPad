@@ -703,9 +703,10 @@ export class SolveEvaluator implements NodeEvaluator {
 
     let resolved = value as SemanticValue;
     if (SemanticValueTypes.isSymbolic(resolved)) {
+      const substituted = this.substituteKnownValues(expressionText, context, localValues, displayOptions);
       const resultText = conversion
-        ? `${expressionText} ${conversion.keyword} ${conversion.target}`
-        : expressionText;
+        ? `${substituted} ${conversion.keyword} ${conversion.target}`
+        : substituted;
       return this.createMathResultNode(node.expression, resultText, context.lineNumber);
     }
     if (conversion) {
@@ -753,6 +754,71 @@ export class SolveEvaluator implements NodeEvaluator {
       return ErrorValue.semanticError(evalResult.error);
     }
     return NumberValue.from(evalResult.value);
+  }
+
+  private substituteKnownValues(
+    expression: string,
+    context: EvaluationContext,
+    localValues: Map<string, SemanticValue>,
+    displayOptions: DisplayOptions
+  ): string {
+    const substitutions = new Map<string, string>();
+    const formatValue = (value: SemanticValue): string => {
+      const formatted = value.toString(displayOptions);
+      if (/[+\-*/^]/.test(formatted)) {
+        return `(${formatted})`;
+      }
+      return formatted;
+    };
+    const addValue = (name: string, value: SemanticValue) => {
+      if (SemanticValueTypes.isSymbolic(value) || SemanticValueTypes.isError(value)) {
+        return;
+      }
+      substitutions.set(normalizeVariableName(name), formatValue(value));
+    };
+
+    context.variableContext.forEach((variable, name) => {
+      const value = variable.value;
+      if (value) {
+        addValue(name, value);
+      }
+    });
+
+    localValues.forEach((value, name) => {
+      addValue(name, value);
+    });
+
+    if (substitutions.size === 0) {
+      return expression;
+    }
+
+    const names = Array.from(substitutions.keys()).sort((a, b) => b.length - a.length);
+    const isBoundary = (char: string | undefined) => !char || /[\s+\-*/^%()=<>!,]/.test(char);
+
+    let result = "";
+    let pos = 0;
+    while (pos < expression.length) {
+      let replaced = false;
+      for (const name of names) {
+        if (!expression.startsWith(name, pos)) {
+          continue;
+        }
+        const before = pos > 0 ? expression[pos - 1] : undefined;
+        const after = pos + name.length < expression.length ? expression[pos + name.length] : undefined;
+        if (isBoundary(before) && isBoundary(after)) {
+          result += substitutions.get(name);
+          pos += name.length;
+          replaced = true;
+          break;
+        }
+      }
+      if (!replaced) {
+        result += expression[pos];
+        pos += 1;
+      }
+    }
+
+    return result;
   }
 
   private extractConversionSuffix(

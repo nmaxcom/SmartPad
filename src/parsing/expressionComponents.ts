@@ -404,44 +404,39 @@ export function parseExpressionComponents(expression: string): ExpressionCompone
       case 'parentheses': {
         if (token.value === '(') {
           // Start of parenthesized expression
-          const subComponents: ExpressionComponent[] = [];
-          pos++;
+          const start = pos + 1;
           let depth = 1;
+          pos++;
 
           while (pos < tokens.length && depth > 0) {
             const current = tokens[pos];
-
             if (current.type === 'parentheses') {
               if (current.value === '(') depth++;
               if (current.value === ')') depth--;
-
-              if (depth === 0) {
-                components.push({
-                  type: 'parentheses',
-                  value: '()',
-                  children: subComponents,
-                });
-                pos++;
-                break;
-              }
             }
-
-            // Parse sub-expression
-            const subTokens: Token[] = [];
-            let subDepth = depth;
-            while (pos < tokens.length) {
-              const t = tokens[pos];
-              if (t.type === 'parentheses') {
-                if (t.value === '(') subDepth++;
-                if (t.value === ')') subDepth--;
-              }
-              if (subDepth === 0) break;
-              subTokens.push(t);
-              pos++;
-            }
-
-            subComponents.push(...parseExpressionComponents(subTokens.map(t => t.value).join('')));
+            if (depth === 0) break;
+            pos++;
           }
+
+          if (depth !== 0) {
+            throw new Error('Unmatched opening parenthesis');
+          }
+
+          const innerTokens = tokens.slice(start, pos);
+          if (innerTokens.length === 0) {
+            throw new Error('Empty parentheses');
+          }
+
+          const subComponents = parseExpressionComponents(
+            innerTokens.map((t) => t.value).join('')
+          );
+          components.push({
+            type: 'parentheses',
+            value: '()',
+            children: subComponents,
+          });
+
+          pos++; // consume closing ')'
         } else {
           // Closing parenthesis without matching open
           throw new Error('Unmatched closing parenthesis');

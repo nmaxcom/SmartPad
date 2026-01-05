@@ -10,7 +10,7 @@ import { ReactiveVariableStore } from "../../src/state/variableStore";
 import { EvaluationContext } from "../../src/eval/registry";
 import { Variable } from "../../src/state/types";
 import { SmartPadQuantity } from "../../src/units/unitsnetAdapter";
-import { UnitValue } from "../../src/types";
+import { UnitValue, NumberValue } from "../../src/types";
 
 describe("UnitsNet.js AST Evaluator", () => {
   let unitsNetEvaluator: UnitsNetExpressionEvaluator;
@@ -139,6 +139,29 @@ describe("UnitsNet.js AST Evaluator", () => {
       if (result?.type === "combined") {
         expect(result.variableName).toBe("velocity");
         expect(result.displayText).toMatch(/velocity = 100 m \/ 10 s => 10\s*m(\/s)?/);
+      }
+    });
+
+    test("should substitute known values in symbolic combined assignments", () => {
+      const astNode = parseLine("total = price * qty =>", 1);
+      const now = new Date();
+      const variables = new Map<string, Variable>([
+        [
+          "price",
+          {
+            name: "price",
+            value: NumberValue.from(3),
+            rawValue: "3",
+            createdAt: now,
+            updatedAt: now,
+          },
+        ],
+      ]);
+
+      const result = unitsNetEvaluator.evaluate(astNode, createContext(variables));
+      expect(result?.type).toBe("combined");
+      if (result?.type === "combined") {
+        expect(result.result).toBe("3 * qty");
       }
     });
   });
