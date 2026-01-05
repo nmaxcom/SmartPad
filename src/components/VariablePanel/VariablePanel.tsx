@@ -1,6 +1,7 @@
 import React from "react";
 import { useVariables } from "../../state";
 import { useSettingsContext } from "../../state/SettingsContext";
+import { getDateLocaleEffective } from "../../types/DateValue";
 import "./VariablePanel.css";
 
 function VariablePanel() {
@@ -11,6 +12,8 @@ function VariablePanel() {
     scientificUpperThreshold: Math.pow(10, settings.scientificUpperExponent),
     scientificLowerThreshold: Math.pow(10, settings.scientificLowerExponent),
     scientificTrimTrailingZeros: settings.scientificTrimTrailingZeros,
+    dateFormat: settings.dateDisplayFormat,
+    dateLocale: getDateLocaleEffective(),
   };
 
   // Convert the Map to an array for easier rendering

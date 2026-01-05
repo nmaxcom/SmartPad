@@ -428,7 +428,7 @@ export class UnitsNetParser {
 
     // Handle unit conversions (e.g., "100 ft + 30 in to m")
     if (this.currentToken().type === UnitsNetTokenType.TO) {
-      this.consume(); // consume "to"/"in"
+      const keyword = this.consume().value; // consume "to"/"in"
       // Build full unit string, supporting forms like km/h, m/s^2, etc.
       let unitStr = "";
       while (true) {
@@ -447,7 +447,7 @@ export class UnitsNetParser {
       }
       unitStr = unitStr.trim();
       if (!unitStr) {
-        throw new Error("Expected unit after 'to'");
+        throw new Error(`Expected unit after '${keyword}'`);
       }
       if (left instanceof UnitValue) {
         return left.convertTo(unitStr);

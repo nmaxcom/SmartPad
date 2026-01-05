@@ -1,6 +1,7 @@
-import React, { createContext, useReducer, useCallback, useMemo, ReactNode } from "react";
+import React, { createContext, useReducer, useCallback, useMemo, ReactNode, useEffect } from "react";
 import { SettingsContextType, SettingsState, SettingsAction } from "./types";
 import { createSettingsState, settingsReducer } from "./settingsStore";
+import { setDateLocaleOverride } from "../types/DateValue";
 
 // Create the context
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -15,6 +16,14 @@ interface SettingsProviderProps {
  */
 export function SettingsProvider({ children }: SettingsProviderProps) {
   const [state, dispatch] = useReducer(settingsReducer, createSettingsState());
+
+  useEffect(() => {
+    if (state.dateLocaleMode === "custom" && state.dateLocaleOverride.trim()) {
+      setDateLocaleOverride(state.dateLocaleOverride);
+    } else {
+      setDateLocaleOverride(null);
+    }
+  }, [state.dateLocaleMode, state.dateLocaleOverride]);
 
   // Memoized action creators for performance
   const updateSetting = useCallback(

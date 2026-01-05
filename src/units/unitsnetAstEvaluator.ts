@@ -477,7 +477,7 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
       return formattedValue;
     }
 
-    return `${formattedValue} ${unit}`;
+    return `${formattedValue} ${this.formatUnitLabel(unit, value)}`;
   }
 
   private isMathematicalConstant(value: number): boolean {
@@ -507,7 +507,9 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
         precision,
         displayOptions
       );
-      return quantity.unit ? `${formattedValue} ${quantity.unit}` : formattedValue;
+      return quantity.unit
+        ? `${formattedValue} ${this.formatUnitLabel(quantity.unit, quantity.value)}`
+        : formattedValue;
     }
 
     // For expressions, use smart thresholds and optionally prefer base units
@@ -535,6 +537,21 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
   private resolveUnitsPrecision(unit: string, value: number, defaultPlaces: number): number {
     // Follow the configured decimalPlaces consistently for all units.
     return defaultPlaces;
+  }
+
+  private formatUnitLabel(unit: string, value: number): string {
+    const absValue = Math.abs(value);
+    const pluralizableUnits = new Set(["day", "week", "month", "year"]);
+    if (
+      pluralizableUnits.has(unit) &&
+      absValue !== 1 &&
+      !unit.includes("/") &&
+      !unit.includes("^") &&
+      !unit.includes("*")
+    ) {
+      return `${unit}s`;
+    }
+    return unit;
   }
 
   private formatScalarValue(

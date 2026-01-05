@@ -197,6 +197,9 @@ describe("Default Unit Registry", () => {
     expect(defaultUnitRegistry.has("min")).toBe(true);
     expect(defaultUnitRegistry.has("h")).toBe(true);
     expect(defaultUnitRegistry.has("day")).toBe(true);
+    expect(defaultUnitRegistry.has("week")).toBe(true);
+    expect(defaultUnitRegistry.has("month")).toBe(true);
+    expect(defaultUnitRegistry.has("year")).toBe(true);
   });
 
   test("should have volume units", () => {

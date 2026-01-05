@@ -42,6 +42,7 @@ export interface Token {
   start: number;
   end: number;
   text: string;
+  className?: string;
 }
 
 // Custom marks for each token type
@@ -199,7 +200,9 @@ export const SemanticHighlightExtension = Extension.create({
 
                   // Create inline decoration with appropriate class
                   const decoration = Decoration.inline(from, to, {
-                    class: `semantic-${token.type}`,
+                    class: token.className
+                      ? `semantic-${token.type} ${token.className}`
+                      : `semantic-${token.type}`,
                   });
                   decorations.push(decoration);
                 });
@@ -492,6 +495,17 @@ export function tokenizeExpression(
 
     let matched = false;
 
+    const dateMatch = matchDateLiteralTokens(expr, pos, baseOffset);
+    if (dateMatch) {
+      tokens.push(...dateMatch.tokens);
+      pos += dateMatch.length;
+      matched = true;
+    }
+
+    if (matched) {
+      continue;
+    }
+
     // Check for functions
     const funcMatch = expr.substring(pos).match(functionRegex);
     if (funcMatch) {
@@ -715,4 +729,87 @@ export function tokenizeExpression(
   }
 
   return tokens;
+}
+
+function matchDateLiteralTokens(
+  expr: string,
+  pos: number,
+  baseOffset: number
+): { tokens: Token[]; length: number } | null {
+  const slice = expr.slice(pos);
+  const tokens: Token[] = [];
+
+  const pushDateNumber = (start: number, length: number) => {
+    tokens.push({
+      type: "scrubbableNumber",
+      start: baseOffset + start,
+      end: baseOffset + start + length,
+      text: expr.slice(start, start + length),
+      className: "semantic-date-part",
+    });
+  };
+
+  const pushSeparator = (start: number, length: number) => {
+    tokens.push({
+      type: "operator",
+      start: baseOffset + start,
+      end: baseOffset + start + length,
+      text: expr.slice(start, start + length),
+      className: "semantic-date-separator",
+    });
+  };
+
+  const isoMatch = slice.match(/^(\d{4})-(\d{2})-(\d{2})(?:\s+(\d{2}):(\d{2}))?/);
+  if (isoMatch) {
+    const yearStart = pos;
+    pushDateNumber(yearStart, 4);
+    pushSeparator(yearStart + 4, 1);
+    pushDateNumber(yearStart + 5, 2);
+    pushSeparator(yearStart + 7, 1);
+    pushDateNumber(yearStart + 8, 2);
+    let length = 10;
+    if (isoMatch[4] && isoMatch[5]) {
+      const timeStart = pos + length;
+      if (expr[timeStart] === " ") {
+        pushSeparator(timeStart, 1);
+        length += 1;
+      }
+      pushDateNumber(pos + length, 2);
+      pushSeparator(pos + length + 2, 1);
+      pushDateNumber(pos + length + 3, 2);
+      length += 5;
+    }
+    return { tokens, length };
+  }
+
+  const numericMatch = slice.match(/^(\d{1,2})([\/.-])(\d{1,2})\2(\d{4})(?:\s+(\d{2}):(\d{2}))?/);
+  if (numericMatch) {
+    const firstLength = numericMatch[1].length;
+    const sep = numericMatch[2].length;
+    const secondLength = numericMatch[3].length;
+    const yearLength = numericMatch[4].length;
+    const firstStart = pos;
+    pushDateNumber(firstStart, firstLength);
+    pushSeparator(firstStart + firstLength, sep);
+    pushDateNumber(firstStart + firstLength + sep, secondLength);
+    pushSeparator(firstStart + firstLength + sep + secondLength, sep);
+    pushDateNumber(firstStart + firstLength + sep + secondLength + sep, yearLength);
+
+    let length = firstLength + sep + secondLength + sep + yearLength;
+    if (numericMatch[5] && numericMatch[6]) {
+      const timeStart = pos + length;
+      if (expr[timeStart] === " ") {
+        pushSeparator(timeStart, 1);
+        length += 1;
+      }
+      pushDateNumber(pos + length, 2);
+      pushSeparator(pos + length + 2, 1);
+      pushDateNumber(pos + length + 3, 2);
+      length += 5;
+    }
+
+    return { tokens, length };
+  }
+
+  return null;
 }

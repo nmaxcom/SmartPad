@@ -689,6 +689,8 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
       scientificUpperThreshold: context.scientificUpperThreshold,
       scientificLowerThreshold: context.scientificLowerThreshold,
       scientificTrimTrailingZeros: context.scientificTrimTrailingZeros,
+      dateFormat: context.dateDisplayFormat,
+      dateLocale: context.dateLocale,
     };
   }
 

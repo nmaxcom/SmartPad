@@ -6,11 +6,12 @@ import { parseLine } from "../../src/parsing/astParser";
 import { defaultRegistry } from "../../src/eval";
 import { ReactiveVariableStore } from "../../src/state/variableStore";
 import { Variable } from "../../src/state/types";
+import { DateValue } from "../../src/types";
 
-const createContext = (lineNumber = 1) => {
+const createContext = (lineNumber = 1, variableContext?: Map<string, Variable>) => {
   const variableStore = new ReactiveVariableStore();
-  const variableContext = new Map<string, Variable>();
-  return { variableStore, variableContext, lineNumber, decimalPlaces: 6 };
+  const contextMap = variableContext ?? new Map<string, Variable>();
+  return { variableStore, variableContext: contextMap, lineNumber, decimalPlaces: 6 };
 };
 
 describe("Date Math Evaluator", () => {
@@ -55,7 +56,16 @@ describe("Date Math Evaluator", () => {
     const result = defaultRegistry.evaluate(node, createContext());
     expect(result?.type).toBe("mathResult");
     if (result?.type === "mathResult") {
-      expect(result.displayText).toMatch(/2024-06-30 - 2024-06-01 => 29\s*day/i);
+      expect(result.displayText).toMatch(/2024-06-30 - 2024-06-01 => 29\s*days/i);
+    }
+  });
+
+  test("should convert date differences into months", () => {
+    const node = parseLine("2024-06-30 - 2024-06-01 in months =>", 1);
+    const result = defaultRegistry.evaluate(node, createContext());
+    expect(result?.type).toBe("mathResult");
+    if (result?.type === "mathResult") {
+      expect(result.displayText).toMatch(/0\.966667\s*months/);
     }
   });
 
@@ -66,6 +76,32 @@ describe("Date Math Evaluator", () => {
     if (result?.type === "mathResult") {
       expect(result.displayText).toBe(
         "2024-06-05 17:00 UTC in +05:00 => 2024-06-05 22:00 +05:00"
+      );
+    }
+  });
+
+  test("should convert time zones for date variables with offsets", () => {
+    const meeting = DateValue.parse("2024-06-05 10:00 UTC");
+    expect(meeting).not.toBeNull();
+    const variableContext = new Map<string, Variable>([
+      [
+        "meeting",
+        {
+          name: "meeting",
+          value: meeting as DateValue,
+          rawValue: "2024-06-05 10:00 UTC",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+    ]);
+
+    const node = parseLine("meeting in +05:00 =>", 1);
+    const result = defaultRegistry.evaluate(node, createContext(1, variableContext));
+    expect(result?.type).toBe("mathResult");
+    if (result?.type === "mathResult") {
+      expect(result.displayText).toBe(
+        "meeting in +05:00 => 2024-06-05 15:00 +05:00"
       );
     }
   });

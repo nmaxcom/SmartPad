@@ -21,6 +21,8 @@ export interface DisplayOptions {
   scientificUpperThreshold?: number;
   scientificLowerThreshold?: number;
   scientificTrimTrailingZeros?: boolean;
+  dateFormat?: 'iso' | 'locale';
+  dateLocale?: string;
   preferBaseUnit?: boolean;
   showType?: boolean;
 }

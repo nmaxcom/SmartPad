@@ -1,8 +1,12 @@
 import React, { useCallback } from "react";
 import { useSettingsContext } from "../../state/SettingsContext";
+import { getDateLocaleDetected, getDateLocaleEffective } from "../../types/DateValue";
 
 export function SettingsSections() {
   const { settings, updateSetting } = useSettingsContext();
+  const detectedLocale = getDateLocaleDetected();
+  const effectiveLocale = getDateLocaleEffective();
+  const isCustomLocale = settings.dateLocaleMode === "custom";
 
   const handleDecimalPlacesChange = useCallback(
     (value: number) => {
@@ -121,6 +125,87 @@ export function SettingsSections() {
               />
               <span className="toggle-slider"></span>
             </label>
+          </div>
+        </div>
+      </div>
+
+      <div className="settings-section">
+        <h3 className="settings-section-title">Date Parsing</h3>
+
+        <div className="settings-item">
+          <div className="settings-item-info">
+            <label htmlFor="date-locale-mode" className="settings-label">
+              Date Locale
+            </label>
+            <p className="settings-description">
+              Detected locale: {detectedLocale}. Using: {effectiveLocale}.
+            </p>
+          </div>
+          <div className="settings-control">
+            <select
+              id="date-locale-mode"
+              value={settings.dateLocaleMode}
+              onChange={(e) =>
+                updateSetting(
+                  "dateLocaleMode",
+                  e.target.value === "custom" ? "custom" : "system"
+                )
+              }
+              className="settings-select"
+            >
+              <option value="system">System default</option>
+              <option value="custom">Custom override</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="settings-item">
+          <div className="settings-item-info">
+            <label htmlFor="date-display-format" className="settings-label">
+              Date Display Format
+            </label>
+            <p className="settings-description">
+              Choose between ISO (YYYY-MM-DD) or locale-style formatting.
+            </p>
+          </div>
+          <div className="settings-control">
+            <select
+              id="date-display-format"
+              value={settings.dateDisplayFormat}
+              onChange={(e) =>
+                updateSetting(
+                  "dateDisplayFormat",
+                  e.target.value === "locale" ? "locale" : "iso"
+                )
+              }
+              className="settings-select"
+            >
+              <option value="iso">ISO (YYYY-MM-DD)</option>
+              <option value="locale">Locale format</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="settings-item">
+          <div className="settings-item-info">
+            <label htmlFor="date-locale-override" className="settings-label">
+              Locale Override
+            </label>
+            <p className="settings-description">
+              Use a BCP 47 locale code (example: en-US, en-GB). Only affects numeric
+              dates like 06/05/2024.
+            </p>
+          </div>
+          <div className="settings-control">
+            <input
+              id="date-locale-override"
+              type="text"
+              value={settings.dateLocaleOverride}
+              onChange={(e) => updateSetting("dateLocaleOverride", e.target.value)}
+              className="settings-text-input"
+              disabled={!isCustomLocale}
+              placeholder="en-US"
+            />
           </div>
         </div>
       </div>

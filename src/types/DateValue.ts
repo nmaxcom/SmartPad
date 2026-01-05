@@ -42,12 +42,46 @@ const monthNames: Record<string, number> = {
 
 type LocaleDateOrder = 'mdy' | 'dmy';
 
+let localeOverride: string | null = null;
+
+export function setDateLocaleOverride(locale: string | null): void {
+  const trimmed = locale?.trim();
+  localeOverride = trimmed ? trimmed : null;
+}
+
+export function getDateLocaleDetected(): string {
+  return new Intl.DateTimeFormat().resolvedOptions().locale;
+}
+
+export function getDateLocaleEffective(): string {
+  const override = localeOverride?.trim();
+  if (!override) {
+    return getDateLocaleDetected();
+  }
+  try {
+    return new Intl.DateTimeFormat(override).resolvedOptions().locale;
+  } catch {
+    return getDateLocaleDetected();
+  }
+}
+
 const getLocaleDateOrder = (): LocaleDateOrder => {
-  const parts = new Intl.DateTimeFormat(undefined, {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(new Date(2006, 3, 23));
+  const locale = localeOverride?.trim();
+  let formatter: Intl.DateTimeFormat;
+  try {
+    formatter = new Intl.DateTimeFormat(locale || undefined, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+  } catch {
+    formatter = new Intl.DateTimeFormat(undefined, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+  }
+  const parts = formatter.formatToParts(new Date(2006, 3, 23));
   const order = parts
     .filter((part) => part.type === 'day' || part.type === 'month' || part.type === 'year')
     .map((part) => part.type);
@@ -159,6 +193,10 @@ export class DateValue extends SemanticValue {
       }
     }
 
+    if (/^-?\d+(?:\.\d+)?$/.test(trimmed)) {
+      return null;
+    }
+
     const parsed = new Date(trimmed);
     if (!isNaN(parsed.getTime())) {
       const hasTime = /\d{1,2}:\d{2}/.test(trimmed);
@@ -187,6 +225,27 @@ export class DateValue extends SemanticValue {
 
   toString(_options?: DisplayOptions): string {
     const dt = this.dateTime.setZone(zoneToLuxon(this.zone));
+    const options = _options;
+    if (options?.dateFormat === 'locale') {
+      const locale = options.dateLocale || getDateLocaleEffective();
+      if (!this.hasTime) {
+        return dt.setLocale(locale).toLocaleString({
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        });
+      }
+      const dateTimeText = dt.setLocale(locale).toLocaleString({
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      });
+      return `${dateTimeText} ${this.zone.label}`;
+    }
+
     const dateText = `${dt.year}-${pad2(dt.month)}-${pad2(dt.day)}`;
     if (!this.hasTime) {
       return dateText;

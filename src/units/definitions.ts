@@ -400,6 +400,39 @@ defaultUnitRegistry.register(
   ["days"]
 );
 
+defaultUnitRegistry.register(
+  {
+    symbol: "week",
+    name: "week",
+    dimension: DIMENSIONS.TIME,
+    baseMultiplier: 604800,
+    category: "time",
+  },
+  ["weeks", "wk", "w"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "month",
+    name: "month",
+    dimension: DIMENSIONS.TIME,
+    baseMultiplier: 2592000,
+    category: "time",
+  },
+  ["months", "mo"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "year",
+    name: "year",
+    dimension: DIMENSIONS.TIME,
+    baseMultiplier: 31536000,
+    category: "time",
+  },
+  ["years", "yr", "y"]
+);
+
 // Frequency units
 defaultUnitRegistry.register(
   {

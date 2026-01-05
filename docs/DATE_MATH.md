@@ -1,7 +1,7 @@
 # SmartPad Date Math
 
 This document is both a **developer reference** and **user documentation** for SmartPad date/time math.
-It captures the current decisions and proposes a clear syntax with examples and results.
+It captures the current behavior and syntax with examples and results.
 
 ---
 
@@ -32,28 +32,16 @@ Example:
 
 ---
 
-## Two Syntax Styles (Formal + Human)
-Every feature is shown in both forms for clarity.
+## Current Syntax (Human)
+These are the implemented forms. "Formal" function-style syntax is **not** supported yet.
 
 ### Create a Date
-**Formal**
-```
-date("2024-06-05") => 2024-06-05
-```
-
-**Human**
 ```
 2024-06-05 => 2024-06-05
 5 June 2004 => 2004-06-05
 ```
 
 ### Create a DateTime
-**Formal**
-```
-datetime("2024-06-05 17:00", tz: "UTC") => 2024-06-05 17:00 UTC
-```
-
-**Human**
 ```
 2024-06-05 17:00 UTC => 2024-06-05 17:00 UTC
 2024-06-05 17:00 Z => 2024-06-05 17:00 UTC
@@ -61,14 +49,6 @@ datetime("2024-06-05 17:00", tz: "UTC") => 2024-06-05 17:00 UTC
 ```
 
 ### Add Durations
-**Formal**
-```
-add(date("2024-06-05"), months: 2, years: 1) => 2025-08-05
-add(date("2024-01-31"), months: 1) => 2024-02-29
-add(date("2024-01-31"), days: 30) => 2024-03-01
-```
-
-**Human**
 ```
 2024-06-05 + 2 months + 1 year => 2025-08-05
 2024-01-31 + 1 month => 2024-02-29
@@ -76,48 +56,51 @@ add(date("2024-01-31"), days: 30) => 2024-03-01
 ```
 
 ### Subtract Durations
-**Formal**
-```
-add(date("2024-06-05"), days: -10) => 2024-05-26
-```
-
-**Human**
 ```
 2024-06-05 - 10 days => 2024-05-26
 ```
 
 ### Date Differences
-**Formal**
-```
-diff(date("2024-06-30"), date("2024-06-01")) => 29 days
-```
-
-**Human**
 ```
 2024-06-30 - 2024-06-01 => 29 days
 ```
 
 ### Business Days (Mon-Fri)
-**Formal**
-```
-add_business_days(date("2024-11-25"), 5) => 2024-12-02
-```
-
-**Human**
 ```
 2024-11-25 + 5 business days => 2024-12-02
 ```
 
 ### Time Zone Conversion
-**Formal**
-```
-to_timezone(datetime("2024-06-05 17:00", tz: "UTC"), "local") => 2024-06-05 10:00 local
-```
-
-**Human**
 ```
 2024-06-05 17:00 UTC in local => 2024-06-05 10:00 local
 2024-06-05 17:00 +05:00 in UTC => 2024-06-05 12:00 UTC
+```
+
+### Convert Date Differences
+Date differences return a duration unit (days by default). You can convert it:
+```
+2024-06-30 - 2024-06-01 in months => 0.966667 months
+2024-06-30 - 2024-06-01 in weeks => 4.142857 weeks
+```
+
+### Convert Calendar Units (Duration Only)
+These are treated as **fixed-length** duration units for conversion math.
+```
+21 months to weeks => 90 weeks
+1 year in days => 365 days
+```
+
+---
+
+## Planned Syntax (Formal API - Not Implemented Yet)
+These are proposed for a future version and shown here for design reference only.
+
+```
+date("2024-06-05") => 2024-06-05
+datetime("2024-06-05 17:00", tz: "UTC") => 2024-06-05 17:00 UTC
+add(date("2024-01-31"), months: 1) => 2024-02-29
+diff(date("2024-06-30"), date("2024-06-01")) => 29 days
+to_timezone(datetime("2024-06-05 17:00", tz: "UTC"), "local") => 2024-06-05 10:00 local
 ```
 
 ---
@@ -137,15 +120,15 @@ now + 3 hours => 2024-10-14 18:00 local
 ---
 
 ## Formatting Rules
-- Default output uses **system locale**.
-- ISO output can be forced with a setting.
+- Default output uses **ISO** (YYYY-MM-DD).
+- Locale output can be enabled via Settings (Date Display Format).
 
 ```
-set date format = ISO
+// ISO display (default)
 2024-06-05 + 2 months => 2024-08-05
 
-set date format = locale
-06/05/2024 + 2 months => Aug 5, 2024
+// Locale display (example: es-ES)
+06/05/2024 + 2 months => 05/08/2024
 ```
 
 ---
@@ -153,8 +136,9 @@ set date format = locale
 ## Edge Cases
 - **End-of-month carry** when adding months or years.
 - **Exact day addition** for `+ N days`.
-- **Locale ambiguity**: `06/05/2024` uses system locale.
+- **Locale ambiguity**: `06/05/2024` uses system/override locale for parsing.
 - **Timezone offsets** are preserved and displayed.
+- **Month/year conversions** use fixed-length durations (30d/365d) when converting units.
 
 Examples:
 ```
@@ -172,18 +156,18 @@ Examples:
 3) Time zone suffixes (UTC, GMT, Z, +05:00, -0800, local)
 
 ### Data model
-- DateValue (date only)
-- DateTimeValue (date + time + zone)
+- DateValue (date only or date+time+zone; hasTime flag)
 
 ### Operations
-- add(date|datetime, years|months|days|hours|minutes)
-- diff(date|datetime, date|datetime)
-- add_business_days(date, N)
-- to_timezone(datetime, zone)
+- date + duration (years, months, weeks, days, hours, minutes, seconds, business days)
+- date - duration
+- date - date => duration (days)
+- duration in/to unit => converted duration
+- date in/to zone => converted date/time zone
 
 ### Expected error messages
 - `Invalid date: "..."`
-- `Invalid time zone: "..."`
+- `Expected time zone after 'in'`
 - `Cannot add hours to a date-only value`
 
 ---
@@ -194,4 +178,3 @@ Examples:
 - Locale parsing defaults to system locale.
 - UTC/GMT/Z and offsets parse and convert.
 - Business day skips weekends.
-

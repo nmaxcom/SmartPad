@@ -1147,13 +1147,25 @@ export class SmartPadQuantity {
     const baseQuantity = options?.preferBaseUnit ? this.toBaseUnit() : this;
     const displayQuantity = baseQuantity.getBestDisplayUnit();
     const value = displayQuantity._value;
-    const unit = displayQuantity._unit;
+    let unit = displayQuantity._unit;
 
     // Format number, removing unnecessary trailing zeros
     const formattedValue = this.formatNumber(value, precision, options);
 
     if (unit === "") {
       return formattedValue;
+    }
+
+    const absValue = Math.abs(value);
+    const pluralizableUnits = new Set(["day", "week", "month", "year"]);
+    if (
+      pluralizableUnits.has(unit) &&
+      absValue !== 1 &&
+      !unit.includes("/") &&
+      !unit.includes("^") &&
+      !unit.includes("*")
+    ) {
+      unit = `${unit}s`;
     }
 
     return `${formattedValue} ${unit}`;

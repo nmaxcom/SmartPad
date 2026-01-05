@@ -107,7 +107,7 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
       }
 
       if (conversion) {
-        semanticValue = this.applyUnitConversion(semanticValue, conversion.target);
+        semanticValue = this.applyUnitConversion(semanticValue, conversion.target, conversion.keyword);
       }
 
       if (SemanticValueTypes.isError(semanticValue)) {
@@ -232,7 +232,7 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
 
   private extractConversionSuffix(
     expression: string
-  ): { baseExpression: string; target: string } | null {
+  ): { baseExpression: string; target: string; keyword: string } | null {
     const match = expression.match(/\b(to|in)\b\s+(.+)$/i);
     if (!match || match.index === undefined) {
       return null;
@@ -245,13 +245,13 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
     if (!target) {
       return null;
     }
-    return { baseExpression, target };
+    return { baseExpression, target, keyword: match[1].toLowerCase() };
   }
 
-  private applyUnitConversion(value: SemanticValue, target: string): SemanticValue {
+  private applyUnitConversion(value: SemanticValue, target: string, keyword: string): SemanticValue {
     const parsed = this.parseConversionTarget(target);
     if (!parsed) {
-      return ErrorValue.semanticError("Expected unit after 'to'");
+      return ErrorValue.semanticError(`Expected unit after '${keyword}'`);
     }
 
     if (value.getType() === "unit") {
@@ -321,6 +321,8 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
       scientificUpperThreshold: context.scientificUpperThreshold,
       scientificLowerThreshold: context.scientificLowerThreshold,
       scientificTrimTrailingZeros: context.scientificTrimTrailingZeros,
+      dateFormat: context.dateDisplayFormat,
+      dateLocale: context.dateLocale,
     };
   }
 }

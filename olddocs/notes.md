@@ -17,6 +17,7 @@ Value by percent addition	5% on what is 6 EUR
 Value by percent subtraction	5% off what is 6 EUR
 
 # bugs/ideas
+- 1ml to dcm^3=>1000 dcm^3?? dm¿
 - comparar escenarios a la vez, rollo tab partida para ver lado vs lado? q otro formato si no?
 - introduce week, month, year?
 - calendar math?:

@@ -29,6 +29,8 @@ export interface EvaluationContext {
   scientificUpperThreshold?: number;
   scientificLowerThreshold?: number;
   scientificTrimTrailingZeros?: boolean;
+  dateDisplayFormat?: 'iso' | 'locale';
+  dateLocale?: string;
   functionCallDepth?: number;
 }
 

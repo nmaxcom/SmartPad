@@ -146,6 +146,18 @@ describe("UnitsNet Integration Plan - Comprehensive Feature Tests", () => {
       if (result5?.type === "mathResult") {
         expect((result5 as any).result).toMatch(/86400\s*s/);
       }
+
+      const result6 = evaluateExpression("21 months to weeks =>");
+      expect(result6?.type).toBe("mathResult");
+      if (result6?.type === "mathResult") {
+        expect((result6 as any).result).toMatch(/90\s*weeks/);
+      }
+
+      const result7 = evaluateExpression("1 year in days =>");
+      expect(result7?.type).toBe("mathResult");
+      if (result7?.type === "mathResult") {
+        expect((result7 as any).result).toMatch(/365\s*days/);
+      }
     });
   });
 

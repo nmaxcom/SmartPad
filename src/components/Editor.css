@@ -132,6 +132,15 @@
   user-select: none;
 }
 
+.semantic-scrubbableNumber.semantic-date-part {
+  padding: 0;
+  border-radius: 0;
+}
+
+.semantic-date-separator {
+  color: var(--color-text-primary);
+}
+
 .semantic-scrubbableNumber:hover {
   background-color: var(--color-surface-light);
 }

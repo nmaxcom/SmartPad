@@ -376,7 +376,18 @@ export class Quantity {
     const formattedValue = parseFloat(this.value.toPrecision(precision));
 
     // Format the unit
-    const unitStr = this.unit.toString();
+    let unitStr = this.unit.toString();
+    const absValue = Math.abs(formattedValue);
+    const pluralizableUnits = new Set(["day", "week", "month", "year"]);
+    if (
+      pluralizableUnits.has(unitStr) &&
+      absValue !== 1 &&
+      !unitStr.includes("/") &&
+      !unitStr.includes("^") &&
+      !unitStr.includes("*")
+    ) {
+      unitStr = `${unitStr}s`;
+    }
 
     if (unitStr === "1") {
       return formattedValue.toString();

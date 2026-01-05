@@ -35,7 +35,8 @@ export function looksLikeDateExpression(expression: string): boolean {
   if (/\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\b/i.test(text)) return true;
   if (/\b(years?|months?|weeks?|days?|hours?|minutes?|business\s+days?)\b/i.test(text)) return true;
   if (/\b\d+\s*(h|d|w|y)\b/i.test(text)) return true;
-  if (/\b(UTC|GMT|Z|local|[+-]\d{2}:?\d{2})\b/.test(text)) return true;
+  if (/\b(UTC|GMT|Z|local)\b/i.test(text)) return true;
+  if (/[+-]\d{2}:?\d{2}\b/.test(text)) return true;
   return false;
 }
 
@@ -177,14 +178,19 @@ export function evaluateDateExpression(
   const trimmed = expression.trim();
   if (!trimmed) return null;
 
-  const conversionMatch = trimmed.match(/\s+in\s+(.+)$/i);
-  const baseExpr = conversionMatch ? trimmed.slice(0, conversionMatch.index).trim() : trimmed;
-  const conversionTarget = conversionMatch ? conversionMatch[1].trim() : null;
+  const conversionMatch = trimmed.match(/\b(to|in)\b\s+(.+)$/i);
+  const baseExpr =
+    conversionMatch && conversionMatch.index !== undefined
+      ? trimmed.slice(0, conversionMatch.index).trim()
+      : trimmed;
+  const conversionKeyword = conversionMatch ? conversionMatch[1].toLowerCase() : null;
+  const conversionTarget = conversionMatch ? conversionMatch[2].trim() : null;
 
   const baseResult = parseDateValueAtStart(baseExpr, variableContext);
   if (!baseResult) return null;
 
   let current = baseResult.value;
+  let result: DateValue | UnitValue = current;
   let cursor = baseResult.length;
 
   while (cursor < baseExpr.length) {
@@ -208,6 +214,7 @@ export function evaluateDateExpression(
         return applied;
       }
       current = applied;
+      result = current;
       cursor += duration.length;
       continue;
     }
@@ -220,19 +227,55 @@ export function evaluateDateExpression(
         if (remainder.length > 0) {
           return ErrorValue.semanticError(`Unexpected token after date difference: "${remainder}"`);
         }
-        return diffDates(current, dateToken.value);
+        result = diffDates(current, dateToken.value);
+        cursor = baseExpr.length;
+        break;
       }
     }
 
     return ErrorValue.semanticError(`Expected duration after '${operator}'`);
   }
 
-  if (conversionTarget) {
-    const zone = parseZone(conversionTarget);
-    return current.withZone(zone);
+  if (conversionTarget && conversionKeyword) {
+    return applyConversion(result, conversionTarget, conversionKeyword);
   }
 
-  return current;
+  return result;
+}
+
+function applyConversion(
+  value: DateValue | UnitValue,
+  target: string,
+  keyword: string
+): DateValue | UnitValue | ErrorValue {
+  const trimmed = target.trim();
+  if (!trimmed) {
+    return ErrorValue.semanticError(`Expected unit after '${keyword}'`);
+  }
+
+  if (value instanceof DateValue) {
+    if (!isZoneTarget(trimmed)) {
+      return ErrorValue.semanticError(`Expected time zone after '${keyword}'`);
+    }
+    const zone = parseZone(trimmed);
+    return value.withZone(zone);
+  }
+
+  if (value instanceof UnitValue) {
+    try {
+      return value.convertTo(trimmed);
+    } catch (error) {
+      return ErrorValue.semanticError(
+        error instanceof Error ? error.message : String(error)
+      );
+    }
+  }
+
+  return ErrorValue.semanticError("Invalid date conversion");
+}
+
+function isZoneTarget(target: string): boolean {
+  return /^(Z|UTC|GMT|local|[+-]\d{2}:?\d{2})$/i.test(target.trim());
 }
 
 function applyDuration(current: DateValue, duration: DurationToken): DateValue | ErrorValue {

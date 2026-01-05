@@ -29,6 +29,7 @@ import { normalizePastedHTML } from "./pasteTransforms";
 import { ResultInlineNode } from "./ResultInlineNode";
 import { ResultInteractionExtension } from "./ResultInteractionExtension";
 import { getSmartPadText } from "./editorText";
+import { getDateLocaleEffective } from "../types/DateValue";
 // Import helper to identify combined assignment nodes (e.g. "speed = slider(...)")
 import { parseLine } from "../parsing/astParser";
 import type { ASTNode } from "../parsing/ast";
@@ -201,6 +202,8 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
             scientificUpperThreshold: Math.pow(10, settings.scientificUpperExponent),
             scientificLowerThreshold: Math.pow(10, settings.scientificLowerExponent),
             scientificTrimTrailingZeros: settings.scientificTrimTrailingZeros,
+            dateDisplayFormat: settings.dateDisplayFormat,
+            dateLocale: getDateLocaleEffective(),
             functionCallDepth: 0,
           };
 
@@ -456,6 +459,9 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
     settings.scientificUpperExponent,
     settings.scientificLowerExponent,
     settings.scientificTrimTrailingZeros,
+    settings.dateLocaleMode,
+    settings.dateLocaleOverride,
+    settings.dateDisplayFormat,
     editor,
     handleUpdateV2,
   ]);
