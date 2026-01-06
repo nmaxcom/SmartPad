@@ -17,6 +17,7 @@ Value by percent addition	5% on what is 6 EUR
 Value by percent subtraction	5% off what is 6 EUR
 
 # bugs/ideas
+
 - adding separator 000,000,000...
 - comparar escenarios a la vez, rollo tab partida para ver lado vs lado? q otro formato si no? 
 - show easily written and read equation/unit when hovering ex: 34m^kg^2/ms^2
