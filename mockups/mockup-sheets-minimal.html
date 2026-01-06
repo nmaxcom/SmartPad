@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SmartPad - Minimal Sheets Sidebar</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap");
+
+      :root {
+        --bg: #0f0f0f;
+        --surface: #1a1a1a;
+        --surface-2: #252525;
+        --border: #333;
+        --text: #e8e8e8;
+        --text-dim: #888;
+        --accent: #3b82f6;
+        --accent-hover: #60a5fa;
+        --success: #10b981;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .app-container {
+        display: flex;
+        height: 100vh;
+      }
+
+      /* LEFT SIDEBAR */
+      .sidebar {
+        width: 260px;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+      }
+
+      .sidebar-header {
+        padding: 16px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .sidebar-title {
+        font-weight: 600;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-dim);
+      }
+
+      .new-sheet-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        border: none;
+        background: var(--accent);
+        color: white;
+        cursor: pointer;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+      }
+
+      .new-sheet-btn:hover {
+        background: var(--accent-hover);
+        transform: scale(1.05);
+      }
+
+      .sheets-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px;
+      }
+
+      .sheet-item {
+        padding: 10px 12px;
+        margin-bottom: 2px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.15s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        position: relative;
+      }
+
+      .sheet-item:hover {
+        background: var(--surface-2);
+      }
+
+      .sheet-item.active {
+        background: var(--accent);
+        color: white;
+      }
+
+      .sheet-item.active .sheet-meta {
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .sheet-icon {
+        width: 16px;
+        height: 16px;
+        opacity: 0.6;
+      }
+
+      .sheet-content {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .sheet-name {
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .sheet-meta {
+        font-size: 11px;
+        color: var(--text-dim);
+      }
+
+      .sheet-menu {
+        opacity: 0;
+        transition: opacity 0.15s;
+      }
+
+      .sheet-item:hover .sheet-menu {
+        opacity: 1;
+      }
+
+      .sheet-menu-btn {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        border: none;
+        background: transparent;
+        color: var(--text-dim);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+      }
+
+      .sheet-menu-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      /* MAIN CONTENT */
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .main-header {
+        height: 60px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        padding: 0 24px;
+        gap: 16px;
+        flex-shrink: 0;
+      }
+
+      .sheet-title-input {
+        font-size: 18px;
+        font-weight: 600;
+        background: transparent;
+        border: none;
+        color: var(--text);
+        outline: none;
+        padding: 8px 12px;
+        border-radius: 6px;
+        transition: background 0.2s;
+        flex: 1;
+        max-width: 400px;
+      }
+
+      .sheet-title-input:hover {
+        background: var(--surface-2);
+      }
+
+      .sheet-title-input:focus {
+        background: var(--surface-2);
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 8px;
+        margin-left: auto;
+      }
+
+      .header-btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.2s;
+      }
+
+      .header-btn:hover {
+        background: var(--surface-2);
+      }
+
+      .editor-area {
+        flex: 1;
+        overflow-y: auto;
+        padding: 40px;
+      }
+
+      .editor-content {
+        max-width: 800px;
+        margin: 0 auto;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 15px;
+        line-height: 1.8;
+      }
+
+      .editor-line {
+        margin-bottom: 8px;
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+      }
+
+      .line-number {
+        color: var(--text-dim);
+        font-size: 13px;
+        min-width: 30px;
+        text-align: right;
+        user-select: none;
+      }
+
+      .line-content {
+        flex: 1;
+      }
+
+      .result {
+        color: var(--accent);
+        margin-left: 8px;
+      }
+
+      .variable {
+        color: #c792ea;
+      }
+
+      .number {
+        color: #f78c6c;
+      }
+
+      .unit {
+        color: #82aaff;
+      }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--surface-2);
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- LEFT SIDEBAR -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-title">Sheets</div>
+          <button class="new-sheet-btn" title="New Sheet">+</button>
+        </div>
+        
+        <div class="sheets-list">
+          <div class="sheet-item active">
+            <svg class="sheet-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <div class="sheet-content">
+              <div class="sheet-name">Physics Homework</div>
+              <div class="sheet-meta">Just now</div>
+            </div>
+            <div class="sheet-menu">
+              <button class="sheet-menu-btn">⋯</button>
+            </div>
+          </div>
+
+          <div class="sheet-item">
+            <svg class="sheet-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <div class="sheet-content">
+              <div class="sheet-name">Budget 2024</div>
+              <div class="sheet-meta">2 hours ago</div>
+            </div>
+            <div class="sheet-menu">
+              <button class="sheet-menu-btn">⋯</button>
+            </div>
+          </div>
+
+          <div class="sheet-item">
+            <svg class="sheet-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <div class="sheet-content">
+              <div class="sheet-name">Road Trip Planning</div>
+              <div class="sheet-meta">Yesterday</div>
+            </div>
+            <div class="sheet-menu">
+              <button class="sheet-menu-btn">⋯</button>
+            </div>
+          </div>
+
+          <div class="sheet-item">
+            <svg class="sheet-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <div class="sheet-content">
+              <div class="sheet-name">Investment Calculator</div>
+              <div class="sheet-meta">3 days ago</div>
+            </div>
+            <div class="sheet-menu">
+              <button class="sheet-menu-btn">⋯</button>
+            </div>
+          </div>
+
+          <div class="sheet-item">
+            <svg class="sheet-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <div class="sheet-content">
+              <div class="sheet-name">Recipe Scaling</div>
+              <div class="sheet-meta">Last week</div>
+            </div>
+            <div class="sheet-menu">
+              <button class="sheet-menu-btn">⋯</button>
+            </div>
+          </div>
+
+          <div class="sheet-item">
+            <svg class="sheet-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <div class="sheet-content">
+              <div class="sheet-name">Untitled</div>
+              <div class="sheet-meta">2 weeks ago</div>
+            </div>
+            <div class="sheet-menu">
+              <button class="sheet-menu-btn">⋯</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- MAIN CONTENT -->
+      <main class="main-content">
+        <header class="main-header">
+          <input type="text" class="sheet-title-input" value="Physics Homework" />
+          <div class="header-actions">
+            <button class="header-btn">Share</button>
+            <button class="header-btn">⋯</button>
+          </div>
+        </header>
+
+        <div class="editor-area">
+          <div class="editor-content">
+            <div class="editor-line">
+              <span class="line-number">1</span>
+              <span class="line-content">
+                <span class="variable">mass</span> = <span class="number">10</span> <span class="unit">kg</span>
+              </span>
+            </div>
+            <div class="editor-line">
+              <span class="line-number">2</span>
+              <span class="line-content">
+                <span class="variable">acceleration</span> = <span class="number">9.8</span> <span class="unit">m/s^2</span>
+              </span>
+            </div>
+            <div class="editor-line">
+              <span class="line-number">3</span>
+              <span class="line-content">
+                <span class="variable">force</span> = mass * acceleration
+                <span class="result">=> <span class="number">98</span> <span class="unit">N</span></span>
+              </span>
+            </div>
+            <div class="editor-line">
+              <span class="line-number">4</span>
+              <span class="line-content"></span>
+            </div>
+            <div class="editor-line">
+              <span class="line-number">5</span>
+              <span class="line-content">
+                force to <span class="unit">lbf</span>
+                <span class="result">=> <span class="number">22.02</span> <span class="unit">lbf</span></span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

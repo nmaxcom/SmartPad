@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "SmartPad: Dev Server",
+        "type": "pwa-node",
+        "request": "launch",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": ["run", "dev"],
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "skipFiles": ["<node_internals>/**"]
+      },
+      {
+        "name": "SmartPad: Chrome",
+        "type": "pwa-chrome",
+        "request": "launch",
+        "url": "http://localhost:5173",
+        "webRoot": "${workspaceFolder}",
+        "sourceMaps": true
+      }
+    ],
+    "compounds": [
+      {
+        "name": "SmartPad: Dev + Chrome",
+        "configurations": ["SmartPad: Dev Server", "SmartPad: Chrome"]
+      }
+    ]
+  }
+  

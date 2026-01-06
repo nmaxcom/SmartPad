@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SmartPad - Command Palette Style</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Sora:wght@400;500;600;700&display=swap");
+
+      :root {
+        --color-background: #1a1a2e;
+        --color-surface: #252542;
+        --color-surface-hover: #2d2d4a;
+        --color-surface-light: #2d2d4a;
+        --color-primary: #7c5dfa;
+        --color-primary-light: rgba(124, 93, 250, 0.15);
+        --color-text-primary: #eaeaf4;
+        --color-text-secondary: #9595b2;
+        --color-border: rgba(255, 255, 255, 0.08);
+        --color-accent: #7c5dfa;
+        --color-accent-soft: rgba(124, 93, 250, 0.15);
+        --color-teal: #00d9c0;
+        --color-pink: #ff6b9d;
+        --color-yellow: #ffd93d;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: "Sora", -apple-system, sans-serif;
+        background: var(--color-background);
+        color: var(--color-text-primary);
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .app-container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        position: relative;
+      }
+
+      /* BACKDROP */
+      .command-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        z-index: 99;
+      }
+
+      /* COMMAND PALETTE */
+      .command-palette {
+        position: fixed;
+        top: 15%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 560px;
+        max-height: 500px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 16px;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+        display: flex;
+        flex-direction: column;
+        z-index: 100;
+        overflow: hidden;
+      }
+
+      .command-input-wrap {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--color-border);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .command-icon {
+        color: var(--color-text-secondary);
+        font-size: 20px;
+      }
+
+      .command-input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: var(--color-text-primary);
+        font-size: 18px;
+        font-family: "Sora", sans-serif;
+        outline: none;
+      }
+
+      .command-input::placeholder {
+        color: var(--color-text-secondary);
+      }
+
+      .command-shortcut {
+        padding: 4px 8px;
+        background: var(--color-surface-hover);
+        border-radius: 6px;
+        font-size: 12px;
+        color: var(--color-text-secondary);
+        font-family: "IBM Plex Mono", monospace;
+      }
+
+      .command-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px;
+      }
+
+      .command-section {
+        margin-bottom: 8px;
+      }
+
+      .command-section-title {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--color-text-secondary);
+        padding: 8px 12px;
+      }
+
+      .command-item {
+        padding: 12px 16px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.1s;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .command-item:hover,
+      .command-item.selected {
+        background: var(--color-primary-light);
+      }
+
+      .command-item.selected {
+        outline: 2px solid var(--color-primary);
+        outline-offset: -2px;
+      }
+
+      .command-item-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: var(--color-surface-hover);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+      }
+
+      .command-item.selected .command-item-icon {
+        background: var(--color-primary);
+      }
+
+      .command-item-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .command-item-name {
+        font-size: 15px;
+        font-weight: 500;
+        margin-bottom: 2px;
+      }
+
+      .command-item-meta {
+        font-size: 12px;
+        color: var(--color-text-secondary);
+        display: flex;
+        gap: 12px;
+      }
+
+      .command-item-action {
+        padding: 4px 10px;
+        background: var(--color-surface-hover);
+        border-radius: 6px;
+        font-size: 11px;
+        color: var(--color-text-secondary);
+        opacity: 0;
+        transition: opacity 0.15s;
+      }
+
+      .command-item:hover .command-item-action {
+        opacity: 1;
+      }
+
+      .command-footer {
+        padding: 12px 20px;
+        border-top: 1px solid var(--color-border);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        font-size: 12px;
+        color: var(--color-text-secondary);
+      }
+
+      .command-footer-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .command-footer-key {
+        padding: 2px 6px;
+        background: var(--color-surface-hover);
+        border-radius: 4px;
+        font-family: "IBM Plex Mono", monospace;
+      }
+
+      /* MAIN CONTENT (dimmed) */
+      .main-header {
+        height: 56px;
+        background: var(--color-surface);
+        border-bottom: 1px solid var(--color-border);
+        display: flex;
+        align-items: center;
+        padding: 0 24px;
+        gap: 16px;
+        flex-shrink: 0;
+      }
+
+      .sheet-title {
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 8px;
+        margin-left: auto;
+      }
+
+      .header-btn {
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 1px solid var(--color-border);
+        background: transparent;
+        color: var(--color-text-primary);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+
+      .header-btn:hover {
+        background: var(--color-surface-hover);
+        border-color: var(--color-primary);
+      }
+
+      .editor-area {
+        flex: 1;
+        overflow-y: auto;
+        padding: 32px;
+      }
+
+      .editor-content {
+        max-width: 800px;
+        margin: 0 auto;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 15px;
+        line-height: 1.8;
+      }
+
+      .editor-line {
+        margin-bottom: 4px;
+        padding: 4px 0;
+      }
+
+      .variable { color: var(--color-teal); font-weight: 500; }
+      .number { color: var(--color-text-primary); }
+      .unit { color: #ff6adf; font-weight: 500; }
+      .operator { color: var(--color-yellow); }
+      .result {
+        color: var(--color-accent);
+        background: var(--color-accent-soft);
+        padding: 2px 8px;
+        border-radius: 6px;
+        margin-left: 8px;
+        font-weight: 600;
+      }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar { width: 8px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: var(--color-surface-hover); border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #3d3d5c; }
+    </style>
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- BACKDROP -->
+      <div class="command-backdrop"></div>
+
+      <!-- COMMAND PALETTE -->
+      <div class="command-palette">
+        <div class="command-input-wrap">
+          <span class="command-icon">🔍</span>
+          <input type="text" class="command-input" placeholder="Search sheets or type to create..." autofocus />
+          <span class="command-shortcut">⌘K</span>
+        </div>
+        
+        <div class="command-content">
+          <div class="command-section">
+            <div class="command-section-title">Recent Sheets</div>
+            
+            <div class="command-item selected">
+              <div class="command-item-icon">📐</div>
+              <div class="command-item-info">
+                <div class="command-item-name">Physics Homework</div>
+                <div class="command-item-meta">
+                  <span>12 lines</span>
+                  <span>•</span>
+                  <span>Edited just now</span>
+                </div>
+              </div>
+              <span class="command-item-action">Open ↵</span>
+            </div>
+
+            <div class="command-item">
+              <div class="command-item-icon">💰</div>
+              <div class="command-item-info">
+                <div class="command-item-name">Budget 2024</div>
+                <div class="command-item-meta">
+                  <span>28 lines</span>
+                  <span>•</span>
+                  <span>2 hours ago</span>
+                </div>
+              </div>
+              <span class="command-item-action">Open ↵</span>
+            </div>
+
+            <div class="command-item">
+              <div class="command-item-icon">🚗</div>
+              <div class="command-item-info">
+                <div class="command-item-name">Road Trip Planning</div>
+                <div class="command-item-meta">
+                  <span>18 lines</span>
+                  <span>•</span>
+                  <span>Yesterday</span>
+                </div>
+              </div>
+              <span class="command-item-action">Open ↵</span>
+            </div>
+          </div>
+
+          <div class="command-section">
+            <div class="command-section-title">All Sheets</div>
+            
+            <div class="command-item">
+              <div class="command-item-icon">📊</div>
+              <div class="command-item-info">
+                <div class="command-item-name">Investment Calculator</div>
+                <div class="command-item-meta">
+                  <span>35 lines</span>
+                  <span>•</span>
+                  <span>3 days ago</span>
+                </div>
+              </div>
+              <span class="command-item-action">Open ↵</span>
+            </div>
+
+            <div class="command-item">
+              <div class="command-item-icon">🍰</div>
+              <div class="command-item-info">
+                <div class="command-item-name">Recipe Scaling</div>
+                <div class="command-item-meta">
+                  <span>9 lines</span>
+                  <span>•</span>
+                  <span>Last week</span>
+                </div>
+              </div>
+              <span class="command-item-action">Open ↵</span>
+            </div>
+
+            <div class="command-item">
+              <div class="command-item-icon">⚡</div>
+              <div class="command-item-info">
+                <div class="command-item-name">Electrical Engineering</div>
+                <div class="command-item-meta">
+                  <span>22 lines</span>
+                  <span>•</span>
+                  <span>2 weeks ago</span>
+                </div>
+              </div>
+              <span class="command-item-action">Open ↵</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="command-footer">
+          <div class="command-footer-item">
+            <span class="command-footer-key">↑↓</span>
+            <span>Navigate</span>
+          </div>
+          <div class="command-footer-item">
+            <span class="command-footer-key">↵</span>
+            <span>Open</span>
+          </div>
+          <div class="command-footer-item">
+            <span class="command-footer-key">⌘N</span>
+            <span>New Sheet</span>
+          </div>
+          <div class="command-footer-item">
+            <span class="command-footer-key">esc</span>
+            <span>Close</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAIN CONTENT -->
+      <header class="main-header">
+        <span class="sheet-title">Physics Homework</span>
+        <div class="header-actions">
+          <button class="header-btn">Export</button>
+          <button class="header-btn">Share</button>
+        </div>
+      </header>
+
+      <main class="editor-area">
+        <div class="editor-content">
+          <div class="editor-line">
+            <span class="variable">mass</span> <span class="operator">=</span> <span class="number">10</span> <span class="unit">kg</span>
+          </div>
+          <div class="editor-line">
+            <span class="variable">acceleration</span> <span class="operator">=</span> <span class="number">9.8</span> <span class="unit">m/s^2</span>
+          </div>
+          <div class="editor-line">
+            <span class="variable">force</span> <span class="operator">=</span> mass <span class="operator">*</span> acceleration <span class="operator">=></span>
+            <span class="result">98 N</span>
+          </div>
+          <div class="editor-line"></div>
+          <div class="editor-line">
+            force to <span class="unit">lbf</span> <span class="operator">=></span>
+            <span class="result">22.02 lbf</span>
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

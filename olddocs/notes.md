@@ -17,12 +17,23 @@ Value by percent addition	5% on what is 6 EUR
 Value by percent subtraction	5% off what is 6 EUR
 
 # bugs/ideas
-- 1ml to dcm^3=>1000 dcm^3?? dm¿
-- comparar escenarios a la vez, rollo tab partida para ver lado vs lado? q otro formato si no?
+- adding separator 000,000,000...
+- comparar escenarios a la vez, rollo tab partida para ver lado vs lado? q otro formato si no? 
+- show easily written and read equation/unit when hovering ex: 34m^kg^2/ms^2
 - introduce week, month, year?
+- functions like sqrt(), sum()... that allow you to click the vars you want to add like sum(hotel, flight, journey) declared up.
 - calendar math?:
   5 june 2004 + 2 months + 1 year
   06.08.1995 9:23 pm - 15 feb 1995 3:42 am to days,hours
+
+- solving "backwards" idea. You can freeze a result and somehow play with its inputs, ex:
+spending =126€/day=>€126/day
+hotel=159€/day=>€159/day
+days=7days
+total = (spending + hotel) * days =>€1995
+
+Let's say €1995 is the max the group wants to spend: how can you change the days, hotel and other spending optimally without blowing that maximum? Maybe click total freezes it. and then..?
+
 - make smartpad more flexible as a doc? Allow pasting images, embed youtube, links, links to other smartpage "pages" (yeah that'd be a thing to i guess...)
 
 - allow **text content after an expression** as a separated thing like:

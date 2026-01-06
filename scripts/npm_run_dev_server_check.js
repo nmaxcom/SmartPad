@@ -20,6 +20,7 @@ async function startDevServer() {
     process.exit(1);
   }
 
+  
   // Start Vite dev server
   const vite = spawn("npx", ["vite"], {
     stdio: "inherit",

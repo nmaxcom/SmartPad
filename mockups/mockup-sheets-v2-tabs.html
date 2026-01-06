@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SmartPad - Browser-Style Tabs</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Sora:wght@400;500;600;700&display=swap");
+
+      :root {
+        --color-background: #1a1a2e;
+        --color-surface: #252542;
+        --color-surface-hover: #2d2d4a;
+        --color-surface-light: #2d2d4a;
+        --color-primary: #7c5dfa;
+        --color-primary-light: rgba(124, 93, 250, 0.15);
+        --color-text-primary: #eaeaf4;
+        --color-text-secondary: #9595b2;
+        --color-border: rgba(255, 255, 255, 0.08);
+        --color-accent: #7c5dfa;
+        --color-accent-soft: rgba(124, 93, 250, 0.15);
+        --color-teal: #00d9c0;
+        --color-pink: #ff6b9d;
+        --color-yellow: #ffd93d;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: "Sora", -apple-system, sans-serif;
+        background: var(--color-background);
+        color: var(--color-text-primary);
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .app-container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
+
+      /* TAB BAR */
+      .tab-bar {
+        height: 44px;
+        background: var(--color-surface);
+        border-bottom: 1px solid var(--color-border);
+        display: flex;
+        align-items: flex-end;
+        padding: 0 16px;
+        gap: 2px;
+        flex-shrink: 0;
+        overflow-x: auto;
+      }
+
+      .tab {
+        height: 36px;
+        padding: 0 16px;
+        border-radius: 8px 8px 0 0;
+        background: transparent;
+        border: none;
+        color: var(--color-text-secondary);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.15s;
+        position: relative;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      .tab:hover {
+        background: var(--color-surface-hover);
+        color: var(--color-text-primary);
+      }
+
+      .tab.active {
+        background: var(--color-background);
+        color: var(--color-text-primary);
+      }
+
+      .tab.active::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--color-primary);
+      }
+
+      .tab-icon {
+        font-size: 14px;
+      }
+
+      .tab-close {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        border: none;
+        background: transparent;
+        color: var(--color-text-secondary);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        margin-left: 4px;
+        opacity: 0;
+        transition: all 0.15s;
+      }
+
+      .tab:hover .tab-close {
+        opacity: 1;
+      }
+
+      .tab-close:hover {
+        background: var(--color-pink);
+        color: white;
+      }
+
+      .new-tab-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: none;
+        background: transparent;
+        color: var(--color-text-secondary);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        margin-left: 8px;
+        flex-shrink: 0;
+        transition: all 0.15s;
+      }
+
+      .new-tab-btn:hover {
+        background: var(--color-primary-light);
+        color: var(--color-primary);
+      }
+
+      .tab-bar-spacer {
+        flex: 1;
+      }
+
+      .tab-bar-actions {
+        display: flex;
+        gap: 8px;
+        padding-bottom: 8px;
+      }
+
+      .tab-bar-btn {
+        padding: 6px 12px;
+        border-radius: 6px;
+        border: 1px solid var(--color-border);
+        background: transparent;
+        color: var(--color-text-secondary);
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.15s;
+      }
+
+      .tab-bar-btn:hover {
+        background: var(--color-surface-hover);
+        color: var(--color-text-primary);
+      }
+
+      /* MAIN CONTENT */
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .main-header {
+        height: 56px;
+        background: var(--color-surface);
+        border-bottom: 1px solid var(--color-border);
+        display: flex;
+        align-items: center;
+        padding: 0 24px;
+        gap: 16px;
+        flex-shrink: 0;
+      }
+
+      .sheet-title-input {
+        font-family: "Sora", sans-serif;
+        font-size: 18px;
+        font-weight: 600;
+        background: transparent;
+        border: none;
+        color: var(--color-text-primary);
+        outline: none;
+        padding: 8px 12px;
+        border-radius: 8px;
+        transition: background 0.2s;
+        flex: 1;
+        max-width: 500px;
+      }
+
+      .sheet-title-input:hover {
+        background: var(--color-surface-hover);
+      }
+
+      .sheet-title-input:focus {
+        background: var(--color-surface-hover);
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 8px;
+        margin-left: auto;
+      }
+
+      .header-btn {
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 1px solid var(--color-border);
+        background: transparent;
+        color: var(--color-text-primary);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+
+      .header-btn:hover {
+        background: var(--color-surface-hover);
+        border-color: var(--color-primary);
+      }
+
+      .editor-area {
+        flex: 1;
+        overflow-y: auto;
+        padding: 32px;
+      }
+
+      .editor-content {
+        max-width: 800px;
+        margin: 0 auto;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 15px;
+        line-height: 1.8;
+      }
+
+      .editor-line {
+        margin-bottom: 4px;
+        padding: 4px 0;
+      }
+
+      .variable { color: var(--color-teal); font-weight: 500; }
+      .number { color: var(--color-text-primary); }
+      .unit { color: #ff6adf; font-weight: 500; }
+      .operator { color: var(--color-yellow); }
+      .result {
+        color: var(--color-accent);
+        background: var(--color-accent-soft);
+        padding: 2px 8px;
+        border-radius: 6px;
+        margin-left: 8px;
+        font-weight: 600;
+      }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: var(--color-surface-hover); border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #3d3d5c; }
+    </style>
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- TAB BAR -->
+      <div class="tab-bar">
+        <button class="tab active">
+          <span class="tab-icon">📐</span>
+          <span>Physics Homework</span>
+          <button class="tab-close">×</button>
+        </button>
+        
+        <button class="tab">
+          <span class="tab-icon">💰</span>
+          <span>Budget 2024</span>
+          <button class="tab-close">×</button>
+        </button>
+        
+        <button class="tab">
+          <span class="tab-icon">🚗</span>
+          <span>Road Trip</span>
+          <button class="tab-close">×</button>
+        </button>
+        
+        <button class="tab">
+          <span class="tab-icon">📊</span>
+          <span>Investments</span>
+          <button class="tab-close">×</button>
+        </button>
+
+        <button class="new-tab-btn" title="New Sheet">+</button>
+
+        <div class="tab-bar-spacer"></div>
+
+        <div class="tab-bar-actions">
+          <button class="tab-bar-btn">All Sheets</button>
+        </div>
+      </div>
+
+      <!-- MAIN CONTENT -->
+      <main class="main-content">
+        <header class="main-header">
+          <input type="text" class="sheet-title-input" value="Physics Homework" />
+          <div class="header-actions">
+            <button class="header-btn">Export</button>
+            <button class="header-btn">Share</button>
+          </div>
+        </header>
+
+        <div class="editor-area">
+          <div class="editor-content">
+            <div class="editor-line">
+              <span class="variable">mass</span> <span class="operator">=</span> <span class="number">10</span> <span class="unit">kg</span>
+            </div>
+            <div class="editor-line">
+              <span class="variable">acceleration</span> <span class="operator">=</span> <span class="number">9.8</span> <span class="unit">m/s^2</span>
+            </div>
+            <div class="editor-line">
+              <span class="variable">force</span> <span class="operator">=</span> mass <span class="operator">*</span> acceleration <span class="operator">=></span>
+              <span class="result">98 N</span>
+            </div>
+            <div class="editor-line"></div>
+            <div class="editor-line">
+              force to <span class="unit">lbf</span> <span class="operator">=></span>
+              <span class="result">22.02 lbf</span>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

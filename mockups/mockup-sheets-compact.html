@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SmartPad - Ultra Compact Sidebar</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap");
+
+      :root {
+        --bg: #ffffff;
+        --surface: #fafafa;
+        --surface-hover: #f0f0f0;
+        --border: #e5e5e5;
+        --text: #171717;
+        --text-dim: #737373;
+        --accent: #f59e0b;
+        --accent-light: #fef3c7;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .app-container {
+        display: flex;
+        height: 100vh;
+      }
+
+      /* COMPACT SIDEBAR */
+      .sidebar {
+        width: 72px;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 16px 0;
+        flex-shrink: 0;
+        gap: 8px;
+      }
+
+      .logo {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--accent) 0%, #f97316 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+      }
+
+      .sidebar-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        border: none;
+        background: transparent;
+        color: var(--text-dim);
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        font-size: 20px;
+        transition: all 0.2s;
+        position: relative;
+      }
+
+      .sidebar-btn:hover {
+        background: var(--surface-hover);
+        color: var(--text);
+      }
+
+      .sidebar-btn.active {
+        background: var(--accent-light);
+        color: var(--accent);
+      }
+
+      .sidebar-btn.active::before {
+        content: "";
+        position: absolute;
+        left: -12px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 3px;
+        height: 24px;
+        background: var(--accent);
+        border-radius: 0 2px 2px 0;
+      }
+
+      .btn-label {
+        font-size: 9px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .divider {
+        width: 32px;
+        height: 1px;
+        background: var(--border);
+        margin: 8px 0;
+      }
+
+      .sheet-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        width: 100%;
+        padding: 0 12px;
+      }
+
+      .sheet-mini {
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+        border: 2px solid transparent;
+        background: var(--bg);
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        font-size: 18px;
+        transition: all 0.2s;
+        position: relative;
+      }
+
+      .sheet-mini:hover {
+        border-color: var(--border);
+        transform: translateX(4px);
+      }
+
+      .sheet-mini.active {
+        border-color: var(--accent);
+        background: var(--accent-light);
+      }
+
+      .sheet-mini-label {
+        font-size: 8px;
+        font-weight: 600;
+        color: var(--text-dim);
+        text-align: center;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      /* EXPANDED PANEL */
+      .expanded-panel {
+        width: 280px;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+      }
+
+      .panel-header {
+        padding: 20px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .panel-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+
+      .panel-subtitle {
+        font-size: 13px;
+        color: var(--text-dim);
+      }
+
+      .panel-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px;
+      }
+
+      .sheet-list-item {
+        padding: 12px;
+        margin-bottom: 4px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.15s;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .sheet-list-item:hover {
+        background: var(--surface-hover);
+      }
+
+      .sheet-list-item.active {
+        background: var(--accent-light);
+      }
+
+      .sheet-list-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: var(--bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+      }
+
+      .sheet-list-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .sheet-list-name {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .sheet-list-time {
+        font-size: 12px;
+        color: var(--text-dim);
+      }
+
+      /* MAIN CONTENT */
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .main-header {
+        height: 64px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        padding: 0 32px;
+        gap: 16px;
+        flex-shrink: 0;
+      }
+
+      .sheet-title {
+        font-size: 18px;
+        font-weight: 600;
+        flex: 1;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .header-btn {
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--text);
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+
+      .header-btn:hover {
+        background: var(--surface-hover);
+      }
+
+      .editor-area {
+        flex: 1;
+        overflow-y: auto;
+        padding: 48px;
+      }
+
+      .editor-content {
+        max-width: 800px;
+        margin: 0 auto;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 15px;
+        line-height: 1.8;
+      }
+
+      .editor-line {
+        margin-bottom: 8px;
+        display: flex;
+        align-items: baseline;
+        gap: 16px;
+      }
+
+      .line-number {
+        color: var(--text-dim);
+        font-size: 13px;
+        min-width: 30px;
+        text-align: right;
+        user-select: none;
+      }
+
+      .line-content {
+        flex: 1;
+      }
+
+      .result {
+        color: var(--accent);
+        margin-left: 8px;
+      }
+
+      .variable {
+        color: #8b5cf6;
+      }
+
+      .number {
+        color: #dc2626;
+      }
+
+      .unit {
+        color: #2563eb;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- COMPACT SIDEBAR -->
+      <aside class="sidebar">
+        <div class="logo">📊</div>
+        
+        <button class="sidebar-btn active">
+          <span>📄</span>
+          <span class="btn-label">Sheets</span>
+        </button>
+        
+        <button class="sidebar-btn">
+          <span>⭐</span>
+          <span class="btn-label">Starred</span>
+        </button>
+        
+        <button class="sidebar-btn">
+          <span>🕒</span>
+          <span class="btn-label">Recent</span>
+        </button>
+
+        <div class="divider"></div>
+
+        <div class="sheet-stack">
+          <div class="sheet-mini active">
+            <span>📐</span>
+            <span class="sheet-mini-label">Physics</span>
+          </div>
+          <div class="sheet-mini">
+            <span>💰</span>
+            <span class="sheet-mini-label">Budget</span>
+          </div>
+          <div class="sheet-mini">
+            <span>🚗</span>
+            <span class="sheet-mini-label">Trip</span>
+          </div>
+          <div class="sheet-mini">
+            <span>📊</span>
+            <span class="sheet-mini-label">Invest</span>
+          </div>
+        </div>
+
+        <div style="flex: 1"></div>
+
+        <button class="sidebar-btn">
+          <span>➕</span>
+        </button>
+      </aside>
+
+      <!-- EXPANDED PANEL -->
+      <div class="expanded-panel">
+        <div class="panel-header">
+          <div class="panel-title">All Sheets</div>
+          <div class="panel-subtitle">8 sheets</div>
+        </div>
+        
+        <div class="panel-content">
+          <div class="sheet-list-item active">
+            <div class="sheet-list-icon">📐</div>
+            <div class="sheet-list-info">
+              <div class="sheet-list-name">Physics Homework</div>
+              <div class="sheet-list-time">Just now</div>
+            </div>
+          </div>
+
+          <div class="sheet-list-item">
+            <div class="sheet-list-icon">💰</div>
+            <div class="sheet-list-info">
+              <div class="sheet-list-name">Budget 2024</div>
+              <div class="sheet-list-time">2 hours ago</div>
+            </div>
+          </div>
+
+          <div class="sheet-list-item">
+            <div class="sheet-list-icon">🚗</div>
+            <div class="sheet-list-info">
+              <div class="sheet-list-name">Road Trip Planning</div>
+              <div class="sheet-list-time">Yesterday</div>
+            </div>
+          </div>
+
+          <div class="sheet-list-item">
+            <div class="sheet-list-icon">📊</div>
+            <div class="sheet-list-info">
+              <div class="sheet-list-name">Investment Calculator</div>
+              <div class="sheet-list-time">3 days ago</div>
+            </div>
+          </div>
+
+          <div class="sheet-list-item">
+            <div class="sheet-list-icon">🍰</div>
+            <div class="sheet-list-info">
+              <div class="sheet-list-name">Recipe Scaling</div>
+              <div class="sheet-list-time">Last week</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAIN CONTENT -->
+      <main class="main-content">
+        <header class="main-header">
+          <div class="sheet-title">Physics Homework</div>
+          <div class="header-actions">
+            <button class="header-btn">Export</button>
+            <button class="header-btn">Share</button>
+            <button class="header-btn">⋯</button>
+          </div>
+        </header>
+
+        <div class="editor-area">
+          <div class="editor-content">
+            <div class="editor-line">
+              <span class="line-number">1</span>
+              <span class="line-content">
+                <span class="variable">mass</span> = <span class="number">10</span> <span class="unit">kg</span>
+              </span>
+            </div>
+            <div class="editor-line">
+              <span class="line-number">2</span>
+              <span class="line-content">
+                <span class="variable">acceleration</span> = <span class="number">9.8</span> <span class="unit">m/s^2</span>
+              </span>
+            </div>
+            <div class="editor-line">
+              <span class="line-number">3</span>
+              <span class="line-content">
+                <span class="variable">force</span> = mass * acceleration
+                <span class="result">=> <span class="number">98</span> <span class="unit">N</span></span>
+              </span>
+            </div>
+            <div class="editor-line">
+              <span class="line-number">4</span>
+              <span class="line-content"></span>
+            </div>
+            <div class="editor-line">
+              <span class="line-number">5</span>
+              <span class="line-content">
+                force to <span class="unit">lbf</span>
+                <span class="result">=> <span class="number">22.02</span> <span class="unit">lbf</span></span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

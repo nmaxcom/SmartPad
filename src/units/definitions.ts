@@ -188,6 +188,9 @@ export class UnitRegistry {
 
       const baseSymbol = symbol.slice(prefix.symbol.length);
       if (!baseSymbol) continue;
+      if (this.isDoublePrefixed(baseSymbol)) {
+        return undefined;
+      }
 
       const baseUnit = this.getDirect(baseSymbol);
       if (!baseUnit || baseUnit.baseOffset !== undefined) continue;
@@ -205,6 +208,16 @@ export class UnitRegistry {
     }
 
     return undefined;
+  }
+
+  private isDoublePrefixed(symbol: string): boolean {
+    if (symbol.length <= 1) return false;
+    return SI_PREFIXES_DESC.some((prefix) => {
+      if (!symbol.startsWith(prefix.symbol)) return false;
+      const innerSymbol = symbol.slice(prefix.symbol.length);
+      if (!innerSymbol) return false;
+      return Boolean(this.getDirect(innerSymbol));
+    });
   }
 
   /**

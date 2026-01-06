@@ -265,4 +265,9 @@ describe("Default Unit Registry", () => {
     expect(kpa?.baseMultiplier).toBe(1000);
     expect(kwh?.baseMultiplier).toBe(3600000);
   });
+
+  test("should reject double-prefixed units", () => {
+    expect(defaultUnitRegistry.has("dcm")).toBe(false);
+    expect(defaultUnitRegistry.has("mmh")).toBe(false);
+  });
 });
