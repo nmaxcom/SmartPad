@@ -64,11 +64,12 @@ export function setupDefaultEvaluators(): void {
   // Solve evaluator - handles explicit solve and implicit unknowns before units
   defaultRegistry.register(solveEvaluator);
   
+  // Combined assignment evaluator - handles "x = 100 =>" patterns
+  defaultRegistry.register(combinedAssignmentEvaluatorV2);
+
   // UnitsNet evaluator - handles unit-aware and identifier-based expressions
   defaultRegistry.register(unitsNetEvaluator);
 
-  // Combined assignment evaluator - handles "x = 100 =>" patterns
-  defaultRegistry.register(combinedAssignmentEvaluatorV2);
 
   // Function definition evaluator - registers user-defined functions
   defaultRegistry.register(functionDefinitionEvaluator);

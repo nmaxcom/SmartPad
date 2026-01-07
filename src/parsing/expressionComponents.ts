@@ -5,7 +5,7 @@
  */
 
 import { ExpressionComponent } from './ast';
-import { SemanticParsers } from '../types';
+import { SemanticParsers, parseListLiteral } from '../types';
 
 /**
  * Token types for the lexer
@@ -560,9 +560,39 @@ function parseFunctionArguments(
   let depth = 1;
   let currentTokens: Token[] = [];
 
+  const tryBuildListComponent = (tokens: Token[]): ExpressionComponent | null => {
+    if (tokens.length === 0) return null;
+    const expression = tokens.map((t) => t.value).join(" ").trim();
+    if (!expression.startsWith("(") || !expression.endsWith(")")) {
+      return null;
+    }
+    const inner = expression.slice(1, -1).trim();
+    if (!inner.includes(",")) {
+      return null;
+    }
+    const parsed = parseListLiteral(inner);
+    if (parsed) {
+      return {
+        type: 'literal',
+        value: expression,
+        parsedValue: parsed,
+      };
+    }
+    return null;
+  };
+
   const flushArg = () => {
     if (currentTokens.length === 0) return;
     const { name, valueTokens } = splitNamedArgument(currentTokens);
+    const listComponent = tryBuildListComponent(valueTokens);
+    if (listComponent) {
+      args.push({
+        name,
+        components: [listComponent],
+      });
+      currentTokens = [];
+      return;
+    }
     const expression = valueTokens.map((t) => t.value).join(" ");
     const components = parseExpressionComponents(expression);
     args.push({ name, components });

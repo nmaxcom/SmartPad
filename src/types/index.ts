@@ -16,6 +16,7 @@ import { UnitValue } from './UnitValue';
 import { DateValue } from './DateValue';
 import { ErrorValue, type ErrorType, type ErrorContext } from './ErrorValue';
 import { SymbolicValue } from './SymbolicValue';
+import { ListValue } from './ListValue';
 import { SmartPadQuantity } from '../units/unitsnetAdapter';
 
 // Re-export base types
@@ -30,6 +31,7 @@ export { UnitValue };
 export { DateValue };
 export { ErrorValue, type ErrorType, type ErrorContext };
 export { SymbolicValue };
+export { ListValue };
 
 // Type guards and utilities
 export const SemanticValueTypes = {
@@ -41,6 +43,7 @@ export const SemanticValueTypes = {
   isDate: (value: SemanticValue): value is DateValue => value.getType() === 'date',
   isError: (value: SemanticValue): value is ErrorValue => value.getType() === 'error',
   isSymbolic: (value: SemanticValue): value is SymbolicValue => value.getType() === 'symbolic',
+  isList: (value: SemanticValue): value is ListValue => value.getType() === 'list',
 } as const;
 
 // Factory functions for creating semantic values
@@ -102,146 +105,190 @@ export const SemanticValues = {
 } as const;
 
 // Parser utilities
+const splitTopLevelCommas = (input: string): string[] => {
+  const parts: string[] = [];
+  let depth = 0;
+  let current = "";
+  for (const char of input) {
+    if (char === "(") {
+      depth += 1;
+    } else if (char === ")") {
+      depth = Math.max(0, depth - 1);
+    }
+    if (char === "," && depth === 0) {
+      parts.push(current.trim());
+      current = "";
+      continue;
+    }
+    current += char;
+  }
+  if (current.trim()) {
+    parts.push(current.trim());
+  }
+  return parts;
+};
+
+const stripEnclosingParentheses = (input: string): string => {
+  let value = input.trim();
+  while (value.startsWith("(") && value.endsWith(")") && hasMatchingOuterParentheses(value)) {
+    value = value.slice(1, -1).trim();
+  }
+  return value;
+};
+
+const hasMatchingOuterParentheses = (input: string): boolean => {
+  let depth = 0;
+  for (let i = 0; i < input.length; i += 1) {
+    const char = input[i];
+    if (char === "(") {
+      depth += 1;
+    } else if (char === ")") {
+      depth -= 1;
+      if (depth === 0 && i < input.length - 1) {
+        return false;
+      }
+    }
+  }
+  return depth === 0;
+};
+
+const parseSingleValue = (input: string): SemanticValue | null => {
+  if (!input) return null;
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+
+  const parseCurrencyUnit = (value: string): SemanticValue | null => {
+    const perMatch = value.match(/^(.*?)\bper\b(.+)$/i);
+    let left: string | null = null;
+    let unit: string | null = null;
+    if (perMatch) {
+      left = perMatch[1].trim();
+      unit = perMatch[2].trim();
+    } else if (value.includes("/")) {
+      const slashIndex = value.indexOf("/");
+      left = value.slice(0, slashIndex).trim();
+      unit = value.slice(slashIndex + 1).trim();
+    }
+    if (!left || !unit) return null;
+    let currency: CurrencyValue;
+    try {
+      currency = CurrencyValue.fromString(left);
+    } catch {
+      return null;
+    }
+    const unitString = unit.replace(/\s+/g, "");
+    if (!unitString || !/[a-zA-Z°µμΩ]/.test(unitString)) return null;
+    try {
+      SmartPadQuantity.fromValueAndUnit(1, unitString);
+    } catch {
+      return null;
+    }
+    return new CurrencyUnitValue(currency.getSymbol(), currency.getNumericValue(), unitString, true);
+  };
+
+  const parseUnitRate = (value: string): SemanticValue | null => {
+    const perMatch = value.match(/^(.*?)\bper\b(.+)$/i);
+    let left: string | null = null;
+    let unit: string | null = null;
+    if (perMatch) {
+      left = perMatch[1].trim();
+      unit = perMatch[2].trim();
+    } else if (value.includes("/")) {
+      const slashIndex = value.indexOf("/");
+      left = value.slice(0, slashIndex).trim();
+      unit = value.slice(slashIndex + 1).trim();
+    }
+    if (!left || !unit) return null;
+    if (!left.match(/^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/)) return null;
+    const unitString = unit.replace(/\s+/g, "");
+    if (!unitString || !/[a-zA-Z°µμΩ]/.test(unitString)) return null;
+    try {
+      SmartPadQuantity.fromValueAndUnit(1, `1/${unitString}`);
+    } catch {
+      return null;
+    }
+    return UnitValue.fromValueAndUnit(parseFloat(left), `1/${unitString}`);
+  };
+
+  const currencyUnit = parseCurrencyUnit(trimmed);
+  if (currencyUnit) return currencyUnit;
+
+  const unitRate = parseUnitRate(trimmed);
+  if (unitRate) return unitRate;
+
+  if (trimmed.match(/^-?\d+(?:\.\d+)?%$/)) {
+    return new PercentageValue(parseFloat(trimmed));
+  }
+
+  if (
+    trimmed.match(/^[\$€£¥₹₿]\s*(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?$/) ||
+    trimmed.match(/^(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?\s*[\$€£¥₹₿]$/) ||
+    trimmed.match(/^(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?\s+(CHF|CAD|AUD)$/)
+  ) {
+    try {
+      return CurrencyValue.fromString(trimmed);
+    } catch {
+      return null;
+    }
+  }
+
+  if (UnitValue.isUnitString(trimmed)) {
+    try {
+      return UnitValue.fromString(trimmed);
+    } catch {
+      return null;
+    }
+  }
+
+  const dateValue = DateValue.parse(trimmed);
+  if (dateValue) return dateValue;
+
+  if (trimmed.match(/^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/)) {
+    try {
+      return NumberValue.from(trimmed);
+    } catch {
+      return null;
+    }
+  }
+
+  // Fallback to symbolic representation for identifiers or phrase variables
+  const identifierPattern = /^[a-zA-Z_][a-zA-Z0-9_\s]*$/;
+  if (identifierPattern.test(trimmed)) {
+    return SymbolicValue.from(trimmed);
+  }
+
+  return null;
+};
+
+const parseListLiteral = (input: string): ListValue | null => {
+  const normalized = stripEnclosingParentheses(input);
+  const parts = splitTopLevelCommas(normalized);
+  if (parts.length <= 1) return null;
+  const items: SemanticValue[] = [];
+  for (const part of parts) {
+    if (!part) return null;
+    const parsed = parseSingleValue(part);
+    if (!parsed) return null;
+    items.push(parsed);
+  }
+  if (items.length === 0) return null;
+  return ListValue.fromItems(items);
+};
+
 export const SemanticParsers = {
   /**
    * Try to parse a string as a semantic value
    */
   parse: (str: string): SemanticValue | null => {
     if (!str) return null;
-    
     const trimmed = str.trim();
     if (!trimmed) return null;
-
-    const parseCurrencyUnit = (input: string): SemanticValue | null => {
-      const perMatch = input.match(/^(.*?)\bper\b(.+)$/i);
-      let left: string | null = null;
-      let unitPart: string | null = null;
-      if (perMatch) {
-        left = perMatch[1].trim();
-        unitPart = perMatch[2].trim();
-      } else if (input.includes("/")) {
-        const slashIndex = input.indexOf("/");
-        left = input.slice(0, slashIndex).trim();
-        unitPart = input.slice(slashIndex + 1).trim();
-      }
-
-      if (!left || !unitPart) {
-        return null;
-      }
-
-      let currency: CurrencyValue;
-      try {
-        currency = CurrencyValue.fromString(left);
-      } catch {
-        return null;
-      }
-
-      const unitString = unitPart.replace(/\s+/g, "");
-      if (!unitString || !/[a-zA-Z°µμΩ]/.test(unitString)) {
-        return null;
-      }
-
-      try {
-        SmartPadQuantity.fromValueAndUnit(1, unitString);
-      } catch {
-        return null;
-      }
-
-      return new CurrencyUnitValue(currency.getSymbol(), currency.getNumericValue(), unitString, true);
-    };
-
-    // Try currency rate literals ($8/m^2, $8 per m^2)
-    const currencyUnit = parseCurrencyUnit(trimmed);
-    if (currencyUnit) {
-      return currencyUnit;
+    const single = parseSingleValue(trimmed);
+    if (single) {
+      return single;
     }
-
-    const parseUnitRate = (input: string): SemanticValue | null => {
-      const perMatch = input.match(/^(.*?)\bper\b(.+)$/i);
-      let left: string | null = null;
-      let unitPart: string | null = null;
-      if (perMatch) {
-        left = perMatch[1].trim();
-        unitPart = perMatch[2].trim();
-      } else if (input.includes("/")) {
-        const slashIndex = input.indexOf("/");
-        left = input.slice(0, slashIndex).trim();
-        unitPart = input.slice(slashIndex + 1).trim();
-      }
-
-      if (!left || !unitPart) {
-        return null;
-      }
-
-      if (!left.match(/^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/)) {
-        return null;
-      }
-
-      const unitString = unitPart.replace(/\s+/g, "");
-      if (!unitString || !/[a-zA-Z°µμΩ]/.test(unitString)) {
-        return null;
-      }
-
-      try {
-        SmartPadQuantity.fromValueAndUnit(1, `1/${unitString}`);
-      } catch {
-        return null;
-      }
-
-      return UnitValue.fromValueAndUnit(parseFloat(left), `1/${unitString}`);
-    };
-
-    const unitRate = parseUnitRate(trimmed);
-    if (unitRate) {
-      return unitRate;
-    }
-    
-    // Try percentage first (20%)
-    if (trimmed.match(/^-?\d+(?:\.\d+)?%$/)) {
-      try {
-        return PercentageValue.fromString(trimmed);
-      } catch {
-        return null;
-      }
-    }
-    
-    // Try currency ($100, €50, $1,000, 100$)
-    if (
-      trimmed.match(/^[\$€£¥₹₿]\s*(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?$/) ||
-      trimmed.match(/^(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?\s*[\$€£¥₹₿]$/) ||
-      trimmed.match(/^(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?\s+(CHF|CAD|AUD)$/)
-    ) {
-      try {
-        return CurrencyValue.fromString(trimmed);
-      } catch {
-        return null;
-      }
-    }
-    
-    // Try units (50 m, 100 kg)
-    if (UnitValue.isUnitString(trimmed)) {
-      try {
-        return UnitValue.fromString(trimmed);
-      } catch {
-        return null;
-      }
-    }
-
-    // Try dates (2024-06-05, June 5 2004)
-    const dateValue = DateValue.parse(trimmed);
-    if (dateValue) {
-      return dateValue;
-    }
-    
-    // Try number (last, as it's most permissive)
-    if (trimmed.match(/^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/)) {
-      try {
-        return NumberValue.from(trimmed);
-      } catch {
-        return null;
-      }
-    }
-    
+    const listValue = parseListLiteral(trimmed);
+    if (listValue) return listValue;
     return null;
   },
   
@@ -266,7 +313,7 @@ export const SemanticParsers = {
     return ErrorValue.parseError(`Cannot parse "${str}" as any semantic value type`);
   },
 } as const;
-
+export { parseListLiteral };
 // Arithmetic utilities
 export const SemanticArithmetic = {
   /**

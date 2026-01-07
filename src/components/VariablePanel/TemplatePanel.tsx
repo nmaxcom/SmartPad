@@ -114,7 +114,32 @@ mass flow to lb/min =>
 # Fuel economy and conversions
 
 fuel economy = 28 mpg
-fuel economy to km/L =>`,
+fuel economy to km/L =>
+
+# Lists and solver tease
+
+costs = $12, $15, $9
+sum(costs) => $36
+avg(costs) => $12
+
+expenses = rent, utilities, 50
+sum(expenses) => 1450
+
+lengths = 3m, 25m, 48km
+lengths =>3 m, 25 m, 48 km
+total(lengths) =>48.028 km
+stddev(lengths) =>18.3727
+mean(lengths) =>16.0093 km
+
+costs = $12, $15, $9 =>
+goal = total(50, 20, x)
+goal => 100
+x => 30
+
+price=3
+total = price * qty =>
+qty => total / 3
+`,
   },
   {
     id: "functions-showcase",

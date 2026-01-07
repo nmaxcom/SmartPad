@@ -14,7 +14,8 @@ export type SemanticValueType =
   | 'currencyUnit'
   | 'date'
   | 'error'
-  | 'symbolic';
+  | 'symbolic'
+  | 'list';
 
 export interface DisplayOptions {
   precision?: number;

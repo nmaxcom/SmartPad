@@ -46,6 +46,8 @@ import {
   ErrorValue,
   DisplayOptions,
   SemanticParsers,
+  ListValue,
+  SemanticValueTypes,
 } from "../types";
 import { Variable } from "../state/types";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
@@ -196,6 +198,11 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
 
     // For expression and combined assignment nodes, check the expression
     const expression = isExpressionNode(node) ? node.expression : node.expression;
+    const listFunctionPattern = /\b(sum|total|avg|mean|median|count|stddev|min|max)\s*\(/i;
+    if (listFunctionPattern.test(expression)) {
+      return false;
+    }
+
     const hasUnits = expressionContainsUnitsNet(expression);
     const hasConstants = this.containsMathematicalConstants(expression);
 
@@ -495,6 +502,10 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     try {
       // Parse the value to extract units
       const valueStr = (node.rawValue || node.parsedValue?.toString() || "").trim();
+      const parsedLiteral = SemanticParsers.parse(valueStr);
+      if (parsedLiteral && parsedLiteral.getType() === "list") {
+        return null;
+      }
       let components: ExpressionComponent[] = [];
       try {
         components = parseExpressionComponents(valueStr);
@@ -731,11 +742,21 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     expression: string,
     context: EvaluationContext
   ): boolean {
+    const variableNames = this.collectVariableNames(components);
+
+    const { hasCurrency, hasUnit, hasPercentage, hasList } = this.collectVariableMetadata(
+      variableNames,
+      context
+    );
+
     const parsedLiteral = SemanticParsers.parse(expression);
     if (parsedLiteral && parsedLiteral.getType() !== "error") {
       // Let UnitsNet handle unit literals; defer for other semantic literals.
       if (parsedLiteral.getType() === "unit") {
         return UnitValue.isUnitString(expression) ? false : true;
+      }
+      if (SemanticValueTypes.isSymbolic(parsedLiteral)) {
+        return hasList;
       }
       return true;
     }
@@ -746,6 +767,10 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
         (component) => context.functionStore?.has(component.value)
       );
       if (hasUserFunction) {
+        return true;
+      }
+      const listFunctionPattern = /\b(sum|total|avg|mean|median|count|stddev|min|max)\s*\(/i;
+      if (listFunctionPattern.test(expression)) {
         return true;
       }
       // Allow UnitsNet to handle built-in functions when units are involved.
@@ -766,11 +791,6 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
       return true;
     }
 
-    const variableNames = this.collectVariableNames(components);
-    if (variableNames.size === 0) {
-      return false;
-    }
-
     const maskedExpression = this.maskVariableNames(expression, variableNames);
     if (
       expressionContainsUnitsNet(maskedExpression) ||
@@ -779,30 +799,16 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
       return false;
     }
 
-    let hasCurrency = false;
-    let hasUnit = false;
-    let hasPercentage = false;
-
-    variableNames.forEach((name) => {
-      const variable = context.variableContext.get(name);
-      const value = variable?.value;
-      if (value instanceof UnitValue) {
-        hasUnit = true;
-      }
-      if (value instanceof PercentageValue) {
-        hasPercentage = true;
-      }
-      if (value instanceof CurrencyValue || value instanceof CurrencyUnitValue) {
-        hasCurrency = true;
-      }
-    });
-
     if (hasCurrency) {
       return true;
     }
 
     if (hasUnit || hasPercentage) {
       return false;
+    }
+
+    if (hasList) {
+      return true;
     }
 
     return false;
@@ -860,6 +866,40 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     };
     visit(components);
     return names;
+  }
+
+  private collectVariableMetadata(
+    variableNames: Set<string>,
+    context: EvaluationContext
+  ): {
+    hasCurrency: boolean;
+    hasUnit: boolean;
+    hasPercentage: boolean;
+    hasList: boolean;
+  } {
+    let hasCurrency = false;
+    let hasUnit = false;
+    let hasPercentage = false;
+    let hasList = false;
+
+    variableNames.forEach((name) => {
+      const variable = context.variableContext.get(name);
+      const value = variable?.value;
+      if (value instanceof ListValue) {
+        hasList = true;
+      }
+      if (value instanceof UnitValue) {
+        hasUnit = true;
+      }
+      if (value instanceof PercentageValue) {
+        hasPercentage = true;
+      }
+      if (value instanceof CurrencyValue || value instanceof CurrencyUnitValue) {
+        hasCurrency = true;
+      }
+    });
+
+    return { hasCurrency, hasUnit, hasPercentage, hasList };
   }
 
   private containsDateVariable(

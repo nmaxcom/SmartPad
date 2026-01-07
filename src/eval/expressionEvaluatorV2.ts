@@ -22,12 +22,14 @@ import {
   NumberValue, 
   UnitValue,
   CurrencyUnitValue,
+  CurrencyValue,
   SymbolicValue,
   ErrorValue,
   SemanticValueTypes,
   DisplayOptions,
   SemanticParsers,
-  SemanticArithmetic
+  SemanticArithmetic,
+  ListValue,
 } from "../types";
 import { parseAndEvaluateExpression } from "../parsing/expressionParser";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
@@ -43,7 +45,7 @@ export class SimpleExpressionParser {
     const trimmed = expr.trim();
     if (
       /[()]/.test(trimmed) ||
-      /\b(sqrt|abs|round|floor|ceil|max|min|sin|cos|tan|log|ln|exp)\s*\(/.test(trimmed)
+      /\b(sqrt|abs|round|floor|ceil|max|min|sum|total|avg|mean|median|count|stddev|sin|cos|tan|log|log10|ln|exp)\s*\(/.test(trimmed)
     ) {
       return null;
     }
@@ -378,7 +380,7 @@ export class SimpleExpressionParser {
     args: { positional: SemanticValue[]; named: Map<string, SemanticValue> },
     context: EvaluationContext
   ): SemanticValue {
-    const builtIn = this.evaluateBuiltInFunction(name, args);
+    const builtIn = this.evaluateBuiltInFunction(name, args, context);
     if (builtIn) {
       return builtIn;
     }
@@ -388,7 +390,8 @@ export class SimpleExpressionParser {
 
   private static evaluateBuiltInFunction(
     name: string,
-    args: { positional: SemanticValue[]; named: Map<string, SemanticValue> }
+    args: { positional: SemanticValue[]; named: Map<string, SemanticValue> },
+    context: EvaluationContext
   ): SemanticValue | null {
     const funcName = name;
     const builtIns = new Set([
@@ -397,6 +400,13 @@ export class SimpleExpressionParser {
       "round",
       "floor",
       "ceil",
+      "sum",
+      "total",
+      "avg",
+      "mean",
+      "median",
+      "count",
+      "stddev",
       "sin",
       "cos",
       "tan",
@@ -407,9 +417,34 @@ export class SimpleExpressionParser {
       "max",
       "min",
     ]);
+    const listFunctionNames = new Set(["sum", "total", "avg", "mean", "median", "count", "stddev", "min", "max"]);
 
     if (!builtIns.has(funcName)) {
       return null;
+    }
+
+    if (listFunctionNames.has(funcName)) {
+      const resolvedArgs = resolveFunctionArguments(args.positional, context);
+      switch (funcName) {
+        case "sum":
+        case "total":
+          return sumSemanticValues(resolvedArgs);
+        case "avg":
+        case "mean":
+          return averageSemanticValues(resolvedArgs);
+        case "median":
+          return medianSemanticValues(resolvedArgs);
+        case "count":
+          return NumberValue.from(filterNumericItems(resolvedArgs).length);
+        case "stddev":
+          return standardDeviation(resolvedArgs);
+        case "min":
+          return extremumSemanticValue(resolvedArgs, (next, current) => next < current);
+        case "max":
+          return extremumSemanticValue(resolvedArgs, (next, current) => next > current);
+        default:
+          return null;
+      }
     }
 
     const hasSymbolic =
@@ -653,6 +688,137 @@ export class SimpleExpressionParser {
   }
 }
 
+const flattenArgumentList = (values: SemanticValue[]): SemanticValue[] => {
+  const flattened: SemanticValue[] = [];
+
+  for (const value of values) {
+    if (SemanticValueTypes.isList(value)) {
+      flattened.push(...(value as ListValue).getItems());
+      continue;
+    }
+    flattened.push(value);
+  }
+
+  return flattened;
+};
+
+const filterNumericItems = (values: SemanticValue[]): SemanticValue[] => {
+  return flattenArgumentList(values).filter((value) => value.isNumeric());
+};
+
+const sumSemanticValues = (values: SemanticValue[]): SemanticValue => {
+  const numericItems = filterNumericItems(values);
+  if (numericItems.length === 0) {
+    return NumberValue.from(0);
+  }
+  let accumulator = numericItems[0];
+  for (const next of numericItems.slice(1)) {
+    const updated = SemanticArithmetic.add(accumulator, next);
+    if (SemanticValueTypes.isError(updated)) {
+      return updated;
+    }
+    accumulator = updated;
+  }
+  return accumulator;
+};
+
+const createZeroNumberValue = (): NumberValue => NumberValue.from(0);
+
+const averageSemanticValues = (values: SemanticValue[]): SemanticValue => {
+  const numericItems = filterNumericItems(values);
+  if (numericItems.length === 0) {
+    return createZeroNumberValue();
+  }
+  const total = sumSemanticValues(numericItems);
+  if (SemanticValueTypes.isError(total)) {
+    return total;
+  }
+  const countValue = NumberValue.from(numericItems.length);
+  return SemanticArithmetic.divide(total, countValue);
+};
+
+const medianSemanticValues = (values: SemanticValue[]): SemanticValue => {
+  const numericItems = filterNumericItems(values);
+  if (numericItems.length === 0) {
+    return createZeroNumberValue();
+  }
+  const numbers = numericItems.map((value) => value.getNumericValue());
+  numbers.sort((a, b) => a - b);
+  const mid = Math.floor(numbers.length / 2);
+  const median =
+    numbers.length % 2 === 1
+      ? numbers[mid]
+      : (numbers[mid - 1] + numbers[mid]) / 2;
+  return NumberValue.from(median);
+};
+
+const standardDeviation = (values: SemanticValue[]): SemanticValue => {
+  const numericItems = filterNumericItems(values);
+  if (numericItems.length === 0) {
+    return createZeroNumberValue();
+  }
+  const numericArray = numericItems.map((value) => value.getNumericValue());
+  const meanValue =
+    numericArray.reduce((sum, next) => sum + next, 0) / numericArray.length;
+  const variance =
+    numericArray.reduce((sum, next) => sum + Math.pow(next - meanValue, 2), 0) /
+    Math.max(numericArray.length, 1);
+  return NumberValue.from(Math.sqrt(variance));
+};
+
+const extremumSemanticValue = (
+  values: SemanticValue[],
+  comparator: (next: number, current: number) => boolean
+): SemanticValue => {
+  const numericItems = filterNumericItems(values);
+  if (numericItems.length === 0) {
+    return createZeroNumberValue();
+  }
+  let bestValue = numericItems[0].getNumericValue();
+  for (const item of numericItems.slice(1)) {
+    const currentValue = item.getNumericValue();
+    if (comparator(currentValue, bestValue)) {
+      bestValue = currentValue;
+    }
+  }
+  return NumberValue.from(bestValue);
+};
+
+const resolveSymbolicReference = (
+  value: SemanticValue,
+  context: EvaluationContext
+): SemanticValue | null => {
+  if (!SemanticValueTypes.isSymbolic(value)) {
+    return value;
+  }
+  const identifier = value.toString().trim();
+  if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(identifier)) {
+    return null;
+  }
+  const variable = context.variableContext.get(identifier);
+  if (variable && variable.value instanceof SemanticValue) {
+    return variable.value;
+  }
+  return null;
+};
+
+const resolveFunctionArguments = (
+  values: SemanticValue[],
+  context: EvaluationContext
+): SemanticValue[] => {
+  const resolved: SemanticValue[] = [];
+  for (const value of values) {
+    if (SemanticValueTypes.isList(value)) {
+      const listItems = (value as ListValue).getItems();
+      resolved.push(...resolveFunctionArguments(listItems, context));
+      continue;
+    }
+    const candidate = resolveSymbolicReference(value, context);
+    resolved.push(candidate || value);
+  }
+  return resolved;
+};
+
 /**
  * Semantic-aware expression evaluator
  * Handles simple arithmetic and delegates complex operations to specialized evaluators
@@ -803,7 +969,11 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
    */
   private isSimpleLiteral(expr: string): boolean {
     const parsed = SemanticParsers.parse(expr.trim());
-    return parsed !== null && !SemanticValueTypes.isError(parsed);
+    return (
+      parsed !== null &&
+      !SemanticValueTypes.isError(parsed) &&
+      !SemanticValueTypes.isSymbolic(parsed)
+    );
   }
   
   /**

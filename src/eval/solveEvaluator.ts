@@ -243,6 +243,11 @@ const buildSolveExpression = (components: ExpressionComponent[]): SolveExpressio
           }
           args.push(built as SolveExpression);
         }
+        const expanded = expandAggregatorFunction(component.value, args);
+        if (expanded) {
+          node = expanded;
+          break;
+        }
         node = { type: "function", name: component.value, args };
         break;
       }
@@ -374,6 +379,22 @@ const makeUnary = (op: "+" | "-", value: SolveExpression): SolveExpression => ({
   op,
   value,
 });
+
+const aggregatorFunctionNames = new Set(["sum", "total"]);
+
+const expandAggregatorFunction = (name: string, args: SolveExpression[]): SolveExpression | null => {
+  if (!aggregatorFunctionNames.has(name.toLowerCase())) {
+    return null;
+  }
+  if (args.length === 0) {
+    return makeLiteral("0");
+  }
+  let accumulator = args[0];
+  for (let i = 1; i < args.length; i += 1) {
+    accumulator = makeBinary("+", accumulator, args[i]);
+  }
+  return accumulator;
+};
 
 const parseArithmeticLiteral = (value: string): number | null => {
   if (!value.trim()) return null;
@@ -831,12 +852,50 @@ export class SolveEvaluator implements NodeEvaluator {
       return this.createErrorNode(`Cannot solve: no equation found for "${target}"`, node.expression, context.lineNumber);
     }
 
+    const knownValues = this.collectKnownValueAssignments(equations, context, equation.line, target);
     const solved = this.solveEquation({ left: equation.variableName, right: equation.expression }, target);
     if (isErrorValue(solved)) {
       return this.createErrorNode((solved as ErrorValue).getMessage(), node.expression, context.lineNumber);
     }
 
-    return this.formatSolveResult(node, solved as SolveExpression, conversion, context, new Map());
+    return this.formatSolveResult(node, solved as SolveExpression, conversion, context, knownValues);
+  }
+
+  private collectKnownValueAssignments(
+    equations: EquationEntry[],
+    context: EvaluationContext,
+    excludeLine: number,
+    target: string
+  ): Map<string, SemanticValue> {
+    const knownValues = new Map<string, SemanticValue>();
+
+    for (const equation of equations) {
+      if (equation.line >= context.lineNumber || equation.line === excludeLine) {
+        continue;
+      }
+
+      const parsed = splitTopLevelEquation(equation.expression);
+      if (!parsed) {
+        continue;
+      }
+
+      const normalizedLeft = normalizeVariableName(parsed.left);
+      if (normalizedLeft === target) {
+        continue;
+      }
+      if (containsTarget(buildSolveTreeFromExpression(parsed.right) as SolveExpression, target)) {
+        continue;
+      }
+
+      const value = this.evaluateExpression(parsed.right, context, knownValues);
+      if (SemanticValueTypes.isError(value) || SemanticValueTypes.isSymbolic(value)) {
+        continue;
+      }
+
+      knownValues.set(normalizedLeft, value as SemanticValue);
+    }
+
+    return knownValues;
   }
 
   private solveEquation(equation: SolveEquation, target: string): SolveExpression | ErrorValue {

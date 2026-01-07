@@ -245,15 +245,19 @@ function createExpressionNode(expression: string, raw: string, line: number): Ex
       /\bas\s+%/.test(expression) ||
       /\bis\s+%/.test(expression);
 
+    const parsedLiteral = SemanticParsers.parse(expression);
+    const isListLiteral = parsedLiteral && parsedLiteral.getType() === "list";
     const expressionForComponents = stripConversionSuffix(expression);
 
-    // Parse the expression into a component tree
+    // Parse the expression into a component tree if it's not a raw list literal
     let components: ReturnType<typeof parseExpressionComponents> = [];
-    try {
-      components = parseExpressionComponents(expressionForComponents);
-    } catch (error) {
-      if (!isPercentageExpression && !looksLikeDateExpression(expression)) {
-        throw error;
+    if (!isListLiteral) {
+      try {
+        components = parseExpressionComponents(expressionForComponents);
+      } catch (error) {
+        if (!isPercentageExpression && !looksLikeDateExpression(expression)) {
+          throw error;
+        }
       }
     }
 
@@ -300,15 +304,19 @@ function createCombinedAssignmentNode(
       /\bas\s+%/.test(expression) ||
       /\bis\s+%/.test(expression);
 
+    const parsedLiteral = SemanticParsers.parse(expression);
+    const isListLiteral = parsedLiteral && parsedLiteral.getType() === "list";
     const expressionForComponents = stripConversionSuffix(expression);
 
     // Parse the expression into a component tree
     let components: ReturnType<typeof parseExpressionComponents> = [];
-    try {
-      components = parseExpressionComponents(expressionForComponents);
-    } catch (error) {
-      if (!isPercentageExpression && !looksLikeDateExpression(expression)) {
-        throw error;
+    if (!isListLiteral) {
+      try {
+        components = parseExpressionComponents(expressionForComponents);
+      } catch (error) {
+        if (!isPercentageExpression && !looksLikeDateExpression(expression)) {
+          throw error;
+        }
       }
     }
     

@@ -1,5 +1,7 @@
 import {
   ASTNode,
+  ExpressionNode,
+  isExpressionNode,
   isVariableAssignmentNode,
   isCombinedAssignmentNode,
 } from "../parsing/ast";
@@ -33,5 +35,21 @@ export const recordEquationFromNode = (node: ASTNode, equations: EquationEntry[]
       variableName: normalizeVariableName(node.variableName),
       expression,
     });
+    return;
+  }
+
+  if (isExpressionNode(node) && node.raw.includes("=>")) {
+    const [leftRaw, rightRaw] = node.raw.split("=>");
+    const left = leftRaw?.trim();
+    const right = rightRaw?.trim();
+    if (!left || !right) return;
+    if (!isVariableReference(left)) return;
+    equations.push({
+      line: node.line,
+      variableName: normalizeVariableName(left),
+      expression: `${left} = ${right}`,
+    });
   }
 };
+
+const isVariableReference = (expr: string): boolean => /^[a-zA-Z_][a-zA-Z0-9_\s]*$/.test(expr.trim());
