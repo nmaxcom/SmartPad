@@ -100,12 +100,66 @@ describe("Solve evaluator", () => {
     expect((result as any).result).toBe("sqrt(area / PI)");
   });
 
-  test("implicit solve errors on non-numeric exponents", () => {
+  test("implicit solve isolates ln/exp expressions", () => {
     const context = createContext();
-    evaluateLine("value = r^time", context, 1);
-    const result = evaluateLine("r =>", context, 2);
-    expect(result?.type).toBe("error");
-    expect((result as any).error).toContain("exponent must be numeric");
+    evaluateLine("y = 4 * exp(0.5 * x)", context, 1);
+    const result = evaluateLine("x =>", context, 2);
+    expect((result as any).result).toBe("ln(y / 4) / 0.5");
+  });
+
+  test("implicit solve isolates log10 with power", () => {
+    const context = createContext();
+    evaluateLine("y = log10(x^3)", context, 1);
+    const result = evaluateLine("x =>", context, 2);
+    expect((result as any).result).toBe("10 ^ (y / 3)");
+  });
+
+  test("log10 expression evaluates directly", () => {
+    const context = createContext();
+    const result = evaluateLine("log10(1000) =>", context, 1);
+    expect((result as any).result).toBe("3");
+  });
+
+  test("implicit solve isolates sin expressions", () => {
+    const context = createContext();
+    evaluateLine("y = 2 * sin(3 * x)", context, 1);
+    const result = evaluateLine("x =>", context, 2);
+    expect((result as any).result).toBe("asin(y / 2) / 3");
+  });
+
+  test("implicit solve isolates tan expressions", () => {
+    const context = createContext();
+    evaluateLine("y = tan(x / 2)", context, 1);
+    const result = evaluateLine("x =>", context, 2);
+    expect((result as any).result).toBe("atan(y) * 2");
+  });
+
+  test("implicit solve isolates logistic ratio", () => {
+    const context = createContext();
+    evaluateLine("y = ln(x / (1 - x))", context, 1);
+    const result = evaluateLine("x =>", context, 2);
+    expect((result as any).result).toBe("exp(y) / (1 + exp(y))");
+  });
+
+  test("implicit solve isolates exponential growth rate", () => {
+    const context = createContext();
+    evaluateLine("growth = initial * exp(rate * time)", context, 1);
+    const result = evaluateLine("rate =>", context, 2);
+    expect((result as any).result).toBe("ln(growth / initial) / time");
+  });
+
+  test("implicit solve handles fractional exponents", () => {
+    const context = createContext();
+    evaluateLine("y = x^(1/2)", context, 1);
+    const result = evaluateLine("x =>", context, 2);
+    expect((result as any).result).toBe("y ^ 2");
+  });
+
+  test("implicit solve can isolate denominators with constants", () => {
+    const context = createContext();
+    evaluateLine("y = 1 / (x + 2)", context, 1);
+    const result = evaluateLine("x =>", context, 2);
+    expect((result as any).result).toBe("1 / y - 2");
   });
 
   test("implicit solve handles nested expressions with exponents", () => {
@@ -118,6 +172,16 @@ describe("Solve evaluator", () => {
     const xResult = evaluateLine("x =>", context, 3);
     expect(xResult?.type).toBe("mathResult");
     expect((xResult as any).result).toMatch(/\(.*z\s*\+\s*3.*\)\s*\/\s*4/);
+  });
+
+  test("round/floor/ceil functions evaluate correctly", () => {
+    const context = createContext();
+    const roundResult = evaluateLine("round(PI, 2) =>", context, 1);
+    const floorResult = evaluateLine("floor(4.9) =>", context, 2);
+    const ceilResult = evaluateLine("ceil(4.1) =>", context, 3);
+    expect((roundResult as any).result).toBe("3.14");
+    expect((floorResult as any).result).toBe("4");
+    expect((ceilResult as any).result).toBe("5");
   });
 
   test("implicit solve errors when variable appears on both sides", () => {

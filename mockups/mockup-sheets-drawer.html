@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SmartPad - Full Drawer</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Sora:wght@400;500;600;700&display=swap");
+
+      :root {
+        --color-background: #1a1a2e;
+        --color-surface: #252542;
+        --color-surface-hover: #2d2d4a;
+        --color-surface-light: #2d2d4a;
+        --color-primary: #7c5dfa;
+        --color-primary-light: rgba(124, 93, 250, 0.15);
+        --color-text-primary: #eaeaf4;
+        --color-text-secondary: #9595b2;
+        --color-border: rgba(255, 255, 255, 0.08);
+        --color-accent: #7c5dfa;
+        --color-accent-soft: rgba(124, 93, 250, 0.15);
+        --color-teal: #00d9c0;
+        --color-pink: #ff6b9d;
+        --color-yellow: #ffd93d;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: "Sora", -apple-system, sans-serif;
+        background: var(--color-background);
+        color: var(--color-text-primary);
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .app-container {
+        display: flex;
+        height: 100vh;
+        position: relative;
+      }
+
+      /* MAIN HEADER */
+      .main-header {
+        height: 56px;
+        background: var(--color-surface);
+        border-bottom: 1px solid var(--color-border);
+        display: flex;
+        align-items: center;
+        padding: 0 24px;
+        gap: 16px;
+        flex-shrink: 0;
+      }
+
+      .sheets-trigger {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 8px;
+        background: var(--color-surface-hover);
+        border: 1px solid var(--color-border);
+        color: var(--color-text-primary);
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+
+      .sheets-trigger:hover {
+        background: var(--color-primary-light);
+        border-color: var(--color-primary);
+      }
+
+      .sheets-trigger-icon {
+        font-size: 16px;
+      }
+
+      .sheets-trigger-arrow {
+        font-size: 10px;
+        color: var(--color-text-secondary);
+      }
+
+      .sheet-title-input {
+        font-family: "Sora", sans-serif;
+        font-size: 18px;
+        font-weight: 600;
+        background: transparent;
+        border: none;
+        color: var(--color-text-primary);
+        outline: none;
+        padding: 8px 12px;
+        border-radius: 8px;
+        transition: background 0.2s;
+        flex: 1;
+        max-width: 500px;
+      }
+
+      .sheet-title-input:hover,
+      .sheet-title-input:focus {
+        background: var(--color-surface-hover);
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 8px;
+        margin-left: auto;
+      }
+
+      .header-btn {
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 1px solid var(--color-border);
+        background: transparent;
+        color: var(--color-text-primary);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+
+      .header-btn:hover {
+        background: var(--color-surface-hover);
+        border-color: var(--color-primary);
+      }
+
+      /* DRAWER BACKDROP */
+      .drawer-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        z-index: 99;
+      }
+
+      .drawer-backdrop.open {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      /* FULL DRAWER */
+      .drawer {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 100vw;
+        height: 100vh;
+        background: var(--color-background);
+        border-left: 1px solid var(--color-border);
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .drawer.open {
+        transform: translateX(0);
+      }
+
+      .drawer-header {
+        padding: 24px 32px;
+        border-bottom: 1px solid var(--color-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+      }
+
+      .drawer-title {
+        font-size: 24px;
+        font-weight: 700;
+      }
+
+      .drawer-close {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        border: none;
+        background: var(--color-surface-hover);
+        color: var(--color-text-primary);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        transition: all 0.2s;
+      }
+
+      .drawer-close:hover {
+        background: var(--color-pink);
+        color: white;
+      }
+
+      .drawer-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px 32px;
+      }
+
+      .drawer-section {
+        margin-bottom: 32px;
+      }
+
+      .drawer-section-title {
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--color-text-secondary);
+        margin-bottom: 16px;
+      }
+
+      .sheets-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+      }
+
+      .sheet-card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        padding: 20px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .sheet-card:hover {
+        border-color: var(--color-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      }
+
+      .sheet-card.active {
+        border-color: var(--color-primary);
+        background: var(--color-primary-light);
+        box-shadow: 0 0 0 2px var(--color-primary);
+      }
+
+      .sheet-card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .sheet-card-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--color-primary) 0%, #9d7bff 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        flex-shrink: 0;
+      }
+
+      .sheet-card.active .sheet-card-icon {
+        background: linear-gradient(135deg, #ffffff 0%, var(--color-primary) 100%);
+        color: white;
+      }
+
+      .sheet-card-info {
+        flex: 1;
+      }
+
+      .sheet-card-name {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      .sheet-card-meta {
+        font-size: 12px;
+        color: var(--color-text-secondary);
+      }
+
+      .sheet-card-preview {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 12px;
+        color: var(--color-text-secondary);
+        line-height: 1.6;
+        background: var(--color-surface-hover);
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid var(--color-border);
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        -webkit-box-orient: vertical;
+      }
+
+      .drawer-footer {
+        padding: 24px 32px;
+        border-top: 1px solid var(--color-border);
+        flex-shrink: 0;
+      }
+
+      .new-sheet-btn {
+        width: 100%;
+        padding: 14px;
+        border-radius: 12px;
+        border: 2px dashed var(--color-border);
+        background: transparent;
+        color: var(--color-text-secondary);
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: all 0.2s;
+      }
+
+      .new-sheet-btn:hover {
+        background: var(--color-primary-light);
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+        transform: scale(1.02);
+      }
+
+      /* MAIN CONTENT */
+      .main-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 32px;
+      }
+
+      .editor-content {
+        max-width: 800px;
+        margin: 0 auto;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 15px;
+        line-height: 1.8;
+      }
+
+      .editor-line {
+        margin-bottom: 4px;
+        padding: 4px 0;
+      }
+
+      .variable { color: var(--color-teal); font-weight: 500; }
+      .number { color: var(--color-text-primary); }
+      .unit { color: #ff6adf; font-weight: 500; }
+      .operator { color: var(--color-yellow); }
+      .result {
+        color: var(--color-accent);
+        background: var(--color-accent-soft);
+        padding: 2px 8px;
+        border-radius: 6px;
+        margin-left: 8px;
+        font-weight: 600;
+      }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar { width: 8px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: var(--color-surface-hover); border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #3d3d5c; }
+    </style>
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- DRAWER BACKDROP -->
+      <div class="drawer-backdrop open"></div>
+
+      <!-- FULL DRAWER -->
+      <div class="drawer open">
+        <div class="drawer-header">
+          <span class="drawer-title">My Sheets</span>
+          <button class="drawer-close">×</button>
+        </div>
+
+        <div class="drawer-content">
+          <div class="drawer-section">
+            <div class="drawer-section-title">Recent Sheets</div>
+            <div class="sheets-grid">
+              <div class="sheet-card active">
+                <div class="sheet-card-header">
+                  <div class="sheet-card-icon">📐</div>
+                  <div class="sheet-card-info">
+                    <div class="sheet-card-name">Physics Homework</div>
+                    <div class="sheet-card-meta">12 lines • Just now</div>
+                  </div>
+                </div>
+                <div class="sheet-card-preview">mass = 10 kg
+acceleration = 9.8 m/s^2
+force = mass * acceleration
+force to lbf</div>
+              </div>
+
+              <div class="sheet-card">
+                <div class="sheet-card-header">
+                  <div class="sheet-card-icon">💰</div>
+                  <div class="sheet-card-info">
+                    <div class="sheet-card-name">Budget 2024</div>
+                    <div class="sheet-card-meta">28 lines • 2 hours ago</div>
+                  </div>
+                </div>
+                <div class="sheet-card-preview">rent = $2200
+utilities = $150
+groceries = $400
+total = rent + utilities + groceries</div>
+              </div>
+
+              <div class="sheet-card">
+                <div class="sheet-card-header">
+                  <div class="sheet-card-icon">🚗</div>
+                  <div class="sheet-card-info">
+                    <div class="sheet-card-name">Road Trip Planning</div>
+                    <div class="sheet-card-meta">18 lines • Yesterday</div>
+                  </div>
+                </div>
+                <div class="sheet-card-preview">distance = 450 km
+fuel_efficiency = 8.5 L/100km
+fuel_needed = (distance / 100 km) * fuel_efficiency</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="drawer-section">
+            <div class="drawer-section-title">All Sheets</div>
+            <div class="sheets-grid">
+              <div class="sheet-card">
+                <div class="sheet-card-header">
+                  <div class="sheet-card-icon">📊</div>
+                  <div class="sheet-card-info">
+                    <div class="sheet-card-name">Investment Calculator</div>
+                    <div class="sheet-card-meta">35 lines • 3 days ago</div>
+                  </div>
+                </div>
+                <div class="sheet-card-preview">principal = $10,000
+annual_rate = 6.5%
+years = 10
+final_amount = principal * (1 + annual_rate)^years</div>
+              </div>
+
+              <div class="sheet-card">
+                <div class="sheet-card-header">
+                  <div class="sheet-card-icon">🍰</div>
+                  <div class="sheet-card-info">
+                    <div class="sheet-card-name">Recipe Scaling</div>
+                    <div class="sheet-card-meta">9 lines • Last week</div>
+                  </div>
+                </div>
+                <div class="sheet-card-preview">flour = 2 cups
+sugar = 1 cup
+butter = 0.5 cups
+serving_multiplier = 10 / 4</div>
+              </div>
+
+              <div class="sheet-card">
+                <div class="sheet-card-header">
+                  <div class="sheet-card-icon">⚡</div>
+                  <div class="sheet-card-info">
+                    <div class="sheet-card-name">Electrical Engineering</div>
+                    <div class="sheet-card-meta">22 lines • 2 weeks ago</div>
+                  </div>
+                </div>
+                <div class="sheet-card-preview">voltage = 12 V
+resistance = 4 ohm
+current = voltage / resistance
+power = voltage * current</div>
+              </div>
+
+              <div class="sheet-card">
+                <div class="sheet-card-header">
+                  <div class="sheet-card-icon">🏃</div>
+                  <div class="sheet-card-info">
+                    <div class="sheet-card-name">Fitness Tracker</div>
+                    <div class="sheet-card-meta">15 lines • 3 weeks ago</div>
+                  </div>
+                </div>
+                <div class="sheet-card-preview">distance = 5 km
+time = 25 min
+pace = time / distance
+calories = 0.75 * 70 kg * 5 km</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="drawer-footer">
+          <button class="new-sheet-btn">
+            <span>+</span>
+            <span>Create New Sheet</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- MAIN HEADER -->
+      <header class="main-header">
+        <button class="sheets-trigger">
+          <span class="sheets-trigger-icon">📐</span>
+          <span>Physics Homework</span>
+          <span class="sheets-trigger-arrow">▼</span>
+        </button>
+        <div class="header-actions">
+          <button class="header-btn">Export</button>
+          <button class="header-btn">Share</button>
+        </div>
+      </header>
+
+      <!-- MAIN CONTENT -->
+      <main class="main-content">
+        <div class="editor-content">
+          <div class="editor-line">
+            <span class="variable">mass</span> <span class="operator">=</span> <span class="number">10</span> <span class="unit">kg</span>
+          </div>
+          <div class="editor-line">
+            <span class="variable">acceleration</span> <span class="operator">=</span> <span class="number">9.8</span> <span class="unit">m/s^2</span>
+          </div>
+          <div class="editor-line">
+            <span class="variable">force</span> <span class="operator">=</span> mass <span class="operator">*</span> acceleration <span class="operator">=></span>
+            <span class="result">98 N</span>
+          </div>
+          <div class="editor-line"></div>
+          <div class="editor-line">
+            force to <span class="unit">lbf</span> <span class="operator">=></span>
+            <span class="result">22.02 lbf</span>
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

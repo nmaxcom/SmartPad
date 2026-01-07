@@ -401,6 +401,7 @@ export class SimpleExpressionParser {
       "cos",
       "tan",
       "log",
+      "log10",
       "ln",
       "exp",
       "max",
@@ -469,10 +470,18 @@ export class SimpleExpressionParser {
           }
           return NumberValue.from(Math.abs(numericArgs[0]));
         case "round":
-          if (numericArgs.length !== 1) {
-            return ErrorValue.semanticError(`round expects 1 argument, got ${numericArgs.length}`);
+          if (numericArgs.length === 1) {
+            return NumberValue.from(Math.round(numericArgs[0]));
           }
-          return NumberValue.from(Math.round(numericArgs[0]));
+          if (numericArgs.length === 2) {
+            const decimals = numericArgs[1];
+            if (!Number.isInteger(decimals)) {
+              return ErrorValue.semanticError("round decimals must be an integer");
+            }
+            const factor = Math.pow(10, decimals);
+            return NumberValue.from(Math.round(numericArgs[0] * factor) / factor);
+          }
+          return ErrorValue.semanticError(`round expects 1 or 2 arguments, got ${numericArgs.length}`);
         case "floor":
           if (numericArgs.length !== 1) {
             return ErrorValue.semanticError(`floor expects 1 argument, got ${numericArgs.length}`);
@@ -501,6 +510,11 @@ export class SimpleExpressionParser {
         case "log":
           if (numericArgs.length !== 1) {
             return ErrorValue.semanticError(`log expects 1 argument, got ${numericArgs.length}`);
+          }
+          return NumberValue.from(Math.log10(numericArgs[0]));
+        case "log10":
+          if (numericArgs.length !== 1) {
+            return ErrorValue.semanticError(`log10 expects 1 argument, got ${numericArgs.length}`);
           }
           return NumberValue.from(Math.log10(numericArgs[0]));
         case "ln":

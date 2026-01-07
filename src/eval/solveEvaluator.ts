@@ -358,17 +358,101 @@ const makeBinary = (op: string, left: SolveExpression, right: SolveExpression): 
   right,
 });
 
+const makeFunction = (name: string, args: SolveExpression[]): SolveExpression => ({
+  type: "function",
+  name,
+  args,
+});
+
+const makeLiteral = (value: string): SolveExpression => ({
+  type: "literal",
+  value,
+});
+
 const makeUnary = (op: "+" | "-", value: SolveExpression): SolveExpression => ({
   type: "unary",
   op,
   value,
 });
 
-const extractNumericLiteral = (expr: SolveExpression): number | null => {
-  if (expr.type !== "literal") return null;
-  const parsed = expr.parsed ?? SemanticParsers.parse(expr.value);
-  if (!parsed || parsed.getType() !== "number") return null;
-  return parsed.getNumericValue();
+const parseArithmeticLiteral = (value: string): number | null => {
+  if (!value.trim()) return null;
+  const normalized = value.trim();
+  if (/^[+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(normalized)) {
+    const num = Number(normalized);
+    return Number.isFinite(num) ? num : null;
+  }
+  const result = parseAndEvaluateExpression(normalized, new Map());
+  if (result.error) {
+    return null;
+  }
+  return Number.isFinite(result.value) ? result.value : null;
+};
+
+const evaluateNumericExpression = (expr: SolveExpression): number | null => {
+  switch (expr.type) {
+    case "literal": {
+      const parsed = expr.parsed ?? SemanticParsers.parse(expr.value);
+      if (parsed && parsed.getType() === "number") {
+        return parsed.getNumericValue();
+      }
+      return parseArithmeticLiteral(expr.value);
+    }
+    case "unary": {
+      const value = evaluateNumericExpression(expr.value);
+      if (value === null) return null;
+      return expr.op === "-" ? -value : value;
+    }
+    case "binary": {
+      const left = evaluateNumericExpression(expr.left);
+      const right = evaluateNumericExpression(expr.right);
+      if (left === null || right === null) return null;
+      switch (expr.op) {
+        case "+":
+          return left + right;
+        case "-":
+          return left - right;
+        case "*":
+          return left * right;
+        case "/":
+          return right === 0 ? null : left / right;
+        case "^":
+          return Math.pow(left, right);
+        default:
+          return null;
+      }
+    }
+    default:
+      return null;
+  }
+};
+
+const extractNumericLiteral = (expr: SolveExpression): number | null => evaluateNumericExpression(expr);
+
+const isExactTargetVariable = (expr: SolveExpression, target: string): boolean =>
+  expr.type === "variable" && normalizeVariableName(expr.name) === normalizeVariableName(target);
+
+const tryHandleDivisionWithDenominator = (
+  expr: SolveExpression,
+  target: string,
+  other: SolveExpression
+): SolveExpression | null => {
+  if (expr.type !== "binary" || expr.op !== "/") return null;
+  if (!containsTarget(expr.left, target) || !containsTarget(expr.right, target)) return null;
+  if (!isExactTargetVariable(expr.left, target)) return null;
+  if (expr.right.type !== "binary" || expr.right.op !== "-") return null;
+  if (containsTarget(expr.right.left, target)) return null;
+  if (!containsTarget(expr.right.right, target)) return null;
+
+  const constantValue = evaluateNumericExpression(expr.right.left);
+  if (constantValue === null) return null;
+
+  const numerator =
+    constantValue === 1
+      ? other
+      : makeBinary("*", makeLiteral(String(constantValue)), other);
+  const denominator = makeBinary("+", makeLiteral("1"), other);
+  return makeBinary("/", numerator, denominator);
 };
 
 const solveForTarget = (
@@ -393,7 +477,37 @@ const solveForTarget = (
   }
 
   if (expr.type === "function") {
-    return ErrorValue.semanticError("Cannot solve: unsupported function");
+    const targetArg = expr.args.find((arg) => containsTarget(arg, target));
+    if (!targetArg) {
+      return ErrorValue.semanticError("Cannot solve: variable not found");
+    }
+
+    const funcName = expr.name.toLowerCase();
+    switch (funcName) {
+      case "sqrt":
+        return solveForTarget(targetArg, target, makeBinary("^", other, makeLiteral("2")));
+      case "exp":
+        return solveForTarget(targetArg, target, makeFunction("ln", [other]));
+      case "log":
+      case "ln":
+        return solveForTarget(targetArg, target, makeFunction("exp", [other]));
+      case "log10":
+        return solveForTarget(targetArg, target, makeBinary("^", makeLiteral("10"), other));
+      case "sin":
+        return solveForTarget(targetArg, target, makeFunction("asin", [other]));
+      case "cos":
+        return solveForTarget(targetArg, target, makeFunction("acos", [other]));
+      case "tan":
+        return solveForTarget(targetArg, target, makeFunction("atan", [other]));
+      case "asin":
+        return solveForTarget(targetArg, target, makeFunction("sin", [other]));
+      case "acos":
+        return solveForTarget(targetArg, target, makeFunction("cos", [other]));
+      case "atan":
+        return solveForTarget(targetArg, target, makeFunction("tan", [other]));
+      default:
+        return ErrorValue.semanticError("Cannot solve: unsupported function");
+    }
   }
 
   if (expr.type !== "binary") {
@@ -403,6 +517,10 @@ const solveForTarget = (
   const leftHas = containsTarget(expr.left, target);
   const rightHas = containsTarget(expr.right, target);
   if (leftHas && rightHas) {
+    const divisionSpecial = tryHandleDivisionWithDenominator(expr, target, other);
+    if (divisionSpecial) {
+      return divisionSpecial;
+    }
     return ErrorValue.semanticError("Cannot solve: variable appears on both sides");
   }
 
@@ -434,10 +552,14 @@ const solveForTarget = (
             args: [other],
           });
         }
+        const reciprocal = 1 / exponent;
+        const exponentLiteral = Number.isFinite(reciprocal)
+          ? makeLiteral(String(reciprocal))
+          : makeBinary("/", makeLiteral("1"), makeLiteral(String(exponent)));
         return solveForTarget(
           expr.left,
           target,
-          makeBinary("^", other, makeBinary("/", { type: "literal", value: "1" }, { type: "literal", value: String(exponent) }))
+          makeBinary("^", other, exponentLiteral)
         );
       }
       default:
@@ -503,6 +625,65 @@ const getEquationCandidates = (
     }
   }
   return null;
+};
+
+const makeFraction = (numerator: SolveExpression, denominator: SolveExpression): SolveExpression => ({
+  type: "binary",
+  op: "/",
+  left: numerator,
+  right: denominator,
+});
+
+const simplifyExponentProduct = (inner: SolveExpression, outer: SolveExpression): SolveExpression => {
+  if (outer.type === "binary" && outer.op === "/" && outer.left.type === "literal" && outer.left.value === "1") {
+    return makeFraction(inner, outer.right);
+  }
+  if (outer.type === "literal") {
+    const outerNumber = parseArithmeticLiteral(outer.value);
+    if (outerNumber !== null && outerNumber !== 0) {
+      const reciprocal = 1 / outerNumber;
+      const rounded = Math.round(reciprocal);
+      if (Math.abs(reciprocal - rounded) < 1e-12 && rounded !== 0) {
+        return makeFraction(inner, makeLiteral(String(rounded)));
+      }
+    }
+  }
+  return makeBinary("*", inner, outer);
+};
+
+const simplifyLog10Power = (expr: SolveExpression): SolveExpression => {
+  if (expr.type !== "binary" || expr.op !== "^") return expr;
+  if (expr.left.type !== "binary" || expr.left.op !== "^") return expr;
+  const base = expr.left.left;
+  const innerExp = expr.left.right;
+  const outerExp = expr.right;
+  if (base.type === "literal" && base.value === "10") {
+    const combined = simplifyExponentProduct(innerExp, outerExp);
+    return makeBinary("^", base, combined);
+  }
+  return expr;
+};
+
+const simplifySolveExpression = (expr: SolveExpression): SolveExpression => {
+  if (expr.type === "binary") {
+    const simplifiedLeft = simplifySolveExpression(expr.left);
+    const simplifiedRight = simplifySolveExpression(expr.right);
+    const rebuilt = makeBinary(expr.op, simplifiedLeft, simplifiedRight);
+    if (expr.op === "^") {
+      return simplifyLog10Power(rebuilt);
+    }
+    return rebuilt;
+  }
+  if (expr.type === "unary") {
+    return makeUnary(expr.op, simplifySolveExpression(expr.value));
+  }
+  if (expr.type === "function") {
+    return {
+      ...expr,
+      args: expr.args.map((arg) => simplifySolveExpression(arg)),
+    };
+  }
+  return expr;
 };
 
 const mergeVariableContext = (
@@ -693,11 +874,21 @@ export class SolveEvaluator implements NodeEvaluator {
     context: EvaluationContext,
     localValues: Map<string, SemanticValue>
   ): RenderNode {
-    const expressionText = formatSolveExpression(solved);
+    const simplifiedExpression = simplifySolveExpression(solved);
+    const expressionText = formatSolveExpression(simplifiedExpression);
     const displayOptions = this.getDisplayOptions(context);
 
     const value = this.evaluateExpression(expressionText, context, localValues);
     if (SemanticValueTypes.isError(value)) {
+      const containsIdentifier = /[a-zA-Z]/.test(expressionText);
+      if (containsIdentifier) {
+        const substituted = this.substituteKnownValues(expressionText, context, localValues, displayOptions);
+        return this.createMathResultNode(
+          node.expression,
+          conversion ? `${substituted} ${conversion.keyword} ${conversion.target}` : substituted,
+          context.lineNumber
+        );
+      }
       return this.createErrorNode((value as ErrorValue).getMessage(), node.expression, context.lineNumber);
     }
 
