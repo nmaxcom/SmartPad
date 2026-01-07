@@ -310,23 +310,35 @@ export class UnitValue extends SemanticValue {
     return new UnitValue(quantity);
   }
 
+  private static parseValueAndUnit(str: string): { value: number; unit: string } | null {
+    if (!str) return null;
+
+    const trimmed = str.trim();
+    if (!trimmed) return null;
+
+    const match = trimmed.match(/^([+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)(.*)$/);
+    if (!match) return null;
+
+    const value = parseFloat(match[1]);
+    const unit = match[2].trim();
+
+    if (!unit) return null;
+    if (!/[a-zA-Z°µμΩ]/.test(unit)) return null;
+
+    return { value, unit };
+  }
+
   /**
    * Parse unit string like "50 m" or "100 kg"
    */
   static fromString(str: string): UnitValue {
-    // Match patterns like "50 m", "100.5 kg", "25 mph"
-    const match = str.match(
-      /^(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\s*([a-zA-Z°]+(?:\/[a-zA-Z°]+)?(?:\^?\d+)?)$/
-    );
-    if (!match) {
+    const parsed = UnitValue.parseValueAndUnit(str);
+    if (!parsed) {
       throw new Error(`Invalid unit format: "${str}"`);
     }
-    
-    const value = parseFloat(match[1]);
-    const unit = match[2];
-    
+
     try {
-      return UnitValue.fromValueAndUnit(value, unit);
+      return UnitValue.fromValueAndUnit(parsed.value, parsed.unit);
     } catch (error) {
       throw new Error(`Cannot create unit value: ${(error as Error).message}`);
     }
@@ -336,15 +348,17 @@ export class UnitValue extends SemanticValue {
    * Check if a string looks like a unit expression
    */
   static isUnitString(str: string): boolean {
-    const trimmed = str.trim();
-    // Avoid misclassifying pure scientific notation as a unit (e.g., "1e6").
-    if (/^-?\d+(?:\.\d+)?[eE][+-]?\d+$/.test(trimmed)) {
+    const parsed = UnitValue.parseValueAndUnit(str);
+    if (!parsed) {
       return false;
     }
-    // Basic pattern matching for unit expressions
-    return /^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\s*[a-zA-Z°]+(?:\/[a-zA-Z°]+)?(?:\^?\d+)?$/.test(
-      trimmed
-    );
+
+    try {
+      SmartPadQuantity.fromValueAndUnit(1, parsed.unit);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   getMetadata(): Record<string, any> {
