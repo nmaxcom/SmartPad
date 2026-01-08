@@ -51,6 +51,7 @@ import {
 } from "../types";
 import { Variable } from "../state/types";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
+import { applyThousandsSeparator } from "../utils/numberFormatting";
 
 function rewriteSimpleTimeLiterals(expression: string): string {
   return expression.replace(/(\d+(?:\.\d+)?)\s*(h|min|day)\b/g, (_m, num, unit) => {
@@ -699,8 +700,8 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     precision: number,
     displayOptions: DisplayOptions
   ): string {
-    if (!isFinite(value)) return "Infinity";
-    if (value === 0) return "0";
+    if (!isFinite(value)) return this.groupIfEnabled("Infinity", displayOptions);
+    if (value === 0) return this.groupIfEnabled("0", displayOptions);
     const abs = Math.abs(value);
     const upperThreshold = displayOptions.scientificUpperThreshold ?? 1e12;
     const lowerThreshold = displayOptions.scientificLowerThreshold ?? 1e-4;
@@ -717,15 +718,19 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
       abs >= upperThreshold ||
       (abs > 0 && lowerThreshold > 0 && abs < lowerThreshold)
     ) {
-      return formatScientific(value);
+      return this.groupIfEnabled(formatScientific(value), displayOptions);
     }
     if (Number.isInteger(value)) return value.toString();
     const fixed = value.toFixed(precision);
     const fixedNumber = parseFloat(fixed);
     if (fixedNumber === 0) {
-      return formatScientific(value);
+      return this.groupIfEnabled(formatScientific(value), displayOptions);
     }
-    return fixedNumber.toString();
+    return this.groupIfEnabled(fixedNumber.toString(), displayOptions);
+  }
+
+  private groupIfEnabled(value: string, displayOptions: DisplayOptions): string {
+    return displayOptions.groupThousands ? applyThousandsSeparator(value) : value;
   }
 
   private getDisplayOptions(context: EvaluationContext): DisplayOptions {
@@ -734,6 +739,7 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
       scientificUpperThreshold: context.scientificUpperThreshold,
       scientificLowerThreshold: context.scientificLowerThreshold,
       scientificTrimTrailingZeros: context.scientificTrimTrailingZeros,
+      groupThousands: context.groupThousands,
     };
   }
 

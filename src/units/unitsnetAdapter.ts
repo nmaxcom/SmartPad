@@ -49,6 +49,7 @@ import {
 } from "unitsnet-js";
 import { CompositeUnit, Quantity, UnitParser } from "./quantity";
 import { formatDimension } from "./definitions";
+import { applyThousandsSeparator } from "../utils/numberFormatting";
 
 // Type for any unitsnet-js value - using any for now to avoid complex type issues
 type UnitsNetValue = any;
@@ -1142,6 +1143,7 @@ export class SmartPadQuantity {
       scientificLowerThreshold?: number;
       scientificTrimTrailingZeros?: boolean;
       preferBaseUnit?: boolean;
+      groupThousands?: boolean;
     }
   ): string {
     const baseQuantity = options?.preferBaseUnit ? this.toBaseUnit() : this;
@@ -1200,10 +1202,11 @@ export class SmartPadQuantity {
       scientificUpperThreshold?: number;
       scientificLowerThreshold?: number;
       scientificTrimTrailingZeros?: boolean;
+      groupThousands?: boolean;
     }
   ): string {
-    if (!isFinite(value)) return "Infinity";
-    if (value === 0) return "0";
+    if (!isFinite(value)) return this.groupIfEnabled("Infinity", options);
+    if (value === 0) return this.groupIfEnabled("0", options);
     const abs = Math.abs(value);
     // Scientific notation for very large/small values to align with plain math formatting
     const upperThreshold = options?.scientificUpperThreshold ?? 1e12;
@@ -1221,15 +1224,22 @@ export class SmartPadQuantity {
       abs >= upperThreshold ||
       (abs > 0 && lowerThreshold > 0 && abs < lowerThreshold)
     ) {
-      return formatScientific(value);
+      return this.groupIfEnabled(formatScientific(value), options);
     }
-    if (Number.isInteger(value)) return value.toString();
+    if (Number.isInteger(value)) return this.groupIfEnabled(value.toString(), options);
     const fixed = value.toFixed(precision);
     const fixedNumber = parseFloat(fixed);
     if (fixedNumber === 0) {
-      return formatScientific(value);
+      return this.groupIfEnabled(formatScientific(value), options);
     }
-    return fixedNumber.toString();
+    return this.groupIfEnabled(fixedNumber.toString(), options);
+  }
+
+  private groupIfEnabled(
+    formatted: string,
+    options?: { groupThousands?: boolean }
+  ): string {
+    return options?.groupThousands ? applyThousandsSeparator(formatted) : formatted;
   }
 
   /**

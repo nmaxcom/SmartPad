@@ -15,6 +15,12 @@ export function SettingsSections() {
     },
     [updateSetting]
   );
+  const handleGroupThousandsToggle = useCallback(
+    (value: boolean) => {
+      updateSetting("groupThousands", value);
+    },
+    [updateSetting]
+  );
 
   const handleScientificUpperChange = useCallback(
     (value: number) => {
@@ -61,6 +67,28 @@ export function SettingsSections() {
               onChange={(e) => handleDecimalPlacesChange(parseInt(e.target.value) || 0)}
               className="settings-number-input"
             />
+          </div>
+        </div>
+
+        <div className="settings-item">
+          <div className="settings-item-info">
+            <label htmlFor="group-thousands" className="settings-label">
+              Group thousands with commas
+            </label>
+            <p className="settings-description">
+              Insert comma separators (e.g., 1,234,567) in standard notation results for readability.
+            </p>
+          </div>
+          <div className="settings-control">
+            <label className="toggle-switch">
+              <input
+                id="group-thousands"
+                type="checkbox"
+                checked={settings.groupThousands}
+                onChange={(e) => handleGroupThousandsToggle(e.target.checked)}
+              />
+              <span className="toggle-slider"></span>
+            </label>
           </div>
         </div>
 

@@ -238,6 +238,7 @@ Behavior and criteria
 - Decimal places and unit display preferences affect widget formatting only, not paragraph text.
 - Global settings are applied consistently across evaluators.
 - Scientific notation threshold and rounding policy are consistent across units and pure math.
+- There is a setting to toggle comma-based thousand separators so standard-notation results (including the variable panel) can show `1,000,000` without changing the typed expression or scientific notation.
 
 ## 10. Errors and messages
 

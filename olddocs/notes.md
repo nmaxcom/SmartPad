@@ -16,9 +16,20 @@ Value by percent part	5% of what is 6 EUR
 Value by percent addition	5% on what is 6 EUR
 Value by percent subtraction	5% off what is 6 EUR
 
+# Big ticket items
+lists
+time
+plots
+FX
 # bugs/ideas
+- Parser confused by 3 digit groupings (frontend also renders them together in groups of 3):
+a=2000=>2,000
+b=2,000=>2, 0
+c=2,1222=>2, 1,222
+d=222,2,3=>⚠️ Combined assignment parse error: Unexpected token: comma
 
-- adding separator 000,000,000...
+- make language more natural with aliases? funcname(var) -> funcname of var;
+- add stuff to tour template: trigonometry, 
 - comparar escenarios a la vez, rollo tab partida para ver lado vs lado? q otro formato si no? 
 - show easily written and read equation/unit when hovering ex: 34m^kg^2/ms^2
 - introduce week, month, year?

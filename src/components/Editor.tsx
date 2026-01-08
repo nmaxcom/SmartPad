@@ -205,6 +205,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
             scientificUpperThreshold: Math.pow(10, settings.scientificUpperExponent),
             scientificLowerThreshold: Math.pow(10, settings.scientificLowerExponent),
             scientificTrimTrailingZeros: settings.scientificTrimTrailingZeros,
+            groupThousands: settings.groupThousands,
             dateDisplayFormat: settings.dateDisplayFormat,
             dateLocale: getDateLocaleEffective(),
             functionCallDepth: 0,
@@ -322,6 +323,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       settings.scientificUpperExponent,
       settings.scientificLowerExponent,
       settings.scientificTrimTrailingZeros,
+      settings.groupThousands,
     ]
   );
 

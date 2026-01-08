@@ -70,6 +70,7 @@ export interface SettingsState {
   scientificUpperExponent: number;
   scientificLowerExponent: number;
   scientificTrimTrailingZeros: boolean;
+  groupThousands: boolean;
   dateLocaleMode: "system" | "custom";
   dateLocaleOverride: string;
   dateDisplayFormat: "iso" | "locale";

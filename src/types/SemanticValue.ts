@@ -1,3 +1,5 @@
+import { applyThousandsSeparator } from "../utils/numberFormatting";
+
 /**
  * @file SemanticValue - Base class for typed values in SmartPad
  * @description This module provides the foundation for SmartPad's semantic type system.
@@ -27,6 +29,7 @@ export interface DisplayOptions {
   dateLocale?: string;
   preferBaseUnit?: boolean;
   showType?: boolean;
+  groupThousands?: boolean;
 }
 
 /**
@@ -151,8 +154,8 @@ export abstract class SemanticValue {
    * Helper method to format numbers consistently across all semantic values
    */
   protected formatNumber(value: number, precision = 6, options?: DisplayOptions): string {
-    if (!isFinite(value)) return "Infinity";
-    if (value === 0) return "0";
+    if (!isFinite(value)) return this.applyGrouping("Infinity", options);
+    if (value === 0) return this.applyGrouping("0", options);
     
     // Handle very large or very small numbers with scientific notation
     const abs = Math.abs(value);
@@ -171,21 +174,25 @@ export abstract class SemanticValue {
       abs >= upperThreshold ||
       (abs > 0 && lowerThreshold > 0 && abs < lowerThreshold)
     ) {
-      return formatScientific(value, precision);
+      return this.applyGrouping(formatScientific(value, precision), options);
     }
     
     // For regular numbers, remove trailing zeros
     if (Number.isInteger(value)) {
-      return value.toString();
+      return this.applyGrouping(value.toString(), options);
     }
 
     const fixed = value.toFixed(precision);
     const fixedNumber = parseFloat(fixed);
     if (fixedNumber === 0) {
-      return formatScientific(value, precision);
+      return this.applyGrouping(formatScientific(value, precision), options);
     }
 
-    return fixedNumber.toString();
+    return this.applyGrouping(fixedNumber.toString(), options);
+  }
+
+  private applyGrouping(value: string, options?: DisplayOptions): string {
+    return options?.groupThousands ? applyThousandsSeparator(value) : value;
   }
 
   /**

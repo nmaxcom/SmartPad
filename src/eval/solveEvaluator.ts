@@ -1186,6 +1186,7 @@ export class SolveEvaluator implements NodeEvaluator {
       scientificTrimTrailingZeros: context.scientificTrimTrailingZeros,
       dateFormat: context.dateDisplayFormat,
       dateLocale: context.dateLocale,
+      groupThousands: context.groupThousands,
     };
   }
 }

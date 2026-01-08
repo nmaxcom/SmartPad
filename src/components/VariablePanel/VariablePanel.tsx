@@ -14,6 +14,7 @@ function VariablePanel() {
     scientificTrimTrailingZeros: settings.scientificTrimTrailingZeros,
     dateFormat: settings.dateDisplayFormat,
     dateLocale: getDateLocaleEffective(),
+    groupThousands: settings.groupThousands,
   };
 
   // Convert the Map to an array for easier rendering

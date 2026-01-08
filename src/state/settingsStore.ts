@@ -6,6 +6,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
   scientificUpperExponent: 12,
   scientificLowerExponent: -4,
   scientificTrimTrailingZeros: true,
+  groupThousands: false,
   dateLocaleMode: "system",
   dateLocaleOverride: "",
   dateDisplayFormat: "iso",
