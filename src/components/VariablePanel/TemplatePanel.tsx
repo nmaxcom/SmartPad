@@ -496,6 +496,42 @@ trip = 2024-09-12 08:00 +05:00
 trip + 3 days + 4 hours =>
 trip in UTC =>`,
   },
+  {
+    id: "nerd-stuff",
+    emoji: "🤓",
+    name: "Nerd stuff",
+    content: `# Nerd stuff
+# Daily ranges default to a single calendar day when the step is omitted
+2026-01-01..2026-01-05 =>2026-01-01, 2026-01-02, 2026-01-03, 2026-01-04, 2026-01-05
+
+# Explicit day step states the increment clearly
+2026-01-01..2026-01-05 step 1 day =>2026-01-01, 2026-01-02, 2026-01-03, 2026-01-04, 2026-01-05
+
+# Weekly steps jump by seven-day intervals
+2026-01-01..2026-02-01 step 1 week =>2026-01-01, 2026-01-08, 2026-01-15, 2026-01-22, 2026-01-29
+
+# Monthly stepping sticks to the same day-of-month when possible
+2026-01-15..2026-05-15 step 1 month =>2026-01-15, 2026-02-15, 2026-03-15, 2026-04-15, 2026-05-15
+
+# Month-end dates fall back to the last valid day
+2026-01-31..2026-05-31 step 1 month =>2026-01-31, 2026-02-28, 2026-03-31, 2026-04-30, 2026-05-31
+
+# Time ranges require an explicit duration step for minutes/hours
+09:00..11:00 step 30 min =>09:00, 09:30, 10:00, 10:30, 11:00
+
+# Datetime ranges are timezone-aware based on the configured zone
+2026-01-01 09:00..2026-01-01 12:00 step 1 h =>2026-01-01 09:00, 10:00, 11:00, 12:00
+
+# Guardrails block huge spans when the step granularity is too small
+09:00..23:59 step 1 min =>⚠️ range too large (... exceeds configured limit)
+
+# Durations must include explicit units; raw numbers trigger an error
+2026-01-01..2026-01-05 step 2 =>⚠️ Date ranges require a duration step (e.g., 1 day)
+
+# Inclusive endpoint when the last step lands exactly on the end
+09:00..10:00 step 40 min =>09:00, 09:40
+`,
+  },
 ];
 
 function TemplatePanel() {

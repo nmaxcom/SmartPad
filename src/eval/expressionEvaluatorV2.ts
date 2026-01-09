@@ -21,6 +21,7 @@ import {
   SemanticValue,
   NumberValue,
   UnitValue,
+  DateValue,
   CurrencyUnitValue,
   CurrencyValue,
   CurrencySymbol,
