@@ -17,12 +17,13 @@ import {
   MathResultRenderNode,
   ErrorRenderNode,
 } from "./renderNodes";
-import { 
+import {
   SemanticValue,
-  NumberValue, 
+  NumberValue,
   UnitValue,
   CurrencyUnitValue,
   CurrencyValue,
+  CurrencySymbol,
   SymbolicValue,
   ErrorValue,
   SemanticValueTypes,
@@ -30,9 +31,55 @@ import {
   SemanticParsers,
   SemanticArithmetic,
   ListValue,
+  createListResult,
+  mapListItems,
 } from "../types";
+import { getListMaxLength } from "../types/listConfig";
 import { parseAndEvaluateExpression } from "../parsing/expressionParser";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
+import { splitTopLevelCommas, inferListDelimiter } from "../utils/listExpression";
+import { PercentageValue } from "../types/PercentageValue";
+import { isAggregatorExpression } from "./aggregatorUtils";
+
+function applyAbsToSemanticValue(value: SemanticValue): SemanticValue {
+  if (!value.isNumeric()) {
+    return ErrorValue.typeError("abs expects a numeric argument", "number", value.getType());
+  }
+
+  switch (value.getType()) {
+    case "number":
+      return NumberValue.from(Math.abs(value.getNumericValue()));
+    case "unit": {
+      const unitValue = value as UnitValue;
+      return UnitValue.fromValueAndUnit(
+        Math.abs(unitValue.getNumericValue()),
+        unitValue.getUnit()
+      );
+    }
+    case "currency": {
+      const currency = value as CurrencyValue;
+      return new CurrencyValue(currency.getSymbol(), Math.abs(currency.getNumericValue()));
+    }
+    case "currencyUnit": {
+      const currencyUnit = value as CurrencyUnitValue;
+      return new CurrencyUnitValue(
+        currencyUnit.getSymbol() as CurrencySymbol,
+        Math.abs(currencyUnit.getNumericValue()),
+        currencyUnit.getUnit(),
+        currencyUnit.isPerUnit()
+      );
+    }
+    case "percentage": {
+      const percentage = value as PercentageValue;
+      return new PercentageValue(
+        Math.abs(percentage.getDisplayPercentage()),
+        percentage.getContext()
+      );
+    }
+    default:
+      return NumberValue.from(Math.abs(value.getNumericValue()));
+  }
+}
 
 /**
  * Simple expression parser for basic arithmetic
@@ -135,6 +182,9 @@ export class SimpleExpressionParser {
     if (variable) {
       const value = (variable as any).value;
       if (value instanceof SemanticValue) {
+        if (SemanticValueTypes.isList(value)) {
+          return resolveSymbolicListForDisplay(value as ListValue, context);
+        }
         return value;
       }
       if (typeof value === 'number') {
@@ -321,6 +371,9 @@ export class SimpleExpressionParser {
         }
         const value = (variable as any).value;
         if (value instanceof SemanticValue) {
+          if (SemanticValueTypes.isList(value)) {
+            return resolveSymbolicListForDisplay(value as ListValue, context);
+          }
           return value;
         }
         if (typeof value === "number") {
@@ -347,6 +400,45 @@ export class SimpleExpressionParser {
         }
 
         return this.evaluateFunction(component.value, args, context);
+      }
+
+      case "listAccess": {
+        if (!component.access) {
+          return ErrorValue.semanticError("Invalid list access expression");
+        }
+        const baseValue = this.resolveComponentValue(component.access.base, context);
+        if (SemanticValueTypes.isError(baseValue)) {
+          return baseValue;
+        }
+        if (!SemanticValueTypes.isList(baseValue)) {
+          return ErrorValue.semanticError("Cannot index a non-list value");
+        }
+        const listValue = baseValue as ListValue;
+        if (component.access.kind === "index") {
+          if (!component.access.indexComponents?.length) {
+            return ErrorValue.semanticError("Empty index expression");
+          }
+          const idxValue = this.evaluateComponentList(component.access.indexComponents, context);
+          if (SemanticValueTypes.isError(idxValue)) {
+            return idxValue;
+          }
+          return evaluateListIndex(listValue, idxValue);
+        }
+        if (component.access.kind === "slice") {
+          if (!component.access.startComponents?.length || !component.access.endComponents?.length) {
+            return ErrorValue.semanticError("Slice requires start and end expressions");
+          }
+          const startValue = this.evaluateComponentList(component.access.startComponents, context);
+          if (SemanticValueTypes.isError(startValue)) {
+            return startValue;
+          }
+          const endValue = this.evaluateComponentList(component.access.endComponents, context);
+          if (SemanticValueTypes.isError(endValue)) {
+            return endValue;
+          }
+          return evaluateListSlice(listValue, startValue, endValue);
+        }
+        return ErrorValue.semanticError("Unsupported list access operation");
       }
       default:
         return ErrorValue.semanticError(`Unsupported component: "${component.type}"`);
@@ -416,15 +508,27 @@ export class SimpleExpressionParser {
       "exp",
       "max",
       "min",
+      "range",
+      "sort",
     ]);
-    const listFunctionNames = new Set(["sum", "total", "avg", "mean", "median", "count", "stddev", "min", "max"]);
+    const listFunctionNames = new Set(["sum", "total", "avg", "mean", "median", "count", "stddev", "min", "max", "range"]);
 
     if (!builtIns.has(funcName)) {
       return null;
     }
 
     if (listFunctionNames.has(funcName)) {
-      const resolvedArgs = resolveFunctionArguments(args.positional, context);
+      const allowSingleScalar = false;
+      const listArgs = collectListFunctionValues(
+        args.positional,
+        context,
+        funcName,
+        allowSingleScalar
+      );
+      if (listArgs instanceof ErrorValue) {
+        return listArgs;
+      }
+      const resolvedArgs = listArgs;
       switch (funcName) {
         case "sum":
         case "total":
@@ -435,16 +539,44 @@ export class SimpleExpressionParser {
         case "median":
           return medianSemanticValues(resolvedArgs);
         case "count":
-          return NumberValue.from(filterNumericItems(resolvedArgs).length);
+          return NumberValue.from(resolvedArgs.length);
         case "stddev":
           return standardDeviation(resolvedArgs);
         case "min":
           return extremumSemanticValue(resolvedArgs, (next, current) => next < current);
         case "max":
           return extremumSemanticValue(resolvedArgs, (next, current) => next > current);
+        case "range":
+          return rangeSemanticValues(resolvedArgs);
         default:
           return null;
       }
+    }
+
+    if (
+      funcName === "abs" &&
+      args.positional.length === 1 &&
+      SemanticValueTypes.isList(args.positional[0])
+    ) {
+      return mapListItems(
+        args.positional[0] as ListValue,
+        (value) => applyAbsToSemanticValue(value)
+      );
+    }
+
+    if (funcName === "sort") {
+      if (args.positional.length === 0) {
+        return ErrorValue.semanticError("sort expects a list");
+      }
+      const listArg = args.positional[0];
+      if (!SemanticValueTypes.isList(listArg)) {
+        return ErrorValue.semanticError("sort expects a list");
+      }
+      const directionArg = args.positional[1];
+      const descending = directionArg
+        ? directionArg.toString().trim().toLowerCase() === "desc"
+        : false;
+      return sortListValue(listArg as ListValue, descending);
     }
 
     const hasSymbolic =
@@ -658,7 +790,7 @@ export class SimpleExpressionParser {
 
     return result;
   }
-  
+
   /**
    * Perform arithmetic operation between two semantic values
    */
@@ -706,6 +838,29 @@ const filterNumericItems = (values: SemanticValue[]): SemanticValue[] => {
   return flattenArgumentList(values).filter((value) => value.isNumeric());
 };
 
+function collectListFunctionValues(
+  values: SemanticValue[],
+  context: EvaluationContext,
+  functionName: string,
+  allowSingleScalar = false
+): SemanticValue[] | ErrorValue {
+  if (values.length === 0) {
+    return [];
+  }
+  if (values.length === 1 && !SemanticValueTypes.isList(values[0])) {
+    if (allowSingleScalar) {
+      return resolveFunctionArguments(values, context);
+    }
+    if (functionName === "count" && values[0].getType() === "number") {
+      return ErrorValue.semanticError("Expected list");
+    }
+    return ErrorValue.semanticError(
+      `${functionName}() expects a list, got ${values[0].getType()} value`
+    );
+  }
+  return resolveFunctionArguments(values, context);
+}
+
 const sumSemanticValues = (values: SemanticValue[]): SemanticValue => {
   const numericItems = filterNumericItems(values);
   if (numericItems.length === 0) {
@@ -742,14 +897,18 @@ const medianSemanticValues = (values: SemanticValue[]): SemanticValue => {
   if (numericItems.length === 0) {
     return createZeroNumberValue();
   }
-  const numbers = numericItems.map((value) => value.getNumericValue());
-  numbers.sort((a, b) => a - b);
-  const mid = Math.floor(numbers.length / 2);
-  const median =
-    numbers.length % 2 === 1
-      ? numbers[mid]
-      : (numbers[mid - 1] + numbers[mid]) / 2;
-  return NumberValue.from(median);
+  const sorted = [...numericItems].sort(
+    (a, b) => a.getNumericValue() - b.getNumericValue()
+  );
+  const mid = Math.floor(sorted.length / 2);
+  if (sorted.length % 2 === 1) {
+    return sorted[mid];
+  }
+  const pairSum = SemanticArithmetic.add(sorted[mid - 1], sorted[mid]);
+  if (SemanticValueTypes.isError(pairSum)) {
+    return pairSum;
+  }
+  return SemanticArithmetic.divide(pairSum, NumberValue.from(2));
 };
 
 const standardDeviation = (values: SemanticValue[]): SemanticValue => {
@@ -757,13 +916,31 @@ const standardDeviation = (values: SemanticValue[]): SemanticValue => {
   if (numericItems.length === 0) {
     return createZeroNumberValue();
   }
-  const numericArray = numericItems.map((value) => value.getNumericValue());
-  const meanValue =
-    numericArray.reduce((sum, next) => sum + next, 0) / numericArray.length;
-  const variance =
-    numericArray.reduce((sum, next) => sum + Math.pow(next - meanValue, 2), 0) /
-    Math.max(numericArray.length, 1);
-  return NumberValue.from(Math.sqrt(variance));
+  const meanValue = averageSemanticValues(numericItems);
+  if (SemanticValueTypes.isError(meanValue)) {
+    return meanValue;
+  }
+  const squaredDiffs: SemanticValue[] = [];
+  for (const item of numericItems) {
+    const difference = SemanticArithmetic.subtract(item, meanValue);
+    if (SemanticValueTypes.isError(difference)) {
+      return difference;
+    }
+    const squared = SemanticArithmetic.multiply(difference, difference);
+    if (SemanticValueTypes.isError(squared)) {
+      return squared;
+    }
+    squaredDiffs.push(squared);
+  }
+  const sumOfSquares = sumSemanticValues(squaredDiffs);
+  if (SemanticValueTypes.isError(sumOfSquares)) {
+    return sumOfSquares;
+  }
+  const variance = SemanticArithmetic.divide(sumOfSquares, NumberValue.from(numericItems.length));
+  if (SemanticValueTypes.isError(variance)) {
+    return variance;
+  }
+  return SemanticArithmetic.power(variance, 0.5);
 };
 
 const extremumSemanticValue = (
@@ -774,15 +951,173 @@ const extremumSemanticValue = (
   if (numericItems.length === 0) {
     return createZeroNumberValue();
   }
-  let bestValue = numericItems[0].getNumericValue();
+  let bestItem = numericItems[0];
+  let bestValue = bestItem.getNumericValue();
   for (const item of numericItems.slice(1)) {
     const currentValue = item.getNumericValue();
     if (comparator(currentValue, bestValue)) {
       bestValue = currentValue;
+      bestItem = item;
     }
   }
-  return NumberValue.from(bestValue);
+  return bestItem;
 };
+
+const rangeSemanticValues = (values: SemanticValue[]): SemanticValue => {
+  const numericItems = filterNumericItems(values);
+  if (numericItems.length === 0) {
+    return createZeroNumberValue();
+  }
+  const minValue = extremumSemanticValue(numericItems, (next, current) => next < current);
+  const maxValue = extremumSemanticValue(numericItems, (next, current) => next > current);
+  const difference = SemanticArithmetic.subtract(maxValue, minValue);
+  if (SemanticValueTypes.isError(difference)) {
+    return difference;
+  }
+  return difference;
+};
+
+const buildListValue = (items: SemanticValue[]): SemanticValue => {
+  return createListResult(items);
+};
+
+const sortListValue = (list: ListValue, descending: boolean): SemanticValue => {
+  const items = list.getItems();
+
+  if (items.length <= 1) {
+    return buildListValue(items);
+  }
+
+  const base = items[0];
+  for (const item of items.slice(1)) {
+    const diff = SemanticArithmetic.subtract(item, base);
+    if (SemanticValueTypes.isError(diff)) {
+      return ErrorValue.semanticError("Cannot sort: incompatible units");
+    }
+  }
+
+  const sorted = [...items].sort(
+    (a, b) => a.getNumericValue() - b.getNumericValue()
+  );
+  const result = descending ? sorted.reverse() : sorted;
+  return buildListValue(result);
+};
+
+const parseRawIntegerIndex = (value: SemanticValue): number | ErrorValue => {
+  if (!value.isNumeric()) {
+    return ErrorValue.typeError("Index must be numeric", "number", value.getType());
+  }
+  const raw = value.getNumericValue();
+  if (!Number.isFinite(raw)) {
+    return ErrorValue.semanticError("Index must be finite");
+  }
+  if (!Number.isInteger(raw)) {
+    return ErrorValue.semanticError("Index must be an integer");
+  }
+  if (raw === 0) {
+    return ErrorValue.semanticError("Indexing starts at 1");
+  }
+  return raw;
+};
+
+const convertToZeroBased = (raw: number, length: number): number => {
+  return raw > 0 ? raw - 1 : length + raw;
+};
+
+const evaluateListIndex = (list: ListValue, indexValue: SemanticValue): SemanticValue => {
+  const items = list.getItems();
+  if (items.length === 0) {
+    return ErrorValue.semanticError("Index out of range (size 0)");
+  }
+  const raw = parseRawIntegerIndex(indexValue);
+  if (typeof raw !== "number") {
+    return raw;
+  }
+  const index = convertToZeroBased(raw, items.length);
+  if (index < 0 || index >= items.length) {
+    return ErrorValue.semanticError(`Index out of range (size ${items.length})`);
+  }
+  return items[index];
+};
+
+const evaluateListSlice = (
+  list: ListValue,
+  startValue: SemanticValue,
+  endValue: SemanticValue
+): SemanticValue => {
+  const items = list.getItems();
+  if (items.length === 0) {
+    return buildListValue([]);
+  }
+  const rawStart = parseRawIntegerIndex(startValue);
+  if (typeof rawStart !== "number") {
+    return rawStart;
+  }
+  const rawEnd = parseRawIntegerIndex(endValue);
+  if (typeof rawEnd !== "number") {
+    return rawEnd;
+  }
+  const startIndex = convertToZeroBased(rawStart, items.length);
+  const endIndex = convertToZeroBased(rawEnd, items.length);
+  if (startIndex > endIndex) {
+    return ErrorValue.semanticError("Range can't go downwards");
+  }
+  const clampedStart = Math.max(0, Math.min(items.length - 1, startIndex));
+  const clampedEnd = Math.max(0, Math.min(items.length - 1, endIndex));
+  const slice = items.slice(clampedStart, clampedEnd + 1);
+  return buildListValue(slice);
+};
+
+type WherePredicate = {
+  comparator: string;
+  otherExpression: string;
+  itemOnLeft: boolean;
+};
+
+const comparatorFunctions: Record<string, (diff: number) => boolean> = {
+  ">": (diff) => diff > 0,
+  "<": (diff) => diff < 0,
+  ">=": (diff) => diff >= 0,
+  "<=": (diff) => diff <= 0,
+  "==": (diff) => diff === 0,
+  "!=": (diff) => diff !== 0,
+};
+
+const comparatorPrefixRegex = /^(>=|<=|==|!=|>|<)\s*(.+)$/;
+const comparatorSuffixRegex = /^(.+?)\s*(>=|<=|==|!=|>|<)\s*$/;
+
+function parseWherePredicate(predicate: string): WherePredicate | ErrorValue {
+  const trimmed = predicate.trim();
+  if (!trimmed) {
+    return ErrorValue.semanticError("Empty where predicate");
+  }
+  const prefixMatch = trimmed.match(comparatorPrefixRegex);
+  if (prefixMatch) {
+    return {
+      comparator: prefixMatch[1],
+      otherExpression: prefixMatch[2].trim(),
+      itemOnLeft: true,
+    };
+  }
+  const suffixMatch = trimmed.match(comparatorSuffixRegex);
+  if (suffixMatch) {
+    return {
+      comparator: suffixMatch[2],
+      otherExpression: suffixMatch[1].trim(),
+      itemOnLeft: false,
+    };
+  }
+  return ErrorValue.semanticError("Unsupported where predicate");
+}
+
+function evaluatePredicateExpression(
+  expression: string,
+  context: EvaluationContext
+): SemanticValue {
+  const components = parseExpressionComponents(expression);
+  const result = SimpleExpressionParser.parseComponents(components, context);
+  return result || ErrorValue.semanticError(`Invalid expression in predicate: "${expression}"`);
+}
 
 const resolveSymbolicReference = (
   value: SemanticValue,
@@ -819,6 +1154,16 @@ const resolveFunctionArguments = (
   return resolved;
 };
 
+const resolveSymbolicListForDisplay = (
+  list: ListValue,
+  context: EvaluationContext
+): SemanticValue => {
+  const resolvedItems = list
+    .getItems()
+    .map((item) => resolveSymbolicReference(item, context) ?? item);
+  return createListResult(resolvedItems, list.getDelimiter());
+};
+
 /**
  * Semantic-aware expression evaluator
  * Handles simple arithmetic and delegates complex operations to specialized evaluators
@@ -836,6 +1181,14 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
     const expr = (node as ExpressionNode).expression;
     
     if (this.containsFunctionCall(expr)) {
+      return true;
+    }
+
+    if (/\bwhere\b/i.test(expr)) {
+      return true;
+    }
+
+    if (this.containsListAccess(expr)) {
       return true;
     }
 
@@ -863,6 +1216,52 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
     const exprNode = node as ExpressionNode;
     const conversion = this.extractConversionSuffix(exprNode.expression);
     const expression = conversion ? conversion.baseExpression : exprNode.expression;
+    const whereMatch = expression.match(/(.+?)\bwhere\b(.+)/i);
+    if (whereMatch) {
+      const filtered = this.evaluateWhereExpression(
+        whereMatch[1].trim(),
+        whereMatch[2].trim(),
+        context
+      );
+      if (SemanticValueTypes.isError(filtered)) {
+        return this.createErrorNode(
+          (filtered as ErrorValue).getMessage(),
+          exprNode.expression,
+          context.lineNumber
+        );
+      }
+      if (!filtered) {
+        return this.createErrorNode(
+          "Cannot evaluate where expression",
+          exprNode.expression,
+          context.lineNumber
+        );
+      }
+      return this.createMathResultNode(
+        exprNode.expression,
+        filtered,
+        context.lineNumber,
+        this.getDisplayOptions(context)
+      );
+    }
+    const listValue = this.tryBuildListFromExpression(expression, context);
+    if (listValue) {
+      if (SemanticValueTypes.isError(listValue)) {
+        return this.createErrorNode(
+          (listValue as ErrorValue).getMessage(),
+          exprNode.expression,
+          context.lineNumber
+        );
+      }
+
+      return this.createMathResultNode(
+        exprNode.expression,
+        this.prepareDisplayValue(listValue, context),
+        context.lineNumber,
+        this.getDisplayOptions(context)
+      );
+    }
+
     const components = conversion
       ? parseExpressionComponents(expression)
       : exprNode.components;
@@ -880,6 +1279,18 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       }
       // Function calls or expression components
       else if (this.containsFunctionCall(expression)) {
+        const componentResult = SimpleExpressionParser.parseComponents(
+          components,
+          context
+        );
+        if (componentResult) {
+          result = componentResult;
+        } else {
+          result = ErrorValue.semanticError(`Unsupported expression: "${expression}"`);
+        }
+      }
+      // List access expressions (e.g., indexing/slicing)
+      else if (this.containsListAccess(expression)) {
         const componentResult = SimpleExpressionParser.parseComponents(
           components,
           context
@@ -930,12 +1341,22 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
         );
       }
 
+      const baseDisplayOptions = this.getDisplayOptions(context);
+      const displayOptions = {
+        ...baseDisplayOptions,
+        preferBaseUnit: !!conversion,
+        forceUnit: !!conversion,
+        precision: isAggregatorExpression(exprNode.expression)
+          ? 4
+          : baseDisplayOptions.precision,
+      };
+      const displayValue = this.prepareDisplayValue(result, context);
       // Create render node
       return this.createMathResultNode(
         exprNode.expression,
-        result,
+        displayValue,
         context.lineNumber,
-        this.getDisplayOptions(context)
+        displayOptions
       );
       
     } catch (error) {
@@ -987,6 +1408,10 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
     return /[a-zA-Z_][a-zA-Z0-9_\s]*\s*\(/.test(expr);
   }
 
+  private containsListAccess(expr: string): boolean {
+    return /\[[^\]]+\]/.test(expr);
+  }
+
   private extractConversionSuffix(
     expression: string
   ): { baseExpression: string; target: string; keyword: string } | null {
@@ -1006,6 +1431,21 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
   }
 
   private applyUnitConversion(value: SemanticValue, target: string, keyword: string): SemanticValue {
+    if (SemanticValueTypes.isList(value)) {
+      const converted: SemanticValue[] = [];
+      for (const item of (value as ListValue).getItems()) {
+        const result = this.convertSingleValue(item, target, keyword);
+        if (SemanticValueTypes.isError(result)) {
+          return result;
+        }
+        converted.push(result);
+      }
+      return buildListValue(converted);
+    }
+    return this.convertSingleValue(value, target, keyword);
+  }
+
+  private convertSingleValue(value: SemanticValue, target: string, keyword: string): SemanticValue {
     const parsed = this.parseConversionTarget(target);
     if (!parsed) {
       return ErrorValue.semanticError(`Expected unit after '${keyword}'`);
@@ -1036,6 +1476,69 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
     }
 
     return ErrorValue.semanticError("Cannot convert non-unit value");
+  }
+
+  private evaluateWhereExpression(
+    listExpr: string,
+    predicateExpr: string,
+    context: EvaluationContext
+  ): SemanticValue {
+    const listComponents = parseExpressionComponents(listExpr);
+    const listValue = SimpleExpressionParser.parseComponents(listComponents, context);
+
+    if (!listValue) {
+      return ErrorValue.semanticError(`Cannot evaluate list expression: "${listExpr}"`);
+    }
+
+    if (SemanticValueTypes.isError(listValue)) {
+      return listValue;
+    }
+
+    if (!SemanticValueTypes.isList(listValue)) {
+      return ErrorValue.semanticError("where expects a list");
+    }
+
+    const predicate = parseWherePredicate(predicateExpr);
+    if (predicate instanceof ErrorValue) {
+      return predicate;
+    }
+
+    if (!predicate.otherExpression) {
+      return ErrorValue.semanticError("Missing predicate expression");
+    }
+
+    const otherValue = evaluatePredicateExpression(predicate.otherExpression, context);
+    if (SemanticValueTypes.isError(otherValue)) {
+      return otherValue;
+    }
+
+    console.log("[WHERE EVAL] otherValue", otherValue.getType(), otherValue.toString());
+
+    const comparatorFn = comparatorFunctions[predicate.comparator];
+    if (!comparatorFn) {
+      return ErrorValue.semanticError(`Unsupported comparator: ${predicate.comparator}`);
+    }
+
+    const filteredItems: SemanticValue[] = [];
+    for (const item of (listValue as ListValue).getItems()) {
+      const difference = predicate.itemOnLeft
+        ? SemanticArithmetic.subtract(item, otherValue)
+        : SemanticArithmetic.subtract(otherValue, item);
+
+      if (SemanticValueTypes.isError(difference)) {
+        return ErrorValue.semanticError("Cannot compare: incompatible units");
+      }
+
+      if (!difference.isNumeric()) {
+        return ErrorValue.semanticError("Comparison result is not numeric");
+      }
+
+      if (comparatorFn(difference.getNumericValue())) {
+        filteredItems.push(item);
+      }
+    }
+
+    return buildListValue(filteredItems);
   }
 
   private parseConversionTarget(
@@ -1133,6 +1636,13 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       groupThousands: context.groupThousands,
     };
   }
+
+  private prepareDisplayValue(value: SemanticValue, context: EvaluationContext): SemanticValue {
+    if (!SemanticValueTypes.isList(value)) {
+      return value;
+    }
+    return resolveSymbolicListForDisplay(value as ListValue, context);
+  }
   
   private createErrorNode(
     message: string,
@@ -1148,6 +1658,89 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       originalRaw: expression,
     };
   }
+
+  private tryBuildListFromExpression(
+    expression: string,
+    context: EvaluationContext
+  ): SemanticValue | null {
+    const segments = splitTopLevelCommas(expression);
+    if (segments.length <= 1) {
+      return null;
+    }
+
+    const items: SemanticValue[] = [];
+    for (let idx = 0; idx < segments.length; idx += 1) {
+      const segment = segments[idx];
+      const trimmed = segment.trim();
+      if (!trimmed) {
+        if (idx === segments.length - 1) {
+          continue;
+        }
+        return ErrorValue.semanticError("Cannot create list: empty value");
+      }
+
+      const evaluated = this.evaluateListSegment(trimmed, context);
+      if (!evaluated) {
+        return null;
+      }
+      if (SemanticValueTypes.isError(evaluated)) {
+        return evaluated;
+      }
+      items.push(evaluated);
+    }
+
+    return createListResult(items, inferListDelimiter(expression));
+  }
+
+  private evaluateListSegment(
+    segment: string,
+    context: EvaluationContext
+  ): SemanticValue | null {
+    const trimmed = segment.trim();
+    if (!trimmed) {
+      return null;
+    }
+
+    const literal = SemanticParsers.parse(trimmed);
+    if (literal) {
+      return literal;
+    }
+
+    const variable = this.evaluateVariableReference(trimmed, context);
+    if (variable) {
+      return variable;
+    }
+
+    let components: ExpressionComponent[] = [];
+    try {
+      components = parseExpressionComponents(trimmed);
+    } catch {
+      components = [];
+    }
+
+    if (components.length > 0) {
+      const evaluated = SimpleExpressionParser.parseComponents(components, context);
+      if (evaluated) {
+        return evaluated;
+      }
+    }
+
+    const arithmetic = SimpleExpressionParser.parseArithmetic(trimmed, context);
+    if (arithmetic) {
+      return arithmetic;
+    }
+
+    const evalResult = parseAndEvaluateExpression(trimmed, context.variableContext);
+    if (evalResult.error) {
+      if (/Undefined variable|not defined/i.test(evalResult.error)) {
+        return SymbolicValue.from(trimmed);
+      }
+      return ErrorValue.semanticError(evalResult.error);
+    }
+
+    return NumberValue.from(evalResult.value);
+  }
+
 }
 
 export const defaultExpressionEvaluatorV2 = new ExpressionEvaluatorV2();

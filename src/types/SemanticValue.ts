@@ -28,6 +28,7 @@ export interface DisplayOptions {
   dateFormat?: 'iso' | 'locale';
   dateLocale?: string;
   preferBaseUnit?: boolean;
+  forceUnit?: boolean;
   showType?: boolean;
   groupThousands?: boolean;
 }

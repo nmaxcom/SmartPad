@@ -10,6 +10,7 @@
 import {
   ASTNode,
   CombinedAssignmentNode,
+  ExpressionComponent,
   isCombinedAssignmentNode,
 } from "../parsing/ast";
 import { NodeEvaluator, EvaluationContext } from "./registry";
@@ -28,10 +29,14 @@ import {
   SemanticValue,
   SemanticValueTypes,
   SymbolicValue,
+  createListResult,
+  ListValue,
 } from "../types";
+import { inferListDelimiter, splitTopLevelCommas } from "../utils/listExpression";
 import { parseAndEvaluateExpression } from "../parsing/expressionParser";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
 import { SimpleExpressionParser } from "./expressionEvaluatorV2";
+import { isAggregatorExpression } from "./aggregatorUtils";
 
 /**
  * Evaluator for combined assignment operations with semantic types
@@ -67,54 +72,66 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
         raw: combNode.raw
       });
       
-      // Parse the expression as a semantic value when it's a literal,
-      // otherwise evaluate via semantic component parsing.
-      let semanticValue =
-        SemanticParsers.parse(expression) ||
-        this.resolveVariableReference(expression, context);
-
-      if (!semanticValue && components.length > 0) {
-        semanticValue = SimpleExpressionParser.parseComponents(
-          components,
-          context
+      const listCandidate = this.tryBuildListFromExpression(expression, context);
+      if (listCandidate && SemanticValueTypes.isError(listCandidate)) {
+        return this.createErrorNode(
+          (listCandidate as ErrorValue).getMessage(),
+          combNode.variableName,
+          combNode.expression,
+          context.lineNumber
         );
       }
 
-      if (!semanticValue) {
-        semanticValue = SimpleExpressionParser.parseArithmetic(
-          expression,
-          context
-        );
-      }
+      let semanticValue: SemanticValue | null = listCandidate;
 
       if (!semanticValue) {
-        const evalResult = parseAndEvaluateExpression(
-          expression,
-          context.variableContext
-        );
-        if (evalResult.error) {
-          if (/Undefined variable|not defined/i.test(evalResult.error)) {
-            semanticValue = SymbolicValue.from(expression);
-          } else {
-            console.warn(
-              "CombinedAssignmentEvaluatorV2: Expression evaluation error:",
-              evalResult.error
-            );
-            return this.createErrorNode(
-              evalResult.error,
-              combNode.variableName,
-              combNode.expression,
-              context.lineNumber
-            );
-          }
+        semanticValue =
+          SemanticParsers.parse(expression) ||
+          this.resolveVariableReference(expression, context);
+
+        if (!semanticValue && components.length > 0) {
+          semanticValue = SimpleExpressionParser.parseComponents(
+            components,
+            context
+          );
         }
+
         if (!semanticValue) {
-          semanticValue = NumberValue.from(evalResult.value);
+          semanticValue = SimpleExpressionParser.parseArithmetic(
+            expression,
+            context
+          );
+        }
+
+        if (!semanticValue) {
+          const evalResult = parseAndEvaluateExpression(
+            expression,
+            context.variableContext
+          );
+          if (evalResult.error) {
+            if (/Undefined variable|not defined/i.test(evalResult.error)) {
+              semanticValue = SymbolicValue.from(expression);
+            } else {
+              console.warn(
+                "CombinedAssignmentEvaluatorV2: Expression evaluation error:",
+                evalResult.error
+              );
+              return this.createErrorNode(
+                evalResult.error,
+                combNode.variableName,
+                combNode.expression,
+                context.lineNumber
+              );
+            }
+          }
+          if (!semanticValue) {
+            semanticValue = NumberValue.from(evalResult.value);
+          }
         }
       }
 
       if (conversion) {
-        semanticValue = this.applyUnitConversion(semanticValue, conversion.target, conversion.keyword);
+      semanticValue = this.applyUnitConversion(semanticValue, conversion.target, conversion.keyword);
       }
 
       if (SemanticValueTypes.isError(semanticValue)) {
@@ -144,7 +161,15 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
       }
       
       // Create combined render node that shows both assignment and result
-      const displayOptions = this.getDisplayOptions(context);
+      const baseDisplayOptions = this.getDisplayOptions(context);
+      const displayOptions = {
+        ...baseDisplayOptions,
+        preferBaseUnit: !!conversion,
+        forceUnit: !!conversion,
+        precision: isAggregatorExpression(expression)
+          ? 4
+          : baseDisplayOptions.precision,
+      };
       const displayValue = SemanticValueTypes.isSymbolic(semanticValue)
         ? this.substituteKnownValues(expression, context, displayOptions)
         : semanticValue.toString(displayOptions);
@@ -265,6 +290,19 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
       return ErrorValue.semanticError(`Expected unit after '${keyword}'`);
     }
 
+    if (SemanticValueTypes.isList(value)) {
+      const listValue = value as ListValue;
+      const convertedItems: SemanticValue[] = [];
+      for (const item of listValue.getItems()) {
+        const converted = this.applyUnitConversion(item, target, keyword);
+        if (SemanticValueTypes.isError(converted)) {
+          return converted;
+        }
+        convertedItems.push(converted);
+      }
+      return createListResult(convertedItems, listValue.getDelimiter());
+    }
+
     if (value.getType() === "unit") {
       try {
         return (value as UnitValue).convertTo(parsed.unit);
@@ -324,6 +362,88 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
     }
 
     return { unit, symbol };
+  }
+
+  private tryBuildListFromExpression(
+    expression: string,
+    context: EvaluationContext
+  ): SemanticValue | null {
+    const segments = splitTopLevelCommas(expression);
+    if (segments.length <= 1) {
+      return null;
+    }
+
+    const items: SemanticValue[] = [];
+    for (let idx = 0; idx < segments.length; idx += 1) {
+      const segment = segments[idx];
+      const trimmed = segment.trim();
+      if (!trimmed) {
+        if (idx === segments.length - 1) {
+          continue;
+        }
+        return ErrorValue.semanticError("Cannot create list: empty value");
+      }
+
+      const resolved = this.evaluateListSegment(trimmed, context);
+      if (!resolved) {
+        return null;
+      }
+      if (SemanticValueTypes.isError(resolved)) {
+        return resolved;
+      }
+      items.push(resolved);
+    }
+
+    return createListResult(items, inferListDelimiter(expression));
+  }
+
+  private evaluateListSegment(
+    segment: string,
+    context: EvaluationContext
+  ): SemanticValue | null {
+    const trimmed = segment.trim();
+    if (!trimmed) {
+      return null;
+    }
+
+    const literal = SemanticParsers.parse(trimmed);
+    if (literal) {
+      return literal;
+    }
+
+    const variable = this.resolveVariableReference(trimmed, context);
+    if (variable) {
+      return variable;
+    }
+
+    let components: ExpressionComponent[] = [];
+    try {
+      components = parseExpressionComponents(trimmed);
+    } catch {
+      components = [];
+    }
+
+    if (components.length > 0) {
+      const evaluated = SimpleExpressionParser.parseComponents(components, context);
+      if (evaluated) {
+        return evaluated;
+      }
+    }
+
+    const arithmetic = SimpleExpressionParser.parseArithmetic(trimmed, context);
+    if (arithmetic) {
+      return arithmetic;
+    }
+
+    const evalResult = parseAndEvaluateExpression(trimmed, context.variableContext);
+    if (evalResult.error) {
+      if (/Undefined variable|not defined/i.test(evalResult.error)) {
+        return SymbolicValue.from(trimmed);
+      }
+      return ErrorValue.semanticError(evalResult.error);
+    }
+
+    return NumberValue.from(evalResult.value);
   }
 
   private substituteKnownValues(

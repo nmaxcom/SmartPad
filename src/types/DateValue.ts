@@ -218,6 +218,11 @@ export class DateValue extends SemanticValue {
       }
     }
 
+    const isCommaSeparatedDigits = /^\s*\d+\s*(?:,\s*\d+\s*)+$/.test(trimmed);
+    if (isCommaSeparatedDigits) {
+      return null;
+    }
+
     const parsed = new Date(trimmed);
     if (!isNaN(parsed.getTime())) {
       const hasTime = /\d{1,2}:\d{2}/.test(trimmed);

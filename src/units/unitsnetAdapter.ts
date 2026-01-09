@@ -1144,10 +1144,11 @@ export class SmartPadQuantity {
       scientificTrimTrailingZeros?: boolean;
       preferBaseUnit?: boolean;
       groupThousands?: boolean;
+      forceUnit?: boolean;
     }
   ): string {
     const baseQuantity = options?.preferBaseUnit ? this.toBaseUnit() : this;
-    const displayQuantity = baseQuantity.getBestDisplayUnit();
+    const displayQuantity = options?.forceUnit ? baseQuantity : baseQuantity.getBestDisplayUnit();
     const value = displayQuantity._value;
     let unit = displayQuantity._unit;
 

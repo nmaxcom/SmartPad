@@ -4,7 +4,7 @@
  * This eliminates the need for string parsing during evaluation and enables early type validation.
  */
 
-import { ExpressionComponent } from './ast';
+import { ExpressionComponent, ListAccessDetails } from './ast';
 import { SemanticParsers, parseListLiteral } from '../types';
 
 /**
@@ -20,7 +20,9 @@ type TokenType =
   | 'unit'
   | 'currency'
   | 'percentage'
-  | 'colon';
+  | 'colon'
+  | 'bracket'
+  | 'range';
 
 interface Token {
   type: TokenType;
@@ -50,23 +52,28 @@ function tokenize(expression: string): Token[] {
       continue;
     }
 
+    // Match range operator (..)
+    if (!matched && expression[pos] === "." && expression[pos + 1] === ".") {
+      tokens.push({ type: 'range', value: '..', start: pos, end: pos + 2 });
+      pos += 2;
+      lastTokenType = 'range';
+      matched = true;
+      continue;
+    }
+
     // Match numbers (including decimals and scientific notation)
     if (!matched && /\d/.test(expression[pos])) {
       const start = pos;
       let value = "";
       while (pos < expression.length) {
         const char = expression[pos];
+        if (char === "." && expression[pos + 1] === ".") {
+          break;
+        }
         if (/[\d.]/.test(char)) {
           value += char;
           pos++;
           continue;
-        }
-        if (char === ",") {
-          const nextDigits = expression.slice(pos + 1, pos + 4);
-          if (/^\d{3}$/.test(nextDigits)) {
-            pos++;
-            continue;
-          }
         }
         break;
       }
@@ -186,6 +193,15 @@ function tokenize(expression: string): Token[] {
       pos++;
       lastTokenType = 'percentage';
       matched = true;
+    }
+
+    // Match brackets
+    if (!matched && (expression[pos] === '[' || expression[pos] === ']')) {
+      tokens.push({ type: 'bracket', value: expression[pos], start: pos, end: pos + 1 });
+      pos++;
+      lastTokenType = 'bracket';
+      matched = true;
+      continue;
     }
 
     // Skip unknown characters
@@ -444,6 +460,25 @@ export function parseExpressionComponents(expression: string): ExpressionCompone
         break;
       }
 
+      case 'bracket': {
+        if (token.value === '[') {
+          if (components.length === 0) {
+            throw new Error('List access missing base expression');
+          }
+          const baseComponent = components.pop()!;
+          const { innerTokens, nextPos } = collectBracketTokens(tokens, pos + 1);
+          pos = nextPos;
+          const accessDetails = buildListAccessDetails(baseComponent, innerTokens);
+          components.push({
+            type: 'listAccess',
+            value: baseComponent.value,
+            access: accessDetails,
+          });
+          break;
+        }
+        throw new Error('Unmatched closing bracket');
+      }
+
       default:
         throw new Error(`Unexpected token: ${token.type}`);
     }
@@ -645,4 +680,83 @@ function splitNamedArgument(tokens: Token[]): { name?: string; valueTokens: Toke
     }
   }
   return { valueTokens: tokens };
+}
+
+function collectBracketTokens(
+  tokens: Token[],
+  startPos: number
+): { innerTokens: Token[]; nextPos: number } {
+  const innerTokens: Token[] = [];
+  let depth = 1;
+  let pos = startPos;
+
+  while (pos < tokens.length && depth > 0) {
+    const current = tokens[pos];
+    if (current.type === 'bracket') {
+      if (current.value === '[') {
+        depth++;
+        innerTokens.push(current);
+        pos++;
+        continue;
+      }
+      if (current.value === ']') {
+        depth--;
+        if (depth === 0) {
+          pos++;
+          break;
+        }
+      }
+    }
+    if (depth > 0) {
+      innerTokens.push(current);
+    }
+    pos++;
+  }
+
+  if (depth !== 0) {
+    throw new Error('Unmatched opening bracket');
+  }
+
+  return { innerTokens, nextPos: pos };
+}
+
+function tokensToExpression(tokens: Token[]): string {
+  return tokens.map((token) => token.value).join(' ').trim();
+}
+
+function buildListAccessDetails(
+  base: ExpressionComponent,
+  tokens: Token[]
+): ListAccessDetails {
+  const cleanedTokens = tokens.filter((token) => token.type !== 'bracket');
+  if (cleanedTokens.length === 0) {
+    throw new Error('Empty list access expression');
+  }
+
+  const rangeIndex = cleanedTokens.findIndex((token) => token.type === 'range');
+  if (rangeIndex >= 0) {
+    const startTokens = cleanedTokens.slice(0, rangeIndex);
+    const endTokens = cleanedTokens.slice(rangeIndex + 1);
+    if (startTokens.length === 0 || endTokens.length === 0) {
+      throw new Error('Invalid slice expression');
+    }
+    const startExpr = tokensToExpression(startTokens);
+    const endExpr = tokensToExpression(endTokens);
+    return {
+      base,
+      kind: 'slice',
+      startComponents: startExpr ? parseExpressionComponents(startExpr) : [],
+      endComponents: endExpr ? parseExpressionComponents(endExpr) : [],
+    };
+  }
+
+  const indexExpr = tokensToExpression(cleanedTokens);
+  if (!indexExpr) {
+    throw new Error('Empty list index');
+  }
+  return {
+    base,
+    kind: 'index',
+    indexComponents: parseExpressionComponents(indexExpr),
+  };
 }

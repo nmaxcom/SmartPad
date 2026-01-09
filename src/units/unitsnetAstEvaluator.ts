@@ -199,6 +199,12 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
 
     // For expression and combined assignment nodes, check the expression
     const expression = isExpressionNode(node) ? node.expression : node.expression;
+    if (/\bwhere\b/i.test(expression)) {
+      return false;
+    }
+    if (expression.includes("[")) {
+      return false;
+    }
     const listFunctionPattern = /\b(sum|total|avg|mean|median|count|stddev|min|max)\s*\(/i;
     if (listFunctionPattern.test(expression)) {
       return false;
@@ -209,11 +215,7 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
 
     if (hasUnits || hasConstants) return true;
 
-    // Also handle expressions that reference variables present in context
-    // We can only determine this at evaluation time, so conservatively return true
-    // when expression contains identifiers (to allow variable-only expressions like "area")
-    const hasIdentifiers = /\b[a-zA-Z_][a-zA-Z0-9_]*\b/.test(expression);
-    return hasIdentifiers;
+    return false;
   }
 
   private containsMathematicalConstants(expression: string): boolean {
@@ -762,7 +764,7 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
         return UnitValue.isUnitString(expression) ? false : true;
       }
       if (SemanticValueTypes.isSymbolic(parsedLiteral)) {
-        return hasList;
+        return hasList || hasCurrency || hasPercentage;
       }
       return true;
     }
@@ -862,6 +864,18 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
       items.forEach((component) => {
         if (component.type === "variable") {
           names.add(component.value);
+        }
+        if (component.type === "listAccess" && component.access) {
+          visit([component.access.base]);
+          if (component.access.indexComponents) {
+            visit(component.access.indexComponents);
+          }
+          if (component.access.startComponents) {
+            visit(component.access.startComponents);
+          }
+          if (component.access.endComponents) {
+            visit(component.access.endComponents);
+          }
         }
         if (component.type === "function" && component.args) {
           component.args.forEach((arg) => visit(arg.components));

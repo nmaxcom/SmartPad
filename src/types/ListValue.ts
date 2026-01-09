@@ -2,14 +2,16 @@ import { SemanticValue, DisplayOptions, SemanticValueType } from "./SemanticValu
 
 export class ListValue extends SemanticValue {
   private readonly items: SemanticValue[];
+  private readonly delimiter: string;
 
-  constructor(items: SemanticValue[]) {
+  constructor(items: SemanticValue[], delimiter = ", ") {
     super();
     this.items = ListValue.flatten(items);
+    this.delimiter = delimiter;
   }
 
-  static fromItems(items: SemanticValue[]): ListValue {
-    return new ListValue(items);
+  static fromItems(items: SemanticValue[], delimiter = ", "): ListValue {
+    return new ListValue(items, delimiter);
   }
 
   static flatten(items: SemanticValue[]): SemanticValue[] {
@@ -32,6 +34,10 @@ export class ListValue extends SemanticValue {
     return this.items.slice();
   }
 
+  getDelimiter(): string {
+    return this.delimiter;
+  }
+
   getNumericValue(): number {
     throw new Error("ListValue cannot be treated as a numeric scalar");
   }
@@ -45,7 +51,10 @@ export class ListValue extends SemanticValue {
   }
 
   toString(options?: DisplayOptions): string {
-    return this.items.map((item) => item.toString(options)).join(", ");
+    if (this.items.length === 0) {
+      return "()";
+    }
+    return this.items.map((item) => item.toString(options)).join(this.delimiter);
   }
 
   equals(other: SemanticValue): boolean {
@@ -75,6 +84,6 @@ export class ListValue extends SemanticValue {
   }
 
   clone(): SemanticValue {
-    return new ListValue(this.items.slice());
+    return new ListValue(this.items.slice(), this.delimiter);
   }
 }

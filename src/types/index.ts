@@ -17,6 +17,7 @@ import { DateValue } from './DateValue';
 import { ErrorValue, type ErrorType, type ErrorContext } from './ErrorValue';
 import { SymbolicValue } from './SymbolicValue';
 import { ListValue } from './ListValue';
+import { getListMaxLength } from './listConfig';
 import { SmartPadQuantity } from '../units/unitsnetAdapter';
 
 // Re-export base types
@@ -221,9 +222,9 @@ const parseSingleValue = (input: string): SemanticValue | null => {
   }
 
   if (
-    trimmed.match(/^[\$€£¥₹₿]\s*(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?$/) ||
-    trimmed.match(/^(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?\s*[\$€£¥₹₿]$/) ||
-    trimmed.match(/^(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?\s+(CHF|CAD|AUD)$/)
+    trimmed.match(/^[\$€£¥₹₿]\s*\d+(?:\.\d+)?$/) ||
+    trimmed.match(/^\d+(?:\.\d+)?\s*[\$€£¥₹₿]$/) ||
+    trimmed.match(/^\d+(?:\.\d+)?\s+(CHF|CAD|AUD)$/)
   ) {
     try {
       return CurrencyValue.fromString(trimmed);
@@ -240,8 +241,10 @@ const parseSingleValue = (input: string): SemanticValue | null => {
     }
   }
 
-  const dateValue = DateValue.parse(trimmed);
-  if (dateValue) return dateValue;
+  if (!trimmed.includes(",")) {
+    const dateValue = DateValue.parse(trimmed);
+    if (dateValue) return dateValue;
+  }
 
   if (trimmed.match(/^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/)) {
     try {
@@ -260,10 +263,19 @@ const parseSingleValue = (input: string): SemanticValue | null => {
   return null;
 };
 
-const parseListLiteral = (input: string): ListValue | null => {
+const parseListLiteral = (input: string): SemanticValue | null => {
   const normalized = stripEnclosingParentheses(input);
-  const parts = splitTopLevelCommas(normalized);
+  const rawParts = splitTopLevelCommas(normalized);
+  if (rawParts.length <= 1) return null;
+  const parts = rawParts.map((part) => part.trim());
+  if (parts.length > 1 && parts[parts.length - 1] === "") {
+    parts.pop();
+  }
   if (parts.length <= 1) return null;
+  const maxLength = getListMaxLength();
+  if (parts.length > maxLength) {
+    return ErrorValue.semanticError(`Can't create lists longer than ${maxLength}`);
+  }
   const items: SemanticValue[] = [];
   for (const part of parts) {
     if (!part) return null;
@@ -272,7 +284,9 @@ const parseListLiteral = (input: string): ListValue | null => {
     items.push(parsed);
   }
   if (items.length === 0) return null;
-  return ListValue.fromItems(items);
+  const hasSpacing = /,\s+/.test(normalized);
+  const delimiter = hasSpacing ? ", " : ",";
+  return createListResult(items, delimiter);
 };
 
 export const SemanticParsers = {
@@ -283,12 +297,12 @@ export const SemanticParsers = {
     if (!str) return null;
     const trimmed = str.trim();
     if (!trimmed) return null;
+    const listValue = parseListLiteral(trimmed);
+    if (listValue) return listValue;
     const single = parseSingleValue(trimmed);
     if (single) {
       return single;
     }
-    const listValue = parseListLiteral(trimmed);
-    if (listValue) return listValue;
     return null;
   },
   
@@ -313,7 +327,83 @@ export const SemanticParsers = {
     return ErrorValue.parseError(`Cannot parse "${str}" as any semantic value type`);
   },
 } as const;
-export { parseListLiteral };
+export { parseListLiteral, createListResult, mapListItems };
+const createListResult = (items: SemanticValue[], delimiter = ", "): SemanticValue => {
+  const maxLength = getListMaxLength();
+  if (items.length > maxLength) {
+    return ErrorValue.semanticError(`Can't create lists longer than ${maxLength}`);
+  }
+  if (items.length === 0) {
+    return ListValue.fromItems(items);
+  }
+  const baseType = items[0].getType();
+  for (const item of items) {
+    if (item.getType() !== baseType) {
+      return ErrorValue.semanticError("Cannot create list: incompatible units");
+    }
+  }
+  return ListValue.fromItems(items, delimiter);
+};
+
+const mapListItems = (
+  list: ListValue,
+  mapper: (value: SemanticValue) => SemanticValue
+): SemanticValue => {
+  const results: SemanticValue[] = [];
+  for (const item of list.getItems()) {
+    const mapped = mapper(item);
+    if (SemanticValueTypes.isError(mapped)) {
+      return mapped;
+    }
+    results.push(mapped);
+  }
+  return createListResult(results);
+};
+
+const zipListItems = (
+  left: ListValue,
+  right: ListValue,
+  mapper: (leftItem: SemanticValue, rightItem: SemanticValue) => SemanticValue
+): SemanticValue => {
+  const leftItems = left.getItems();
+  const rightItems = right.getItems();
+  if (leftItems.length !== rightItems.length) {
+    return ErrorValue.semanticError(
+      `Cannot work with lists of different lengths (${leftItems.length} vs ${rightItems.length})`
+    );
+  }
+  const results: SemanticValue[] = [];
+  for (let i = 0; i < leftItems.length; i++) {
+    const mapped = mapper(leftItems[i], rightItems[i]);
+    if (SemanticValueTypes.isError(mapped)) {
+      return mapped;
+    }
+    results.push(mapped);
+  }
+  return createListResult(results);
+};
+
+const handleListOperation = (
+  left: SemanticValue,
+  right: SemanticValue,
+  operator: (leftValue: SemanticValue, rightValue: SemanticValue) => SemanticValue
+): SemanticValue => {
+  const leftIsList = SemanticValueTypes.isList(left);
+  const rightIsList = SemanticValueTypes.isList(right);
+  if (!leftIsList && !rightIsList) {
+    return operator(left, right);
+  }
+
+  if (leftIsList && rightIsList) {
+    return zipListItems(left as ListValue, right as ListValue, operator);
+  }
+
+  if (leftIsList) {
+    return mapListItems(left as ListValue, (item) => operator(item, right));
+  }
+
+  return mapListItems(right as ListValue, (item) => operator(left, item));
+};
 // Arithmetic utilities
 export const SemanticArithmetic = {
   /**
@@ -325,7 +415,7 @@ export const SemanticArithmetic = {
         const base = SemanticValueTypes.isSymbolic(left) ? left : SymbolicValue.from(left.toString());
         return base.add(right);
       }
-      return left.add(right);
+      return handleListOperation(left, right, (a, b) => a.add(b));
     } catch (error) {
       return ErrorValue.fromError(error as Error, 'runtime');
     }
@@ -340,7 +430,7 @@ export const SemanticArithmetic = {
         const base = SemanticValueTypes.isSymbolic(left) ? left : SymbolicValue.from(left.toString());
         return base.subtract(right);
       }
-      return left.subtract(right);
+      return handleListOperation(left, right, (a, b) => a.subtract(b));
     } catch (error) {
       return ErrorValue.fromError(error as Error, 'runtime');
     }
@@ -355,7 +445,7 @@ export const SemanticArithmetic = {
         const base = SemanticValueTypes.isSymbolic(left) ? left : SymbolicValue.from(left.toString());
         return base.multiply(right);
       }
-      return left.multiply(right);
+      return handleListOperation(left, right, (a, b) => a.multiply(b));
     } catch (error) {
       return ErrorValue.fromError(error as Error, 'runtime');
     }
@@ -370,7 +460,7 @@ export const SemanticArithmetic = {
         const base = SemanticValueTypes.isSymbolic(left) ? left : SymbolicValue.from(left.toString());
         return base.divide(right);
       }
-      return left.divide(right);
+      return handleListOperation(left, right, (a, b) => a.divide(b));
     } catch (error) {
       return ErrorValue.fromError(error as Error, 'runtime');
     }
@@ -383,6 +473,9 @@ export const SemanticArithmetic = {
     try {
       if (SemanticValueTypes.isSymbolic(base)) {
         return base.power(exponent);
+      }
+      if (SemanticValueTypes.isList(base)) {
+        return mapListItems(base as ListValue, (item) => item.power(exponent));
       }
       return base.power(exponent);
     } catch (error) {

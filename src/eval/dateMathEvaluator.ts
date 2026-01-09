@@ -32,16 +32,23 @@ import {
   looksLikeDateExpression,
   parseDateLiteral,
 } from '../date/dateMath';
+import { splitTopLevelCommas } from '../utils/listExpression';
 
 export class DateMathEvaluator implements NodeEvaluator {
   canHandle(node: ASTNode): boolean {
     if (isVariableAssignmentNode(node)) {
       const raw = (node.rawValue || '').trim();
+      if (raw.includes(',') && splitTopLevelCommas(raw).length > 1) {
+        return false;
+      }
       return !!parseDateLiteral(raw);
     }
 
     if (isCombinedAssignmentNode(node) || isExpressionNode(node)) {
       const expr = isExpressionNode(node) ? node.expression : node.expression;
+      if (expr.includes(',') && splitTopLevelCommas(expr).length > 1) {
+        return false;
+      }
       return looksLikeDateExpression(expr);
     }
 

@@ -63,12 +63,29 @@ export interface FunctionArgument {
   readonly components: ExpressionComponent[];
 }
 
+export type ListAccessKind = "index" | "slice";
+
+export interface ListAccessDetails {
+  readonly base: ExpressionComponent;
+  readonly kind: ListAccessKind;
+  readonly indexComponents?: ExpressionComponent[];
+  readonly startComponents?: ExpressionComponent[];
+  readonly endComponents?: ExpressionComponent[];
+}
+
 export interface ExpressionComponent {
-  readonly type: "literal" | "variable" | "operator" | "function" | "parentheses";
+  readonly type:
+    | "literal"
+    | "variable"
+    | "operator"
+    | "function"
+    | "parentheses"
+    | "listAccess";
   readonly value: string;
   readonly parsedValue?: SemanticValue;
   readonly children?: ExpressionComponent[];
   readonly args?: FunctionArgument[];
+  readonly access?: ListAccessDetails;
 }
 
 /**

@@ -7,6 +7,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
   scientificLowerExponent: -4,
   scientificTrimTrailingZeros: true,
   groupThousands: false,
+  listMaxLength: 100,
   dateLocaleMode: "system",
   dateLocaleOverride: "",
   dateDisplayFormat: "iso",

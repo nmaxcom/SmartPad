@@ -2,6 +2,7 @@ import React, { createContext, useReducer, useCallback, useMemo, ReactNode, useE
 import { SettingsContextType, SettingsState, SettingsAction } from "./types";
 import { createSettingsState, settingsReducer } from "./settingsStore";
 import { setDateLocaleOverride } from "../types/DateValue";
+import { setListMaxLength } from "../types/listConfig";
 
 // Create the context
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -24,6 +25,10 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       setDateLocaleOverride(null);
     }
   }, [state.dateLocaleMode, state.dateLocaleOverride]);
+
+  useEffect(() => {
+    setListMaxLength(state.listMaxLength);
+  }, [state.listMaxLength]);
 
   // Memoized action creators for performance
   const updateSetting = useCallback(

@@ -23,7 +23,7 @@ import {
   parseVariableAssignmentWithOptionalEvaluation,
 } from "./variableParser";
 import { needsExpressionEvaluation, isVariableAssignmentWithEvaluation } from "./expressionParser";
-import { SemanticParsers, ErrorValue } from "../types";
+import { SemanticParsers, ErrorValue, SemanticValueTypes } from "../types";
 import { validateExpressionTypes } from "./typeResolver";
 import { parseExpressionComponents } from "./expressionComponents";
 import { looksLikeDateExpression } from "../date/dateMath";
@@ -246,6 +246,14 @@ function createExpressionNode(expression: string, raw: string, line: number): Ex
       /\bis\s+%/.test(expression);
 
     const parsedLiteral = SemanticParsers.parse(expression);
+    if (parsedLiteral && SemanticValueTypes.isError(parsedLiteral)) {
+      return createErrorNode(
+        (parsedLiteral as ErrorValue).getMessage(),
+        "semantic",
+        raw,
+        line
+      );
+    }
     const isListLiteral = parsedLiteral && parsedLiteral.getType() === "list";
     const expressionForComponents = stripConversionSuffix(expression);
 
@@ -305,6 +313,14 @@ function createCombinedAssignmentNode(
       /\bis\s+%/.test(expression);
 
     const parsedLiteral = SemanticParsers.parse(expression);
+    if (parsedLiteral && SemanticValueTypes.isError(parsedLiteral)) {
+      return createErrorNode(
+        (parsedLiteral as ErrorValue).getMessage(),
+        "semantic",
+        raw,
+        line
+      );
+    }
     const isListLiteral = parsedLiteral && parsedLiteral.getType() === "list";
     const expressionForComponents = stripConversionSuffix(expression);
 

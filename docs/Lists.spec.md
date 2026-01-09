@@ -566,7 +566,7 @@ internet = $75
 subscriptions = $49.99
 expenses = rent, utilities, internet, subscriptions
 total = sum(expenses) => $1559.99
-expenses / total as % => 80.1295%, 11.8597%, 4.8079%, 3.2028%
+expenses / total as % => 80.1287%, 11.8591%, 4.8077%, 3.2045%
 ```
 
 ### Science: “average + spread of repeated measurements”

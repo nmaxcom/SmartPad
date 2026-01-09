@@ -142,6 +142,115 @@ qty => total / 3
 `,
   },
   {
+    id: "list-spec",
+    emoji: "🧾",
+    name: "List Spec Lab",
+    content: `# Lists Spec Lab
+# Creation & display
+xs = 10, 20, 30
+ys = xs[2..2]
+ys =>20
+count(ys) => 1
+costs = $12, $15, $9
+costs => $12, $15, $9
+lengths = 3 m, 25 ft, 48 km
+lengths => 3 m, 25 ft, 48 km
+rates = 5%, 8%, 21%
+rates => 5%, 8%, 21%
+
+# Aggregations
+sum(costs) => $36
+count(costs) => 3
+mean(costs) => $12
+avg(costs) => $12
+min(costs) => $9
+max(costs) => $15
+xs = 1, 3, 10
+median(xs) => 3
+ys = 1, 3, 10, 11
+median(ys) => 6.5
+costs = $12, $15, $9
+range(costs) => $6
+xs = 2, 4, 4, 4, 5, 5, 7, 9
+stddev(xs) => 2
+lengths = 3 m, 25 m, 48 km
+sum(lengths) => 48.028 km
+mean(lengths) => 16.0093 km
+
+# Indexing & slicing
+costs = $12, $15, $9
+costs[1] => $12
+costs[2] => $15
+costs[3] => $9
+costs[-1] => $9
+costs[1..2] => $12, $15
+costs[2..3] => $15, $9
+costs[3..3] => $9
+costs[2..1] => ⚠️ Range can't go downwards
+
+# Sorting & filtering
+sort(costs) => $9, $12, $15
+sort(costs, desc) => $15, $12, $9
+lengths = 3 m, 25 m, 48 km
+sort(lengths) => 3 m, 25 m, 48 km
+weird = 3 m, 2 s
+sort(weird) => ⚠️ Cannot sort: incompatible units
+costs = $12, $15, $9, $100
+costs where > $10 => $12, $15, $100
+lengths where > 10 km => 48 km
+costs where > $200 => ()
+vals = 3 m, 2 s
+vals where > 1 m => ⚠️ Cannot compare: incompatible units
+
+# Mapping & conversions
+costs = $12, $15, $9
+costs * 2 => $24, $30, $18
+xs = -1, 4, -9
+abs(xs) => 1, 4, 9
+lengths to m => 3 m, 25 m, 48000 m
+rent = $1250
+utilities = $185
+internet = $75
+subscriptions = $49.99
+expenses = rent, utilities, internet, subscriptions
+total = sum(expenses) => $1559.99
+distribution = expenses / total as % => 80.1287%, 11.8591%, 4.8077%, 3.2045%
+
+# Pairwise & broadcast
+prices = $10, $20, $30
+qty = 2, 1, 3
+line totals = prices * qty => $20, $20, $90
+sum(line totals) => $130
+a = 1, 2, 3
+b = 10, 20, 30
+a + b => 11, 22, 33
+a = 1, 2, 3
+b = 10, 20
+a + b => ⚠️ Cannot work with lists of different lengths (3 vs 2)
+a = 1, 2, 3
+a + 10 => 11, 12, 13
+
+# Robustness & errors
+mix = 3 m, 2 s
+sum(mix) => ⚠️ Cannot sum incompatible units
+mix money = $10, €10
+sum(mix money) => ⚠️ Cannot sum different currencies ($ vs €)
+xs = 1, 2, 3,
+xs => 1, 2, 3
+
+# Mini recipes
+sort(expenses, desc) => $1250, $185, $75, $49.99
+max(expenses) => $1250
+measurements = 9.8 m/s^2, 9.7 m/s^2, 9.81 m/s^2, 9.79 m/s^2
+mean(measurements) => 9.775 m/s^2
+stddev(measurements) => 0.0430 m/s^2
+weights = 80 kg, 85 kg, 90 kg
+reps = 5, 5, 3
+volume = weights * reps => 400 kg, 425 kg, 270 kg
+sum(volume) => 1095 kg
+`,
+  },
+  {
     id: "functions-showcase",
     emoji: "🧩",
     name: "Functions Showcase",

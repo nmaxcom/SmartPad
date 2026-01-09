@@ -1,40 +1,42 @@
-# Lists: collections of values separated by commas
+lengths = 3 m, 25 ft, 48 km
+lengths =>3 m, 25 ft, 48 km
+sum(lengths) to ft=>48,010.62 m
+sum(lengths) to km=>48,010.62 m
 
-## Feature mission
-Create a human-friendly list syntax that feels like ordinary writing (comma separated values, no bracket noise), works with both inline expressions and stored phrase variables, keeps units when possible, and lets statistical helpers and even solving logic understand collections.  
+Sort by the actual physical magnitude, not by textual form. If units are compatible (same dimension), sorting should use their canonical value, then preserve the original unit representation in output. 5ft is shorter than 3m.
+lengths = 3 m, 5 ft, 48 km
+sort(lengths) =>5 m, 3 ft, 48 km
 
-## Step-by-step plan
-1. **List semantics and parsing**  
-   - Extend the AST/evaluator pipeline so expressions like `10, 20, 30` or `prices = 10, 15, 22` produce a new `ListValue` semantic type.  
-   - Allow phrase variables to reference lists without requiring brackets.  
-   - Ensure lists flatten when nested (e.g., `sum( (10, 20), (30, 40) )` becomes `[10,20,30,40]`) and ignore non-value noise gracefully.  
+The same rule applies to any dimension where a total ordering makes sense.
+times = 2 min, 30 s, 1 h
+sort(times) =>30 s, 2 min, 1 h
 
-2. **Statistical functions**  
-   - Implement `sum`/`total`, `avg`/`mean`, `median`, `min`, `max`, `count`, and `stddev` in the expression evaluator so they accept lists or arrays of arguments, maintain compatible units (e.g., normalizing units to the first entry before summing), and skip non-numeric strings.  
-   - Support direct and variable-based invocation (`avg(10,20,30)` and `total(costs)`).  
+list can't have different dimensions:
+weird = 3 m, 2 h=>3 m, 2 h
 
-3. **Solve/list integration**  
-   - Teach the solve evaluator to reason about lists, including symbolic placeholders inside a list (`100 = total(50, 20, x)` ⇒ `x => 30`).  
-   - Ensure the solver handles unit-aware lists and can fall back to symbolic expressions when data is missing.  
+should only return if there's a value (once or more) equal to $8, otherwise empty
+costs = $8, $12, $15, $9, $8, $100
+costs where = $8 => $8, $8
 
-4. **Edge-case coverage & docs**  
-   - Add regression tests covering single item lists, mixed units, nested lists, empty args, non-numeric noise, unit conversions, phrase variables, and solving unknowns in lists.  
-   - Update documentation/templates to showcase the new list/statistics syntax and expected results (median, stddev, unit-aware sum, etc.).  
+Equality should be semantic, not textual.
+lengths = 1 m, 100 cm, 2 m
+lengths where = 1 m =>1 m, 100 cm
 
-## Example snippet (for reference)
-scores = 85, 92, 78, 95, 88
-count(scores) => 5
-total(scores) => 438
-avg(scores) => 87.6
-median(scores) => 88
-expenses = rent, utilities, 50
-sum(expenses) => 1450
-stddev(expenses) => 452.148
+You should define a tolerance rule, otherwise equality becomes unusable.
+Example:
+xs = 0.1 + 0.2, 0.3
+xs where = 0.3 => ?
+Use a small relative/absolute tolerance for numeric equality
 
-weights = 1.2 kg, 800 g, 2.5 kg
-total(weights) => 4.5 kg
-mean(weights) to g => 1500 g
+Tolerance rules
 
-goal = total(50, 20, x)
-goal => 100
-x => 30
+Use a standard combined tolerance test for numeric comparisons:
+
+a == b is true if
+|a - b| <= max(absTol, relTol * max(|a|, |b|))
+
+Recommended defaults:
+
+absTol = 1e-12
+
+relTol = 1e-9

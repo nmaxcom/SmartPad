@@ -71,6 +71,7 @@ export interface SettingsState {
   scientificLowerExponent: number;
   scientificTrimTrailingZeros: boolean;
   groupThousands: boolean;
+  listMaxLength: number;
   dateLocaleMode: "system" | "custom";
   dateLocaleOverride: string;
   dateDisplayFormat: "iso" | "locale";

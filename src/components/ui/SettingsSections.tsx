@@ -22,6 +22,14 @@ export function SettingsSections() {
     [updateSetting]
   );
 
+  const handleListMaxLengthChange = useCallback(
+    (value: number) => {
+      const clampedValue = Math.max(5, Math.min(1000, Math.round(value)));
+      updateSetting("listMaxLength", clampedValue);
+    },
+    [updateSetting]
+  );
+
   const handleScientificUpperChange = useCallback(
     (value: number) => {
       const safeValue = Number.isFinite(value)
@@ -89,6 +97,28 @@ export function SettingsSections() {
               />
               <span className="toggle-slider"></span>
             </label>
+          </div>
+        </div>
+
+        <div className="settings-item">
+          <div className="settings-item-info">
+            <label htmlFor="list-max-length" className="settings-label">
+              Max items per list
+            </label>
+            <p className="settings-description">
+              Cap the number of entries a list can contain before throwing an error.
+            </p>
+          </div>
+          <div className="settings-control">
+            <input
+              id="list-max-length"
+              type="number"
+              min="5"
+              max="1000"
+              value={settings.listMaxLength}
+              onChange={(e) => handleListMaxLengthChange(parseInt(e.target.value) || 0)}
+              className="settings-number-input"
+            />
           </div>
         </div>
 

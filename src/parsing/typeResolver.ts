@@ -30,6 +30,23 @@ const TYPE_RULES: TypeRule[] = [
   { leftType: 'number', rightType: 'number', operator: '/', resultType: 'number' },
   { leftType: 'number', rightType: 'number', operator: '^', resultType: 'number' },
 
+  // List operations
+  { leftType: 'list', rightType: 'list', operator: '+', resultType: 'list' },
+  { leftType: 'list', rightType: 'list', operator: '-', resultType: 'list' },
+  { leftType: 'list', rightType: 'list', operator: '*', resultType: 'list' },
+  { leftType: 'list', rightType: 'list', operator: '/', resultType: 'list' },
+  { leftType: 'list', rightType: 'number', operator: '+', resultType: 'list' },
+  { leftType: 'list', rightType: 'number', operator: '-', resultType: 'list' },
+  { leftType: 'list', rightType: 'number', operator: '*', resultType: 'list' },
+  { leftType: 'list', rightType: 'number', operator: '/', resultType: 'list' },
+  { leftType: 'number', rightType: 'list', operator: '+', resultType: 'list' },
+  { leftType: 'number', rightType: 'list', operator: '-', resultType: 'list' },
+  { leftType: 'number', rightType: 'list', operator: '*', resultType: 'list' },
+  { leftType: 'number', rightType: 'list', operator: '/', resultType: 'list' },
+  { leftType: 'list', rightType: 'percentage', operator: '*', resultType: 'list' },
+  { leftType: 'percentage', rightType: 'list', operator: '*', resultType: 'list' },
+  { leftType: 'list', rightType: 'percentage', operator: '/', resultType: 'list' },
+
   // Currency operations
   { leftType: 'currency', rightType: 'currency', operator: '+', resultType: 'currency' },
   { leftType: 'currency', rightType: 'currency', operator: '-', resultType: 'currency' },
@@ -130,6 +147,12 @@ function resolveComponentType(
         return ErrorValue.semanticError('Empty parentheses', { expression: 'Type Resolution' });
       }
       return resolveExpressionType(component.children, variables);
+
+    case 'listAccess':
+      if (!component.access) {
+        return ErrorValue.semanticError('Invalid list access', { expression: 'Type Resolution' });
+      }
+      return component.access.kind === 'index' ? 'number' : 'list';
 
     default:
       return ErrorValue.semanticError(`Unknown component type: ${component.type}`, { expression: 'Type Resolution' });

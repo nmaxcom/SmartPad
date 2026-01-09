@@ -28,6 +28,7 @@ import {
 } from "./renderNodes";
 import { 
   SemanticValue,
+  ListValue,
   PercentageValue, 
   NumberValue, 
   ErrorValue,
@@ -35,9 +36,12 @@ import {
   SemanticValueTypes,
   SemanticParsers,
   CurrencyValue,
-  SymbolicValue
+  SymbolicValue,
+  mapListItems
 } from "../types";
 import { evaluateMath } from "../parsing/mathEvaluator";
+import { parseExpressionComponents } from "../parsing/expressionComponents";
+import { SimpleExpressionParser } from "./expressionEvaluatorV2";
 
 /**
  * Expression parser for percentage operations
@@ -449,7 +453,11 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
    * Evaluate "0.2 as %" -> 20%
    */
   private evaluateAsPercent(valueExpr: string, context: EvaluationContext): SemanticValue {
-    const value = this.evaluateSubExpression(valueExpr, context);
+    const parsedValue = this.evaluateSemanticExpression(valueExpr, context);
+    const value =
+      parsedValue && !SemanticValueTypes.isError(parsedValue)
+        ? parsedValue
+        : this.evaluateSubExpression(valueExpr, context);
     
     if (SemanticValueTypes.isSymbolic(value)) {
       return SymbolicValue.from(`${valueExpr} as %`);
@@ -457,12 +465,38 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     if (SemanticValueTypes.isError(value)) {
       return value;
     }
+
+    if (SemanticValueTypes.isList(value)) {
+      return mapListItems(value as ListValue, (item) => {
+        if (!item.isNumeric()) {
+          return ErrorValue.typeError(
+            "Cannot convert non-numeric value to percentage",
+            "percentage",
+            item.getType()
+          );
+        }
+        return PercentageValue.fromDecimal(item.getNumericValue());
+      });
+    }
     
     if (!value.isNumeric()) {
       return ErrorValue.typeError("Cannot convert non-numeric value to percentage", 'percentage', value.getType());
     }
     
     return PercentageValue.fromDecimal(value.getNumericValue());
+  }
+
+  private evaluateSemanticExpression(
+    expression: string,
+    context: EvaluationContext
+  ): SemanticValue | null {
+    try {
+      const components = parseExpressionComponents(expression);
+      const result = SimpleExpressionParser.parseComponents(components, context);
+      return result || null;
+    } catch {
+      return null;
+    }
   }
   
   /**
@@ -688,7 +722,7 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     lineNumber: number,
     context: EvaluationContext
   ): MathResultRenderNode {
-    const resultString = result.toString(this.getDisplayOptions(context));
+    const resultString = result.toString(this.getDisplayOptionsForResult(result, context));
     const displayText = `${expression} => ${resultString}`;
     
     return {
@@ -706,7 +740,7 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     result: SemanticValue,
     context: EvaluationContext
   ): CombinedRenderNode {
-    const resultString = result.toString(this.getDisplayOptions(context));
+    const resultString = result.toString(this.getDisplayOptionsForResult(result, context));
     const displayText = `${node.variableName} = ${node.expression} => ${resultString}`;
     
     // Store the result in the variable store
@@ -736,6 +770,24 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
       line: lineNumber,
       originalRaw: expression,
     };
+  }
+
+  private getDisplayOptionsForResult(
+    result: SemanticValue,
+    context: EvaluationContext
+  ): DisplayOptions {
+    const base = this.getDisplayOptions(context);
+    if (result.getType() === "percentage") {
+      return { ...base, precision: 4 };
+    }
+    if (SemanticValueTypes.isList(result)) {
+      const list = result as ListValue;
+      const items = list.getItems();
+      if (items.length > 0 && items.every((item) => item.getType() === "percentage")) {
+        return { ...base, precision: 4 };
+      }
+    }
+    return base;
   }
 
   private getDisplayOptions(context: EvaluationContext): DisplayOptions {

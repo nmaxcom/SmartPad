@@ -7,6 +7,9 @@
 
 import { SemanticValue, SemanticValueType, DisplayOptions } from './SemanticValue';
 import { NumberValue } from './NumberValue';
+import { ListValue } from './ListValue';
+import { ErrorValue } from './ErrorValue';
+import { getListMaxLength } from './listConfig';
 
 export type PercentageContext = 'standalone' | 'of' | 'on' | 'off';
 
@@ -185,6 +188,10 @@ export class PercentageValue extends SemanticValue {
    * This is the core semantic operation that resolves the ambiguity
    */
   of(baseValue: SemanticValue): SemanticValue {
+    if (baseValue instanceof ListValue) {
+      return mapPercentageList(baseValue, (item: SemanticValue) => this.of(item));
+    }
+
     if (baseValue.getType() === 'number') {
       // 20% of 100 = 20
       const result = baseValue.getNumericValue() * this.decimalValue;
@@ -209,6 +216,10 @@ export class PercentageValue extends SemanticValue {
    * Example: 20% on $100 = $120
    */
   on(baseValue: SemanticValue): SemanticValue {
+    if (baseValue instanceof ListValue) {
+      return mapPercentageList(baseValue, (item: SemanticValue) => this.on(item));
+    }
+
     if (baseValue.getType() === 'number') {
       // 20% on 100 = 100 + (20% of 100) = 120
       const increase = baseValue.getNumericValue() * this.decimalValue;
@@ -229,6 +240,10 @@ export class PercentageValue extends SemanticValue {
    * Example: 20% off $100 = $80
    */
   off(baseValue: SemanticValue): SemanticValue {
+    if (baseValue instanceof ListValue) {
+      return mapPercentageList(baseValue, (item: SemanticValue) => this.off(item));
+    }
+
     if (baseValue.getType() === 'number') {
       // 20% off 100 = 100 - (20% of 100) = 80
       const decrease = baseValue.getNumericValue() * this.decimalValue;
@@ -300,3 +315,26 @@ export class PercentageValue extends SemanticValue {
     };
   }
 }
+
+const createListValueFromItems = (items: SemanticValue[]): SemanticValue => {
+  const maxLength = getListMaxLength();
+  if (items.length > maxLength) {
+    return ErrorValue.semanticError(`Can't create lists longer than ${maxLength}`);
+  }
+  return ListValue.fromItems(items);
+};
+
+const mapPercentageList = (
+  list: ListValue,
+  mapper: (value: SemanticValue) => SemanticValue
+): SemanticValue => {
+  const results: SemanticValue[] = [];
+  for (const item of list.getItems()) {
+    const mapped = mapper(item);
+    if (mapped instanceof ErrorValue) {
+      return mapped;
+    }
+    results.push(mapped);
+  }
+  return createListValueFromItems(results);
+};
