@@ -22,7 +22,9 @@ type TokenType =
   | 'percentage'
   | 'colon'
   | 'bracket'
-  | 'range';
+  | 'range'
+  | 'string'
+  | 'date';
 
 interface Token {
   type: TokenType;
@@ -42,6 +44,8 @@ function tokenize(expression: string): Token[] {
   const isWhitespace = (char: string) => /\s/.test(char);
   const isIdentChar = (char: string) => /[a-zA-Z0-9_]/.test(char);
   const unitPattern = /^[a-zA-Z°µμΩ][a-zA-Z0-9°µμΩ\/\^\-\*\·]*/;
+  const dateTimePattern = /^\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}(?:\s*(?:Z|UTC|GMT|local|[+-]\d{2}:?\d{2}))?)?/;
+  const timePattern = /^\d{1,2}:\d{2}(?:\s*(?:Z|UTC|GMT|local|[+-]\d{2}:?\d{2}))?/;
 
   while (pos < expression.length) {
     let matched = false;
@@ -59,6 +63,70 @@ function tokenize(expression: string): Token[] {
       lastTokenType = 'range';
       matched = true;
       continue;
+    }
+
+    if (!matched && (expression[pos] === '"' || expression[pos] === "'")) {
+      const quote = expression[pos];
+      const start = pos;
+      pos++;
+      let value = "";
+      while (pos < expression.length) {
+        const char = expression[pos];
+        if (char === "\\") {
+          const nextChar = expression[pos + 1];
+          if (nextChar) {
+            value += nextChar;
+            pos += 2;
+            continue;
+          }
+        }
+        if (char === quote) {
+          pos++;
+          break;
+        }
+        value += char;
+        pos++;
+      }
+      tokens.push({ type: 'string', value, start, end: pos });
+      lastTokenType = 'string';
+      matched = true;
+      continue;
+    }
+
+    const remaining = expression.substring(pos);
+
+    // Match date/time literals first (e.g., 2026-01-01, 2026-01-01 09:00 UTC)
+    if (!matched) {
+      const dateMatch = remaining.match(dateTimePattern);
+      if (dateMatch) {
+        tokens.push({
+          type: 'date',
+          value: dateMatch[0],
+          start: pos,
+          end: pos + dateMatch[0].length,
+        });
+        pos += dateMatch[0].length;
+        lastTokenType = 'date';
+        matched = true;
+        continue;
+      }
+    }
+
+    // Match standalone time literals (e.g., 09:00)
+    if (!matched) {
+      const timeMatch = remaining.match(timePattern);
+      if (timeMatch) {
+        tokens.push({
+          type: 'date',
+          value: timeMatch[0],
+          start: pos,
+          end: pos + timeMatch[0].length,
+        });
+        pos += timeMatch[0].length;
+        lastTokenType = 'date';
+        matched = true;
+        continue;
+      }
     }
 
     // Match numbers (including decimals and scientific notation)
@@ -383,6 +451,27 @@ export function parseExpressionComponents(expression: string): ExpressionCompone
           parsedValue: SemanticParsers.parseOrError(value + nextToken.value),
         });
         pos += 2;
+        break;
+      }
+
+      case 'string': {
+        components.push({
+          type: 'literal',
+          value: token.value,
+          parsedValue: SemanticParsers.parseOrError(token.value),
+        });
+        pos++;
+        break;
+      }
+
+      case 'date': {
+        const parsed = SemanticParsers.parseOrError(token.value);
+        components.push({
+          type: 'literal',
+          value: token.value,
+          parsedValue: parsed,
+        });
+        pos++;
         break;
       }
 
@@ -733,9 +822,10 @@ function buildRangeReplacement(
     segmentEnd = stepValue.endIndex;
   }
 
+  const wrapEndpoint = (text: string) => `(${text.trim()})`;
   const replacementParts = [
-    left.text,
-    right.text,
+    wrapEndpoint(left.text),
+    wrapEndpoint(right.text),
     stepExpr?.text,
   ].filter(Boolean);
   const replacement = `__rangeLiteral(${replacementParts.join(", ")})`;
@@ -774,7 +864,16 @@ function extractLeftEndpoint(
 
   let boundary = pos;
   while (boundary >= 0) {
-    if (isLeftBoundary(expression[boundary])) {
+    const char = expression[boundary];
+    if (isLeftBoundary(char)) {
+      if (
+        char === "-" &&
+        /\d/.test(expression[boundary - 1] ?? "") &&
+        /\d/.test(expression[boundary + 1] ?? "")
+      ) {
+        boundary--;
+        continue;
+      }
       break;
     }
     boundary--;
@@ -820,6 +919,14 @@ function extractRightEndpoint(
   while (end < expression.length) {
     const char = expression[end];
     if (isRightBoundary(char)) {
+      if (
+        char === "-" &&
+        /\d/.test(expression[end - 1] ?? "") &&
+        /\d/.test(expression[end + 1] ?? "")
+      ) {
+        end++;
+        continue;
+      }
       if (
         (char === "-" || char === "+") &&
         end === pos &&

@@ -35,12 +35,14 @@ import {
   createListResult,
   mapListItems,
 } from "../types";
+import { DateTime } from "luxon";
 import { getListMaxLength } from "../types/listConfig";
 import { parseAndEvaluateExpression } from "../parsing/expressionParser";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
 import { splitTopLevelCommas, inferListDelimiter } from "../utils/listExpression";
 import { PercentageValue } from "../types/PercentageValue";
 import { isAggregatorExpression } from "./aggregatorUtils";
+import { rewriteLocaleDateLiterals } from "../utils/localeDateNormalization";
 
 function applyAbsToSemanticValue(value: SemanticValue): SemanticValue {
   if (!value.isNumeric()) {
@@ -535,10 +537,7 @@ export class SimpleExpressionParser {
         return listArgsResult;
       }
       if (listArgsResult.containsNestedList) {
-        const firstArgLabel = describeListArgument(args.positional[0], context);
-        return ErrorValue.semanticError(
-          `Cannot ${funcName}: ${firstArgLabel} contains a nested list`
-        );
+        return ErrorValue.semanticError(`${funcName}() does not support nested lists`);
       }
       const resolvedArgs = listArgsResult.values;
       switch (funcName) {
@@ -578,11 +577,12 @@ export class SimpleExpressionParser {
 
     if (funcName === "sort") {
       if (args.positional.length === 0) {
-        return ErrorValue.semanticError("sort expects a list");
+        return ErrorValue.semanticError("sort() expects a list, got nothing");
       }
       const listArg = args.positional[0];
       if (!SemanticValueTypes.isList(listArg)) {
-        return ErrorValue.semanticError("sort expects a list");
+        const gotType = canonicalTypeName(listArg);
+        return ErrorValue.semanticError(`sort() expects a list, got ${gotType}`);
       }
       const directionArg = args.positional[1];
       const descending = directionArg
@@ -846,6 +846,36 @@ const flattenArgumentList = (values: SemanticValue[]): SemanticValue[] => {
   return flattened;
 };
 
+const canonicalTypeName = (value: SemanticValue): string => {
+  switch (value.getType()) {
+    case "number":
+      return "number";
+    case "percentage":
+      return "percent";
+    case "currency":
+    case "currencyUnit":
+      return "currency";
+    case "unit":
+      return "quantity";
+    case "date":
+      return "date";
+    case "list":
+      return "list";
+    case "symbolic":
+      return "unknown";
+    default:
+      return "unknown";
+  }
+};
+
+const describeSemanticValue = (value: SemanticValue): string => {
+  const trimmed = value.toString().trim();
+  if (trimmed) {
+    return trimmed;
+  }
+  return canonicalTypeName(value);
+};
+
 const filterNumericItems = (values: SemanticValue[]): SemanticValue[] => {
   return flattenArgumentList(values).filter((value) => value.isNumeric());
 };
@@ -868,44 +898,13 @@ function collectListFunctionValues(
     if (allowSingleScalar) {
       return resolveFunctionArguments(values, context);
     }
-    if (functionName === "count" && values[0].getType() === "number") {
-      return ErrorValue.semanticError("Expected list");
-    }
+    const gotType = canonicalTypeName(values[0]);
     return ErrorValue.semanticError(
-      `${functionName}() expects a list, got ${values[0].getType()} value`
+      `${functionName}() expects a list, got ${gotType}`
     );
   }
   return resolveFunctionArguments(values, context);
 }
-
-const describeListArgument = (
-  value: SemanticValue | undefined,
-  context: EvaluationContext
-): string => {
-  if (!value) {
-    return "list";
-  }
-  if (SemanticValueTypes.isSymbolic(value)) {
-    const label = value.toString().trim();
-    if (label) {
-      return label;
-    }
-  }
-  for (const variable of context.variableContext.values()) {
-    if (variable.value === value) {
-      return variable.name;
-    }
-    if (
-      variable.value instanceof SemanticValue &&
-      value instanceof SemanticValue &&
-      variable.value.toString() === value.toString()
-    ) {
-      return variable.name;
-    }
-  }
-  const fallback = value.toString().trim();
-  return fallback || "list";
-};
 
 const sumSemanticValues = (values: SemanticValue[]): SemanticValue => {
   const numericItems = filterNumericItems(values);
@@ -1026,6 +1025,44 @@ const rangeSemanticValues = (values: SemanticValue[]): SemanticValue => {
 const RANGE_LITERAL_FUNCTION = "__rangeLiteral";
 const MAX_RANGE_ELEMENTS = 10000;
 
+const DATE_RANGE_STEP_ERROR = "Date ranges require a duration step (e.g., 1 day)";
+const RANGE_TIME_MISMATCH_ERROR = "Range endpoints must both include time or both be date-only";
+const TIME_ONLY_DURATION_UNITS = new Set<DurationUnit>(["hour", "minute", "second"]);
+
+type RangeEndpoint = number | DateValue;
+type DurationUnit = "year" | "month" | "week" | "day" | "hour" | "minute" | "second";
+type DurationStep = {
+  value: number;
+  unit: DurationUnit;
+};
+
+const DURATION_UNIT_ALIASES: Record<string, DurationUnit> = {
+  year: "year",
+  years: "year",
+  month: "month",
+  months: "month",
+  week: "week",
+  weeks: "week",
+  w: "week",
+  day: "day",
+  days: "day",
+  d: "day",
+  h: "hour",
+  hr: "hour",
+  hrs: "hour",
+  hour: "hour",
+  hours: "hour",
+  min: "minute",
+  mins: "minute",
+  minute: "minute",
+  minutes: "minute",
+  sec: "second",
+  secs: "second",
+  s: "second",
+  second: "second",
+  seconds: "second",
+};
+
 const evaluateRangeLiteralFunction = (
   args: { positional: SemanticValue[]; named: Map<string, SemanticValue> }
 ): SemanticValue => {
@@ -1037,21 +1074,37 @@ const evaluateRangeLiteralFunction = (
   }
 
   const startEndpoint = ensureRangeEndpoint(args.positional[0]);
-  if (typeof startEndpoint !== "number") {
+  if (startEndpoint instanceof ErrorValue) {
     return startEndpoint;
   }
   const endEndpoint = ensureRangeEndpoint(args.positional[1]);
-  if (typeof endEndpoint !== "number") {
+  if (endEndpoint instanceof ErrorValue) {
     return endEndpoint;
   }
 
-  if (startEndpoint === endEndpoint) {
-    return ListValue.fromItems([NumberValue.from(startEndpoint)]);
+  if (typeof startEndpoint === "number" && typeof endEndpoint === "number") {
+    return evaluateNumericRange(startEndpoint, endEndpoint, args.positional[2]);
   }
 
-  let stepValue = startEndpoint < endEndpoint ? 1 : -1;
-  if (args.positional.length === 3) {
-    const candidateStep = ensureRangeStep(args.positional[2]);
+  if (startEndpoint instanceof DateValue && endEndpoint instanceof DateValue) {
+    return evaluateDateRange(startEndpoint, endEndpoint, args.positional[2]);
+  }
+
+  return ErrorValue.semanticError("range endpoints must be both numbers or both dates");
+};
+
+const evaluateNumericRange = (
+  start: number,
+  end: number,
+  stepArg?: SemanticValue
+): SemanticValue => {
+  if (start === end) {
+    return buildListValue([NumberValue.from(start)]);
+  }
+
+  let stepValue = start < end ? 1 : -1;
+  if (stepArg) {
+    const candidateStep = ensureRangeStep(stepArg);
     if (typeof candidateStep !== "number") {
       return candidateStep;
     }
@@ -1062,11 +1115,10 @@ const evaluateRangeLiteralFunction = (
     return ErrorValue.semanticError("step cannot be 0");
   }
 
-  const direction = Math.sign(endEndpoint - startEndpoint);
+  const direction = Math.sign(end - start);
   if (direction === 0) {
-    return ListValue.fromItems([NumberValue.from(startEndpoint)]);
+    return buildListValue([NumberValue.from(start)]);
   }
-
   if (Math.sign(stepValue) !== direction) {
     const message =
       direction > 0
@@ -1075,10 +1127,49 @@ const evaluateRangeLiteralFunction = (
     return ErrorValue.semanticError(message);
   }
 
-  return buildRangeList(startEndpoint, endEndpoint, stepValue);
+  return buildRangeList(start, end, stepValue);
 };
 
-const ensureRangeEndpoint = (value: SemanticValue): number | ErrorValue => {
+const evaluateDateRange = (
+  start: DateValue,
+  end: DateValue,
+  stepArg?: SemanticValue
+): SemanticValue => {
+  if (start.getNumericValue() === end.getNumericValue()) {
+    return buildListValue([start]);
+  }
+
+  if (start.hasTimeComponent() !== end.hasTimeComponent()) {
+    return ErrorValue.semanticError(RANGE_TIME_MISMATCH_ERROR);
+  }
+
+  const direction = Math.sign(end.getNumericValue() - start.getNumericValue());
+  if (direction === 0) {
+    return buildListValue([start]);
+  }
+
+  if (!stepArg) {
+    return ErrorValue.semanticError(DATE_RANGE_STEP_ERROR);
+  }
+
+  const ensured = ensureDurationStep(stepArg);
+  if (ensured instanceof ErrorValue) {
+    return ensured;
+  }
+  const step = ensured;
+
+  if (!start.hasTimeComponent() && TIME_ONLY_DURATION_UNITS.has(step.unit)) {
+    return ErrorValue.semanticError(DATE_RANGE_STEP_ERROR);
+  }
+
+  return buildDateRangeList(start, end, step, direction);
+};
+
+const ensureRangeEndpoint = (value: SemanticValue): RangeEndpoint | ErrorValue => {
+  if (value.getType() === "date") {
+    return value as DateValue;
+  }
+
   if (value.getType() !== "number") {
     if (value.getType() === "unit") {
       const unitValue = value as UnitValue;
@@ -1123,25 +1214,134 @@ const ensureRangeStep = (value: SemanticValue): number | ErrorValue => {
   return numeric;
 };
 
+const ensureDurationStep = (value: SemanticValue): DurationStep | ErrorValue => {
+  if (value.getType() !== "unit") {
+    return ErrorValue.semanticError(
+      `Invalid range step: expected duration, got ${describeSemanticValue(value)}`
+    );
+  }
+  const unitValue = value as UnitValue;
+  const rawUnit = unitValue.getUnit().toLowerCase();
+  const normalized = DURATION_UNIT_ALIASES[rawUnit];
+  if (!normalized) {
+    return ErrorValue.semanticError(
+      `Invalid range step: expected duration, got ${describeSemanticValue(value)}`
+    );
+  }
+  const numeric = unitValue.getNumericValue();
+  if (!Number.isFinite(numeric) || numeric <= 0) {
+    return ErrorValue.semanticError(
+      `Invalid range step: expected a positive duration, got ${describeSemanticValue(value)}`
+    );
+  }
+  return { value: numeric, unit: normalized };
+};
+
+const getRangeElementLimit = (): number => Math.min(MAX_RANGE_ELEMENTS, getListMaxLength());
+
 const buildRangeList = (start: number, end: number, step: number): SemanticValue => {
   const direction = Math.sign(end - start);
+  if (direction === 0) {
+    return buildListValue([NumberValue.from(start)]);
+  }
   const comparator = direction > 0 ? (value: number) => value <= end : (value: number) => value >= end;
-  const magnitude = Math.abs(step);
-  const estimatedElements = magnitude > 0 ? Math.floor(Math.abs(end - start) / magnitude) + 1 : 1;
   const items: SemanticValue[] = [];
   let current = start;
   let count = 0;
+  const limit = getRangeElementLimit();
   while (comparator(current)) {
     items.push(NumberValue.from(current));
     count += 1;
-    if (count > MAX_RANGE_ELEMENTS) {
+    if (count > limit) {
       return ErrorValue.semanticError(
-        `range too large (${estimatedElements} elements; max ${MAX_RANGE_ELEMENTS})`
+        `range too large (${count} elements; max ${limit})`
       );
     }
     current += step;
   }
-  return ListValue.fromItems(items);
+  return buildListValue(items);
+};
+
+const buildDateRangeList = (
+  start: DateValue,
+  end: DateValue,
+  step: DurationStep,
+  direction: number
+): SemanticValue => {
+  const endMs = end.getNumericValue();
+  const comparator =
+    direction > 0
+      ? (value: DateValue) => value.getNumericValue() <= endMs
+      : (value: DateValue) => value.getNumericValue() >= endMs;
+  const items: SemanticValue[] = [];
+  let current = start;
+  let count = 0;
+  const limit = getRangeElementLimit();
+  let iteration = 0;
+
+  while (comparator(current)) {
+    items.push(current);
+    count += 1;
+    if (count > limit) {
+      return ErrorValue.semanticError(`range too large (${count} elements; max ${limit})`);
+    }
+    iteration += 1;
+    if (step.unit === "month" || step.unit === "year") {
+      current = buildMonthYearCandidate(start, step, direction, iteration);
+    } else {
+      current = addDurationStep(current, step, direction);
+    }
+  }
+
+  return buildListValue(items);
+};
+
+const buildMonthYearCandidate = (
+  start: DateValue,
+  step: DurationStep,
+  direction: number,
+  iteration: number
+): DateValue => {
+  const base = start.getDateTime();
+  const monthsPerStep =
+    step.unit === "year" ? step.value * 12 : step.unit === "month" ? step.value : 0;
+  const totalMonths = monthsPerStep * direction * iteration;
+  const candidate = base.plus({ months: totalMonths });
+  return DateValue.fromDateTime(candidate, start.getZone(), start.hasTimeComponent());
+};
+
+const addDurationStep = (
+  current: DateValue,
+  step: DurationStep,
+  direction: number
+): DateValue => {
+  const dt = current.getDateTime();
+  const amount = step.value * direction;
+  let updated: DateTime;
+  switch (step.unit) {
+    case "year":
+      updated = dt.plus({ years: amount });
+      break;
+    case "month":
+      updated = dt.plus({ months: amount });
+      break;
+    case "week":
+      updated = dt.plus({ days: amount * 7 });
+      break;
+    case "day":
+      updated = dt.plus({ days: amount });
+      break;
+    case "hour":
+      updated = dt.plus({ hours: amount });
+      break;
+    case "minute":
+      updated = dt.plus({ minutes: amount });
+      break;
+    case "second":
+      updated = dt.plus({ seconds: amount });
+      break;
+  }
+  return DateValue.fromDateTime(updated, current.getZone(), current.hasTimeComponent());
 };
 
 const buildListValue = (items: SemanticValue[]): SemanticValue => {
@@ -1415,8 +1615,16 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
     }
     
     const exprNode = node as ExpressionNode;
-    const conversion = this.extractConversionSuffix(exprNode.expression);
-    const expression = conversion ? conversion.baseExpression : exprNode.expression;
+    const normalized = rewriteLocaleDateLiterals(exprNode.expression, context.dateLocale);
+    if (normalized.errors.length > 0) {
+      return this.createErrorNode(
+        normalized.errors[0],
+        exprNode.expression,
+        context.lineNumber
+      );
+    }
+    const conversion = this.extractConversionSuffix(normalized.expression);
+    const expression = conversion ? conversion.baseExpression : normalized.expression;
     const whereMatch = expression.match(/(.+?)\bwhere\b(.+)/i);
     if (whereMatch) {
       const filtered = this.evaluateWhereExpression(
@@ -1699,7 +1907,9 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
     }
 
     if (!SemanticValueTypes.isList(listValue)) {
-      return ErrorValue.semanticError("where expects a list");
+      return ErrorValue.semanticError(
+        `where() expects a list, got ${canonicalTypeName(listValue)}`
+      );
     }
 
     const predicate = parseWherePredicate(predicateExpr);

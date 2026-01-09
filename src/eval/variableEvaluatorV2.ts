@@ -7,6 +7,7 @@
 
 import {
   ASTNode,
+  ExpressionComponent,
   VariableAssignmentNode,
   isVariableAssignmentNode,
 } from "../parsing/ast";
@@ -31,6 +32,7 @@ import { parseExpressionComponents } from "../parsing/expressionComponents";
 import { SimpleExpressionParser } from "./expressionEvaluatorV2";
 import { expressionContainsUnitsNet } from "../units/unitsnetEvaluator";
 import { inferListDelimiter } from "../utils/listExpression";
+import { rewriteLocaleDateLiterals } from "../utils/localeDateNormalization";
 
 /**
  * Semantic-aware variable evaluator
@@ -56,8 +58,19 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
     
     const varNode = node as VariableAssignmentNode;
     
+    const originalRawValue = varNode.rawValue || "";
+    const normalized = rewriteLocaleDateLiterals(originalRawValue, context.dateLocale);
+    if (normalized.errors.length > 0) {
+      return this.createErrorNode(
+        normalized.errors[0],
+        varNode.variableName,
+        context.lineNumber
+      );
+    }
+    const normalizedRawValue = normalized.expression;
+
     const thousandCommaPattern = /^[\$€£¥₹₿]\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?\s*$/;
-    if (thousandCommaPattern.test(varNode.rawValue || "")) {
+    if (thousandCommaPattern.test(normalizedRawValue)) {
       return this.createErrorNode(
         "Cannot create list: incompatible units",
         varNode.variableName,
@@ -65,28 +78,17 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
       );
     }
 
-    if (this.shouldDeferToUnitsNet(varNode, context)) {
+    if (this.shouldDeferToUnitsNet(varNode, context, normalizedRawValue)) {
       return null;
     }
     
     try {
-      // Debug logging
-      console.log('VariableEvaluatorV2: Processing variable assignment:', {
-        variableName: varNode.variableName,
-        rawValue: varNode.rawValue,
-        parsedValue: varNode.parsedValue,
-        parsedValueType: varNode.parsedValue?.getType()
-      });
-      
       // The value is already parsed as a SemanticValue!
       let semanticValue = varNode.parsedValue;
       
       // Check if parsing resulted in an error
       if (SemanticValueTypes.isError(semanticValue)) {
-      const errorValue = semanticValue as ErrorValue;
-      if (varNode.variableName === "vals") {
-        console.log("vals error type:", errorValue.getErrorType());
-      }
+        const errorValue = semanticValue as ErrorValue;
 
       if (SemanticValueTypes.isList(semanticValue)) {
         const resolvedList = this.resolveListSymbols(semanticValue, context);
@@ -101,11 +103,11 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
       }
 
         // If this looks like a non-literal expression, try evaluating it numerically
-        if (errorValue.getErrorType() === "parse" && varNode.rawValue) {
+        if (errorValue.getErrorType() === "parse" && normalizedRawValue) {
           let resolvedValue: import("../types").SemanticValue | null = null;
 
           const listValue = this.evaluateListLiteralExpressions(
-            varNode.rawValue,
+            normalizedRawValue,
             context
           );
           if (listValue) {
@@ -120,9 +122,9 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
           } else {
             try {
               resolvedValue = SimpleExpressionParser.parseComponents(
-                parseExpressionComponents(varNode.rawValue),
-                context
-              );
+              parseExpressionComponents(normalizedRawValue),
+              context
+            );
             } catch (parseError) {
               resolvedValue = ErrorValue.parseError(
                 parseError instanceof Error ? parseError.message : String(parseError)
@@ -130,19 +132,15 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
             }
 
             if (!resolvedValue || SemanticValueTypes.isError(resolvedValue)) {
-              const evalResult = parseAndEvaluateExpression(
-                varNode.rawValue,
-                context.variableContext
-              );
+                const evalResult = parseAndEvaluateExpression(
+                  normalizedRawValue,
+                  context.variableContext
+                );
 
               if (evalResult.error) {
                 if (/Undefined variable|not defined/i.test(evalResult.error)) {
-                  resolvedValue = SymbolicValue.from(varNode.rawValue);
+                  resolvedValue = SymbolicValue.from(normalizedRawValue);
                 } else {
-                  console.warn(
-                    "VariableEvaluatorV2: Expression evaluation error:",
-                    evalResult.error
-                  );
                   return this.createErrorNode(
                     `Invalid variable value: ${evalResult.error}`,
                     varNode.variableName,
@@ -161,10 +159,6 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
             semanticValue = resolvedValue;
           }
         } else {
-          console.warn(
-            "VariableEvaluatorV2: Semantic value is an error:",
-            errorValue.getMessage()
-          );
           return this.createErrorNode(
             `Invalid variable value: ${errorValue.getMessage()}`,
             varNode.variableName,
@@ -180,6 +174,20 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
           if (referencedVariable?.value instanceof SemanticValue) {
             semanticValue = referencedVariable.value;
           }
+        }
+      }
+
+      if (
+        SemanticValueTypes.isSymbolic(semanticValue) &&
+        normalizedRawValue &&
+        normalizedRawValue.includes("..")
+      ) {
+        const evaluated = this.evaluateExpressionComponentsFromRaw(
+          normalizedRawValue,
+          context
+        );
+        if (evaluated) {
+          semanticValue = evaluated;
         }
       }
 
@@ -240,15 +248,21 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
 
   private shouldDeferToUnitsNet(
     node: VariableAssignmentNode,
-    context: EvaluationContext
+    context: EvaluationContext,
+    normalizedExpression?: string
   ): boolean {
     const parsedValue = node.parsedValue;
     if (parsedValue && !SemanticValueTypes.isError(parsedValue)) {
       return false;
     }
 
-    const expression = (node.rawValue || node.parsedValue?.toString() || "").trim();
+    const expression =
+      normalizedExpression?.trim() ||
+      (node.rawValue || node.parsedValue?.toString() || "").trim();
     if (expression.includes(",")) {
+      return false;
+    }
+    if (expression.includes("..")) {
       return false;
     }
     if (!expression) {
@@ -259,8 +273,8 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
       return true;
     }
 
-    const normalizedExpression = expression.replace(/\s+/g, " ").trim();
-    if (!normalizedExpression) {
+    const normalizedExpr = expression.replace(/\s+/g, " ").trim();
+    if (!normalizedExpr) {
       return false;
     }
 
@@ -269,7 +283,7 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
       if (!normalizedName) {
         continue;
       }
-      if (!normalizedExpression.includes(normalizedName)) {
+      if (!normalizedExpr.includes(normalizedName)) {
         continue;
       }
       const value = variable.value;
@@ -383,6 +397,29 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
     }
 
     return parts;
+  }
+
+  private evaluateExpressionComponentsFromRaw(
+    rawValue: string,
+    context: EvaluationContext
+  ): SemanticValue | null {
+    if (!rawValue) {
+      return null;
+    }
+    let components: ExpressionComponent[] = [];
+    try {
+      components = parseExpressionComponents(rawValue);
+    } catch (_) {
+      return null;
+    }
+    if (components.length === 0) {
+      return null;
+    }
+    const evaluated = SimpleExpressionParser.parseComponents(components, context);
+    if (!evaluated || SemanticValueTypes.isError(evaluated)) {
+      return null;
+    }
+    return evaluated;
   }
 }
 

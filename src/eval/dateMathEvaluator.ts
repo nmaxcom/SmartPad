@@ -34,10 +34,15 @@ import {
 } from '../date/dateMath';
 import { splitTopLevelCommas } from '../utils/listExpression';
 
+const containsRangeOperator = (text?: string): boolean => !!text && text.includes('..');
+
 export class DateMathEvaluator implements NodeEvaluator {
   canHandle(node: ASTNode): boolean {
     if (isVariableAssignmentNode(node)) {
       const raw = (node.rawValue || '').trim();
+      if (containsRangeOperator(raw)) {
+        return false;
+      }
       if (raw.includes(',') && splitTopLevelCommas(raw).length > 1) {
         return false;
       }
@@ -46,6 +51,9 @@ export class DateMathEvaluator implements NodeEvaluator {
 
     if (isCombinedAssignmentNode(node) || isExpressionNode(node)) {
       const expr = isExpressionNode(node) ? node.expression : node.expression;
+      if (containsRangeOperator(expr)) {
+        return false;
+      }
       if (expr.includes(',') && splitTopLevelCommas(expr).length > 1) {
         return false;
       }

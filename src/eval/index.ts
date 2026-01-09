@@ -26,6 +26,7 @@ import { defaultErrorEvaluator } from "./errorEvaluator";
 
 // Import V2 evaluators
 import { PercentageExpressionEvaluatorV2 } from "./percentageEvaluatorV2";
+import { RangeExpressionEvaluator } from "./rangeExpressionEvaluator";
 import { VariableEvaluatorV2 } from "./variableEvaluatorV2";
 import { ExpressionEvaluatorV2 } from "./expressionEvaluatorV2";
 import { CombinedAssignmentEvaluatorV2 } from "./combinedAssignmentEvaluatorV2";
@@ -46,6 +47,7 @@ export function setupDefaultEvaluators(): void {
 
   // Create V2 evaluator instances (semantic-aware)
   const percentageEvaluatorV2 = new PercentageExpressionEvaluatorV2();
+  const rangeExpressionEvaluator = new RangeExpressionEvaluator();
   const dateMathEvaluator = new DateMathEvaluator();
   const solveEvaluator = new SolveEvaluator();
   const unitsNetEvaluator = new UnitsNetExpressionEvaluator();
@@ -57,6 +59,9 @@ export function setupDefaultEvaluators(): void {
   // Register V2 evaluators in order of priority
   // Percentage evaluator first - handles complex percentage operations
   defaultRegistry.register(percentageEvaluatorV2);
+
+  // Range evaluator must own .. expressions before others
+  defaultRegistry.register(rangeExpressionEvaluator);
 
   // Date math evaluator - handles date/time expressions before units
   defaultRegistry.register(dateMathEvaluator);

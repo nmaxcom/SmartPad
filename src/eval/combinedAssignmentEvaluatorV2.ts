@@ -37,6 +37,7 @@ import { parseAndEvaluateExpression } from "../parsing/expressionParser";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
 import { SimpleExpressionParser } from "./expressionEvaluatorV2";
 import { isAggregatorExpression } from "./aggregatorUtils";
+import { rewriteLocaleDateLiterals } from "../utils/localeDateNormalization";
 
 /**
  * Evaluator for combined assignment operations with semantic types
@@ -60,18 +61,20 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
     }
     
     const combNode = node as CombinedAssignmentNode;
-    const conversion = this.extractConversionSuffix(combNode.expression);
-    const expression = conversion ? conversion.baseExpression : combNode.expression;
-    const components = conversion ? this.parseComponents(expression) : combNode.components;
+    const normalized = rewriteLocaleDateLiterals(combNode.expression, context.dateLocale);
+    if (normalized.errors.length > 0) {
+      return this.createErrorNode(
+        normalized.errors[0],
+        combNode.variableName,
+        combNode.expression,
+        context.lineNumber
+      );
+    }
+    const conversion = this.extractConversionSuffix(normalized.expression);
+    const expression = conversion ? conversion.baseExpression : normalized.expression;
+    const components = this.parseComponents(expression);
     
     try {
-      // Debug logging
-      console.log('CombinedAssignmentEvaluatorV2: Processing combined assignment:', {
-        variableName: combNode.variableName,
-        expression,
-        raw: combNode.raw
-      });
-      
       const listCandidate = this.tryBuildListFromExpression(expression, context);
       if (listCandidate && SemanticValueTypes.isError(listCandidate)) {
         return this.createErrorNode(
@@ -112,10 +115,6 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
             if (/Undefined variable|not defined/i.test(evalResult.error)) {
               semanticValue = SymbolicValue.from(expression);
             } else {
-              console.warn(
-                "CombinedAssignmentEvaluatorV2: Expression evaluation error:",
-                evalResult.error
-              );
               return this.createErrorNode(
                 evalResult.error,
                 combNode.variableName,
