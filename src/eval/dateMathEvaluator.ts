@@ -33,8 +33,11 @@ import {
   parseDateLiteral,
 } from '../date/dateMath';
 import { splitTopLevelCommas } from '../utils/listExpression';
+import { rewriteLocaleDateLiterals } from "../utils/localeDateNormalization";
+import { containsRangeOperatorOutsideString } from "../utils/rangeExpression";
 
-const containsRangeOperator = (text?: string): boolean => !!text && text.includes('..');
+const containsRangeOperator = (text?: string): boolean =>
+  !!text && containsRangeOperatorOutsideString(text);
 
 export class DateMathEvaluator implements NodeEvaluator {
   canHandle(node: ASTNode): boolean {
@@ -84,7 +87,16 @@ export class DateMathEvaluator implements NodeEvaluator {
     context: EvaluationContext
   ): RenderNode | null {
     const raw = (node.rawValue || '').trim();
-    const parsed = parseDateLiteral(raw);
+    const normalized = rewriteLocaleDateLiterals(raw, context.dateLocale);
+    if (normalized.errors.length > 0) {
+      return this.createErrorNode(
+        normalized.errors[0],
+        node.variableName,
+        context.lineNumber,
+        node.rawValue
+      );
+    }
+    const parsed = parseDateLiteral(normalized.expression);
     if (!parsed) {
       return null;
     }
@@ -112,7 +124,22 @@ export class DateMathEvaluator implements NodeEvaluator {
     node: CombinedAssignmentNode,
     context: EvaluationContext
   ): RenderNode | null {
-    const result = evaluateDateExpression(node.expression, context.variableContext);
+    const normalized = rewriteLocaleDateLiterals(
+      node.expression,
+      context.dateLocale
+    );
+    if (normalized.errors.length > 0) {
+      return this.createErrorNode(
+        normalized.errors[0],
+        node.variableName,
+        context.lineNumber,
+        node.expression
+      );
+    }
+    const result = evaluateDateExpression(
+      normalized.expression,
+      context.variableContext
+    );
     if (!result) {
       return null;
     }
@@ -142,7 +169,21 @@ export class DateMathEvaluator implements NodeEvaluator {
   }
 
   private evaluateExpression(node: ExpressionNode, context: EvaluationContext): RenderNode | null {
-    const result = evaluateDateExpression(node.expression, context.variableContext);
+    const normalized = rewriteLocaleDateLiterals(
+      node.expression,
+      context.dateLocale
+    );
+    if (normalized.errors.length > 0) {
+      return this.createErrorNode(
+        normalized.errors[0],
+        node.expression,
+        context.lineNumber
+      );
+    }
+    const result = evaluateDateExpression(
+      normalized.expression,
+      context.variableContext
+    );
     if (!result) {
       return null;
     }

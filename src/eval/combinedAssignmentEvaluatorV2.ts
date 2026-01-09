@@ -38,6 +38,11 @@ import { parseExpressionComponents } from "../parsing/expressionComponents";
 import { SimpleExpressionParser } from "./expressionEvaluatorV2";
 import { isAggregatorExpression } from "./aggregatorUtils";
 import { rewriteLocaleDateLiterals } from "../utils/localeDateNormalization";
+import {
+  containsRangeOperatorOutsideString,
+  isValidRangeExpressionCandidate,
+  normalizeRangeErrorMessage,
+} from "../utils/rangeExpression";
 
 /**
  * Evaluator for combined assignment operations with semantic types
@@ -70,6 +75,17 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
         context.lineNumber
       );
     }
+    const hasRangeOperator = containsRangeOperatorOutsideString(
+      normalized.expression
+    );
+    if (hasRangeOperator && !isValidRangeExpressionCandidate(normalized.expression)) {
+      return this.createErrorNode(
+        `Invalid range expression near "${combNode.expression}"`,
+        combNode.variableName,
+        combNode.expression,
+        context.lineNumber
+      );
+    }
     const conversion = this.extractConversionSuffix(normalized.expression);
     const expression = conversion ? conversion.baseExpression : normalized.expression;
     const components = this.parseComponents(expression);
@@ -78,7 +94,12 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
       const listCandidate = this.tryBuildListFromExpression(expression, context);
       if (listCandidate && SemanticValueTypes.isError(listCandidate)) {
         return this.createErrorNode(
-          (listCandidate as ErrorValue).getMessage(),
+          hasRangeOperator
+            ? normalizeRangeErrorMessage(
+                combNode.expression,
+                (listCandidate as ErrorValue).getMessage()
+              )
+            : (listCandidate as ErrorValue).getMessage(),
           combNode.variableName,
           combNode.expression,
           context.lineNumber
@@ -116,7 +137,12 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
               semanticValue = SymbolicValue.from(expression);
             } else {
               return this.createErrorNode(
-                evalResult.error,
+                hasRangeOperator
+                  ? normalizeRangeErrorMessage(
+                      combNode.expression,
+                      evalResult.error
+                    )
+                  : evalResult.error,
                 combNode.variableName,
                 combNode.expression,
                 context.lineNumber
@@ -136,7 +162,9 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
       if (SemanticValueTypes.isError(semanticValue)) {
         const errorMessage = (semanticValue as ErrorValue).getMessage();
         return this.createErrorNode(
-          errorMessage,
+          hasRangeOperator
+            ? normalizeRangeErrorMessage(combNode.expression, errorMessage)
+            : errorMessage,
           combNode.variableName,
           combNode.expression,
           context.lineNumber
@@ -152,7 +180,12 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
       
       if (!result.success) {
         return this.createErrorNode(
-          result.error || "Failed to set variable",
+          hasRangeOperator
+            ? normalizeRangeErrorMessage(
+                combNode.expression,
+                result.error || "Failed to set variable"
+              )
+            : result.error || "Failed to set variable",
           combNode.variableName,
           combNode.expression,
           context.lineNumber
@@ -184,7 +217,14 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
       
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      return this.createErrorNode(message, combNode.variableName, combNode.expression, context.lineNumber);
+      return this.createErrorNode(
+        hasRangeOperator
+          ? normalizeRangeErrorMessage(combNode.expression, message)
+          : message,
+        combNode.variableName,
+        combNode.expression,
+        context.lineNumber
+      );
     }
   }
   

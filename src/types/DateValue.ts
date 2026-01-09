@@ -12,6 +12,26 @@ export type DateZone =
   | { type: 'offset'; label: string; offsetMinutes: number };
 
 const pad2 = (value: number): string => String(value).padStart(2, '0');
+const formatUtcOffset = (offsetMinutes: number): string => {
+  const sign = offsetMinutes >= 0 ? "+" : "-";
+  const abs = Math.abs(offsetMinutes);
+  const hours = Math.floor(abs / 60);
+  const minutes = abs % 60;
+  if (minutes === 0) {
+    return `${sign}${hours}`;
+  }
+  return `${sign}${hours}:${pad2(minutes)}`;
+};
+
+export const formatZoneLabel = (zone: DateZone, dt: DateTime): string => {
+  if (zone.type === 'utc') {
+    return 'UTC';
+  }
+  if (zone.type === 'offset') {
+    return zone.label;
+  }
+  return `UTC${formatUtcOffset(dt.offset)}`;
+};
 
 const monthNames: Record<string, number> = {
   jan: 0,
@@ -269,7 +289,7 @@ export class DateValue extends SemanticValue {
         minute: '2-digit',
         hour12: false,
       });
-      return `${dateTimeText} ${this.zone.label}`;
+      return `${dateTimeText} ${formatZoneLabel(this.zone, dt)}`;
     }
 
     const dateText = `${dt.year}-${pad2(dt.month)}-${pad2(dt.day)}`;
@@ -277,7 +297,7 @@ export class DateValue extends SemanticValue {
       return dateText;
     }
     const timeText = `${pad2(dt.hour)}:${pad2(dt.minute)}`;
-    return `${dateText} ${timeText} ${this.zone.label}`;
+    return `${dateText} ${timeText} ${formatZoneLabel(this.zone, dt)}`;
   }
 
   equals(other: SemanticValue): boolean {

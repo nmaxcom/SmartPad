@@ -4,14 +4,23 @@
 
 import { parseLine } from "../../src/parsing/astParser";
 import { defaultRegistry } from "../../src/eval";
+import type { EvaluationContext } from "../../src/eval/registry";
 import { ReactiveVariableStore } from "../../src/state/variableStore";
 import { Variable } from "../../src/state/types";
 import { DateValue } from "../../src/types";
 
-const createContext = (lineNumber = 1, variableContext?: Map<string, Variable>) => {
+const createContext = (
+  lineNumber = 1,
+  variableContext?: Map<string, Variable>
+): EvaluationContext => {
   const variableStore = new ReactiveVariableStore();
   const contextMap = variableContext ?? new Map<string, Variable>();
-  return { variableStore, variableContext: contextMap, lineNumber, decimalPlaces: 6 };
+  return {
+    variableStore,
+    variableContext: contextMap,
+    lineNumber,
+    decimalPlaces: 6,
+  };
 };
 
 describe("Date Math Evaluator", () => {
@@ -221,49 +230,23 @@ describe("Date Math Evaluator", () => {
     }
   });
 
-  test("should parse locale month/day order", () => {
-    const spy = jest.spyOn(Intl, "DateTimeFormat").mockImplementation(() => {
-      return {
-        formatToParts: () => [
-          { type: "month", value: "04" },
-          { type: "literal", value: "/" },
-          { type: "day", value: "23" },
-          { type: "literal", value: "/" },
-          { type: "year", value: "2006" },
-        ],
-      } as Intl.DateTimeFormat;
-    });
-
+  test("should parse locale numeric dates when locale is configured", () => {
     const node = parseLine("06/05/2024 =>", 1);
-    const result = defaultRegistry.evaluate(node, createContext());
-    expect(result?.type).toBe("mathResult");
-    if (result?.type === "mathResult") {
-      expect(result.displayText).toBe("06/05/2024 => 2024-06-05");
-    }
-
-    spy.mockRestore();
-  });
-
-  test("should parse locale day/month order", () => {
-    const spy = jest.spyOn(Intl, "DateTimeFormat").mockImplementation(() => {
-      return {
-        formatToParts: () => [
-          { type: "day", value: "23" },
-          { type: "literal", value: "/" },
-          { type: "month", value: "04" },
-          { type: "literal", value: "/" },
-          { type: "year", value: "2006" },
-        ],
-      } as Intl.DateTimeFormat;
-    });
-
-    const node = parseLine("06/05/2024 =>", 1);
-    const result = defaultRegistry.evaluate(node, createContext());
+    const context = createContext();
+    context.dateLocale = "es-ES";
+    const result = defaultRegistry.evaluate(node, context);
     expect(result?.type).toBe("mathResult");
     if (result?.type === "mathResult") {
       expect(result.displayText).toBe("06/05/2024 => 2024-05-06");
     }
+  });
 
-    spy.mockRestore();
+  test("should reject locale numeric dates when locale is unset", () => {
+    const node = parseLine("06/05/2024 =>", 1);
+    const result = defaultRegistry.evaluate(node, createContext());
+    expect(result?.type).toBe("error");
+    if (result?.type === "error") {
+      expect(result.displayText).toContain('Unsupported date format "06/05/2024"');
+    }
   });
 });

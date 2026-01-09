@@ -179,4 +179,31 @@ describe("Date and time ranges", () => {
     expect(result?.type).toBe("error");
     expect((result as any).displayText).toContain("Invalid range step");
   });
+
+  test("numeric ranges reject duration steps", () => {
+    const context = createContext();
+    const result = evaluateLine("1..10 step 1 day =>", context, 1);
+    expect(result?.type).toBe("error");
+    expect((result as any).displayText).toContain("Invalid range step");
+  });
+
+  test("invalid range expressions are normalized", () => {
+    const context = createContext();
+    const result = evaluateLine("2026-01-01....2026-01-05 =>", context, 1);
+    expect(result?.type).toBe("error");
+    expect((result as any).displayText).toContain(
+      'Invalid range expression near "2026-01-01....2026-01-05"'
+    );
+  });
+
+  test("ranges missing endpoints return range errors", () => {
+    const context = createContext();
+    const first = evaluateLine("2026-01-01.. step 1 day =>", context, 1);
+    expect(first?.type).toBe("error");
+    expect((first as any).displayText).toContain("Invalid range expression");
+
+    const second = evaluateLine("..2026-01-05 step 1 day =>", context, 2);
+    expect(second?.type).toBe("error");
+    expect((second as any).displayText).toContain("Invalid range expression");
+  });
 });

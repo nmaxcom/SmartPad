@@ -1,4 +1,62 @@
 import { SemanticValue, DisplayOptions, SemanticValueType } from "./SemanticValue";
+import { DateValue, formatZoneLabel, getDateLocaleEffective } from "./DateValue";
+
+const pad2 = (value: number): string => String(value).padStart(2, "0");
+
+const isDateTimeList = (items: SemanticValue[]): items is DateValue[] =>
+  items.length > 0 &&
+  items.every(
+    (item) =>
+      item instanceof DateValue && (item as DateValue).hasTimeComponent()
+  );
+
+const formatDatePart = (value: DateValue, options?: DisplayOptions): string => {
+  const dt = value.getDateTime();
+  if (options?.dateFormat === "locale") {
+    const locale = options.dateLocale || getDateLocaleEffective();
+    return dt.setLocale(locale).toLocaleString({
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  }
+  return `${dt.year}-${pad2(dt.month)}-${pad2(dt.day)}`;
+};
+
+const formatTimePart = (value: DateValue, options?: DisplayOptions): string => {
+  const dt = value.getDateTime();
+  if (options?.dateFormat === "locale") {
+    const locale = options.dateLocale || getDateLocaleEffective();
+    return dt.setLocale(locale).toLocaleString({
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  }
+  return `${pad2(dt.hour)}:${pad2(dt.minute)}`;
+};
+
+const formatCompactDateTimeList = (
+  items: DateValue[],
+  options?: DisplayOptions
+): string => {
+  const groups: Array<{ date: string; times: string[]; zone: string }> = [];
+  for (const item of items) {
+    const dateText = formatDatePart(item, options);
+    const timeText = formatTimePart(item, options);
+    const zoneText = formatZoneLabel(item.getZone(), item.getDateTime());
+    const last = groups[groups.length - 1];
+    if (!last || last.date !== dateText) {
+      groups.push({ date: dateText, times: [timeText], zone: zoneText });
+      continue;
+    }
+    last.times.push(timeText);
+  }
+
+  return groups
+    .map((group) => `${group.date}: ${group.times.join(", ")} ${group.zone}`)
+    .join("; ");
+};
 
 export class ListValue extends SemanticValue {
   private readonly items: SemanticValue[];
@@ -60,6 +118,9 @@ export class ListValue extends SemanticValue {
   toString(options?: DisplayOptions): string {
     if (this.items.length === 0) {
       return "()";
+    }
+    if (isDateTimeList(this.items)) {
+      return formatCompactDateTimeList(this.items, options);
     }
     return this.items.map((item) => item.toString(options)).join(this.delimiter);
   }

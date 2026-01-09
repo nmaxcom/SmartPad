@@ -43,6 +43,7 @@ import { splitTopLevelCommas, inferListDelimiter } from "../utils/listExpression
 import { PercentageValue } from "../types/PercentageValue";
 import { isAggregatorExpression } from "./aggregatorUtils";
 import { rewriteLocaleDateLiterals } from "../utils/localeDateNormalization";
+import { containsRangeOperatorOutsideString } from "../utils/rangeExpression";
 
 function applyAbsToSemanticValue(value: SemanticValue): SemanticValue {
   if (!value.isNumeric()) {
@@ -1025,7 +1026,8 @@ const rangeSemanticValues = (values: SemanticValue[]): SemanticValue => {
 const RANGE_LITERAL_FUNCTION = "__rangeLiteral";
 const MAX_RANGE_ELEMENTS = 10000;
 
-const DATE_RANGE_STEP_ERROR = "Date ranges require a duration step (e.g., 1 day)";
+const DATE_RANGE_STEP_ERROR =
+  "Date/time ranges require a duration step (e.g., step 1 day)";
 const RANGE_TIME_MISMATCH_ERROR = "Range endpoints must both include time or both be date-only";
 const TIME_ONLY_DURATION_UNITS = new Set<DurationUnit>(["hour", "minute", "second"]);
 
@@ -1196,17 +1198,18 @@ const ensureRangeEndpoint = (value: SemanticValue): RangeEndpoint | ErrorValue =
 
 const ensureRangeStep = (value: SemanticValue): number | ErrorValue => {
   if (value.getType() !== "number") {
-    const fallback = value.toString().trim() || value.getType();
-    return ErrorValue.semanticError(`step must be an integer (got ${fallback})`);
+    const got =
+      value.getType() === "unit" ? "duration" : canonicalTypeName(value);
+    return ErrorValue.semanticError(
+      `Invalid range step: expected integer, got ${got}`
+    );
   }
   const numeric = value.getNumericValue();
   if (!Number.isFinite(numeric)) {
-    return ErrorValue.semanticError("step must be an integer");
+    return ErrorValue.semanticError("Invalid range step: expected integer");
   }
   if (!Number.isInteger(numeric)) {
-    return ErrorValue.semanticError(
-      `step must be an integer (got ${value.toString().trim()})`
-    );
+    return ErrorValue.semanticError("Invalid range step: expected integer");
   }
   if (numeric === 0) {
     return ErrorValue.semanticError("step cannot be 0");
@@ -1216,8 +1219,10 @@ const ensureRangeStep = (value: SemanticValue): number | ErrorValue => {
 
 const ensureDurationStep = (value: SemanticValue): DurationStep | ErrorValue => {
   if (value.getType() !== "unit") {
+    const got =
+      value.getType() === "number" ? "number" : canonicalTypeName(value);
     return ErrorValue.semanticError(
-      `Invalid range step: expected duration, got ${describeSemanticValue(value)}`
+      `Invalid range step: expected duration, got ${got}`
     );
   }
   const unitValue = value as UnitValue;
@@ -1589,7 +1594,7 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       return true;
     }
 
-    if (expr.includes("..")) {
+    if (containsRangeOperatorOutsideString(expr)) {
       return true;
     }
 
@@ -1687,7 +1692,10 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
         result = this.evaluateVariableReference(expression, context);
       }
       // Function calls, range literals, or expression components
-      else if (this.containsFunctionCall(expression) || expression.includes("..")) {
+      else if (
+        this.containsFunctionCall(expression) ||
+        containsRangeOperatorOutsideString(expression)
+      ) {
         const componentResult = SimpleExpressionParser.parseComponents(
           components,
           context
@@ -1798,7 +1806,7 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
    * Check if expression is a simple literal
    */
   private isSimpleLiteral(expr: string): boolean {
-    if (expr.includes("..")) {
+    if (containsRangeOperatorOutsideString(expr)) {
       return false;
     }
     const parsed = SemanticParsers.parse(expr.trim());
@@ -2118,7 +2126,7 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       return null;
     }
 
-    if (!trimmed.includes("..")) {
+    if (!containsRangeOperatorOutsideString(trimmed)) {
       const literal = SemanticParsers.parse(trimmed);
       if (literal) {
         return literal;

@@ -33,6 +33,11 @@ import { SimpleExpressionParser } from "./expressionEvaluatorV2";
 import { expressionContainsUnitsNet } from "../units/unitsnetEvaluator";
 import { inferListDelimiter } from "../utils/listExpression";
 import { rewriteLocaleDateLiterals } from "../utils/localeDateNormalization";
+import {
+  containsRangeOperatorOutsideString,
+  isValidRangeExpressionCandidate,
+  normalizeRangeErrorMessage,
+} from "../utils/rangeExpression";
 
 /**
  * Semantic-aware variable evaluator
@@ -68,6 +73,15 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
       );
     }
     const normalizedRawValue = normalized.expression;
+    const hasRangeOperator =
+      containsRangeOperatorOutsideString(normalizedRawValue);
+    if (hasRangeOperator && !isValidRangeExpressionCandidate(normalizedRawValue)) {
+      return this.createErrorNode(
+        `Invalid range expression near "${originalRawValue}"`,
+        varNode.variableName,
+        context.lineNumber
+      );
+    }
 
     const thousandCommaPattern = /^[\$€£¥₹₿]\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?\s*$/;
     if (thousandCommaPattern.test(normalizedRawValue)) {
@@ -94,7 +108,12 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
         const resolvedList = this.resolveListSymbols(semanticValue, context);
         if (SemanticValueTypes.isError(resolvedList)) {
           return this.createErrorNode(
-            (resolvedList as ErrorValue).getMessage(),
+            hasRangeOperator
+              ? normalizeRangeErrorMessage(
+                  originalRawValue,
+                  (resolvedList as ErrorValue).getMessage()
+                )
+              : (resolvedList as ErrorValue).getMessage(),
             varNode.variableName,
             context.lineNumber
           );
@@ -113,7 +132,12 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
           if (listValue) {
             if (SemanticValueTypes.isError(listValue)) {
               return this.createErrorNode(
-                (listValue as ErrorValue).getMessage(),
+                hasRangeOperator
+                  ? normalizeRangeErrorMessage(
+                      originalRawValue,
+                      (listValue as ErrorValue).getMessage()
+                    )
+                  : (listValue as ErrorValue).getMessage(),
                 varNode.variableName,
                 context.lineNumber
               );
@@ -142,7 +166,12 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
                   resolvedValue = SymbolicValue.from(normalizedRawValue);
                 } else {
                   return this.createErrorNode(
-                    `Invalid variable value: ${evalResult.error}`,
+                    hasRangeOperator
+                      ? normalizeRangeErrorMessage(
+                          originalRawValue,
+                          evalResult.error
+                        )
+                      : `Invalid variable value: ${evalResult.error}`,
                     varNode.variableName,
                     context.lineNumber
                   );
@@ -160,7 +189,12 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
           }
         } else {
           return this.createErrorNode(
-            `Invalid variable value: ${errorValue.getMessage()}`,
+            hasRangeOperator
+              ? normalizeRangeErrorMessage(
+                  originalRawValue,
+                  errorValue.getMessage()
+                )
+              : `Invalid variable value: ${errorValue.getMessage()}`,
             varNode.variableName,
             context.lineNumber
           );

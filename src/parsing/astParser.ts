@@ -27,6 +27,7 @@ import { SemanticParsers, ErrorValue, SemanticValueTypes } from "../types";
 import { validateExpressionTypes } from "./typeResolver";
 import { parseExpressionComponents } from "./expressionComponents";
 import { looksLikeDateExpression } from "../date/dateMath";
+import { containsRangeOperatorOutsideString } from "../utils/rangeExpression";
 
 /**
  * Parse a single line of text into an AST node
@@ -263,7 +264,11 @@ function createExpressionNode(expression: string, raw: string, line: number): Ex
       try {
         components = parseExpressionComponents(expressionForComponents);
       } catch (error) {
-        if (!isPercentageExpression && !looksLikeDateExpression(expression)) {
+        if (
+          !isPercentageExpression &&
+          !looksLikeDateExpression(expression) &&
+          !containsRangeOperatorOutsideString(expression)
+        ) {
           throw error;
         }
       }
@@ -330,7 +335,11 @@ function createCombinedAssignmentNode(
       try {
         components = parseExpressionComponents(expressionForComponents);
       } catch (error) {
-        if (!isPercentageExpression && !looksLikeDateExpression(expression)) {
+        if (
+          !isPercentageExpression &&
+          !looksLikeDateExpression(expression) &&
+          !containsRangeOperatorOutsideString(expression)
+        ) {
           throw error;
         }
       }

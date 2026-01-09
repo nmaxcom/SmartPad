@@ -39,8 +39,27 @@ describe("Locale-aware date literals", () => {
     const context = createContext();
     context.dateLocale = "es-ES";
     const result = evaluateLine("d = 01-02-2023 =>", context, 1);
-    expect(result?.type).toBe("mathResult");
+    expect(result?.type).toBe("combined");
     expect((result as any).result).toContain("2023-02-01");
+  });
+
+  test("unsupported numeric dates error when locale is unset", () => {
+    const context = createContext();
+    const result = evaluateLine("d = 01-02-2023 =>", context, 1);
+    expect(result?.type).toBe("error");
+    expect((result as any).displayText).toContain(
+      'Unsupported date format "01-02-2023"'
+    );
+  });
+
+  test("es-ES datetime values show timezone offsets instead of local", () => {
+    const context = createContext();
+    context.dateLocale = "es-ES";
+    const result = evaluateLine("dt = 01-02-2023 09:30 =>", context, 1);
+    expect(result?.type).toBe("combined");
+    expect((result as any).result).toContain("2023-02-01 09:30");
+    expect((result as any).result).toContain("UTC");
+    expect((result as any).result).not.toContain("local");
   });
 
   test("invalid es-ES value reports literal error", () => {
@@ -59,9 +78,40 @@ describe("Locale-aware date literals", () => {
       context,
       1
     );
-    expect(result?.type).toBe("mathResult");
+    expect(result?.type).toBe("combined");
     const display = (result as any).result as string;
     expect(display).toContain("2023-02-01");
     expect(display).not.toContain("Cannot solve");
+  });
+
+  test("compact datetime lists suppress repeated dates", () => {
+    const context = createContext();
+    evaluateLine(
+      "slots = 2026-01-01 09:00..2026-01-01 11:00 step 18 min",
+      context,
+      1
+    );
+    const result = evaluateLine("slots =>", context, 2);
+    expect(result?.type).toBe("mathResult");
+    const output = (result as any).result as string;
+    expect(output).toContain("2026-01-01:");
+    expect(output).toContain("09:00");
+    expect(output).toContain("10:48");
+    expect(output).toContain("UTC");
+    expect(output).not.toContain("local");
+  });
+
+  test("compact datetime lists break on day changes", () => {
+    const context = createContext();
+    evaluateLine(
+      "slots = 2026-01-01 23:30..2026-01-02 00:30 step 18 min",
+      context,
+      1
+    );
+    const result = evaluateLine("slots =>", context, 2);
+    expect(result?.type).toBe("mathResult");
+    const output = (result as any).result as string;
+    expect(output).toContain("2026-01-01:");
+    expect(output).toContain("; 2026-01-02:");
   });
 });
