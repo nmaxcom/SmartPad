@@ -48,6 +48,17 @@ const evaluateSequence = (lines: string[]) => {
   };
 };
 
+const findMathResultByDisplay = (
+  results: Array<RenderNode | null>,
+  prefix: string
+) =>
+  results.find(
+    (node) =>
+      node?.type === "mathResult" &&
+      typeof (node as any).displayText === "string" &&
+      (node as any).displayText.includes(prefix)
+  ) as RenderNode | undefined;
+
 describe("List spec examples", () => {
   beforeAll(() => {
     setupDefaultEvaluators();
@@ -111,12 +122,6 @@ describe("List spec examples", () => {
       "expenses = rent, utilities, internet",
       "expenses => $1250, $185, $75",
     ]);
-    console.log("block4 results:", results.map((node, idx) => ({
-      idx,
-      type: node?.type,
-      result: node && (node as any).result,
-      display: node && (node as any).displayText,
-    })));
     expect((results[1] as any).result).toBe("$12, $15, $9");
     expect((results[3] as any).result).toBe("3 m, 25 ft, 48 km");
     expect((results[5] as any).result).toBe("5%, 8%, 21%");
@@ -228,6 +233,27 @@ describe("List spec examples", () => {
     expect(results[6]?.type).toBe("error");
   });
 
+  test("sorting respects canonical magnitude and list dimensions", () => {
+    const { results } = evaluateSequence([
+      "lengths = 3 m, 5 ft, 48 km",
+      "sort(lengths) => 5 ft, 3 m, 48 km",
+      "times = 2 min, 30 s, 1 h",
+      "sort(times) => 30 s, 2 min, 1 h",
+    ]);
+    const canonicalLengthSort = findMathResultByDisplay(results, "sort(lengths) => 5 ft");
+    expect(canonicalLengthSort).toBeDefined();
+    expect((canonicalLengthSort as any).result).toBe("5 ft, 3 m, 48 km");
+    const timeSort = findMathResultByDisplay(results, "sort(times) => 30 s");
+    expect(timeSort).toBeDefined();
+    expect((timeSort as any).result).toBe("30 s, 2 min, 1 h");
+  });
+
+  test("list dimension mismatch is rejected", () => {
+    const { lastResult } = evaluateSequence(["weird = 3 m, 2 h"]);
+    expect(lastResult?.type).toBe("error");
+    expect((lastResult as any).displayText).toContain("incompatible dimensions");
+  });
+
   test("blocks 33-36: filtering", () => {
     const { results } = evaluateSequence([
       "costs = $12, $15, $9, $100",
@@ -242,6 +268,26 @@ describe("List spec examples", () => {
     expect((results[3] as any).result).toBe("48 km");
     expect((results[4] as any).result).toBe("()");
     expect(results[6]?.type).toBe("error");
+  });
+
+  test("where equality honors tolerance and duplicates", () => {
+    const { results } = evaluateSequence([
+      "xs = 0.1 + 0.2, 0.3",
+      "xs where = 0.3 => 0.3, 0.3",
+      "lengths = 1 m, 100 cm, 2 m",
+      "lengths where = 1 m => 1 m, 100 cm",
+      "costs = $8, $12, $15, $9, $8, $100",
+      "costs where = $8 => $8, $8",
+      "costs where = $123 => ()",
+    ]);
+    const toleranceResult = findMathResultByDisplay(results, "xs where = 0.3");
+    expect((toleranceResult as any).result).toBe("0.3, 0.3");
+    const lengthsEqual = findMathResultByDisplay(results, "lengths where = 1 m");
+    expect((lengthsEqual as any).result).toBe("1 m, 100 cm");
+    const repeatedCosts = findMathResultByDisplay(results, "costs where = $8");
+    expect((repeatedCosts as any).result).toBe("$8, $8");
+    const emptyCosts = findMathResultByDisplay(results, "costs where = $123");
+    expect((emptyCosts as any).result).toBe("()");
   });
 
   test("blocks 37-41: mapping & scaling", () => {

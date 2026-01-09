@@ -136,6 +136,13 @@ lengths = 3 m, 25 ft, 48 km
 lengths => 3 m, 25 ft, 48 km
 rates = 5%, 8%, 21%
 rates => 5%, 8%, 21%
+single = $12
+single => $12
+rent = 1200, 1200
+utilities = 200, 200
+expenses = rent, utilities
+sum(expenses) => ⚠️ Cannot sum: 1200, 1200, 200, 200 contains a nested list
+avg(50) => ⚠️ avg() expects a list
 
 # Aggregations
 sum(costs) => $36
@@ -148,7 +155,6 @@ xs = 1, 3, 10
 median(xs) => 3
 ys = 1, 3, 10, 11
 median(ys) => 6.5
-costs = $12, $15, $9
 range(costs) => $6
 xs = 2, 4, 4, 4, 5, 5, 7, 9
 stddev(xs) => 2
@@ -167,19 +173,30 @@ costs[2..3] => $15, $9
 costs[3..3] => $9
 costs[2..1] => ⚠️ Range can't go downwards
 
-# Sorting & filtering
+# Sorting & ordering
 sort(costs) => $9, $12, $15
 sort(costs, desc) => $15, $12, $9
 lengths = 3 m, 25 m, 48 km
 sort(lengths) => 3 m, 25 m, 48 km
-weird = 3 m, 2 s
-sort(weird) => ⚠️ Cannot sort: incompatible units
+lengths = 3 m, 5 ft, 48 km
+sort(lengths) => 5 ft, 3 m, 48 km
+times = 2 min, 30 s, 1 h
+sort(times) => 30 s, 2 min, 1 h
+weird = 3 m, 2 h => ⚠️ Cannot create list: incompatible dimensions
+
+# Filtering & tolerance
 costs = $12, $15, $9, $100
 costs where > $10 => $12, $15, $100
 lengths where > 10 km => 48 km
 costs where > $200 => ()
-vals = 3 m, 2 s
-vals where > 1 m => ⚠️ Cannot compare: incompatible units
+xs = 0.1 + 0.2, 0.3
+xs where = 0.3 => 0.3, 0.3
+lengths = 1 m, 100 cm, 2 m
+lengths where = 1 m => 1 m, 100 cm
+costs = $8, $12, $15, $9, $8, $100
+costs where = $8 => $8, $8
+costs where = $123 => ()
+single where > $10 => ⚠️ where expects a list
 
 # Mapping & conversions
 costs = $12, $15, $9

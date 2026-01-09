@@ -337,9 +337,21 @@ const createListResult = (items: SemanticValue[], delimiter = ", "): SemanticVal
     return ListValue.fromItems(items);
   }
   const baseType = items[0].getType();
+  let baseUnitSignature: string | null = null;
+  if (baseType === "unit") {
+    const unitItem = items[0] as UnitValue;
+    baseUnitSignature = unitItem.getQuantity().toBaseUnit().unit;
+  }
   for (const item of items) {
     if (item.getType() !== baseType) {
       return ErrorValue.semanticError("Cannot create list: incompatible units");
+    }
+    if (baseType === "unit") {
+      const unitItem = item as UnitValue;
+      const itemSignature = unitItem.getQuantity().toBaseUnit().unit;
+      if (itemSignature !== baseUnitSignature) {
+        return ErrorValue.semanticError("Cannot create list: incompatible dimensions");
+      }
     }
   }
   return ListValue.fromItems(items, delimiter);

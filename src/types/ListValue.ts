@@ -3,10 +3,13 @@ import { SemanticValue, DisplayOptions, SemanticValueType } from "./SemanticValu
 export class ListValue extends SemanticValue {
   private readonly items: SemanticValue[];
   private readonly delimiter: string;
+  private readonly nestedList: boolean;
 
   constructor(items: SemanticValue[], delimiter = ", ") {
     super();
-    this.items = ListValue.flatten(items);
+    const flattened = ListValue.flatten(items);
+    this.items = flattened.items;
+    this.nestedList = flattened.containsNestedList;
     this.delimiter = delimiter;
   }
 
@@ -14,16 +17,20 @@ export class ListValue extends SemanticValue {
     return new ListValue(items, delimiter);
   }
 
-  static flatten(items: SemanticValue[]): SemanticValue[] {
+  static flatten(items: SemanticValue[]): { items: SemanticValue[]; containsNestedList: boolean } {
     const flattened: SemanticValue[] = [];
+    let containsNestedList = false;
     for (const item of items) {
       if (item instanceof ListValue) {
-        flattened.push(...item.getItems());
+        containsNestedList = true;
+        const inner = ListValue.flatten(item.getItems());
+        flattened.push(...inner.items);
+        containsNestedList = containsNestedList || inner.containsNestedList;
       } else {
         flattened.push(item);
       }
     }
-    return flattened;
+    return { items: flattened, containsNestedList };
   }
 
   getType(): SemanticValueType {
@@ -55,6 +62,10 @@ export class ListValue extends SemanticValue {
       return "()";
     }
     return this.items.map((item) => item.toString(options)).join(this.delimiter);
+  }
+
+  containsNestedList(): boolean {
+    return this.nestedList;
   }
 
   equals(other: SemanticValue): boolean {

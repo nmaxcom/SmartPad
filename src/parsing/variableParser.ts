@@ -172,6 +172,15 @@ export function parseVariableAssignmentWithOptionalEvaluation(line: string): Var
     assignmentPart = trimmedLine.substring(0, arrowIndex).trim();
   }
 
+  // If this looks like a 'where' expression (e.g., "list where = ..."),
+  // treat it as an expression evaluation instead of a variable assignment.
+  if (/\bwhere\b\s*=/.test(assignmentPart)) {
+    return {
+      isValid: false,
+      error: "Where expressions are handled as expressions, not assignments",
+    };
+  }
+
   // Parse the assignment part using existing logic
   const result = parseVariableAssignment(assignmentPart);
 

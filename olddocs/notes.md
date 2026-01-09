@@ -16,12 +16,19 @@ Value by percent part	5% of what is 6 EUR
 Value by percent addition	5% on what is 6 EUR
 Value by percent subtraction	5% off what is 6 EUR
 
+
+
 # Big ticket items
 lists
 time
 plots
 FX
 # bugs/ideas
+- smartpad can't paste correctly:
+0.1 + 0.2 = 0.3 =>true
+1 = 1.000001 =>false
+1 ~= 1.000001 =>true
+
 - Parser confused by 3 digit groupings (frontend also renders them together in groups of 3):
 a=2000=>2,000
 b=2,000=>2, 0

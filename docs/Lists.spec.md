@@ -81,6 +81,15 @@ stddev(single) => ⚠️ sum() expects a list, got a currency value
 
 ### Syntax & test examples
 
+List-based aggregators take one regular list argument and will error as soon as the input does not behave like a list. Passing a scalar yields messages such as `avg() expects a list`, and if the list value itself came from combining other lists, the aggregator rejects it with `Cannot <function>: <list representation> contains a nested list`.
+
+```text
+rent = 1200, 1200
+utilities = 200, 200
+expenses = rent, utilities
+sum(expenses) => ⚠️ Cannot sum: 1200, 1200, 200, 200 contains a nested list
+```
+
 #### Literal list of currency
 
 ```text
@@ -358,6 +367,22 @@ weird = 3 m, 2 s
 sort(weird) => ⚠️ Cannot sort: incompatible units
 ```
 
+#### Canonical magnitude sort
+
+When units are compatible, sorting always compares the canonical magnitude (e.g., meters for lengths, seconds for durations) but retains the original unit text in the output.
+
+```text
+lengths = 3 m, 5 ft, 48 km
+sort(lengths) => 5 ft, 3 m, 48 km
+
+times = 2 min, 30 s, 1 h
+sort(times) => 30 s, 2 min, 1 h
+```
+
+#### Dimension safety
+
+Lists are rejected when their values belong to different physical dimensions. Trying to define a list such as `3 m` and `2 h` will produce `⚠️ Cannot create list: incompatible dimensions`, so sorting/filtering never runs on that data.
+
 ---
 
 ## Filtering
@@ -369,6 +394,8 @@ sort(weird) => ⚠️ Cannot sort: incompatible units
 * Fitness: “sets heavier than 80 kg”
 
 ### Syntax & test examples
+
+`where` expects a valid list value at runtime; if the variable being filtered never resolved to a list, you’ll see `⚠️ where expects a list` instead of a comparison.
 
 #### Filter by scalar condition
 
@@ -389,6 +416,28 @@ lengths where > 10 km => 48 km
 ```text
 costs = $12, $15, $9, $100
 costs where > $200 => ()
+```
+
+#### Equality & tolerance
+
+Use `where = value` to preserve only the matching entries (duplicates stay in the result). Equality tests are semantic—`1 m` equals `100 cm`, `$8` matches any `$8`, and floating-point noise like `0.1 + 0.2` is compared using a combined tolerance:
+
+```
+absTol = 1e-12
+relTol = 1e-9
+|a - b| <= max(absTol, relTol * max(|a|, |b|))
+```
+
+```text
+costs = $8, $12, $15, $9, $8, $100
+costs where = $8 => $8, $8
+costs where = $123 => ()
+
+lengths = 1 m, 100 cm, 2 m
+lengths where = 1 m => 1 m, 100 cm
+
+xs = 0.1 + 0.2, 0.3
+xs where = 0.3 => 0.3, 0.3
 ```
 
 #### Ambiguity: comparing incompatible units

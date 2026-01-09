@@ -64,7 +64,8 @@ describe("List & statistical helpers", () => {
   test("single-item average behaves correctly", () => {
     const context = createContext();
     const result = evaluateLine("avg(50) =>", context, 1);
-    expect((result as any).result).toBe("50");
+    expect(result?.type).toBe("error");
+    expect((result as any).displayText).toContain("avg() expects a list");
   });
 
   test("mixed-unit sum normalizes to first unit", () => {
@@ -91,13 +92,15 @@ describe("List & statistical helpers", () => {
     expect((result as any).result).toBe("100");
   });
 
-  test("phrase nesting works and retains units", () => {
+  test("phrase nesting rejects nested lists", () => {
     const context = createContext();
-    evaluateLine("rent = 1200", context, 1);
-    evaluateLine("utilities = 200", context, 2);
-    evaluateLine("expenses = rent, utilities, 50", context, 3);
+    evaluateLine("rent = 1200, 1200", context, 1);
+    evaluateLine("utilities = 200, 200", context, 2);
+    evaluateLine("expenses = rent, utilities", context, 3);
     const result = evaluateLine("sum(expenses) =>", context, 4);
-    expect((result as any).result).toBe("1450");
+    expect(result?.type).toBe("error");
+    expect((result as any).displayText).toContain("Cannot sum:");
+    expect((result as any).displayText).toContain("contains a nested list");
   });
 
   test("solve supports unknowns inside lists", () => {
@@ -154,6 +157,16 @@ describe("List & statistical helpers", () => {
     expect((desc as any).result).toBe("$15, $12, $9");
   });
 
+  test("sort uses canonical magnitude for compatible unit lists", () => {
+    const context = createContext();
+    evaluateLine("lengths = 3 m, 5 ft, 48 km", context, 1);
+    const lengthsResult = evaluateLine("sort(lengths) =>", context, 2);
+    expect((lengthsResult as any).result).toBe("5 ft, 3 m, 48 km");
+    evaluateLine("times = 2 min, 30 s, 1 h", context, 3);
+    const timeResult = evaluateLine("sort(times) =>", context, 4);
+    expect((timeResult as any).result).toBe("30 s, 2 min, 1 h");
+  });
+
   test("list indexing supports 1-based and negative access", () => {
     const context = createContext();
     evaluateLine("costs = $12, $15, $9", context, 1);
@@ -190,6 +203,13 @@ describe("List & statistical helpers", () => {
     setListMaxLength(100);
   });
 
+  test("list creation rejects values with mixed dimensions", () => {
+    const context = createContext();
+    const result = evaluateLine("weird = 3 m, 2 h =>", context, 1);
+    expect(result?.type).toBe("error");
+    expect((result as any).displayText).toContain("incompatible dimensions");
+  });
+
   test("unit conversion works over lists", () => {
     const context = createContext();
     evaluateLine("lengths = 3 m, 25 m, 48 km", context, 1);
@@ -205,11 +225,26 @@ describe("List & statistical helpers", () => {
     expect((result as any).result).toBe("$10.8, $21.6, $32.4");
   });
 
+  test("where equality preserves duplicates via tolerance", () => {
+    const context = createContext();
+    evaluateLine("xs = 0.1 + 0.2, 0.3", context, 1);
+    const toleranceResult = evaluateLine("xs where = 0.3 =>", context, 2);
+    expect((toleranceResult as any).result).toBe("0.3, 0.3");
+    evaluateLine("lengths = 1 m, 100 cm, 2 m", context, 3);
+    const lengthsResult = evaluateLine("lengths where = 1 m =>", context, 4);
+    expect((lengthsResult as any).result).toBe("1 m, 100 cm");
+    evaluateLine("costs = $8, $12, $15, $9, $8, $100", context, 5);
+    const repeatedCosts = evaluateLine("costs where = $8 =>", context, 6);
+    const emptyCosts = evaluateLine("costs where = $123 =>", context, 7);
+    expect((repeatedCosts as any).result).toBe("$8, $8");
+    expect((emptyCosts as any).result).toBe("()");
+  });
+
   test("where predicate fails for incompatible units", () => {
     const context = createContext();
     evaluateLine("vals = 3 m, 2 s", context, 1);
     const result = evaluateLine("vals where > 1 m =>", context, 2);
     expect(result?.type).toBe("error");
-    expect((result as any).displayText).toContain("Cannot compare: incompatible units");
+    expect((result as any).displayText).toContain("where expects a list");
   });
 });

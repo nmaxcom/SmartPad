@@ -519,16 +519,22 @@ export class SimpleExpressionParser {
 
     if (listFunctionNames.has(funcName)) {
       const allowSingleScalar = false;
-      const listArgs = collectListFunctionValues(
+      const listArgsResult = collectListFunctionValues(
         args.positional,
         context,
         funcName,
         allowSingleScalar
       );
-      if (listArgs instanceof ErrorValue) {
-        return listArgs;
+      if (listArgsResult instanceof ErrorValue) {
+        return listArgsResult;
       }
-      const resolvedArgs = listArgs;
+      if (listArgsResult.containsNestedList) {
+        const firstArgLabel = describeListArgument(args.positional[0], context);
+        return ErrorValue.semanticError(
+          `Cannot ${funcName}: ${firstArgLabel} contains a nested list`
+        );
+      }
+      const resolvedArgs = listArgsResult.values;
       switch (funcName) {
         case "sum":
         case "total":
@@ -838,14 +844,19 @@ const filterNumericItems = (values: SemanticValue[]): SemanticValue[] => {
   return flattenArgumentList(values).filter((value) => value.isNumeric());
 };
 
+type ListFunctionResolution = {
+  values: SemanticValue[];
+  containsNestedList: boolean;
+};
+
 function collectListFunctionValues(
   values: SemanticValue[],
   context: EvaluationContext,
   functionName: string,
   allowSingleScalar = false
-): SemanticValue[] | ErrorValue {
+): ListFunctionResolution | ErrorValue {
   if (values.length === 0) {
-    return [];
+    return { values: [], containsNestedList: false };
   }
   if (values.length === 1 && !SemanticValueTypes.isList(values[0])) {
     if (allowSingleScalar) {
@@ -860,6 +871,35 @@ function collectListFunctionValues(
   }
   return resolveFunctionArguments(values, context);
 }
+
+const describeListArgument = (
+  value: SemanticValue | undefined,
+  context: EvaluationContext
+): string => {
+  if (!value) {
+    return "list";
+  }
+  if (SemanticValueTypes.isSymbolic(value)) {
+    const label = value.toString().trim();
+    if (label) {
+      return label;
+    }
+  }
+  for (const variable of context.variableContext.values()) {
+    if (variable.value === value) {
+      return variable.name;
+    }
+    if (
+      variable.value instanceof SemanticValue &&
+      value instanceof SemanticValue &&
+      variable.value.toString() === value.toString()
+    ) {
+      return variable.name;
+    }
+  }
+  const fallback = value.toString().trim();
+  return fallback || "list";
+};
 
 const sumSemanticValues = (values: SemanticValue[]): SemanticValue => {
   const numericItems = filterNumericItems(values);
@@ -981,6 +1021,14 @@ const buildListValue = (items: SemanticValue[]): SemanticValue => {
   return createListResult(items);
 };
 
+const getCanonicalMagnitude = (value: SemanticValue): number => {
+  if (value.getType() === "unit") {
+    const unitValue = value as UnitValue;
+    return unitValue.getQuantity().toBaseUnit().value;
+  }
+  return value.getNumericValue();
+};
+
 const sortListValue = (list: ListValue, descending: boolean): SemanticValue => {
   const items = list.getItems();
 
@@ -996,9 +1044,11 @@ const sortListValue = (list: ListValue, descending: boolean): SemanticValue => {
     }
   }
 
-  const sorted = [...items].sort(
-    (a, b) => a.getNumericValue() - b.getNumericValue()
-  );
+  const sorted = [...items].sort((a, b) => {
+    const aValue = getCanonicalMagnitude(a);
+    const bValue = getCanonicalMagnitude(b);
+    return aValue - bValue;
+  });
   const result = descending ? sorted.reverse() : sorted;
   return buildListValue(result);
 };
@@ -1074,17 +1124,30 @@ type WherePredicate = {
   itemOnLeft: boolean;
 };
 
-const comparatorFunctions: Record<string, (diff: number) => boolean> = {
-  ">": (diff) => diff > 0,
-  "<": (diff) => diff < 0,
-  ">=": (diff) => diff >= 0,
-  "<=": (diff) => diff <= 0,
-  "==": (diff) => diff === 0,
-  "!=": (diff) => diff !== 0,
+const ABSOLUTE_TOLERANCE = 1e-12;
+const RELATIVE_TOLERANCE = 1e-9;
+
+const toleranceThreshold = (left: number, right: number): number => {
+  const magnitude = Math.max(Math.abs(left), Math.abs(right));
+  return Math.max(ABSOLUTE_TOLERANCE, RELATIVE_TOLERANCE * magnitude);
 };
 
-const comparatorPrefixRegex = /^(>=|<=|==|!=|>|<)\s*(.+)$/;
-const comparatorSuffixRegex = /^(.+?)\s*(>=|<=|==|!=|>|<)\s*$/;
+const comparatorFunctions: Record<
+  string,
+  (diff: number, left: number, right: number) => boolean
+> = {
+  ">": (diff, left, right) => diff > toleranceThreshold(left, right),
+  "<": (diff, left, right) => diff < -toleranceThreshold(left, right),
+  ">=": (diff, left, right) => diff >= -toleranceThreshold(left, right),
+  "<=": (diff, left, right) => diff <= toleranceThreshold(left, right),
+  "==": (diff, left, right) => Math.abs(diff) <= toleranceThreshold(left, right),
+  "=": (diff, left, right) => Math.abs(diff) <= toleranceThreshold(left, right),
+  "!=": (diff, left, right) =>
+    Math.abs(diff) > toleranceThreshold(left, right),
+};
+
+const comparatorPrefixRegex = /^(>=|<=|==|!=|=|>|<)\s*(.+)$/;
+const comparatorSuffixRegex = /^(.+?)\s*(>=|<=|==|!=|=|>|<)\s*$/;
 
 function parseWherePredicate(predicate: string): WherePredicate | ErrorValue {
   const trimmed = predicate.trim();
@@ -1140,18 +1203,25 @@ const resolveSymbolicReference = (
 const resolveFunctionArguments = (
   values: SemanticValue[],
   context: EvaluationContext
-): SemanticValue[] => {
+): ListFunctionResolution => {
   const resolved: SemanticValue[] = [];
-  for (const value of values) {
-    if (SemanticValueTypes.isList(value)) {
-      const listItems = (value as ListValue).getItems();
-      resolved.push(...resolveFunctionArguments(listItems, context));
+  let containsNestedList = false;
+  for (const rawValue of values) {
+    const candidate = resolveSymbolicReference(rawValue, context) || rawValue;
+    if (SemanticValueTypes.isList(candidate)) {
+      const listValue = candidate as ListValue;
+      if (listValue.containsNestedList()) {
+        containsNestedList = true;
+      }
+      const listItems = listValue.getItems();
+      const nested = resolveFunctionArguments(listItems, context);
+      resolved.push(...nested.values);
+      containsNestedList = containsNestedList || nested.containsNestedList;
       continue;
     }
-    const candidate = resolveSymbolicReference(value, context);
-    resolved.push(candidate || value);
+    resolved.push(candidate);
   }
-  return resolved;
+  return { values: resolved, containsNestedList };
 };
 
 const resolveSymbolicListForDisplay = (
@@ -1512,8 +1582,6 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       return otherValue;
     }
 
-    console.log("[WHERE EVAL] otherValue", otherValue.getType(), otherValue.toString());
-
     const comparatorFn = comparatorFunctions[predicate.comparator];
     if (!comparatorFn) {
       return ErrorValue.semanticError(`Unsupported comparator: ${predicate.comparator}`);
@@ -1533,7 +1601,12 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
         return ErrorValue.semanticError("Comparison result is not numeric");
       }
 
-      if (comparatorFn(difference.getNumericValue())) {
+      const diffValue = difference.getNumericValue();
+      const itemNumeric = item.getNumericValue();
+      const otherNumeric = otherValue.getNumericValue();
+      const leftNumeric = predicate.itemOnLeft ? itemNumeric : otherNumeric;
+      const rightNumeric = predicate.itemOnLeft ? otherNumeric : itemNumeric;
+      if (comparatorFn(diffValue, leftNumeric, rightNumeric)) {
         filteredItems.push(item);
       }
     }
