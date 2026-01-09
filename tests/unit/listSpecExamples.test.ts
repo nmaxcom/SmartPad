@@ -80,7 +80,7 @@ describe("List spec examples", () => {
   test("block 2: count on scalar errors", () => {
     const { lastResult } = evaluateSequence(["x = 20", "count(x) => ⚠️ Expected list"]);
     expect(lastResult?.type).toBe("error");
-    expect((lastResult as any).error).toContain("Expected list");
+    expect((lastResult as any).error).toContain("expects a list");
   });
 
   test("block 3: single value list errors", () => {

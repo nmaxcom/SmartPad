@@ -25,6 +25,11 @@ time, calendar math
 plots
 FX
 # bugs/ideas
+a = 22
+b = 5
+y = a^x + b^2 =>22^x + 5^2
+x =>⚠️ Cannot solve: exponent requires constant base
+
 lists should take this speeds = 3, 4, 5, 6 to m/s
 - smartpad can't paste correctly:
 0.1 + 0.2 = 0.3 =>true

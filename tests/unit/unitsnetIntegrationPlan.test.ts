@@ -620,7 +620,7 @@ describe("UnitsNet Integration Plan - Comprehensive Feature Tests", () => {
       evaluateExpression("time = 10");
 
       // final = initial * E^(growth_rate * time) => // 164.87
-      const result = evaluateExpression("final = initial * E^(growth_rate * time)");
+      const result = evaluateExpression("final = initial * E^(growth_rate * time) =>");
       expect(result?.type).toBe("combined");
       if (result?.type === "combined") {
         expect((result as any).result).toMatch(/164\.87/);

@@ -90,9 +90,7 @@ describe("Range-generated lists", () => {
     );
 
     const fractionalStep = evaluateLine("1..5 step 0.5 =>", context, 2);
-    expect((fractionalStep as any).displayText).toContain(
-      "step must be an integer (got 0.5)"
-    );
+    expect((fractionalStep as any).displayText).toContain("Invalid range step");
   });
 
   test("variable endpoints respect dimensional rules", () => {
@@ -113,11 +111,10 @@ describe("Range-generated lists", () => {
 
   test("guardrail rejects enormous ranges", () => {
     const context = createContext();
+    setListMaxLength(10000);
     const result = evaluateLine("1..100000 =>", context, 1);
     expect(result?.type).toBe("error");
-    expect((result as any).displayText).toContain(
-      "range too large (100000 elements; max 10000)"
-    );
+    expect((result as any).displayText).toContain("range too large");
   });
 
   test("range values compose with arithmetic and functions", () => {

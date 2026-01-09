@@ -96,7 +96,13 @@ export const isValidRangeExpressionCandidate = (expression: string): boolean => 
 
 export const normalizeRangeErrorMessage = (raw: string, message: string): string => {
   const lower = message.toLowerCase();
-  if (lower.includes("range") || lower.includes("duration step")) {
+  if (
+    lower.includes("range") ||
+    lower.includes("duration step") ||
+    lower.includes("step cannot be 0") ||
+    lower.includes("step must be") ||
+    lower.includes("invalid range step")
+  ) {
     return message;
   }
   return `Invalid range expression near "${raw}"`;

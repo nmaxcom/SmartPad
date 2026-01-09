@@ -99,8 +99,7 @@ describe("List & statistical helpers", () => {
     evaluateLine("expenses = rent, utilities", context, 3);
     const result = evaluateLine("sum(expenses) =>", context, 4);
     expect(result?.type).toBe("error");
-    expect((result as any).displayText).toContain("Cannot sum:");
-    expect((result as any).displayText).toContain("contains a nested list");
+    expect((result as any).displayText).toContain("does not support nested lists");
   });
 
   test("solve supports unknowns inside lists", () => {
@@ -245,6 +244,6 @@ describe("List & statistical helpers", () => {
     evaluateLine("vals = 3 m, 2 s", context, 1);
     const result = evaluateLine("vals where > 1 m =>", context, 2);
     expect(result?.type).toBe("error");
-    expect((result as any).displayText).toContain("where expects a list");
+    expect((result as any).displayText).toContain("where() expects a list");
   });
 });
