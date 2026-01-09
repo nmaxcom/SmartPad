@@ -510,11 +510,16 @@ export class SimpleExpressionParser {
       "min",
       "range",
       "sort",
+      RANGE_LITERAL_FUNCTION,
     ]);
     const listFunctionNames = new Set(["sum", "total", "avg", "mean", "median", "count", "stddev", "min", "max", "range"]);
 
     if (!builtIns.has(funcName)) {
       return null;
+    }
+
+    if (funcName === RANGE_LITERAL_FUNCTION) {
+      return evaluateRangeLiteralFunction(args);
     }
 
     if (listFunctionNames.has(funcName)) {
@@ -1017,6 +1022,127 @@ const rangeSemanticValues = (values: SemanticValue[]): SemanticValue => {
   return difference;
 };
 
+const RANGE_LITERAL_FUNCTION = "__rangeLiteral";
+const MAX_RANGE_ELEMENTS = 10000;
+
+const evaluateRangeLiteralFunction = (
+  args: { positional: SemanticValue[]; named: Map<string, SemanticValue> }
+): SemanticValue => {
+  if (args.named.size > 0) {
+    return ErrorValue.semanticError("range literal does not support named arguments");
+  }
+  if (args.positional.length < 2 || args.positional.length > 3) {
+    return ErrorValue.semanticError("range literal expects 2 or 3 arguments");
+  }
+
+  const startEndpoint = ensureRangeEndpoint(args.positional[0]);
+  if (typeof startEndpoint !== "number") {
+    return startEndpoint;
+  }
+  const endEndpoint = ensureRangeEndpoint(args.positional[1]);
+  if (typeof endEndpoint !== "number") {
+    return endEndpoint;
+  }
+
+  if (startEndpoint === endEndpoint) {
+    return ListValue.fromItems([NumberValue.from(startEndpoint)]);
+  }
+
+  let stepValue = startEndpoint < endEndpoint ? 1 : -1;
+  if (args.positional.length === 3) {
+    const candidateStep = ensureRangeStep(args.positional[2]);
+    if (typeof candidateStep !== "number") {
+      return candidateStep;
+    }
+    stepValue = candidateStep;
+  }
+
+  if (stepValue === 0) {
+    return ErrorValue.semanticError("step cannot be 0");
+  }
+
+  const direction = Math.sign(endEndpoint - startEndpoint);
+  if (direction === 0) {
+    return ListValue.fromItems([NumberValue.from(startEndpoint)]);
+  }
+
+  if (Math.sign(stepValue) !== direction) {
+    const message =
+      direction > 0
+        ? "step must be positive for an increasing range"
+        : "step must be negative for a decreasing range";
+    return ErrorValue.semanticError(message);
+  }
+
+  return buildRangeList(startEndpoint, endEndpoint, stepValue);
+};
+
+const ensureRangeEndpoint = (value: SemanticValue): number | ErrorValue => {
+  if (value.getType() !== "number") {
+    if (value.getType() === "unit") {
+      const unitValue = value as UnitValue;
+      return ErrorValue.semanticError(
+        `range endpoints must be unitless integers (got ${unitValue.getUnit()})`
+      );
+    }
+    const fallback = value.toString().trim() || value.getType();
+    return ErrorValue.semanticError(
+      `range endpoints must be integers (got ${fallback})`
+    );
+  }
+  const numeric = value.getNumericValue();
+  if (!Number.isFinite(numeric)) {
+    return ErrorValue.semanticError("range endpoints must be finite integers");
+  }
+  if (!Number.isInteger(numeric)) {
+    return ErrorValue.semanticError(
+      `range endpoints must be integers (got ${value.toString().trim()})`
+    );
+  }
+  return numeric;
+};
+
+const ensureRangeStep = (value: SemanticValue): number | ErrorValue => {
+  if (value.getType() !== "number") {
+    const fallback = value.toString().trim() || value.getType();
+    return ErrorValue.semanticError(`step must be an integer (got ${fallback})`);
+  }
+  const numeric = value.getNumericValue();
+  if (!Number.isFinite(numeric)) {
+    return ErrorValue.semanticError("step must be an integer");
+  }
+  if (!Number.isInteger(numeric)) {
+    return ErrorValue.semanticError(
+      `step must be an integer (got ${value.toString().trim()})`
+    );
+  }
+  if (numeric === 0) {
+    return ErrorValue.semanticError("step cannot be 0");
+  }
+  return numeric;
+};
+
+const buildRangeList = (start: number, end: number, step: number): SemanticValue => {
+  const direction = Math.sign(end - start);
+  const comparator = direction > 0 ? (value: number) => value <= end : (value: number) => value >= end;
+  const magnitude = Math.abs(step);
+  const estimatedElements = magnitude > 0 ? Math.floor(Math.abs(end - start) / magnitude) + 1 : 1;
+  const items: SemanticValue[] = [];
+  let current = start;
+  let count = 0;
+  while (comparator(current)) {
+    items.push(NumberValue.from(current));
+    count += 1;
+    if (count > MAX_RANGE_ELEMENTS) {
+      return ErrorValue.semanticError(
+        `range too large (${estimatedElements} elements; max ${MAX_RANGE_ELEMENTS})`
+      );
+    }
+    current += step;
+  }
+  return ListValue.fromItems(items);
+};
+
 const buildListValue = (items: SemanticValue[]): SemanticValue => {
   return createListResult(items);
 };
@@ -1262,6 +1388,10 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       return true;
     }
 
+    if (expr.includes("..")) {
+      return true;
+    }
+
     // Don't handle percentage expressions - let the percentage evaluator handle those
     if (this.isPercentageExpression(expr)) {
       return false;
@@ -1347,8 +1477,8 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       else if (this.isVariableReference(expression)) {
         result = this.evaluateVariableReference(expression, context);
       }
-      // Function calls or expression components
-      else if (this.containsFunctionCall(expression)) {
+      // Function calls, range literals, or expression components
+      else if (this.containsFunctionCall(expression) || expression.includes("..")) {
         const componentResult = SimpleExpressionParser.parseComponents(
           components,
           context
@@ -1414,7 +1544,7 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       const baseDisplayOptions = this.getDisplayOptions(context);
       const displayOptions = {
         ...baseDisplayOptions,
-        preferBaseUnit: !!conversion,
+        preferBaseUnit: false,
         forceUnit: !!conversion,
         precision: isAggregatorExpression(exprNode.expression)
           ? 4
@@ -1459,6 +1589,9 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
    * Check if expression is a simple literal
    */
   private isSimpleLiteral(expr: string): boolean {
+    if (expr.includes("..")) {
+      return false;
+    }
     const parsed = SemanticParsers.parse(expr.trim());
     return (
       parsed !== null &&
@@ -1774,9 +1907,11 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       return null;
     }
 
-    const literal = SemanticParsers.parse(trimmed);
-    if (literal) {
-      return literal;
+    if (!trimmed.includes("..")) {
+      const literal = SemanticParsers.parse(trimmed);
+      if (literal) {
+        return literal;
+      }
     }
 
     const variable = this.evaluateVariableReference(trimmed, context);

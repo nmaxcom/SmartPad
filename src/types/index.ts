@@ -153,6 +153,8 @@ const hasMatchingOuterParentheses = (input: string): boolean => {
   return depth === 0;
 };
 
+const groupedNumberPattern = "(?:\\d{1,3}(?:,\\d{3})*|\\d+)(?:\\.\\d+)?";
+
 const parseSingleValue = (input: string): SemanticValue | null => {
   if (!input) return null;
   const trimmed = input.trim();
@@ -222,9 +224,9 @@ const parseSingleValue = (input: string): SemanticValue | null => {
   }
 
   if (
-    trimmed.match(/^[\$€£¥₹₿]\s*\d+(?:\.\d+)?$/) ||
-    trimmed.match(/^\d+(?:\.\d+)?\s*[\$€£¥₹₿]$/) ||
-    trimmed.match(/^\d+(?:\.\d+)?\s+(CHF|CAD|AUD)$/)
+    trimmed.match(new RegExp(`^[\$€£¥₹₿]\\s*${groupedNumberPattern}$`)) ||
+    trimmed.match(new RegExp(`^${groupedNumberPattern}\\s*[\$€£¥₹₿]$`)) ||
+    trimmed.match(new RegExp(`^${groupedNumberPattern}\\s+(CHF|CAD|AUD)$`))
   ) {
     try {
       return CurrencyValue.fromString(trimmed);
@@ -265,6 +267,18 @@ const parseSingleValue = (input: string): SemanticValue | null => {
 
 const parseListLiteral = (input: string): SemanticValue | null => {
   const normalized = stripEnclosingParentheses(input);
+  const currencyLiteralPatterns = [
+    new RegExp(`^[\$€£¥₹₿]\\s*${groupedNumberPattern}$`),
+    new RegExp(`^${groupedNumberPattern}\\s*[\$€£¥₹₿]$`),
+    new RegExp(`^${groupedNumberPattern}\\s+(CHF|CAD|AUD)$`),
+  ];
+  const numberLiteralPattern = new RegExp(`^${groupedNumberPattern}$`);
+  if (
+    currencyLiteralPatterns.some((pattern) => pattern.test(normalized)) ||
+    numberLiteralPattern.test(normalized)
+  ) {
+    return null;
+  }
   const rawParts = splitTopLevelCommas(normalized);
   if (rawParts.length <= 1) return null;
   const parts = rawParts.map((part) => part.trim());

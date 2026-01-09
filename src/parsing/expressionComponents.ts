@@ -217,7 +217,8 @@ function tokenize(expression: string): Token[] {
  * Parses an expression into a semantic component tree
  */
 export function parseExpressionComponents(expression: string): ExpressionComponent[] {
-  const tokens = tokenize(expression);
+  const rewrittenExpression = rewriteRangeExpressions(expression);
+  const tokens = tokenize(rewrittenExpression);
   const components: ExpressionComponent[] = [];
   let pos = 0;
 
@@ -659,6 +660,217 @@ function parseFunctionArguments(
   }
 
   return { args, nextPos: pos };
+}
+
+type RangeReplacement = {
+  segmentStart: number;
+  segmentEnd: number;
+  text: string;
+};
+
+function rewriteRangeExpressions(expression: string): string {
+  if (!expression.includes("..")) {
+    return expression;
+  }
+
+  let result = "";
+  let lastIndex = 0;
+  let cursor = 0;
+  let squareDepth = 0;
+
+  while (cursor < expression.length) {
+    const char = expression[cursor];
+    if (char === "[") {
+      squareDepth++;
+    } else if (char === "]") {
+      squareDepth = Math.max(0, squareDepth - 1);
+    }
+
+    if (
+      squareDepth === 0 &&
+      char === "." &&
+      expression[cursor + 1] === "."
+    ) {
+      const replacement = buildRangeReplacement(expression, cursor);
+      if (replacement) {
+        result += expression.slice(lastIndex, replacement.segmentStart);
+        result += replacement.text;
+        cursor = replacement.segmentEnd;
+        lastIndex = cursor;
+        continue;
+      }
+    }
+
+    cursor++;
+  }
+
+  if (lastIndex < expression.length) {
+    result += expression.slice(lastIndex);
+  }
+
+  return result;
+}
+
+function buildRangeReplacement(
+  expression: string,
+  rangeIndex: number
+): RangeReplacement | null {
+  const left = extractLeftEndpoint(expression, rangeIndex);
+  if (!left) return null;
+  const right = extractRightEndpoint(expression, rangeIndex + 2);
+  if (!right) return null;
+
+  let segmentEnd = right.endIndex;
+  let stepExpr: { text: string; endIndex: number } | null = null;
+  const afterRight = skipWhitespace(expression, segmentEnd);
+  if (matchesKeyword(expression, afterRight, "step")) {
+    const stepStart = afterRight + 4;
+    const stepValue = extractRightEndpoint(expression, stepStart);
+    if (!stepValue) {
+      return null;
+    }
+    stepExpr = stepValue;
+    segmentEnd = stepValue.endIndex;
+  }
+
+  const replacementParts = [
+    left.text,
+    right.text,
+    stepExpr?.text,
+  ].filter(Boolean);
+  const replacement = `__rangeLiteral(${replacementParts.join(", ")})`;
+  return {
+    segmentStart: left.startIndex,
+    segmentEnd,
+    text: replacement,
+  };
+}
+
+function extractLeftEndpoint(
+  expression: string,
+  rangeIndex: number
+): { text: string; startIndex: number } | null {
+  let pos = rangeIndex - 1;
+  while (pos >= 0 && /\s/.test(expression[pos])) {
+    pos--;
+  }
+  if (pos < 0) return null;
+
+  if (expression[pos] === ")") {
+    let depth = 1;
+    pos--;
+    while (pos >= 0 && depth > 0) {
+      const char = expression[pos];
+      if (char === ")") depth++;
+      else if (char === "(") depth--;
+      pos--;
+    }
+    if (depth !== 0) return null;
+    const startIndex = pos + 1;
+    const segment = expression.slice(startIndex, rangeIndex).trim();
+    if (!segment) return null;
+    return { text: segment, startIndex };
+  }
+
+  let boundary = pos;
+  while (boundary >= 0) {
+    if (isLeftBoundary(expression[boundary])) {
+      break;
+    }
+    boundary--;
+  }
+
+  let startIndex = boundary + 1;
+  if (
+    startIndex > 0 &&
+    (expression[startIndex - 1] === "-" || expression[startIndex - 1] === "+") &&
+    !/\s/.test(expression[startIndex - 2] ?? "")
+  ) {
+    startIndex -= 1;
+  }
+
+  const segment = expression.slice(startIndex, rangeIndex).trim();
+  if (!segment) return null;
+  return { text: segment, startIndex };
+}
+
+function extractRightEndpoint(
+  expression: string,
+  startIndex: number
+): { text: string; endIndex: number } | null {
+  let pos = skipWhitespace(expression, startIndex);
+  if (pos >= expression.length) return null;
+
+  if (expression[pos] === "(") {
+    let depth = 1;
+    let idx = pos + 1;
+    while (idx < expression.length && depth > 0) {
+      const char = expression[idx];
+      if (char === "(") depth++;
+      else if (char === ")") depth--;
+      idx++;
+    }
+    if (depth !== 0) return null;
+    const segment = expression.slice(pos, idx).trim();
+    if (!segment) return null;
+    return { text: segment, endIndex: idx };
+  }
+
+  let end = pos;
+  while (end < expression.length) {
+    const char = expression[end];
+    if (isRightBoundary(char)) {
+      if (
+        (char === "-" || char === "+") &&
+        end === pos &&
+        /[\d.]/.test(expression[end + 1] ?? "")
+      ) {
+        end++;
+        continue;
+      }
+      break;
+    }
+    if (matchesKeyword(expression, end, "step")) {
+      break;
+    }
+    end++;
+  }
+
+  const segment = expression.slice(pos, end).trim();
+  if (!segment) return null;
+  return { text: segment, endIndex: end };
+}
+
+function skipWhitespace(expression: string, index: number): number {
+  let pos = index;
+  while (pos < expression.length && /\s/.test(expression[pos])) {
+    pos++;
+  }
+  return pos;
+}
+
+function matchesKeyword(expression: string, index: number, keyword: string): boolean {
+  const slice = expression.slice(index);
+  if (!slice.toLowerCase().startsWith(keyword.toLowerCase())) {
+    return false;
+  }
+  const nextChar = slice[keyword.length];
+  if (nextChar && /[a-zA-Z0-9_]/.test(nextChar)) {
+    return false;
+  }
+  const prevChar = expression[index - 1];
+  if (prevChar && /[a-zA-Z0-9_]/.test(prevChar)) {
+    return false;
+  }
+  return true;
+}
+
+function isLeftBoundary(char: string): boolean {
+  return /[,\(\[\{\+\-\*\/\^=]/.test(char);
+}
+
+function isRightBoundary(char: string): boolean {
+  return /[,\)\]\}\+\-\*\/\^=]/.test(char);
 }
 
 function splitNamedArgument(tokens: Token[]): { name?: string; valueTokens: Token[] } {

@@ -164,7 +164,7 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
       const baseDisplayOptions = this.getDisplayOptions(context);
       const displayOptions = {
         ...baseDisplayOptions,
-        preferBaseUnit: !!conversion,
+        preferBaseUnit: false,
         forceUnit: !!conversion,
         precision: isAggregatorExpression(expression)
           ? 4

@@ -16,10 +16,21 @@ import {
   VariableRenderNode,
   ErrorRenderNode,
 } from "./renderNodes";
-import { ErrorValue, SemanticValue, SemanticValueTypes, NumberValue, DisplayOptions, SymbolicValue, createListResult } from "../types";
+import {
+  ErrorValue,
+  SemanticValue,
+  SemanticValueTypes,
+  NumberValue,
+  DisplayOptions,
+  SymbolicValue,
+  createListResult,
+  UnitValue,
+} from "../types";
 import { parseAndEvaluateExpression } from "../parsing/expressionParser";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
 import { SimpleExpressionParser } from "./expressionEvaluatorV2";
+import { expressionContainsUnitsNet } from "../units/unitsnetEvaluator";
+import { inferListDelimiter } from "../utils/listExpression";
 
 /**
  * Semantic-aware variable evaluator
@@ -44,6 +55,19 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
     }
     
     const varNode = node as VariableAssignmentNode;
+    
+    const thousandCommaPattern = /^[\$€£¥₹₿]\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?\s*$/;
+    if (thousandCommaPattern.test(varNode.rawValue || "")) {
+      return this.createErrorNode(
+        "Cannot create list: incompatible units",
+        varNode.variableName,
+        context.lineNumber
+      );
+    }
+
+    if (this.shouldDeferToUnitsNet(varNode, context)) {
+      return null;
+    }
     
     try {
       // Debug logging
@@ -213,6 +237,49 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
     }
     return createListResult(items, list.getDelimiter());
   }
+
+  private shouldDeferToUnitsNet(
+    node: VariableAssignmentNode,
+    context: EvaluationContext
+  ): boolean {
+    const parsedValue = node.parsedValue;
+    if (parsedValue && !SemanticValueTypes.isError(parsedValue)) {
+      return false;
+    }
+
+    const expression = (node.rawValue || node.parsedValue?.toString() || "").trim();
+    if (expression.includes(",")) {
+      return false;
+    }
+    if (!expression) {
+      return false;
+    }
+
+    if (expressionContainsUnitsNet(expression)) {
+      return true;
+    }
+
+    const normalizedExpression = expression.replace(/\s+/g, " ").trim();
+    if (!normalizedExpression) {
+      return false;
+    }
+
+    for (const [name, variable] of context.variableContext.entries()) {
+      const normalizedName = name.replace(/\s+/g, " ").trim();
+      if (!normalizedName) {
+        continue;
+      }
+      if (!normalizedExpression.includes(normalizedName)) {
+        continue;
+      }
+      const value = variable.value;
+      if (value instanceof UnitValue) {
+        return true;
+      }
+    }
+
+    return false;
+  }
   
   /**
    * Create a variable render node
@@ -289,7 +356,7 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
     if (items.length === 0) {
       return null;
     }
-    return createListResult(items);
+    return createListResult(items, inferListDelimiter(rawValue));
   }
 
   private splitCommaSeparatedParts(rawValue: string): string[] {

@@ -139,6 +139,9 @@ function resolveComponentType(
       return ErrorValue.semanticError('Cannot resolve type of standalone operator', { expression: 'Type Resolution' });
 
     case 'function':
+      if (component.value === "__rangeLiteral") {
+        return 'list';
+      }
       // Functions always return numbers for now
       return 'number';
 

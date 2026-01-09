@@ -20,10 +20,12 @@ Value by percent subtraction	5% off what is 6 EUR
 
 # Big ticket items
 lists
-time
+ranges
+time, calendar math
 plots
 FX
 # bugs/ideas
+lists should take this speeds = 3, 4, 5, 6 to m/s
 - smartpad can't paste correctly:
 0.1 + 0.2 = 0.3 =>true
 1 = 1.000001 =>false

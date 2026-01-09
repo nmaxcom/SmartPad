@@ -247,6 +247,47 @@ sum(volume) => 1095 kg
 `,
     },
     {
+        id: "range-spec",
+        emoji: "🔢",
+        name: "Range Spec Lab",
+        content: `# Range-Generated Lists
+1..5 => 1, 2, 3, 4, 5
+0..10 step 2 => 0, 2, 4, 6, 8, 10
+0..10 step 3 => 0, 3, 6, 9
+2..6 => 2, 3, 4, 5, 6
+6..2 => 6, 5, 4, 3, 2
+5..5 => 5
+0..10 step 0 => ⚠️ step cannot be 0
+0..10 step -2 => ⚠️ step must be positive for an increasing range
+10..0 step 2 => ⚠️ step must be negative for a decreasing range
+0.5..3 => ⚠️ range endpoints must be integers (got 0.5)
+1..5 step 0.5 => ⚠️ step must be an integer (got 0.5)
+a = 1
+b = 5
+a..b => 1, 2, 3, 4, 5
+a = 1 m
+b = 5 m
+a..b => ⚠️ range endpoints must be unitless integers (got m)
+1..100000 => ⚠️ range too large (100000 elements; max 10000)
+
+# Composition & helpers
+(1..5) * 2 => 2, 4, 6, 8, 10
+sum(1..5) => 15
+
+# Mini recipes
+unit price = $3
+qty = 1..6
+line totals = unit price * qty =>$3, $6, $9, $12, $15, $18
+sum(line totals) =>$63
+
+x = 0..10 step 2
+y = x^2 => 0, 4, 16, 36, 64, 100
+
+n = 1..10
+n * 7 => 7, 14, 21, 28, 35, 42, 49, 56, 63, 70
+`,
+    },
+    {
         id: "functions-showcase",
         emoji: "🧩",
         name: "Functions Showcase",
