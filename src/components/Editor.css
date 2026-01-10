@@ -208,6 +208,9 @@ body.number-scrubbing * {
   border-radius: 6px;
   font-weight: 600;
   border: 1px solid rgba(124, 93, 250, 0.25);
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
 }
 
 /* Result text is inserted as real text nodes in the widget for selection/copy */

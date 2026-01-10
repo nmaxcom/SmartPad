@@ -136,13 +136,13 @@ describe("List spec examples", () => {
       "rent = $1,250",
       "rent => ⚠️ Cannot create list: incompatible units",
       "xs = 1,250",
-      "xs => 1,250",
+      "xs => 1, 250",
       "xs = 1, 250",
       "xs => 1, 250",
     ]);
     expect((results[1] as any).result).toBe("1, 2, 3");
     expect(results[3]?.type).toBe("error");
-    expect((results[5] as any).result).toBe("1,250");
+    expect((results[5] as any).result).toBe("1, 250");
     expect((results[7] as any).result).toBe("1, 250");
   });
 
