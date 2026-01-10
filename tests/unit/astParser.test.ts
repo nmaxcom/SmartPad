@@ -52,6 +52,16 @@ describe("AST Parser", () => {
         }
       });
 
+      it("should not parse prose containing units as an expression", () => {
+        const line =
+          "Sort by magnitude. 5ft is shorter than 3m.";
+        const result = parseLine(line, 1);
+        expect(isPlainTextNode(result)).toBe(true);
+        if (isPlainTextNode(result)) {
+          expect(result.content).toBe(line);
+        }
+      });
+
       it("should parse text with equals but no variable pattern as plain text", () => {
         const result = parseLine("2 + 2 = 4", 1);
         expect(isPlainTextNode(result)).toBe(true);

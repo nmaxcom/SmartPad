@@ -381,7 +381,30 @@ function containsUnitsOrMathExpression(line: string): boolean {
   // Check for basic unit patterns
   const unitPattern =
     /\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\s*[a-zA-Z°]+(?:\/[a-zA-Z°]+)?(?:\^?\d+)?(?:\s+to\s+[a-zA-Z°]+)?\b/;
-  if (unitPattern.test(line)) return true;
+  if (unitPattern.test(line)) {
+    const wordMatches = [...line.matchAll(/[A-Za-z°]+/g)];
+    if (wordMatches.length === 0) return true;
+    for (const match of wordMatches) {
+      const word = match[0];
+      const lower = word.toLowerCase();
+      if (lower === "to" || lower === "in" || lower === "per") {
+        continue;
+      }
+      if (word === "PI" || word === "E") {
+        continue;
+      }
+      const start = match.index ?? 0;
+      let idx = start - 1;
+      while (idx >= 0 && /\s/.test(line[idx])) idx -= 1;
+      if (idx < 0) {
+        return false;
+      }
+      if (!/[0-9.)/\^]/.test(line[idx])) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   // Check for arithmetic with potential units
   if (!line.trim().startsWith('//') && /[\+\-\*\/\^]/.test(line) && /[a-zA-Z]/.test(line)) return true;
