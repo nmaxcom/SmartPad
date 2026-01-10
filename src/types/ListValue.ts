@@ -122,7 +122,7 @@ export class ListValue extends SemanticValue {
     if (isDateTimeList(this.items)) {
       return formatCompactDateTimeList(this.items, options);
     }
-    return this.items.map((item) => item.toString(options)).join(this.delimiter);
+    return this.items.map((item) => item.toString(options)).join(", ");
   }
 
   containsNestedList(): boolean {

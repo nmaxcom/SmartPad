@@ -1,4 +1,8 @@
-New possible version of About.md (older is down to the end)
+A few new possible versions of About.md (older is down to the end)
+
+Smartpad is a lightweight computational notebook designed for thinking with numbers, not just calculating them. It blends calculator-style expressions, unit-aware math, variables, percentages, dates, lists, and light symbolic reasoning into a single plain-text surface. The core idea is that you write things the way you’d naturally think about them (including units, currencies, and phrases), and Smartpad continuously interprets them as meaningful computations. It’s closer to a “quantitative scratchpad” than a programming language or a spreadsheet.
+
+Smartpad emphasizes readability and intent over strict syntax. Units are first-class, conversions are semantic (to, in, on, off, as %), variables can be named with spaces, and results can be previewed live or explicitly committed. The goal is to make everyday quantitative reasoning—finance, planning, science, estimation—fast, expressive, and low-friction.
 
 # Killer demo notebook (markdown)
 

@@ -155,6 +155,16 @@ describe("Solve evaluator", () => {
     expect((result as any).result).toBe("y ^ 2");
   });
 
+  test("implicit solve supports constant bases in exponents", () => {
+    const context = createContext();
+    evaluateLine("a = 22", context, 1);
+    evaluateLine("b = 5", context, 2);
+    evaluateLine("y = a^x + b^2", context, 3);
+    const result = evaluateLine("x =>", context, 4);
+    expect(result?.type).toBe("mathResult");
+    expect((result as any).result).toContain("log");
+  });
+
   test("implicit solve can isolate denominators with constants", () => {
     const context = createContext();
     evaluateLine("y = 1 / (x + 2)", context, 1);

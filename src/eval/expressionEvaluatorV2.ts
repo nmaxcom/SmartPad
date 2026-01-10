@@ -1658,7 +1658,29 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
         this.getDisplayOptions(context)
       );
     }
-    const listValue = this.tryBuildListFromExpression(expression, context);
+    let listValue = this.tryBuildListFromExpression(expression, context);
+    if (conversion && listValue && SemanticValueTypes.isError(listValue)) {
+      const looseItems = this.tryBuildListItems(expression, context);
+      if (looseItems && !(looseItems instanceof ErrorValue)) {
+        const convertedItems: SemanticValue[] = [];
+        let conversionError: ErrorValue | null = null;
+        for (const item of looseItems) {
+          const converted = this.convertSingleValue(
+            item,
+            conversion.target,
+            conversion.keyword
+          );
+          if (SemanticValueTypes.isError(converted)) {
+            conversionError = converted as ErrorValue;
+            break;
+          }
+          convertedItems.push(converted);
+        }
+        listValue = conversionError
+          ? conversionError
+          : buildListValue(convertedItems);
+      }
+    }
     if (listValue) {
       if (SemanticValueTypes.isError(listValue)) {
         return this.createErrorNode(
@@ -1666,6 +1688,22 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
           exprNode.expression,
           context.lineNumber
         );
+      }
+
+      if (conversion) {
+        const converted = this.applyUnitConversion(
+          listValue,
+          conversion.target,
+          conversion.keyword
+        );
+        if (SemanticValueTypes.isError(converted)) {
+          return this.createErrorNode(
+            (converted as ErrorValue).getMessage(),
+            exprNode.expression,
+            context.lineNumber
+          );
+        }
+        listValue = converted;
       }
 
       return this.createMathResultNode(
@@ -1850,7 +1888,11 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
     return { baseExpression, target, keyword: match[1].toLowerCase() };
   }
 
-  private applyUnitConversion(value: SemanticValue, target: string, keyword: string): SemanticValue {
+  private applyUnitConversion(
+    value: SemanticValue,
+    target: string,
+    keyword: string
+  ): SemanticValue {
     if (SemanticValueTypes.isList(value)) {
       const converted: SemanticValue[] = [];
       for (const item of (value as ListValue).getItems()) {
@@ -1865,13 +1907,20 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
     return this.convertSingleValue(value, target, keyword);
   }
 
-  private convertSingleValue(value: SemanticValue, target: string, keyword: string): SemanticValue {
+  private convertSingleValue(
+    value: SemanticValue,
+    target: string,
+    keyword: string
+  ): SemanticValue {
     const parsed = this.parseConversionTarget(target);
     if (!parsed) {
       return ErrorValue.semanticError(`Expected unit after '${keyword}'`);
     }
 
     if (value.getType() === "unit") {
+      if (!parsed.unit) {
+        return ErrorValue.semanticError("Cannot convert non-unit value");
+      }
       try {
         return (value as UnitValue).convertTo(parsed.unit);
       } catch (error) {
@@ -1882,6 +1931,9 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
     }
 
     if (value.getType() === "currencyUnit") {
+      if (!parsed.unit) {
+        return ErrorValue.semanticError("Cannot convert non-unit value");
+      }
       const currencyValue = value as CurrencyUnitValue;
       if (parsed.symbol && parsed.symbol !== currencyValue.getSymbol()) {
         return ErrorValue.semanticError("Cannot convert between different currencies");
@@ -1892,6 +1944,24 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
         return ErrorValue.semanticError(
           error instanceof Error ? error.message : String(error)
         );
+      }
+    }
+
+    if (value.getType() === "currency") {
+      const currencyValue = value as CurrencyValue;
+      if (!parsed.symbol || parsed.symbol !== currencyValue.getSymbol()) {
+        return ErrorValue.semanticError("Cannot convert between different currencies");
+      }
+      return currencyValue;
+    }
+
+    if (value.getType() === "number") {
+      const numeric = value.getNumericValue();
+      if (parsed.symbol) {
+        return new CurrencyValue(parsed.symbol as CurrencySymbol, numeric);
+      }
+      if (parsed.unit) {
+        return UnitValue.fromValueAndUnit(numeric, parsed.unit);
       }
     }
 
@@ -1986,6 +2056,9 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
 
     const unit = raw.replace(/\s+/g, "");
     if (!unit) {
+      if (symbol) {
+        return { unit: "", symbol };
+      }
       return null;
     }
 
@@ -2115,6 +2188,39 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
     }
 
     return createListResult(items, inferListDelimiter(expression));
+  }
+
+  private tryBuildListItems(
+    expression: string,
+    context: EvaluationContext
+  ): SemanticValue[] | ErrorValue | null {
+    const segments = splitTopLevelCommas(expression);
+    if (segments.length <= 1) {
+      return null;
+    }
+
+    const items: SemanticValue[] = [];
+    for (let idx = 0; idx < segments.length; idx += 1) {
+      const segment = segments[idx];
+      const trimmed = segment.trim();
+      if (!trimmed) {
+        if (idx === segments.length - 1) {
+          continue;
+        }
+        return ErrorValue.semanticError("Cannot create list: empty value");
+      }
+
+      const evaluated = this.evaluateListSegment(trimmed, context);
+      if (!evaluated) {
+        return null;
+      }
+      if (SemanticValueTypes.isError(evaluated)) {
+        return evaluated;
+      }
+      items.push(evaluated);
+    }
+
+    return items;
   }
 
   private evaluateListSegment(

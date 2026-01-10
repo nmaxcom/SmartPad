@@ -216,6 +216,48 @@ describe("List & statistical helpers", () => {
     expect((result as any).result).toBe("3 m, 25 m, 48000 m");
   });
 
+  test("unit annotation applies over numeric lists", () => {
+    const context = createContext();
+    const result = evaluateLine("speeds = 3, 4, 5, 6 to m/s =>", context, 1);
+    expect(result?.type).toBe("combined");
+    expect((result as any).result).toBe("3 m/s, 4 m/s, 5 m/s, 6 m/s");
+  });
+
+  test("unit annotation applies over numeric lists (raw case)", () => {
+    const context = createContext();
+    const result = evaluateLine("ass = 3, 4, 5, 6 to m/s =>", context, 1);
+    expect(result?.type).toBe("combined");
+    expect((result as any).result).toBe("3 m/s, 4 m/s, 5 m/s, 6 m/s");
+  });
+
+  test("unit annotation applies when unit is on the last element", () => {
+    const context = createContext();
+    const result = evaluateLine("speeds = 10, 20, 30 km/h =>", context, 1);
+    expect(result?.type).toBe("combined");
+    expect((result as any).result).toBe("10 km/h, 20 km/h, 30 km/h");
+  });
+
+  test("mixed unit lists annotate and convert to target unit", () => {
+    const context = createContext();
+    const result = evaluateLine("lengths = 3 cm, 4, 5 to m =>", context, 1);
+    expect(result?.type).toBe("combined");
+    expect((result as any).result).toBe("0.03 m, 4 m, 5 m");
+  });
+
+  test("currency annotation applies to numeric lists", () => {
+    const context = createContext();
+    const result = evaluateLine("prices = 10, 20, 30 to $ =>", context, 1);
+    expect(result?.type).toBe("combined");
+    expect((result as any).result).toBe("$10, $20, $30");
+  });
+
+  test("mixed currencies with to $ error out", () => {
+    const context = createContext();
+    const result = evaluateLine("prices = €10, 20, 30 to $ =>", context, 1);
+    expect(result?.type).toBe("error");
+    expect((result as any).displayText).toContain("Cannot convert");
+  });
+
   test("percentage on/off applies element-wise", () => {
     const context = createContext();
     evaluateLine("tax = 8%", context, 1);

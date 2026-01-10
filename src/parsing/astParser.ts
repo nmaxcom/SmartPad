@@ -28,6 +28,7 @@ import { validateExpressionTypes } from "./typeResolver";
 import { parseExpressionComponents } from "./expressionComponents";
 import { looksLikeDateExpression } from "../date/dateMath";
 import { containsRangeOperatorOutsideString } from "../utils/rangeExpression";
+import { splitTopLevelCommas } from "../utils/listExpression";
 
 /**
  * Parse a single line of text into an AST node
@@ -260,9 +261,12 @@ function createExpressionNode(expression: string, raw: string, line: number): Ex
 
     // Parse the expression into a component tree if it's not a raw list literal
     let components: ReturnType<typeof parseExpressionComponents> = [];
+    const isCommaList = splitTopLevelCommas(expressionForComponents).length > 1;
     if (!isListLiteral) {
       try {
-        components = parseExpressionComponents(expressionForComponents);
+        if (!isCommaList) {
+          components = parseExpressionComponents(expressionForComponents);
+        }
       } catch (error) {
         if (
           !isPercentageExpression &&
@@ -331,9 +335,12 @@ function createCombinedAssignmentNode(
 
     // Parse the expression into a component tree
     let components: ReturnType<typeof parseExpressionComponents> = [];
+    const isCommaList = splitTopLevelCommas(expressionForComponents).length > 1;
     if (!isListLiteral) {
       try {
-        components = parseExpressionComponents(expressionForComponents);
+        if (!isCommaList) {
+          components = parseExpressionComponents(expressionForComponents);
+        }
       } catch (error) {
         if (
           !isPercentageExpression &&

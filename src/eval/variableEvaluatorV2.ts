@@ -26,6 +26,8 @@ import {
   SymbolicValue,
   createListResult,
   UnitValue,
+  CurrencyValue,
+  CurrencySymbol,
 } from "../types";
 import { parseAndEvaluateExpression } from "../parsing/expressionParser";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
@@ -73,9 +75,13 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
       );
     }
     const normalizedRawValue = normalized.expression;
+    const conversion = this.extractConversionSuffix(normalizedRawValue);
+    const expressionRawValue = conversion
+      ? conversion.baseExpression
+      : normalizedRawValue;
     const hasRangeOperator =
-      containsRangeOperatorOutsideString(normalizedRawValue);
-    if (hasRangeOperator && !isValidRangeExpressionCandidate(normalizedRawValue)) {
+      containsRangeOperatorOutsideString(expressionRawValue);
+    if (hasRangeOperator && !isValidRangeExpressionCandidate(expressionRawValue)) {
       return this.createErrorNode(
         `Invalid range expression near "${originalRawValue}"`,
         varNode.variableName,
@@ -92,7 +98,7 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
       );
     }
 
-    if (this.shouldDeferToUnitsNet(varNode, context, normalizedRawValue)) {
+    if (this.shouldDeferToUnitsNet(varNode, context, expressionRawValue)) {
       return null;
     }
     
@@ -122,13 +128,41 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
       }
 
         // If this looks like a non-literal expression, try evaluating it numerically
-        if (errorValue.getErrorType() === "parse" && normalizedRawValue) {
+        if (errorValue.getErrorType() === "parse" && expressionRawValue) {
           let resolvedValue: import("../types").SemanticValue | null = null;
 
-          const listValue = this.evaluateListLiteralExpressions(
-            normalizedRawValue,
+          let listValue = this.evaluateListLiteralExpressions(
+            expressionRawValue,
             context
           );
+          if (conversion && listValue && SemanticValueTypes.isError(listValue)) {
+            const looseItems = this.evaluateListLiteralItems(
+              expressionRawValue,
+              context
+            );
+            if (looseItems && !(looseItems instanceof ErrorValue)) {
+              const convertedItems: SemanticValue[] = [];
+              let conversionError: ErrorValue | null = null;
+              for (const item of looseItems) {
+                const converted = this.applyUnitConversion(
+                  item,
+                  conversion.target,
+                  conversion.keyword
+                );
+                if (SemanticValueTypes.isError(converted)) {
+                  conversionError = converted as ErrorValue;
+                  break;
+                }
+                convertedItems.push(converted);
+              }
+              listValue = conversionError
+                ? conversionError
+                : createListResult(
+                    convertedItems,
+                    inferListDelimiter(expressionRawValue)
+                  );
+            }
+          }
           if (listValue) {
             if (SemanticValueTypes.isError(listValue)) {
               return this.createErrorNode(
@@ -146,7 +180,7 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
           } else {
             try {
               resolvedValue = SimpleExpressionParser.parseComponents(
-              parseExpressionComponents(normalizedRawValue),
+              parseExpressionComponents(expressionRawValue),
               context
             );
             } catch (parseError) {
@@ -157,13 +191,13 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
 
             if (!resolvedValue || SemanticValueTypes.isError(resolvedValue)) {
                 const evalResult = parseAndEvaluateExpression(
-                  normalizedRawValue,
+                  expressionRawValue,
                   context.variableContext
                 );
 
               if (evalResult.error) {
                 if (/Undefined variable|not defined/i.test(evalResult.error)) {
-                  resolvedValue = SymbolicValue.from(normalizedRawValue);
+                  resolvedValue = SymbolicValue.from(expressionRawValue);
                 } else {
                   return this.createErrorNode(
                     hasRangeOperator
@@ -213,16 +247,32 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
 
       if (
         SemanticValueTypes.isSymbolic(semanticValue) &&
-        normalizedRawValue &&
-        normalizedRawValue.includes("..")
+        expressionRawValue &&
+        expressionRawValue.includes("..")
       ) {
         const evaluated = this.evaluateExpressionComponentsFromRaw(
-          normalizedRawValue,
+          expressionRawValue,
           context
         );
         if (evaluated) {
           semanticValue = evaluated;
         }
+      }
+
+      if (conversion) {
+        const converted = this.applyUnitConversion(
+          semanticValue,
+          conversion.target,
+          conversion.keyword
+        );
+        if (SemanticValueTypes.isError(converted)) {
+          return this.createErrorNode(
+            (converted as ErrorValue).getMessage(),
+            varNode.variableName,
+            context.lineNumber
+          );
+        }
+        semanticValue = converted;
       }
 
       // Store the variable with its semantic value
@@ -405,6 +455,152 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
       return null;
     }
     return createListResult(items, inferListDelimiter(rawValue));
+  }
+
+  private evaluateListLiteralItems(
+    rawValue: string,
+    context: EvaluationContext
+  ): SemanticValue[] | ErrorValue | null {
+    const parts = this.splitCommaSeparatedParts(rawValue);
+    if (parts.length <= 1) {
+      return null;
+    }
+    const items: SemanticValue[] = [];
+    for (const part of parts) {
+      const trimmed = part.trim();
+      if (!trimmed) continue;
+      const components = parseExpressionComponents(trimmed);
+      const evaluated = SimpleExpressionParser.parseComponents(components, context);
+      if (!evaluated || SemanticValueTypes.isError(evaluated)) {
+        return evaluated as ErrorValue;
+      }
+      items.push(evaluated);
+    }
+    if (items.length === 0) {
+      return null;
+    }
+    return items;
+  }
+
+  private extractConversionSuffix(
+    expression: string
+  ): { baseExpression: string; target: string; keyword: string } | null {
+    const match = expression.match(/\b(to|in)\b\s+(.+)$/i);
+    if (!match || match.index === undefined) {
+      return null;
+    }
+    const baseExpression = expression.slice(0, match.index).trim();
+    if (!baseExpression) {
+      return null;
+    }
+    const target = match[2].trim();
+    if (!target) {
+      return null;
+    }
+    return { baseExpression, target, keyword: match[1].toLowerCase() };
+  }
+
+  private parseConversionTarget(
+    target: string
+  ): { unit: string; symbol?: string } | null {
+    let raw = target.trim();
+    if (!raw) {
+      return null;
+    }
+
+    let symbol: string | undefined;
+    const symbolMatch = raw.match(/^([$€£¥₹₿])\s*(.*)$/);
+    if (symbolMatch) {
+      symbol = symbolMatch[1];
+      raw = symbolMatch[2].trim();
+    }
+
+    raw = raw.replace(/^per\b/i, "").trim();
+    raw = raw.replace(/^[/*]+/, "").trim();
+
+    const unit = raw.replace(/\s+/g, "");
+    if (!unit) {
+      if (symbol) {
+        return { unit: "", symbol };
+      }
+      return null;
+    }
+
+    return { unit, symbol };
+  }
+
+  private applyUnitConversion(
+    value: SemanticValue,
+    target: string,
+    keyword: string
+  ): SemanticValue {
+    const parsed = this.parseConversionTarget(target);
+    if (!parsed) {
+      return ErrorValue.semanticError(`Expected unit after '${keyword}'`);
+    }
+
+    if (SemanticValueTypes.isList(value)) {
+      const listValue = value as import("../types").ListValue;
+      const convertedItems: SemanticValue[] = [];
+      for (const item of listValue.getItems()) {
+        const converted = this.applyUnitConversion(item, target, keyword);
+        if (SemanticValueTypes.isError(converted)) {
+          return converted;
+        }
+        convertedItems.push(converted);
+      }
+      return createListResult(convertedItems, listValue.getDelimiter());
+    }
+
+    if (value.getType() === "unit") {
+      if (!parsed.unit) {
+        return ErrorValue.semanticError("Cannot convert non-unit value");
+      }
+      try {
+        return (value as UnitValue).convertTo(parsed.unit);
+      } catch (error) {
+        return ErrorValue.semanticError(
+          error instanceof Error ? error.message : String(error)
+        );
+      }
+    }
+
+    if (value.getType() === "currencyUnit") {
+      if (!parsed.unit) {
+        return ErrorValue.semanticError("Cannot convert non-unit value");
+      }
+      const currencyValue = value as import("../types").CurrencyUnitValue;
+      if (parsed.symbol && parsed.symbol !== currencyValue.getSymbol()) {
+        return ErrorValue.semanticError("Cannot convert between different currencies");
+      }
+      try {
+        return currencyValue.convertTo(parsed.unit);
+      } catch (error) {
+        return ErrorValue.semanticError(
+          error instanceof Error ? error.message : String(error)
+        );
+      }
+    }
+
+    if (value.getType() === "currency") {
+      const currencyValue = value as CurrencyValue;
+      if (!parsed.symbol || parsed.symbol !== currencyValue.getSymbol()) {
+        return ErrorValue.semanticError("Cannot convert between different currencies");
+      }
+      return currencyValue;
+    }
+
+    if (value.getType() === "number") {
+      const numeric = value.getNumericValue();
+      if (parsed.symbol) {
+        return new CurrencyValue(parsed.symbol as CurrencySymbol, numeric);
+      }
+      if (parsed.unit) {
+        return UnitValue.fromValueAndUnit(numeric, parsed.unit);
+      }
+    }
+
+    return ErrorValue.semanticError("Cannot convert non-unit value");
   }
 
   private splitCommaSeparatedParts(rawValue: string): string[] {

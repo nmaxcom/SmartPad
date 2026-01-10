@@ -1,5 +1,4 @@
 # Similar apps
-
 parsify.app, figr.app, aybo.app, calca.io, numi.app, Soulver 3, notepadcalculator.com, mathnotepad.com, bbodi.github.io/notecalc3, numbat.dev, hissab.io, numpad.io
 
 ---
@@ -16,19 +15,14 @@ Value by percent part	5% of what is 6 EUR
 Value by percent addition	5% on what is 6 EUR
 Value by percent subtraction	5% off what is 6 EUR
 
-
-
 # Big ticket items
 lists
 ranges
+true/false statements
 time, calendar math
 plots
 FX
 # bugs/ideas
-a = 22
-b = 5
-y = a^x + b^2 =>22^x + 5^2
-x =>⚠️ Cannot solve: exponent requires constant base
 
 lists should take this speeds = 3, 4, 5, 6 to m/s
 - smartpad can't paste correctly:

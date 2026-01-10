@@ -217,6 +217,29 @@ describe("List spec examples", () => {
     expect(results[13]?.type).toBe("error");
   });
 
+  test("list unit annotation and conversion", () => {
+    const { results } = evaluateSequence([
+      "speeds = 3, 4, 5, 6 to m/s",
+      "speeds => 3 m/s, 4 m/s, 5 m/s, 6 m/s",
+      "lengths = 3 cm, 4, 5 to m",
+      "lengths => 0.03 m, 4 m, 5 m",
+      "prices = 10, 20, 30 to $",
+      "prices => $10, $20, $30",
+      "speeds2 = 10, 20, 30 km/h",
+      "speeds2 => 10 km/h, 20 km/h, 30 km/h",
+      "prices2 = €10, 20, 30 to $ => ⚠️ Cannot convert",
+    ]);
+    expect(results[1]?.type).toBe("mathResult");
+    expect((results[1] as any).result).toBe("3 m/s, 4 m/s, 5 m/s, 6 m/s");
+    expect(results[3]?.type).toBe("mathResult");
+    expect((results[3] as any).result).toBe("0.03 m, 4 m, 5 m");
+    expect(results[5]?.type).toBe("mathResult");
+    expect((results[5] as any).result).toBe("$10, $20, $30");
+    expect(results[7]?.type).toBe("mathResult");
+    expect((results[7] as any).result).toBe("10 km/h, 20 km/h, 30 km/h");
+    expect(results[8]?.type).toBe("error");
+  });
+
   test("blocks 29-32: sorting", () => {
     const { results } = evaluateSequence([
       "costs = $12, $15, $9",

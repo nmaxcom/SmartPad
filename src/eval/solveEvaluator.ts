@@ -448,7 +448,76 @@ const evaluateNumericExpression = (expr: SolveExpression): number | null => {
   }
 };
 
-const extractNumericLiteral = (expr: SolveExpression): number | null => evaluateNumericExpression(expr);
+const extractNumericLiteral = (expr: SolveExpression): number | null =>
+  evaluateNumericExpression(expr);
+
+const buildNumericConstants = (
+  context: EvaluationContext,
+  localValues: Map<string, SemanticValue>,
+  target: string
+): Map<string, number> => {
+  const constants = new Map<string, number>();
+  const tryAdd = (name: string, value: SemanticValue) => {
+    const normalized = normalizeVariableName(name);
+    if (normalized === normalizeVariableName(target)) {
+      return;
+    }
+    if (value.getType() !== "number") {
+      return;
+    }
+    constants.set(normalized, value.getNumericValue());
+  };
+
+  context.variableContext.forEach((variable, name) => {
+    if (variable.value) {
+      tryAdd(name, variable.value);
+    }
+  });
+
+  localValues.forEach((value, name) => {
+    tryAdd(name, value);
+  });
+
+  return constants;
+};
+
+const substituteNumericConstants = (
+  expr: SolveExpression,
+  constants: Map<string, number>,
+  target: string
+): SolveExpression => {
+  switch (expr.type) {
+    case "variable": {
+      const normalized = normalizeVariableName(expr.name);
+      if (normalized === normalizeVariableName(target)) {
+        return expr;
+      }
+      const value = constants.get(normalized);
+      if (value === undefined) {
+        return expr;
+      }
+      return { type: "literal", value: String(value) };
+    }
+    case "binary":
+      return {
+        ...expr,
+        left: substituteNumericConstants(expr.left, constants, target),
+        right: substituteNumericConstants(expr.right, constants, target),
+      };
+    case "unary":
+      return {
+        ...expr,
+        value: substituteNumericConstants(expr.value, constants, target),
+      };
+    case "function":
+      return {
+        ...expr,
+        args: expr.args.map((arg) => substituteNumericConstants(arg, constants, target)),
+      };
+    default:
+      return expr;
+  }
+};
 
 const isExactTargetVariable = (expr: SolveExpression, target: string): boolean =>
   expr.type === "variable" && normalizeVariableName(expr.name) === normalizeVariableName(target);
@@ -832,7 +901,7 @@ export class SolveEvaluator implements NodeEvaluator {
       localValues.set(leftName, value as SemanticValue);
     }
 
-    const solved = this.solveEquation(targetEquation, target);
+    const solved = this.solveEquation(targetEquation, target, localValues, context);
     if (isErrorValue(solved)) {
       return this.createErrorNode((solved as ErrorValue).getMessage(), node.expression, context.lineNumber);
     }
@@ -853,7 +922,12 @@ export class SolveEvaluator implements NodeEvaluator {
     }
 
     const knownValues = this.collectKnownValueAssignments(equations, context, equation.line, target);
-    const solved = this.solveEquation({ left: equation.variableName, right: equation.expression }, target);
+    const solved = this.solveEquation(
+      { left: equation.variableName, right: equation.expression },
+      target,
+      knownValues,
+      context
+    );
     if (isErrorValue(solved)) {
       return this.createErrorNode((solved as ErrorValue).getMessage(), node.expression, context.lineNumber);
     }
@@ -898,7 +972,12 @@ export class SolveEvaluator implements NodeEvaluator {
     return knownValues;
   }
 
-  private solveEquation(equation: SolveEquation, target: string): SolveExpression | ErrorValue {
+  private solveEquation(
+    equation: SolveEquation,
+    target: string,
+    localValues: Map<string, SemanticValue>,
+    context: EvaluationContext
+  ): SolveExpression | ErrorValue {
     const leftTree = buildSolveTreeFromExpression(equation.left);
     const rightTree = buildSolveTreeFromExpression(equation.right);
 
@@ -906,8 +985,17 @@ export class SolveEvaluator implements NodeEvaluator {
       return ErrorValue.semanticError("Cannot solve: equation is not valid");
     }
 
-    const left = leftTree as SolveExpression;
-    const right = rightTree as SolveExpression;
+    const constants = buildNumericConstants(context, localValues, target);
+    const left = substituteNumericConstants(
+      leftTree as SolveExpression,
+      constants,
+      target
+    );
+    const right = substituteNumericConstants(
+      rightTree as SolveExpression,
+      constants,
+      target
+    );
     const leftHas = containsTarget(left, target);
     const rightHas = containsTarget(right, target);
 

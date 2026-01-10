@@ -350,6 +350,39 @@ const createListResult = (items: SemanticValue[], delimiter = ", "): SemanticVal
   if (items.length === 0) {
     return ListValue.fromItems(items);
   }
+  const unitItems = items.filter((item) => item.getType() === "unit") as UnitValue[];
+  const numberItems = items.filter((item) => item.getType() === "number") as NumberValue[];
+  if (
+    unitItems.length === 1 &&
+    numberItems.length > 0 &&
+    items.every((item) => item.getType() === "unit" || item.getType() === "number") &&
+    items[items.length - 1].getType() === "unit"
+  ) {
+    const targetUnit = unitItems[0].getUnit();
+    const targetSignature = unitItems[0].getQuantity().toBaseUnit().unit;
+    const converted = items.map((item) => {
+      if (item.getType() === "number") {
+        return UnitValue.fromValueAndUnit(item.getNumericValue(), targetUnit);
+      }
+      const unitItem = item as UnitValue;
+      const unitSignature = unitItem.getQuantity().toBaseUnit().unit;
+      if (unitSignature !== targetSignature) {
+        return ErrorValue.semanticError("Cannot create list: incompatible dimensions");
+      }
+      try {
+        return unitItem.convertTo(targetUnit);
+      } catch (error) {
+        return ErrorValue.semanticError(
+          error instanceof Error ? error.message : String(error)
+        );
+      }
+    });
+    const conversionError = converted.find((item) => item.getType() === "error");
+    if (conversionError) {
+      return conversionError as ErrorValue;
+    }
+    return createListResult(converted, delimiter);
+  }
   const baseType = items[0].getType();
   let baseUnitSignature: string | null = null;
   if (baseType === "unit") {

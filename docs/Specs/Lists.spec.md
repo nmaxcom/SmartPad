@@ -181,6 +181,93 @@ No auto-conversion just for printing (only convert on `to`).
 
 ---
 
+## Applying units/currency to whole lists
+
+### Postfix unit annotation (required)
+
+If `to <unit>` is applied to a comma-separated numeric list, treat it as **unit annotation**, not conversion.
+
+```text
+speeds = 3, 4, 5, 6 to m/s
+speeds =>3 m/s, 4 m/s, 5 m/s, 6 m/s
+```
+
+### `to <unit>` binds to the entire list
+
+```text
+xs = 1, 2, 3 to m
+xs =>1 m, 2 m, 3 m
+```
+
+### Mixed units already present
+
+If list items already include units:
+
+- items with units are converted to the target unit
+- unitless items are annotated with the target unit
+- incompatible units raise an error
+
+```text
+lengths = 3 cm, 4, 5 to m
+lengths =>0.03 m, 4 m, 5 m
+```
+
+### Compound units are allowed
+
+```text
+accelerations = 1.5, 2, to m/s^2
+accelerations =>1.5 m/s^2, 2 m/s^2, m/s^2
+```
+
+### Currency annotation
+
+```text
+prices = 10, 20, 30 to $
+prices => $10, $20, $30
+```
+
+Mixed currencies are not auto-converted:
+
+```text
+prices = €10, 20, 30 to $ => ⚠️ Cannot convert € to $
+```
+
+### Conversion chaining on lists
+
+```text
+lengths = 100, 200, 300 to cm
+lengths to m =>1 m, 2 m, 3 m
+```
+
+### Trailing unit applies to the whole line
+
+When the last element has a unit and earlier elements do not, assume the unit applies to the whole list.
+
+```text
+speeds = 10, 20, 30 km/h
+speeds => 10 km/h, 20 km/h, 30 km/h
+```
+
+### List-to-list unit alignment
+
+Lists zip; compatible units auto-convert.
+
+```text
+a = 1, 2, 3 to m
+b = 100, 200, 300 to cm
+a + b =>2 m, 4 m, 6 m
+```
+
+Incompatible units error:
+
+```text
+a = 1, 2, 3 to m
+b = 1, 2, 3 to s
+a + b =>⚠️ Cannot add incompatible units (m vs s)
+```
+
+---
+
 ## Aggregations (reduce list → scalar)
 
 ### What it’s useful for
