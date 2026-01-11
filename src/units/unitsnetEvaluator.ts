@@ -119,6 +119,34 @@ function aliasVariablesInExpression(
   return { expression: expr, variables: aliasedVars };
 }
 
+function rewriteTrailingUnitSuffix(expr: string): string {
+  const trimmed = expr.trim();
+  if (!trimmed) return expr;
+
+  const match = trimmed.match(/^(.*?)([a-zA-Z°µμΩ][a-zA-Z0-9°µμΩ\/\^\-\*\·]*)$/);
+  if (!match) return expr;
+
+  const before = match[1].trimEnd();
+  const unitStr = match[2];
+  if (!before) return expr;
+
+  if (/[a-zA-Z°µμΩ]/.test(before)) {
+    return expr;
+  }
+
+  if (/^[+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(before.trim())) {
+    return expr;
+  }
+
+  try {
+    SmartPadQuantity.fromValueAndUnit(1, unitStr);
+  } catch {
+    return expr;
+  }
+
+  return `(${before}) * 1 ${unitStr}`;
+}
+
 /**
  * Enhanced tokenizer that recognizes units and constants
  */
@@ -511,16 +539,32 @@ export class UnitsNetParser {
       this.consume(); // consume "^"
       const exponent = this.parsePower();
 
-      if (!(exponent instanceof NumberValue)) {
-        throw new Error("Exponent must be a number");
+      if (exponent instanceof NumberValue) {
+        const result = base.power(exponent.getNumericValue());
+        if (result instanceof UnitValue || result instanceof NumberValue) {
+          base = result;
+        } else {
+          throw new Error("Invalid power result type");
+        }
+        continue;
       }
 
-      const result = base.power(exponent.getNumericValue());
-      if (result instanceof UnitValue || result instanceof NumberValue) {
-        base = result;
-      } else {
-        throw new Error("Invalid power result type");
+      if (exponent instanceof UnitValue && base instanceof NumberValue) {
+        const result = base.power(exponent.getNumericValue());
+        if (!(result instanceof UnitValue || result instanceof NumberValue)) {
+          throw new Error("Invalid power result type");
+        }
+        const unitSuffix = UnitValue.fromValueAndUnit(1, exponent.getUnit());
+        const combined = result.multiply(unitSuffix);
+        if (combined instanceof UnitValue || combined instanceof NumberValue) {
+          base = combined;
+        } else {
+          throw new Error("Invalid power result type");
+        }
+        continue;
       }
+
+      throw new Error("Exponent must be a number");
     }
 
     return base;
@@ -646,9 +690,11 @@ export function evaluateUnitsNetExpression(
   variables: Record<string, UnitValue | NumberValue> = {}
 ): UnitsNetResult {
   try {
+    const rewrittenTrailingUnit = rewriteTrailingUnitSuffix(expression);
+
     // Alias phrase variables to letter-only identifiers that the tokenizer accepts
     const { expression: aliasedExpr, variables: aliasedVars } = aliasVariablesInExpression(
-      expression,
+      rewrittenTrailingUnit,
       variables
     );
 
@@ -692,5 +738,8 @@ export function evaluateUnitsNetExpression(
  * Check if an expression contains units
  */
 export function expressionContainsUnitsNet(expression: string): boolean {
-  return UnitsNetAdapterParser.containsUnits(expression);
+  if (UnitsNetAdapterParser.containsUnits(expression)) {
+    return true;
+  }
+  return rewriteTrailingUnitSuffix(expression) !== expression;
 }

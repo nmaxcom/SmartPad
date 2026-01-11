@@ -107,14 +107,33 @@ export class SimpleExpressionParser {
     for (const op of operators) {
       const parts = expr.split(op).map(p => p.trim());
       if (parts.length === 2 && parts[0] && parts[1]) {
+        let suffixValue: SemanticValue | null = null;
+        let rightOperand = parts[1];
+
+        if (op === "^") {
+          const suffixInfo = this.extractExponentSuffix(rightOperand);
+          if (suffixInfo) {
+            const parsedSuffix = this.parseUnitSuffix(suffixInfo.suffix);
+            if (parsedSuffix && !SemanticValueTypes.isSymbolic(parsedSuffix)) {
+              rightOperand = suffixInfo.numericPart;
+              suffixValue = parsedSuffix;
+            }
+          }
+        }
+
         const left = this.parseOperand(parts[0], context);
-        const right = this.parseOperand(parts[1], context);
-        
+        const right = this.parseOperand(rightOperand, context);
+
         if (SemanticValueTypes.isError(left) || SemanticValueTypes.isError(right)) {
           return left; // Return first error
         }
-        
-        return this.performOperation(left, right, op);
+
+        const operationResult = this.performOperation(left, right, op);
+        if (op === "^" && suffixValue && !SemanticValueTypes.isError(operationResult)) {
+          return SemanticArithmetic.multiply(operationResult, suffixValue);
+        }
+
+        return operationResult;
       }
     }
     
@@ -218,6 +237,35 @@ export class SimpleExpressionParser {
     return SymbolicValue.from(normalized);
   }
 
+  private static extractExponentSuffix(operand: string): { numericPart: string; suffix: string } | null {
+    const trimmed = operand.trim();
+    if (!trimmed) return null;
+
+    const match = trimmed.match(/^([+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)(.*)$/);
+    if (!match) return null;
+
+    const suffix = match[2].trim();
+    if (!suffix) return null;
+
+    if (!/[A-Za-z°µμΩ$€£¥₹₿]/.test(suffix)) {
+      return null;
+    }
+
+    return { numericPart: match[1], suffix };
+  }
+
+  private static parseUnitSuffix(suffix: string): SemanticValue | null {
+    const normalized = suffix.trim();
+    if (!normalized) return null;
+
+    try {
+      const candidate = SemanticParsers.parse(`1 ${normalized}`);
+      return candidate || null;
+    } catch {
+      return null;
+    }
+  }
+
   private static wrapExpression(expr: string): string {
     const trimmed = expr.trim();
     if (!/\s|[+\-*/^]/.test(trimmed)) {
@@ -265,16 +313,21 @@ export class SimpleExpressionParser {
           return SemanticArithmetic.multiply(left, right);
         case "/":
           return SemanticArithmetic.divide(left, right);
-        case "^":
+        case "^": {
           if (SemanticValueTypes.isSymbolic(right)) {
             const leftExpr = SimpleExpressionParser.wrapExpression(left.toString());
             const rightExpr = SimpleExpressionParser.wrapExpression(right.toString());
             return SymbolicValue.from(`${leftExpr} ^ ${rightExpr}`);
           }
+          const suffixResult = this.applyExponentUnitSuffix(left, right);
+          if (suffixResult) {
+            return suffixResult;
+          }
           if (!right.isNumeric()) {
             return ErrorValue.typeError("Exponent must be numeric", "number", right.getType());
           }
           return SemanticArithmetic.power(left, right.getNumericValue());
+        }
         default:
           return ErrorValue.semanticError(`Unknown operator: ${op}`);
       }
@@ -348,6 +401,21 @@ export class SimpleExpressionParser {
     }
 
     return values[0];
+  }
+
+  private static applyExponentUnitSuffix(left: SemanticValue, right: SemanticValue): SemanticValue | null {
+    if (left.getType() !== "number" || right.getType() !== "unit") {
+      return null;
+    }
+
+    const unitRight = right as UnitValue;
+    const exponent = unitRight.getNumericValue();
+    const unit = unitRight.getUnit();
+    const powered = SemanticArithmetic.power(left, exponent);
+    if (SemanticValueTypes.isError(powered)) {
+      return powered;
+    }
+    return SemanticArithmetic.multiply(powered, UnitValue.fromValueAndUnit(1, unit));
   }
 
   private static resolveComponentValue(
@@ -822,6 +890,10 @@ export class SimpleExpressionParser {
           const leftExpr = SimpleExpressionParser.wrapExpression(left.toString());
           const rightExpr = SimpleExpressionParser.wrapExpression(right.toString());
           return SymbolicValue.from(`${leftExpr} ^ ${rightExpr}`);
+        }
+        const suffixResult = this.applyExponentUnitSuffix(left, right);
+        if (suffixResult) {
+          return suffixResult;
         }
         if (!right.isNumeric()) {
           return ErrorValue.typeError("Exponent must be numeric", 'number', right.getType());

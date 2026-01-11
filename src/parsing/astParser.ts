@@ -239,6 +239,7 @@ function createVariableAssignmentNode(
 
 function createExpressionNode(expression: string, raw: string, line: number): ExpressionNode | ErrorNode {
   try {
+    const hasTrigger = raw.includes("=>");
     const isPercentageExpression =
       /%/.test(expression) ||
       /\bof\b/.test(expression) ||
@@ -249,15 +250,20 @@ function createExpressionNode(expression: string, raw: string, line: number): Ex
 
     const parsedLiteral = SemanticParsers.parse(expression);
     if (parsedLiteral && SemanticValueTypes.isError(parsedLiteral)) {
-      return createErrorNode(
-        (parsedLiteral as ErrorValue).getMessage(),
-        "semantic",
-        raw,
-        line
-      );
+      if (hasTrigger) {
+        return createErrorNode(
+          (parsedLiteral as ErrorValue).getMessage(),
+          "semantic",
+          raw,
+          line
+        );
+      }
     }
     const isListLiteral = parsedLiteral && parsedLiteral.getType() === "list";
-    const expressionForComponents = stripConversionSuffix(expression);
+    const normalizedExpression = normalizeExponentUnitSuffix(
+      normalizeTrailingUnitSuffix(expression)
+    );
+    const expressionForComponents = stripConversionSuffix(normalizedExpression);
 
     // Parse the expression into a component tree if it's not a raw list literal
     let components: ReturnType<typeof parseExpressionComponents> = [];
@@ -269,6 +275,7 @@ function createExpressionNode(expression: string, raw: string, line: number): Ex
         }
       } catch (error) {
         if (
+          hasTrigger &&
           !isPercentageExpression &&
           !looksLikeDateExpression(expression) &&
           !containsRangeOperatorOutsideString(expression)
@@ -280,7 +287,13 @@ function createExpressionNode(expression: string, raw: string, line: number): Ex
 
     // Validate types early (without variable context yet)
     const hasFunction = components.some((component) => component.type === "function");
-    if (!isPercentageExpression && !hasFunction && components.length > 0 && !looksLikeDateExpression(expression)) {
+    if (
+      hasTrigger &&
+      !isPercentageExpression &&
+      !hasFunction &&
+      components.length > 0 &&
+      !looksLikeDateExpression(normalizedExpression)
+    ) {
       const typeError = validateExpressionTypes(components, new Map(), undefined, {
         allowUnknownVariables: true,
       });
@@ -331,7 +344,10 @@ function createCombinedAssignmentNode(
       );
     }
     const isListLiteral = parsedLiteral && parsedLiteral.getType() === "list";
-    const expressionForComponents = stripConversionSuffix(expression);
+    const normalizedExpression = normalizeExponentUnitSuffix(
+      normalizeTrailingUnitSuffix(expression)
+    );
+    const expressionForComponents = stripConversionSuffix(normalizedExpression);
 
     // Parse the expression into a component tree
     let components: ReturnType<typeof parseExpressionComponents> = [];
@@ -403,6 +419,42 @@ function stripConversionSuffix(expression: string): string {
   }
   const base = expression.slice(0, match.index).trim();
   return base || expression;
+}
+
+function normalizeExponentUnitSuffix(expression: string): string {
+  const pattern =
+    /\^([+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)(\s*[A-Za-z°µμΩ$€£¥₹₿][A-Za-z0-9°µμΩ$€£¥₹₿\/\^\*\-]*)/g;
+  return expression.replace(pattern, (match, exponent, suffix) => {
+    const cleanSuffix = suffix.trim();
+    return `^${exponent} * 1 ${cleanSuffix}`;
+  });
+}
+
+function normalizeTrailingUnitSuffix(expression: string): string {
+  const trimmed = expression.trim();
+  if (!trimmed) return expression;
+
+  const match = trimmed.match(/^(.*?)([A-Za-z°µμΩ][A-Za-z0-9°µμΩ\/\^\-\*\·]*)$/);
+  if (!match) return expression;
+
+  const before = match[1].trimEnd();
+  const unitStr = match[2];
+  if (!before) return expression;
+
+  if (/[A-Za-z°µμΩ]/.test(before)) {
+    return expression;
+  }
+
+  if (/^[+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(before.trim())) {
+    return expression;
+  }
+
+  const parsed = SemanticParsers.parse(`1${unitStr}`);
+  if (!parsed || parsed.getType() !== "unit") {
+    return expression;
+  }
+
+  return `(${before}) * 1 ${unitStr}`;
 }
 
 function parseFunctionDefinition(

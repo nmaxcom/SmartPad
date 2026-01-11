@@ -9,6 +9,7 @@ import { Plugin, PluginKey } from "prosemirror-state";
 import { Decoration, DecorationSet } from "prosemirror-view";
 import { Node as ProseMirrorNode } from "prosemirror-model";
 import { Variable } from "../state/types";
+import { UnitValue } from "../types";
 import { parseLine } from "../parsing/astParser";
 import type { ASTNode } from "../parsing/ast";
 import {
@@ -538,6 +539,10 @@ export function tokenizeExpression(
     if (!matched) {
       for (const varName of variableNames) {
         if (expr.substring(pos).startsWith(varName)) {
+          const lastToken = tokens[tokens.length - 1];
+          if (lastToken?.type === "scrubbableNumber" && UnitValue.isUnitString(`1${varName}`)) {
+            continue;
+          }
           // Check if it's a word boundary (not part of a larger word)
           const afterChar = expr[pos + varName.length];
           if (!afterChar || /[\s\+\-\*\/\^\%\(\)]/.test(afterChar)) {
@@ -643,7 +648,9 @@ export function tokenizeExpression(
         if (unitMatch) {
           // Make sure it's not a variable name
           const unitText = unitMatch[0];
-          if (!variableContext.has(unitText)) {
+          const unitIsKnown = UnitValue.isUnitString(`1${unitText}`);
+          const preferUnit = unitIsKnown && lastToken?.type === "scrubbableNumber";
+          if (preferUnit || !variableContext.has(unitText)) {
             pushToken({
               type: "unit",
               start: baseOffset + pos,

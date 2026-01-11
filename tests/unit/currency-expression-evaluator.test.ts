@@ -433,4 +433,22 @@ describe("Currency Expression Evaluation", () => {
     expect(results.Total).toBe("$748.8");
     expect(results.math).toBe("160");
   });
+
+  test("interprets unit suffix after exponent as applying to the result", () => {
+    const variableStore = new ReactiveVariableStore();
+    const node = parseLine("4^2m =>", 1);
+    const evaluator = new ExpressionEvaluatorV2();
+
+    const result = evaluator.evaluate(node, {
+      variableStore,
+      variableContext: new Map<string, Variable>(),
+      lineNumber: 1,
+      decimalPlaces: 6,
+    });
+
+    expect(result?.type).toBe("mathResult");
+    if (result?.type === "mathResult") {
+      expect(result.result).toBe("16 m");
+    }
+  });
 });
