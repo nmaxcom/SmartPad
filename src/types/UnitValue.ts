@@ -8,6 +8,7 @@
 import { SemanticValue, SemanticValueType, DisplayOptions } from './SemanticValue';
 import { NumberValue } from './NumberValue';
 import { PercentageValue } from './PercentageValue';
+import { DurationValue } from './DurationValue';
 import { SmartPadQuantity } from '../units/unitsnetAdapter';
 
 /**
@@ -208,6 +209,26 @@ export class UnitValue extends SemanticValue {
         const result = this.quantity.divide(otherUnit.quantity);
         
         // If result is dimensionless, return NumberValue
+        if (result.isDimensionless()) {
+          return new NumberValue(result.value);
+        }
+        
+        return new UnitValue(result);
+      } catch (error) {
+        throw this.createIncompatibilityError(other, 'divide', (error as Error).message);
+      }
+    }
+    
+    if (other.getType() === 'duration') {
+      const otherDuration = other as DurationValue;
+      
+      try {
+        const durationQuantity = SmartPadQuantity.fromValueAndUnit(
+          otherDuration.getTotalSeconds(),
+          's'
+        );
+        const result = this.quantity.divide(durationQuantity);
+        
         if (result.isDimensionless()) {
           return new NumberValue(result.value);
         }

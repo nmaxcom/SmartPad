@@ -7,6 +7,8 @@ import {
 import { parseExpressionComponents } from "../parsing/expressionComponents";
 import { parseAndEvaluateExpression } from "../parsing/expressionParser";
 import { EquationEntry, normalizeVariableName } from "../solve/equationStore";
+import { splitTopLevelEquation, isVariableReferenceExpression } from "../solve/parseUtils";
+import type { SolveEquation } from "../solve/parseUtils";
 import { NodeEvaluator, EvaluationContext } from "./registry";
 import {
   ErrorRenderNode,
@@ -32,11 +34,6 @@ type SolveExpression =
   | { type: "unary"; op: "+" | "-"; value: SolveExpression }
   | { type: "function"; name: string; args: SolveExpression[] };
 
-type SolveEquation = {
-  left: string;
-  right: string;
-};
-
 type SolveParseResult = {
   target: string;
   equations: SolveEquation[];
@@ -52,9 +49,6 @@ const operatorPrecedence: Record<string, number> = {
 };
 
 const isSolveExpression = (expr: string): boolean => /^solve\b/i.test(expr.trim());
-const isVariableReferenceExpression = (expr: string): boolean =>
-  /^[a-zA-Z_][a-zA-Z0-9_\s]*$/.test(expr.trim());
-
 const isConstantName = (name: string): boolean =>
   name === "PI" || name === "E";
 const isErrorValue = (value: unknown): value is ErrorValue => value instanceof ErrorValue;
@@ -108,22 +102,6 @@ const splitTopLevelList = (input: string): string[] => {
   }
 
   return parts;
-};
-
-const splitTopLevelEquation = (input: string): SolveEquation | null => {
-  let depth = 0;
-  for (let i = 0; i < input.length; i++) {
-    const char = input[i];
-    if (char === "(") depth += 1;
-    if (char === ")") depth = Math.max(0, depth - 1);
-    if (char === "=" && depth === 0) {
-      const left = input.slice(0, i).trim();
-      const right = input.slice(i + 1).trim();
-      if (!left || !right) return null;
-      return { left, right };
-    }
-  }
-  return null;
 };
 
 const parseSolveExpression = (expression: string): SolveParseResult | null => {
@@ -451,6 +429,26 @@ const evaluateNumericExpression = (expr: SolveExpression): number | null => {
 const extractNumericLiteral = (expr: SolveExpression): number | null =>
   evaluateNumericExpression(expr);
 
+const containsNegativeRadicand = (expr: SolveExpression): boolean => {
+  if (expr.type === "function") {
+    const name = expr.name.toLowerCase();
+    if (name === "sqrt" && expr.args.length === 1) {
+      const numericArg = evaluateNumericExpression(expr.args[0]);
+      if (numericArg !== null && numericArg < 0) {
+        return true;
+      }
+    }
+    return expr.args.some(containsNegativeRadicand);
+  }
+  if (expr.type === "binary") {
+    return containsNegativeRadicand(expr.left) || containsNegativeRadicand(expr.right);
+  }
+  if (expr.type === "unary") {
+    return containsNegativeRadicand(expr.value);
+  }
+  return false;
+};
+
 const buildNumericConstants = (
   context: EvaluationContext,
   localValues: Map<string, SemanticValue>,
@@ -702,11 +700,25 @@ const getEquationCandidates = (
   lineNumber: number,
   equations: EquationEntry[]
 ): EquationEntry | null => {
-  for (let i = equations.length - 1; i >= 0; i -= 1) {
-    const equation = equations[i];
-    if (equation.line >= lineNumber) continue;
-    if (normalizeVariableName(equation.variableName) === normalizeVariableName(target)) {
-      return equation;
+    for (let i = equations.length - 1; i >= 0; i -= 1) {
+      const equation = equations[i];
+      if (equation.line >= lineNumber) continue;
+      if (normalizeVariableName(equation.variableName) === normalizeVariableName(target)) {
+        return equation;
+      }
+
+    const topLevel = splitTopLevelEquation(equation.expression);
+    if (topLevel) {
+      const leftTree = buildSolveTreeFromExpression(topLevel.left);
+      const rightTree = buildSolveTreeFromExpression(topLevel.right);
+      const leftHas =
+        !isErrorValue(leftTree) && containsTarget(leftTree as SolveExpression, target);
+      const rightHas =
+        !isErrorValue(rightTree) && containsTarget(rightTree as SolveExpression, target);
+      if (leftHas || rightHas) {
+        return equation;
+      }
+      continue;
     }
 
     const parsed = buildSolveTreeFromExpression(equation.expression);
@@ -922,17 +934,24 @@ export class SolveEvaluator implements NodeEvaluator {
     }
 
     const knownValues = this.collectKnownValueAssignments(equations, context, equation.line, target);
-    const solved = this.solveEquation(
-      { left: equation.variableName, right: equation.expression },
-      target,
-      knownValues,
-      context
-    );
+    const equationParts = this.buildSolveEquationFromEntry(equation);
+    const solved = this.solveEquation(equationParts, target, knownValues, context);
     if (isErrorValue(solved)) {
       return this.createErrorNode((solved as ErrorValue).getMessage(), node.expression, context.lineNumber);
     }
 
     return this.formatSolveResult(node, solved as SolveExpression, conversion, context, knownValues);
+  }
+
+  private buildSolveEquationFromEntry(equation: EquationEntry): SolveEquation {
+    if (equation.variableName) {
+      return { left: equation.variableName, right: equation.expression };
+    }
+    const parsed = splitTopLevelEquation(equation.expression);
+    if (parsed) {
+      return parsed;
+    }
+    return { left: equation.variableName, right: equation.expression };
   }
 
   private collectKnownValueAssignments(
@@ -1022,6 +1041,13 @@ export class SolveEvaluator implements NodeEvaluator {
     localValues: Map<string, SemanticValue>
   ): RenderNode {
     const simplifiedExpression = simplifySolveExpression(solved);
+    if (containsNegativeRadicand(simplifiedExpression)) {
+      return this.createMathResultNode(
+        node.expression,
+        "⚠️ Cannot solve: no real solution",
+        context.lineNumber
+      );
+    }
     const expressionText = formatSolveExpression(simplifiedExpression);
     const displayOptions = this.getDisplayOptions(context);
 

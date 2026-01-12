@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        :root { --bg-app: #13141f; --bg-panel: #1e1f2e; --bg-hover: #2a2b3d; --text-main: #e2e8f0; --accent: #c084fc; --border: #ffffff10; }
+        body { margin: 0; background: var(--bg-app); font-family: sans-serif; color: var(--text-main); height: 100vh; display: flex; flex-direction: column; }
+        
+        header { height: 50px; background: var(--bg-panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 20px; justify-content: space-between; }
+        .main-container { display: flex; flex: 1; overflow: hidden; }
+        
+        .sidebar { width: 240px; background: var(--bg-panel); border-right: 1px solid var(--border); }
+        .sheet-item { padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid transparent; }
+        .sheet-item.active { background: var(--bg-hover); border-left-color: var(--accent); }
+        .dots { opacity: 0; cursor: pointer; }
+        .sheet-item:hover .dots { opacity: 1; }
+
+        .editor { flex: 1; padding: 40px; background: var(--bg-app); overflow-y: auto; }
+        .right-panel { width: 300px; background: var(--bg-panel); border-left: 1px solid var(--border); padding: 20px; }
+        
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; display: inline-block; margin-right: 8px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div><strong>Smartpad</strong></div>
+        <div><span class="status-dot"></span><small style="color:var(--text-muted)">Synced to Browser</small></div>
+    </header>
+    <div class="main-container">
+        <nav class="sidebar">
+            <div style="padding:20px; font-size:0.7rem; color:gray">SHEETS <span style="float:right; cursor:pointer">+</span></div>
+            <div class="sheet-item active"><span>Budget 2026</span><span class="dots">⋮</span></div>
+            <div class="sheet-item"><span>Physics Lab</span><span class="dots">⋮</span></div>
+        </nav>
+        <main class="editor">
+            <h1 contenteditable="true">Budget 2026</h1>
+            <p>Type your numbers here...</p>
+        </main>
+        <aside class="right-panel">
+            <div style="font-size:0.8rem; font-weight:bold; margin-bottom:20px">QUICK TEMPLATES</div>
+            <div style="background:var(--bg-hover); padding:15px; border-radius:8px; margin-bottom:10px">Commute Planner</div>
+        </aside>
+    </div>
+</body>
+</html>

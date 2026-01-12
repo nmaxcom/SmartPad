@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Smartpad Sidebar - IDE</title>
+    <style>
+        :root {
+            --bg-app: #13141f;
+            --bg-panel: #1e1f2e;
+            --bg-hover: #2a2b3d;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent-blue: #22d3ee;
+            --border: #ffffff08;
+        }
+        body {
+            margin: 0;
+            background-color: var(--bg-app);
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.85rem;
+        }
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            background-color: var(--bg-panel);
+            border-right: 1px solid var(--border);
+        }
+        .title {
+            padding: 16px 20px;
+            font-family: sans-serif;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+        }
+        .file-item {
+            padding: 8px 12px 8px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+        .file-item:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-main);
+        }
+        .file-item.active {
+            color: var(--accent-blue);
+            background-color: rgba(34, 211, 238, 0.05);
+        }
+        .actions {
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .file-item:hover .actions { opacity: 1; }
+        .action-icon {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            border: none;
+            background: none;
+            cursor: pointer;
+        }
+        .action-icon:hover { color: white; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="title">Workspace</div>
+        <div class="file-item active">
+            <span>📄 main.sp</span>
+            <div class="actions">
+                <button class="action-icon">✎</button>
+                <button class="action-icon">🗑</button>
+            </div>
+        </div>
+        <div class="file-item">
+            <span>📄 taxes_2025.sp</span>
+            <div class="actions">
+                <button class="action-icon">✎</button>
+                <button class="action-icon">🗑</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

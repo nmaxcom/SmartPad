@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        :root { --bg: #13141f; --panel: #1e1f2e; --text: #e2e8f0; --accent: #c084fc; }
+        body { margin: 0; display: flex; height: 100vh; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; }
+        
+        .left-nav { width: 60px; background: var(--panel); display: flex; flex-direction: column; align-items: center; padding-top: 20px; border-right: 1px solid #ffffff05; }
+        .expanded-sidebar { width: 200px; background: var(--bg); border-right: 1px solid #ffffff05; padding: 20px; }
+        
+        .editor-view { flex: 1; display: flex; flex-direction: column; align-items: center; }
+        .canvas { width: 100%; max-width: 800px; height: 100%; padding: 60px 20px; box-sizing: border-box; }
+        
+        .top-meta { width: 100%; display: flex; justify-content: space-between; color: gray; font-size: 0.75rem; margin-bottom: 40px; border-bottom: 1px solid #ffffff10; padding-bottom: 10px; }
+        .dots-btn { opacity: 0; transition: 0.2s; cursor: pointer; }
+        .sheet-row:hover .dots-btn { opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="left-nav">
+        <div style="width:30px; height:30px; background:var(--accent); border-radius:6px; margin-bottom:20px"></div>
+        <div style="color:gray">📁</div>
+    </div>
+    <div class="expanded-sidebar">
+        <div style="font-size:0.7rem; margin-bottom:15px; color:gray">ALL FILES</div>
+        <div class="sheet-row" style="margin-bottom:10px; display:flex; justify-content:space-between">
+            <span style="color:var(--accent)">● Morning Calc</span>
+            <span class="dots-btn">⋮</span>
+        </div>
+    </div>
+    <div class="editor-view">
+        <div class="canvas">
+            <div class="top-meta">
+                <span>Created: Today</span>
+                <span>STATUS: SAVED</span>
+            </div>
+            <h1 style="font-size: 2.5rem; margin: 0 0 20px 0;">Morning Calc</h1>
+            <p style="font-size: 1.2rem; line-height: 1.6; opacity: 0.8;">rent = $1200<br>tax = 10%<br>total = tax on rent => $1320</p>
+        </div>
+    </div>
+</body>
+</html>

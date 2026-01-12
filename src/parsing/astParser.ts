@@ -240,6 +240,15 @@ function createVariableAssignmentNode(
 function createExpressionNode(expression: string, raw: string, line: number): ExpressionNode | ErrorNode {
   try {
     const hasTrigger = raw.includes("=>");
+    if (!hasTrigger && containsTopLevelEquation(expression)) {
+      return {
+        type: "expression",
+        line,
+        raw,
+        expression,
+        components: [],
+      };
+    }
     const isPercentageExpression =
       /%/.test(expression) ||
       /\bof\b/.test(expression) ||
@@ -457,6 +466,33 @@ function normalizeTrailingUnitSuffix(expression: string): string {
   return `(${before}) * 1 ${unitStr}`;
 }
 
+function containsTopLevelEquation(input: string): boolean {
+  let depth = 0;
+  for (let i = 0; i < input.length; i += 1) {
+    const char = input[i];
+    if (char === "(") {
+      depth += 1;
+      continue;
+    }
+    if (char === ")") {
+      depth = Math.max(0, depth - 1);
+      continue;
+    }
+    if (char === "=" && depth === 0) {
+      const prev = input[i - 1];
+      const next = input[i + 1];
+      if (prev === ">" || prev === "<" || prev === "=" || prev === "!") {
+        continue;
+      }
+      if (next === "=") {
+        continue;
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
 function parseFunctionDefinition(
   trimmedLine: string,
   raw: string,
@@ -471,23 +507,12 @@ function parseFunctionDefinition(
   const { left, right } = assignment;
   if (!left || !right) return null;
 
-  const openIndex = left.indexOf("(");
-  const closeIndex = left.lastIndexOf(")");
-  if (openIndex === -1 || closeIndex === -1 || closeIndex < openIndex) {
-    return null;
-  }
+  const signatureMatch = left.match(/^([a-zA-Z][a-zA-Z0-9\s_]*)\s*\((.*)\)$/);
+  if (!signatureMatch) return null;
 
-  const functionName = left.substring(0, openIndex).trim();
-  const paramsRaw = left.substring(openIndex + 1, closeIndex).trim();
+  const functionName = signatureMatch[1].trim();
+  const paramsRaw = signatureMatch[2].trim();
   const expression = right.trim();
-
-  if (!functionName) {
-    return createErrorNode("Missing function name", "syntax", raw, line);
-  }
-
-  if (!/^[a-zA-Z][a-zA-Z0-9\s_]*$/.test(functionName)) {
-    return createErrorNode(`Invalid function name: ${functionName}`, "syntax", raw, line);
-  }
 
   if (!expression) {
     return createErrorNode("Missing function body", "syntax", raw, line);

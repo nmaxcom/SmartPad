@@ -4,7 +4,12 @@ import {
   isExpressionNode,
   isVariableAssignmentNode,
   isCombinedAssignmentNode,
+  isErrorNode,
 } from "../parsing/ast";
+import {
+  splitTopLevelEquation,
+  isVariableReferenceExpression,
+} from "./parseUtils";
 
 export interface EquationEntry {
   line: number;
@@ -48,6 +53,33 @@ export const recordEquationFromNode = (node: ASTNode, equations: EquationEntry[]
       line: node.line,
       variableName: normalizeVariableName(left),
       expression: `${left} = ${right}`,
+    });
+    return;
+  }
+
+  if (isExpressionNode(node)) {
+    const equation = splitTopLevelEquation(node.raw);
+    if (!equation) return;
+    const variableName = isVariableReferenceExpression(equation.left)
+      ? normalizeVariableName(equation.left)
+      : "";
+    equations.push({
+      line: node.line,
+      variableName,
+      expression: `${equation.left} = ${equation.right}`,
+    });
+  }
+
+  if (isErrorNode(node) && !node.raw.includes("=>")) {
+    const equation = splitTopLevelEquation(node.raw);
+    if (!equation) return;
+    const variableName = isVariableReferenceExpression(equation.left)
+      ? normalizeVariableName(equation.left)
+      : "";
+    equations.push({
+      line: node.line,
+      variableName,
+      expression: `${equation.left} = ${equation.right}`,
     });
   }
 };

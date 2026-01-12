@@ -48,6 +48,7 @@ b=2,000=>2, 0
 c=2,1222=>2, 1,222
 d=222,2,3=>⚠️ Combined assignment parse error: Unexpected token: comma
 
+- add the "where" operator to define ex: 
 - make language more natural with aliases? funcname(var) -> funcname of var;
 - add stuff to tour template: trigonometry, 
 - comparar escenarios a la vez, rollo tab partida para ver lado vs lado? q otro formato si no? 

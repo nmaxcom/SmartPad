@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smartpad Sidebar - Glide</title>
+    <style>
+        :root {
+            --bg-app: #13141f;
+            --bg-panel: #1e1f2e;
+            --bg-hover: #2a2b3d;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent-purple: #c084fc;
+            --border-color: #ffffff10;
+        }
+        body {
+            margin: 0;
+            background-color: var(--bg-app);
+            color: var(--text-main);
+            font-family: 'Inter', system-ui, sans-serif;
+            display: flex;
+        }
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background-color: var(--bg-panel);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            padding: 24px 20px 16px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .new-btn {
+            background: none;
+            border: none;
+            color: var(--accent-purple);
+            font-size: 1.4rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            transition: 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .item:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-main);
+        }
+        .item.active {
+            background-color: var(--bg-hover);
+            color: var(--text-main);
+            border-left-color: var(--accent-purple);
+            box-shadow: inset 8px 0 15px -10px rgba(192, 132, 252, 0.3);
+        }
+        .icon { font-size: 1.1rem; opacity: 0.7; }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="header">
+            <span>MY SHEETS</span>
+            <button class="new-btn">+</button>
+        </div>
+        <ul class="list">
+            <li class="item active">
+                <span class="icon">📄</span>
+                <span>Q4 Budget Plan</span>
+            </li>
+            <li class="item">
+                <span class="icon">📄</span>
+                <span>Commute Analysis</span>
+            </li>
+            <li class="item">
+                <span class="icon">📄</span>
+                <span>Physics Lab 01</span>
+            </li>
+        </ul>
+    </nav>
+</body>
+</html>

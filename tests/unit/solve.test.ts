@@ -184,6 +184,22 @@ describe("Solve evaluator", () => {
     expect((xResult as any).result).toMatch(/\(.*z\s*\+\s*3.*\)\s*\/\s*4/);
   });
 
+  test("implicit solve treats standalone equations without arrows", () => {
+    const context = createContext();
+    evaluateLine("3 * x + 2 = 0", context, 1);
+    const result = evaluateLine("x =>", context, 2);
+    expect(result?.type).toBe("mathResult");
+    expect((result as any).result).toBe("-0.666667");
+  });
+
+  test("implicit solve reports no real solution when radicand is negative", () => {
+    const context = createContext();
+    evaluateLine("((z + 3)^2 + 2) / 4 = 0", context, 1);
+    const result = evaluateLine("z =>", context, 2);
+    expect(result?.type).toBe("mathResult");
+    expect((result as any).result).toBe("⚠️ Cannot solve: no real solution");
+  });
+
   test("round/floor/ceil functions evaluate correctly", () => {
     const context = createContext();
     const roundResult = evaluateLine("round(PI, 2) =>", context, 1);
