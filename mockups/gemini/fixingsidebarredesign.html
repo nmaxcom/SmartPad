@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartPad | Professional Workspace</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
+    @import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css");
+
+    :root {
+      /* Deep Midnight Professional Palette */
+      --bg-deep: #0d0e14;
+      --bg-sidebar: #15161e;
+      --bg-surface: #1c1d29;
+      --bg-hover: #262837;
+      
+      /* Primary Accents */
+      --accent: #c084fc; /* Soft Purple */
+      --accent-glow: rgba(192, 132, 252, 0.2);
+      --cyan: #2dd4bf;
+      --pink: #f472b6;
+      
+      /* Typography */
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+      --text-dim: #475569;
+      
+      --font-sans: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      
+      --border: rgba(255, 255, 255, 0.04);
+      --radius-xl: 12px;
+    }
+
+    * { box-sizing: border-box; outline: none; }
+
+    body {
+      margin: 0;
+      background: var(--bg-deep);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* --- NAVIGATION BAR --- */
+    .app-nav {
+      height: 56px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-sidebar);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      font-size: 1.1rem;
+    }
+
+    .nav-brand i { color: var(--accent); }
+
+    .nav-actions { display: flex; gap: 8px; align-items: center; }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .nav-btn:hover { background: var(--bg-hover); color: var(--text-main); }
+    .nav-btn.active { color: var(--accent); background: var(--accent-glow); }
+
+    /* --- MAIN LAYOUT --- */
+    .workspace {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 56px);
+    }
+
+    /* Sidebar Glide */
+    .sidebar {
+      width: 260px;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+    }
+
+    .sidebar-section-label {
+      padding: 0 24px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .sheet-item {
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      transition: 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .sheet-item:hover { background: var(--bg-hover); color: var(--text-main); }
+    .sheet-item.active {
+      background: var(--bg-hover);
+      color: var(--text-main);
+      border-left-color: var(--accent);
+      box-shadow: inset 10px 0 20px -10px var(--accent-glow);
+    }
+
+    /* Editor Canvas */
+    .editor-container {
+      flex: 1;
+      background: var(--bg-deep);
+      padding: 40px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .editor-canvas {
+      width: 100%;
+      max-width: 850px;
+      background: var(--bg-surface);
+      border-radius: var(--radius-xl);
+      padding: 48px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+      min-height: 80vh;
+      position: relative;
+    }
+
+    .editor-header {
+      margin-bottom: 32px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+    }
+
+    .editor-header h1 { margin: 0; font-size: 1.5rem; font-weight: 600; }
+
+    .code-line {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      line-height: 1.8;
+      white-space: pre-wrap;
+      margin-bottom: 4px;
+    }
+
+    .comment { color: var(--text-dim); font-style: italic; }
+    .variable { color: var(--cyan); }
+    .operator { color: var(--text-muted); }
+    .result-tag {
+      background: var(--accent-glow);
+      color: var(--accent);
+      padding: 2px 10px;
+      border-radius: 6px;
+      font-weight: 600;
+      margin-left: 12px;
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    /* Inspector Panel */
+    .inspector {
+      width: 320px;
+      background: var(--bg-sidebar);
+      border-left: 1px solid var(--border);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .inspector-card {
+      background: var(--bg-surface);
+      border-radius: var(--radius-xl);
+      padding: 16px;
+      border: 1px solid var(--border);
+    }
+
+    .inspector-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .var-row {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      margin-bottom: 12px;
+    }
+
+    .var-name { color: var(--cyan); }
+    .var-val { color: var(--text-main); font-weight: 600; }
+
+    .template-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .template-chip {
+      background: var(--bg-hover);
+      border: 1px solid var(--border);
+      padding: 12px 8px;
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .template-chip:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .template-chip span { display: block; font-size: 0.7rem; font-weight: 600; margin-top: 4px; }
+
+    .save-btn {
+      margin-top: auto;
+      background: linear-gradient(135deg, var(--accent), #7c3aed);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(124, 58, 237, 0.2);
+    }
+
+    .save-btn:hover { filter: brightness(1.1); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--bg-hover); border-radius: 10px; }
+  </style>
+</head>
+<body>
+
+  <nav class="app-nav">
+    <div class="nav-brand">
+      <i class="fas fa-terminal"></i>
+      SmartPad
+    </div>
+    <div class="nav-actions">
+      <div style="display: flex; gap: 4px; background: var(--bg-deep); padding: 4px; border-radius: 10px;">
+        <button class="nav-btn active"><i class="fas fa-code"></i></button>
+        <button class="nav-btn"><i class="fas fa-table-list"></i></button>
+        <button class="nav-btn"><i class="fas fa-bolt"></i></button>
+      </div>
+      <button class="nav-btn"><i class="fas fa-cog"></i></button>
+    </div>
+  </nav>
+
+  <main class="workspace">
+    <aside class="sidebar">
+      <div class="sidebar-section-label">
+        My Sheets <i class="fas fa-plus" style="cursor: pointer;"></i>
+      </div>
+      <div class="sheet-item active">
+        <i class="far fa-file-alt"></i> Q4 Budget Plan
+      </div>
+      <div class="sheet-item">
+        <i class="far fa-file-alt"></i> Physics Lab 01
+      </div>
+      <div class="sheet-item">
+        <i class="far fa-file-alt"></i> Commute Analysis
+      </div>
+    </aside>
+
+    <section class="editor-container">
+      <div class="editor-canvas">
+        <div class="editor-header">
+          <h1>Q4 Budget Plan</h1>
+        </div>
+        
+        <div class="code-line comment"># Scientific constants</div>
+        <div class="code-line">
+          <span class="variable">light_speed</span> <span class="operator">=</span> 3e8 m/s
+          <span class="result-tag">300,000,000 m/s</span>
+        </div>
+        
+        <div class="code-line comment" style="margin-top: 24px;"># Monthly Expenses</div>
+        <div class="code-line"><span class="variable">rent</span> <span class="operator">=</span> 1200 USD</div>
+        <div class="code-line"><span class="variable">food</span> <span class="operator">=</span> 450 USD</div>
+        <div class="code-line">
+          <span class="variable">total</span> <span class="operator">=</span> rent + food
+          <span class="result-tag">1,650 USD</span>
+        </div>
+
+        <div class="code-line" style="margin-top: 24px;">
+          <span class="variable">sqrt</span>(144) * 2 <span class="operator">=></span>
+          <span class="result-tag">24</span>
+        </div>
+
+        <div style="position: absolute; bottom: 20px; right: 20px; color: var(--text-dim); font-size: 0.7rem;">
+          UTF-8  |  Ln 12, Col 4  |  Auto-solve: ON
+        </div>
+      </div>
+    </section>
+
+    <aside class="inspector">
+      <div class="inspector-card">
+        <span class="inspector-title">VARIABLES</span>
+        <div class="var-row">
+          <span class="var-name">light_speed</span>
+          <span class="var-val">3e8</span>
+        </div>
+        <div class="var-row">
+          <span class="var-name">rent</span>
+          <span class="var-val">1200</span>
+        </div>
+        <div class="var-row">
+          <span class="var-name">total</span>
+          <span class="var-val">1650</span>
+        </div>
+      </div>
+
+      <div class="inspector-card">
+        <span class="inspector-title">QUICK TEMPLATES</span>
+        <div class="template-grid">
+          <div class="template-chip">🚀 <span>Tour</span></div>
+          <div class="template-chip">🧪 <span>Lab</span></div>
+          <div class="template-chip">📅 <span>Date</span></div>
+          <div class="template-chip">💰 <span>Finance</span></div>
+        </div>
+      </div>
+
+      <button class="save-btn">
+        <i class="fas fa-save" style="margin-right: 8px;"></i> Save Workspace
+      </button>
+    </aside>
+  </main>
+
+</body>
+</html>

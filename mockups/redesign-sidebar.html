@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartPad Layout Redesign</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Fira+Code:wght@700&family=Inter:wght@400;700&display=swap");
+    @import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css");
+
+    :root {
+      --color-background: #1a1a2e;
+      --color-surface: #252542;
+      --color-surface-hover: #2d2d4a;
+      --color-surface-light: #2d2d4a;
+      --color-primary: #7c5dfa;
+      --color-primary-light: rgba(124, 93, 250, 0.15);
+      --color-text-primary: #eaeaf4;
+      --color-text-secondary: #9595b2;
+      --color-border: rgba(255, 255, 255, 0.08);
+      --color-accent: #7c5dfa;
+      --color-accent-soft: rgba(124, 93, 250, 0.15);
+      --color-teal: #00d9c0;
+      --color-teal-soft: rgba(0, 217, 192, 0.15);
+      --color-pink: #ff6b9d;
+      --color-pink-soft: rgba(255, 107, 157, 0.15);
+      --color-yellow: #ffd93d;
+      --color-yellow-soft: rgba(255, 217, 61, 0.15);
+      --color-success: #00d9c0;
+      --color-success-soft: rgba(0, 217, 192, 0.15);
+      --color-error: #ff6b9d;
+      --color-error-soft: rgba(255, 107, 157, 0.15);
+      --color-warning: #ffd93d;
+      --color-warning-soft: rgba(255, 217, 61, 0.15);
+      --color-blue-100: rgba(124, 93, 250, 0.15);
+      --color-blue-700: #a78bfa;
+      --color-green-100: rgba(0, 217, 192, 0.15);
+      --color-green-700: #00d9c0;
+      --color-yellow-100: rgba(255, 217, 61, 0.15);
+      --color-yellow-700: #ffd93d;
+      --color-purple-100: rgba(255, 107, 157, 0.15);
+      --color-purple-700: #ff6b9d;
+      --color-red-100: rgba(255, 107, 157, 0.15);
+      --color-red-700: #ff6b9d;
+      --font-family-sans: "Sora", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-family-mono: "IBM Plex Mono", "Fira Code", monospace;
+      --font-size-xs: 0.75rem;
+      --font-size-sm: 0.875rem;
+      --font-size-base: 1rem;
+      --font-size-md: 1.05rem;
+      --font-size-lg: 1.125rem;
+      --font-size-xl: 1.25rem;
+      --font-size-2xl: 1.5rem;
+      --spacing-1: 0.25rem;
+      --spacing-2: 0.5rem;
+      --spacing-3: 0.75rem;
+      --spacing-4: 1rem;
+      --spacing-6: 1.5rem;
+      --spacing-8: 2rem;
+      --spacing-10: 2.5rem;
+      --spacing-12: 3rem;
+      --border-radius-sm: 0.25rem;
+      --border-radius-md: 0.375rem;
+      --border-radius-lg: 0.5rem;
+      --border-radius-xl: 0.75rem;
+      --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+      --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.25);
+      --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.35);
+
+      /* App header theme */
+      --bg-dark: #202235;
+      --bg-panel: #2a2c40;
+      --text-primary: #e0e0e0;
+      --text-secondary: #a0a0a0;
+      --accent-purple: #b676f2;
+      --accent-cyan: #4ab9a7;
+      --accent-magenta: #d956e5;
+      --font-mono: "Fira Code", monospace;
+      --font-sans: "Inter", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg-panel);
+      color: var(--color-text-primary);
+      font-family: var(--font-family-sans);
+    }
+
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: var(--bg-panel);
+    }
+
+    .app-header.header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: var(--bg-panel);
+      padding: 12px 32px;
+      border-bottom: 1px solid transparent;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      font-family: var(--font-sans);
+    }
+
+    .logo {
+      font-family: var(--font-mono);
+      font-weight: bold;
+      font-size: 1.25em;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-icon {
+      margin-right: 10px;
+      color: var(--accent-cyan);
+      font-size: 1.1em;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .toggles-group {
+      display: flex;
+      gap: 16px;
+      padding-right: 24px;
+      border-right: 1px solid #3a3c50;
+    }
+
+    .toggle-glow-icons button {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.3em;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      padding: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .toggle-glow-icons button:hover {
+      color: var(--text-primary);
+    }
+
+    .toggle-glow-icons button.active {
+      color: var(--accent-magenta);
+      filter: drop-shadow(0 0 8px rgba(217, 86, 229, 0.6));
+      transform: translateY(-1px);
+    }
+
+    .header-settings-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 1.3em;
+      line-height: 1;
+      transition: transform 0.4s ease, color 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .header-settings-btn:hover {
+      color: var(--accent-purple);
+      transform: rotate(45deg);
+    }
+
+    .main-container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      background: var(--bg-panel);
+    }
+
+    .sidebar,
+    .right-panel,
+    .editor {
+      background: var(--bg-panel);
+    }
+
+    .sidebar {
+      width: 240px;
+      border-right: 1px solid var(--color-border);
+      display: flex;
+      flex-direction: column;
+      padding: var(--spacing-6) 0;
+      gap: var(--spacing-4);
+    }
+
+    .panel-title {
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin: 0 0 var(--spacing-4);
+      padding-bottom: var(--spacing-2);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .sidebar-header {
+      padding: 0 var(--spacing-6);
+    }
+
+    .sidebar-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--spacing-2);
+    }
+
+    .sidebar-title-row button {
+      background: none;
+      border: none;
+      color: var(--color-accent);
+      font-size: 1.2rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .sheet-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 4px;
+    }
+
+    .sheet-item {
+      padding: var(--spacing-3) var(--spacing-6);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--color-text-secondary);
+      border-left: 3px solid transparent;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .sheet-title {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      font-size: var(--font-size-sm);
+    }
+
+    .sheet-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--color-teal);
+      box-shadow: 0 0 0 4px var(--color-teal-soft);
+    }
+
+    .sheet-actions {
+      opacity: 0;
+      color: var(--color-text-secondary);
+      font-weight: 700;
+    }
+
+    .sheet-item:hover {
+      background: var(--color-surface-hover);
+      color: var(--color-text-primary);
+    }
+
+    .sheet-item:hover .sheet-actions {
+      opacity: 1;
+    }
+
+    .sheet-item.active {
+      background: var(--color-surface-hover);
+      color: var(--color-text-primary);
+      border-left-color: var(--color-accent);
+      box-shadow: inset 8px 0 14px -12px var(--color-accent);
+    }
+
+    .editor {
+      flex: 1;
+      padding: var(--spacing-8);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-6);
+    }
+
+    .editor-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--border-radius-xl);
+      padding: var(--spacing-8);
+      box-shadow: var(--shadow-md);
+    }
+
+    .editor-title {
+      margin: 0 0 var(--spacing-4);
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .editor-content {
+      font-family: var(--font-family-mono);
+      color: var(--color-text-primary);
+      font-size: var(--font-size-md);
+      line-height: 1.7;
+    }
+
+    .editor-content .comment {
+      color: var(--color-text-secondary);
+    }
+
+    .token-variable {
+      color: var(--color-teal);
+      font-weight: 600;
+    }
+
+    .token-operator {
+      color: var(--color-yellow);
+      font-weight: 600;
+    }
+
+    .token-number {
+      color: var(--color-text-primary);
+    }
+
+    .token-function {
+      color: var(--color-pink);
+      font-weight: 600;
+    }
+
+    .token-result {
+      color: var(--color-accent);
+      background: var(--color-accent-soft);
+      padding: 2px 8px;
+      border-radius: var(--border-radius-md);
+      font-weight: 600;
+    }
+
+    .editor-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--color-text-secondary);
+      font-size: 0.85rem;
+    }
+
+    .helper-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      background: var(--color-teal-soft);
+      color: var(--color-text-primary);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    .right-panel {
+      width: 320px;
+      border-left: 1px solid var(--color-border);
+      padding: var(--spacing-6);
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-4);
+      overflow-y: auto;
+    }
+
+    .variable-panel,
+    .template-panel {
+      background-color: var(--color-surface);
+      border-radius: var(--border-radius-xl);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--color-border);
+      padding: var(--spacing-6);
+      height: fit-content;
+    }
+
+    .variable-panel {
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .variable-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-2);
+      margin: 0;
+      padding: 0;
+    }
+
+    .variable-item {
+      font-family: var(--font-family-mono);
+      font-size: var(--font-size-sm);
+      padding: var(--spacing-2) var(--spacing-3);
+      border-radius: var(--border-radius-md);
+      background: rgba(255, 255, 255, 0.02);
+      transition: background-color 0.15s ease;
+    }
+
+    .variable-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .variable-info {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--spacing-3);
+    }
+
+    .variable-name {
+      color: var(--color-teal);
+      font-weight: 500;
+    }
+
+    .variable-values {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+
+    .variable-raw-value {
+      color: var(--color-text-secondary);
+      font-style: italic;
+    }
+
+    .variable-equals {
+      color: var(--color-text-secondary);
+      padding: 0 var(--spacing-2);
+    }
+
+    .variable-computed-value {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+
+    .variable-value {
+      color: var(--color-text-primary);
+    }
+
+    .variable-type {
+      font-size: var(--font-size-xs);
+      padding: var(--spacing-1) var(--spacing-2);
+      border-radius: var(--border-radius-sm);
+      font-weight: 500;
+      text-transform: lowercase;
+    }
+
+    .variable-type-number {
+      background-color: var(--color-blue-100);
+      color: var(--color-blue-700);
+    }
+
+    .variable-type-percentage {
+      background-color: var(--color-green-100);
+      color: var(--color-green-700);
+    }
+
+    .variable-type-currency {
+      background-color: var(--color-yellow-100);
+      color: var(--color-yellow-700);
+    }
+
+    .variable-type-unit {
+      background-color: transparent;
+      color: #ff6adf;
+    }
+
+    .variable-type-error {
+      background-color: var(--color-red-100);
+      color: var(--color-red-700);
+    }
+
+    .save-load-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-1);
+    }
+
+    .save-button,
+    .load-button {
+      background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-pink) 100%);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius-lg);
+      padding: var(--spacing-3) var(--spacing-4);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .save-button::before,
+    .load-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .save-button:hover::before,
+    .load-button:hover::before {
+      left: 100%;
+    }
+
+    .save-button:hover,
+    .load-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(124, 93, 250, 0.4);
+    }
+
+    .save-button:focus,
+    .load-button:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--color-accent-soft);
+    }
+
+    .button-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .load-button-container {
+      position: relative;
+    }
+
+    .dropdown-arrow {
+      width: 16px;
+      height: 16px;
+      transition: transform 0.2s ease;
+    }
+
+    .template-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--spacing-2);
+    }
+
+    .template-button {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--spacing-1);
+      padding: var(--spacing-2) var(--spacing-1);
+      background: var(--color-background);
+      border: 1px solid var(--color-border);
+      border-radius: var(--border-radius-md);
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      font-size: var(--font-size-xs);
+      min-height: 60px;
+    }
+
+    .template-button:hover {
+      background: var(--color-surface-light);
+      border-color: var(--color-accent);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .template-emoji {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .template-name {
+      font-weight: 500;
+      color: var(--color-text-primary);
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    .template-button:hover .template-name {
+      color: var(--color-accent);
+    }
+
+    @media (max-width: 980px) {
+      .app-header.header-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+      }
+
+      .header-controls {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .toggles-group {
+        padding-right: 16px;
+      }
+
+      .main-container {
+        flex-direction: column;
+      }
+
+      .sidebar,
+      .right-panel {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .template-buttons {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header header-container">
+      <div class="logo">
+        <i class="fas fa-terminal logo-icon" aria-hidden="true"></i>
+        SmartPad
+      </div>
+
+      <div class="header-controls">
+        <div class="toggles-group toggle-glow-icons" role="group" aria-label="Panels">
+          <button class="active" title="Toggle Variables" aria-label="Toggle Variables" aria-pressed="true" type="button">
+            <i class="fas fa-file-code" aria-hidden="true"></i>
+          </button>
+          <button title="Toggle Templates" aria-label="Toggle Templates" aria-pressed="true" type="button">
+            <i class="fas fa-table" aria-hidden="true"></i>
+          </button>
+          <button title="Toggle Inspector" aria-label="Toggle Inspector" aria-pressed="true" type="button">
+            <i class="fas fa-tools" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <button class="header-settings-btn" aria-label="Open Settings" title="Open Settings" type="button">
+          <i class="fas fa-cog" aria-hidden="true"></i>
+        </button>
+      </div>
+    </header>
+
+    <main class="main-container">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-title-row panel-title">
+            <span>MY SHEETS</span>
+            <button aria-label="Create">+</button>
+          </div>
+        </div>
+        <ul class="sheet-list">
+          <li class="sheet-item active">
+            <div class="sheet-title">
+              <span class="sheet-dot"></span>
+              Q4 Budget Plan
+            </div>
+            <span class="sheet-actions">...</span>
+          </li>
+          <li class="sheet-item">
+            <div class="sheet-title">
+              <span class="sheet-dot"></span>
+              Commute Analysis
+            </div>
+            <span class="sheet-actions">...</span>
+          </li>
+          <li class="sheet-item">
+            <div class="sheet-title">
+              <span class="sheet-dot"></span>
+              Physics Lab 01
+            </div>
+            <span class="sheet-actions">...</span>
+          </li>
+        </ul>
+      </aside>
+
+      <section class="editor">
+        <div class="editor-card">
+          <div class="editor-title">Q4 Budget Plan</div>
+          <div class="editor-content">
+            <div class="comment"># Quick tour: write a line and add "=>" to evaluate</div>
+            <div><span class="token-number">2</span> <span class="token-operator">+</span> <span class="token-number">3</span> <span class="token-operator">=></span> <span class="token-result">5</span></div>
+            <div><span class="token-function">sqrt</span>(<span class="token-number">16</span>) <span class="token-operator">+</span> <span class="token-number">2.5</span> <span class="token-operator">=></span> <span class="token-result">6.5</span></div>
+            <div><span class="token-function">abs</span>(<span class="token-number">-4.2</span>) <span class="token-operator">=></span> <span class="token-result">4.2</span></div>
+            <div><span class="token-function">max</span>(<span class="token-number">3</span>, <span class="token-number">7</span>) <span class="token-operator">*</span> <span class="token-number">2</span> <span class="token-operator">=></span> <span class="token-result">14</span></div>
+            <div><span class="token-function">PI</span> <span class="token-operator">*</span> <span class="token-number">2</span> <span class="token-operator">=></span> <span class="token-result">6.283</span></div>
+            <br />
+            <div class="comment"># Scientific notation: huge or small values use e-notation</div>
+            <br />
+            <div><span class="token-variable">light speed</span> <span class="token-operator">=</span> <span class="token-number">3e8</span> m/s</div>
+            <div><span class="token-variable">light speed</span> <span class="token-operator">=></span> <span class="token-result">300,000,000</span> m/s</div>
+            <div><span class="token-variable">tiny mass</span> <span class="token-operator">=</span> <span class="token-number">4.2e-9</span> kg</div>
+            <div><span class="token-variable">tiny mass</span> <span class="token-operator">=></span> <span class="token-result">4.200e-6</span> g</div>
+            <div><span class="token-variable">edge tiny</span> <span class="token-operator">=</span> <span class="token-number">9.99e-5</span> s</div>
+            <div><span class="token-variable">edge tiny</span> <span class="token-operator">=></span> <span class="token-result">9.990e-5</span> s</div>
+          </div>
+        </div>
+        <div class="editor-footer">
+          <span class="helper-chip">Auto-solve enabled</span>
+          <span>Focus mode: OFF</span>
+        </div>
+      </section>
+
+      <aside class="right-panel">
+        <section class="variable-panel">
+          <h2 class="panel-title">Variables</h2>
+          <div class="panel-content">
+            <ul class="variable-list">
+              <li class="variable-item">
+                <div class="variable-info">
+                  <span class="variable-name">light speed</span>
+                  <div class="variable-values">
+                    <span class="variable-raw-value">3e8</span>
+                    <span class="variable-equals">=</span>
+                    <span class="variable-computed-value">
+                      <span class="variable-value">300,000,000 m/s</span>
+                      <span class="variable-type variable-type-unit">unit</span>
+                    </span>
+                  </div>
+                </div>
+              </li>
+              <li class="variable-item">
+                <div class="variable-info">
+                  <span class="variable-name">tiny mass</span>
+                  <div class="variable-values">
+                    <span class="variable-raw-value">4.2e-9 kg</span>
+                    <span class="variable-equals">=</span>
+                    <span class="variable-computed-value">
+                      <span class="variable-value">4.200e-6 g</span>
+                      <span class="variable-type variable-type-unit">unit</span>
+                    </span>
+                  </div>
+                </div>
+              </li>
+              <li class="variable-item">
+                <div class="variable-info">
+                  <span class="variable-name">edge tiny</span>
+                  <div class="variable-values">
+                    <span class="variable-raw-value">9.99e-5 s</span>
+                    <span class="variable-equals">=</span>
+                    <span class="variable-computed-value">
+                      <span class="variable-value">9.990e-5 s</span>
+                      <span class="variable-type variable-type-unit">unit</span>
+                    </span>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <div class="save-load-buttons">
+          <button class="save-button" aria-label="Save current content" title="Save current content">
+            <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17,21 17,13 7,13 7,21"></polyline>
+              <polyline points="7,3 7,8 15,8"></polyline>
+            </svg>
+            Save
+          </button>
+          <div class="load-button-container">
+            <button class="load-button" aria-label="Load a saved state" title="Load a saved state">
+              <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7,10 12,15 17,10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+            Load
+              <svg class="dropdown-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6,9 12,15 18,9"></polyline>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <section class="template-panel">
+          <h2 class="panel-title">Quick Templates</h2>
+          <div class="template-buttons">
+            <button class="template-button" type="button">
+              <span class="template-emoji">✨</span>
+              <span class="template-name">Quick Tour</span>
+            </button>
+            <button class="template-button" type="button">
+              <span class="template-emoji">🧾</span>
+              <span class="template-name">List Spec Lab</span>
+            </button>
+            <button class="template-button" type="button">
+              <span class="template-emoji">🔢</span>
+              <span class="template-name">Range Spec Lab</span>
+            </button>
+            <button class="template-button" type="button">
+              <span class="template-emoji">🧩</span>
+              <span class="template-name">Function Showcase</span>
+            </button>
+          </div>
+        </section>
+      </aside>
+    </main>
+  </div>
+</body>
+</html>
