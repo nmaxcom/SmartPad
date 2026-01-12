@@ -48,6 +48,7 @@ import {
   SemanticParsers,
   ListValue,
   SemanticValueTypes,
+  DurationValue,
 } from "../types";
 import { Variable } from "../state/types";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
@@ -146,6 +147,10 @@ function convertVariablesToUnitsNetQuantities(
   variableContext.forEach((variable, name) => {
     if (variable.value instanceof UnitValue || variable.value instanceof NumberValue) {
       quantities[name] = variable.value;
+      return;
+    }
+    if (variable.value instanceof DurationValue) {
+      quantities[name] = UnitValue.fromValueAndUnit(variable.value.getTotalSeconds(), "s");
       return;
     }
     if (variable.value instanceof DateValue) {

@@ -48,6 +48,45 @@ These are the implemented forms. "Formal" function-style syntax is **not** suppo
 2024-06-05 17:00 +05:00 => 2024-06-05 17:00 +05:00
 ```
 
+### Create a Duration (first-class value)
+Duration literals accept compact or spaced units. A leading sign applies to the whole literal.
+```
+2hours 1min => 2 h 1 min
+-2hours 1min => -2 h 1 min
+-2hours + 1min => -1 h 59 min
+125s => 2 min 5 s
+1h 90min => 2 h 30 min
+```
+
+### Create a Time (clock time)
+```
+19:30 => 19:30
+07:05:09 => 07:05:09
+```
+
+### Time + Duration
+```
+19:30 + 5h 20min 3s => 00:50:03 (+1 day)
+00:10 - 45min => 23:25 (-1 day)
+23:59:30 + 90s => 00:01:00 (+1 day)
+```
+
+### Time - Time
+```
+19:30 - 18:00 => 1 h 30 min
+18:00 - 19:30 => -1 h 30 min
+```
+
+### Time + Time (invalid)
+```
+19:30 + 18:00 => ⚠️ Cannot add two clock times. Did you mean a duration?
+```
+
+### Date + Time (combine into DateTime)
+```
+2025-04-01 + 19:30 => 2025-04-01 19:30 <local tz>
+```
+
 ### Add Durations
 ```
 2024-06-05 + 2 months + 1 year => 2025-08-05
@@ -83,9 +122,13 @@ Date differences return a duration unit (days by default). You can convert it:
 2024-06-30 - 2024-06-01 in weeks => 4.142857 weeks
 ```
 
-### Convert Calendar Units (Duration Only)
+### Convert Durations
 These are treated as **fixed-length** duration units for conversion math.
 ```
+3h 7min 12s to min => 187.2 min
+125s to min => 2.083333 min
+2 days 3h to h => 51 h
+1h to s => 3600 s
 21 months to weeks => 90 weeks
 1 year in days => 365 days
 ```
@@ -139,6 +182,8 @@ now + 3 hours => 2024-10-14 18:00 local
 - **Locale ambiguity**: `06/05/2024` uses system/override locale for parsing.
 - **Timezone offsets** are preserved and displayed.
 - **Month/year conversions** use fixed-length durations (30d/365d) when converting units.
+- **Clock math** rolls over with `(+1 day)` / `(-1 day)` hints.
+- **Minutes alias**: `min` is minutes; bare `m` is meters unless in time context.
 
 Examples:
 ```
@@ -157,11 +202,17 @@ Examples:
 
 ### Data model
 - DateValue (date only or date+time+zone; hasTime flag)
+- DurationValue (duration parts; fixed-length conversions)
+- TimeValue (clock time with optional rollover metadata)
 
 ### Operations
 - date + duration (years, months, weeks, days, hours, minutes, seconds, business days)
 - date - duration
 - date - date => duration (days)
+- datetime - datetime => duration
+- time + duration => time (rollover metadata)
+- time - time => duration
+- date + time => datetime
 - duration in/to unit => converted duration
 - date in/to zone => converted date/time zone
 
@@ -178,3 +229,5 @@ Examples:
 - Locale parsing defaults to system locale.
 - UTC/GMT/Z and offsets parse and convert.
 - Business day skips weekends.
+
+

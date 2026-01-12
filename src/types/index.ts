@@ -14,6 +14,8 @@ import { CurrencyValue, type CurrencySymbol } from './CurrencyValue';
 import { CurrencyUnitValue } from './CurrencyUnitValue';
 import { UnitValue } from './UnitValue';
 import { DateValue } from './DateValue';
+import { TimeValue } from './TimeValue';
+import { DurationValue } from './DurationValue';
 import { ErrorValue, type ErrorType, type ErrorContext } from './ErrorValue';
 import { SymbolicValue } from './SymbolicValue';
 import { ListValue } from './ListValue';
@@ -30,6 +32,8 @@ export { CurrencyValue, type CurrencySymbol };
 export { CurrencyUnitValue };
 export { UnitValue };
 export { DateValue };
+export { TimeValue };
+export { DurationValue };
 export { ErrorValue, type ErrorType, type ErrorContext };
 export { SymbolicValue };
 export { ListValue };
@@ -42,6 +46,8 @@ export const SemanticValueTypes = {
   isCurrencyUnit: (value: SemanticValue): value is CurrencyUnitValue => value.getType() === 'currencyUnit',
   isUnit: (value: SemanticValue): value is UnitValue => value.getType() === 'unit',
   isDate: (value: SemanticValue): value is DateValue => value.getType() === 'date',
+  isTime: (value: SemanticValue): value is TimeValue => value.getType() === 'time',
+  isDuration: (value: SemanticValue): value is DurationValue => value.getType() === 'duration',
   isError: (value: SemanticValue): value is ErrorValue => value.getType() === 'error',
   isSymbolic: (value: SemanticValue): value is SymbolicValue => value.getType() === 'symbolic',
   isList: (value: SemanticValue): value is ListValue => value.getType() === 'list',
@@ -235,12 +241,25 @@ const parseSingleValue = (input: string): SemanticValue | null => {
     }
   }
 
+  const durationLiteral = DurationValue.parseLiteral(trimmed, {
+    allowMinuteAlias: false,
+    requireMultipleComponents: false,
+  });
+  if (durationLiteral) {
+    return durationLiteral;
+  }
+
   if (UnitValue.isUnitString(trimmed)) {
     try {
       return UnitValue.fromString(trimmed);
     } catch {
       return null;
     }
+  }
+
+  const timeValue = TimeValue.parse(trimmed);
+  if (timeValue) {
+    return timeValue;
   }
 
   if (!trimmed.includes(",")) {

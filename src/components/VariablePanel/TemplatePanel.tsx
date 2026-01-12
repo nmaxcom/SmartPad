@@ -530,7 +530,7 @@ trip in UTC =>`,
 
 # Inclusive endpoint when the last step lands exactly on the end
 09:00..10:00 step 40 min =>09:00, 09:40
-`,
+    `,
   },
 ];
 

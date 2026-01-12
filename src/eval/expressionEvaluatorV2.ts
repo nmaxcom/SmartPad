@@ -34,6 +34,7 @@ import {
   ListValue,
   createListResult,
   mapListItems,
+  DurationValue,
 } from "../types";
 import { DateTime } from "luxon";
 import { getListMaxLength } from "../types/listConfig";
@@ -59,6 +60,10 @@ function applyAbsToSemanticValue(value: SemanticValue): SemanticValue {
         Math.abs(unitValue.getNumericValue()),
         unitValue.getUnit()
       );
+    }
+    case "duration": {
+      const duration = value as DurationValue;
+      return DurationValue.fromSeconds(Math.abs(duration.getTotalSeconds()));
     }
     case "currency": {
       const currency = value as CurrencyValue;
@@ -1429,6 +1434,9 @@ const getCanonicalMagnitude = (value: SemanticValue): number => {
   if (value.getType() === "unit") {
     const unitValue = value as UnitValue;
     return unitValue.getQuantity().toBaseUnit().value;
+  }
+  if (value.getType() === "duration") {
+    return (value as DurationValue).getTotalSeconds();
   }
   return value.getNumericValue();
 };

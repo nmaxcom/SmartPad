@@ -20,9 +20,21 @@ lists
 ranges
 true/false statements
 time, calendar math
+sheets/tabs, remember docs
 plots
 FX
 # bugs/ideas
+capital=30000€=>€30000
+roi=7%
+ganancias brutas=capital*roi=>€2100
+
+hacienda=16%
+ganancia limpia = hacienda off ganancias brutas per year=>hacienda off ganancias brutas per year
+ganancia limpia=>16% off €2100 per year
+porc=ganancia limpia / ganancias brutas as %=>ganancia limpia / ganancias brutas as %
+roi real = ganancia limpia / capital as %=>ganancia limpia / capital as %
+ganancia mensual = ganancia limpia/12=>ganancia limpia/12
+
 
 lists should take this speeds = 3, 4, 5, 6 to m/s
 - smartpad can't paste correctly:
@@ -55,31 +67,8 @@ total = (spending + hotel) * days =>€1995
 Let's say €1995 is the max the group wants to spend: how can you change the days, hotel and other spending optimally without blowing that maximum? Maybe click total freezes it. and then..?
 
 - make smartpad more flexible as a doc? Allow pasting images, embed youtube, links, links to other smartpage "pages" (yeah that'd be a thing to i guess...)
-
-- allow **text content after an expression** as a separated thing like:
-var2= 69 // (or smth other symbols) blabla
-As of now makes var2 undefined.
- 
-speed = 30kmh + 2kmh to m/s
-speed = 9 m/s
-
-
-- automatically solve for one variable like:
-    f = (9/5)*c + 32
-    c => 0.5556 f - 17.7778
-
 - text formatting tools
-
-- clear style in pasted content 
-- add a text style toolbar
-
 - clicking a variable or expression to reference it at cursor? Like clicking a var name copies it where you are so you don't have to type it again
-
-# cool syntax uses for future docs/templates
-sqrt(9 m^2) to m =>3 m
-(100 kg + 30 lb) in kg =>114 kg
-paint cost(width, height, price per m2) = width * height * price per m2
-paint cost(3m, 5m, $8 per m^2)=>$120
 
 # longterm ideas
 
@@ -94,25 +83,12 @@ Add a collapsible “Controls” side panel listing every slider and its current
 1. Live graphs & views:
 - Auto-suggest a graph icon next to arrays or expressions returning many points (e.g. sin(x) over a domain). Clicking spawns a lightweight SVG plot that updates as inputs change.
 - Support “playhead” animations: any expression referencing a t variable can be auto-animated (user presses ▶️; t ramps and the sheet updates).
-1. Sensitivity / range exploration
-After a variable is assigned a number, allow “sweep mode”: hold Option and drag further to reveal a shaded confidence interval or envelope in dependent graphs. Under the hood, compute results for value ± ε and render bands.
 1. Constraints and goal seek
 Blend light-weight solver capabilities:
 User types: profit = revenue - cost and profit = 10_000?
 → SmartPad treats the ? as “solve for the nearest adjustable input to satisfy this”.
-1. Units & dimensional analysis
-Accept distance = 5 km, time = 30 min, resolve units in arithmetic automatically, and flag mismatches. Greatly improves real-world modelling and complements number scrubbing (dragging keeps unit).
 
-Parallel track – Units & solvers (experimental)
-Evaluate libraries like mathjs with unit support or integrate Tiny-Solver for **goal seek**.
-
-Narrative mode / collapsible sections
-Markdown-style ### Heading folds multiple lines under a title, so you can turn a scratch pad into a polished report without exporting elsewhere.
-
-Named functions & parameter lists
-f(a, b) = a^2 + b^2, used later as f(x, y). Stored in the dependency graph like variables, unlocks DRY modelling and reuse across sheets.
-
-7. Real-time data streams
+1. Real-time data streams
 btc = fetch("https://api.coincap.io/v2/rates/bitcoin").priceUsd updates every N seconds; expressions depending on btc recompute live. You already have the reactivity—just add a polling/comet layer.
 
 

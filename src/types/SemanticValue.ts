@@ -15,6 +15,8 @@ export type SemanticValueType =
   | 'unit'
   | 'currencyUnit'
   | 'date'
+  | 'time'
+  | 'duration'
   | 'error'
   | 'symbolic'
   | 'list';

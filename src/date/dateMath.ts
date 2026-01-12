@@ -11,10 +11,9 @@ import {
   parseWeekday,
   zoneToLuxon,
 } from '../types/DateValue';
-import { UnitValue, ErrorValue } from '../types';
+import { UnitValue, ErrorValue, DurationValue, TimeValue } from '../types';
+import type { DurationUnit } from '../types/DurationValue';
 import { Variable } from '../state/types';
-
-const msPerDay = 24 * 60 * 60 * 1000;
 
 export interface DateParseResult {
   value: DateValue;
@@ -33,8 +32,10 @@ export function looksLikeDateExpression(expression: string): boolean {
   if (/\b\d{4}-\d{2}-\d{2}\b/.test(text)) return true;
   if (/\b\d{1,2}[\/.-]\d{1,2}[\/.-]\d{4,}\b/.test(text)) return true;
   if (/\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\b/i.test(text)) return true;
-  if (/\b(years?|months?|weeks?|days?|hours?|minutes?|business\s+days?)\b/i.test(text)) return true;
-  if (/\b\d+\s*(h|d|w|y)\b/i.test(text)) return true;
+  if (/\b(years?|months?|weeks?|days?|hours?|minutes?|seconds?|ms|business\s+days?)\b/i.test(text)) return true;
+  if (/\d+\s*(years?|months?|weeks?|days?|hours?|minutes?|seconds?|business\s+days?)\b/i.test(text)) return true;
+  if (/\b\d+\s*(h|d|w|y|min|sec|s|ms)\b/i.test(text)) return true;
+  if (/\b\d{1,2}:\d{2}(?::\d{2})?\b/.test(text)) return true;
   if (/\b(UTC|GMT|Z|local)\b/i.test(text)) return true;
   if (/[+-]\d{2}:?\d{2}\b/.test(text)) return true;
   return false;
@@ -133,52 +134,46 @@ export function parseDateValueAtStart(
 }
 
 export function parseDurationAtStart(input: string): { token: DurationToken; length: number } | null {
-  const trimmed = input.trimStart();
-  const offset = input.length - trimmed.length;
-  const match = trimmed.match(
-    /^(\d+(?:\.\d+)?)\s*(business\s+days?|years?|months?|weeks?|days?|hours?|hrs?|hr|minutes?|mins?|min|seconds?|secs?|sec|h|d|w|y)\b/i
-  );
-  if (!match) return null;
-
-  const value = Number(match[1]);
-  if (!isFinite(value)) return null;
-  const rawUnit = match[2].toLowerCase();
-
-  let unit: DurationToken['unit'] | null = null;
-  if (rawUnit.startsWith('business')) {
-    unit = 'businessDay';
-  } else if (rawUnit.startsWith('year') || rawUnit === 'y') {
-    unit = 'year';
-  } else if (rawUnit.startsWith('month')) {
-    unit = 'month';
-  } else if (rawUnit.startsWith('week') || rawUnit === 'w') {
-    unit = 'week';
-  } else if (rawUnit.startsWith('day') || rawUnit === 'd') {
-    unit = 'day';
-  } else if (rawUnit.startsWith('hour') || rawUnit.startsWith('hr') || rawUnit === 'h') {
-    unit = 'hour';
-  } else if (rawUnit.startsWith('min')) {
-    unit = 'minute';
-  } else if (rawUnit.startsWith('sec')) {
-    unit = 'second';
-  }
-
-  if (!unit) return null;
-
+  const parsed = DurationValue.parseAtStart(input, { allowMinuteAlias: false });
+  if (!parsed) return null;
+  const parts = parsed.value.getParts();
+  const keys = Object.keys(parts);
+  if (keys.length !== 1) return null;
+  const unit = keys[0] as DurationToken["unit"];
+  const value = parts[unit] ?? 0;
   return {
     token: { value, unit },
-    length: offset + match[0].length,
+    length: parsed.length,
   };
+}
+
+export function parseTimeValueAtStart(input: string): { value: TimeValue; length: number } | null {
+  const trimmed = input.trimStart();
+  const offset = input.length - trimmed.length;
+  const match = trimmed.match(/^(\d{1,2}:\d{2}(?::\d{2})?)/);
+  if (!match) return null;
+  const value = TimeValue.parse(match[1]);
+  if (!value) return null;
+  return { value, length: offset + match[1].length };
+}
+
+function parseDurationLiteralAtStart(
+  input: string,
+  options: { allowMinuteAlias: boolean }
+): { value: DurationValue; length: number } | null {
+  const parsed = DurationValue.parseAtStart(input, { allowMinuteAlias: options.allowMinuteAlias });
+  if (!parsed) return null;
+  return { value: parsed.value, length: parsed.length };
 }
 
 export function evaluateDateExpression(
   expression: string,
   variableContext: Map<string, Variable>
-): DateValue | UnitValue | ErrorValue | null {
+): DateValue | UnitValue | DurationValue | TimeValue | ErrorValue | null {
   const trimmed = expression.trim();
   if (!trimmed) return null;
 
-  const conversionMatch = trimmed.match(/\b(to|in)\b\s+(.+)$/i);
+  const conversionMatch = trimmed.match(/\b(to|in|as)\b\s+(.+)$/i);
   const baseExpr =
     conversionMatch && conversionMatch.index !== undefined
       ? trimmed.slice(0, conversionMatch.index).trim()
@@ -187,65 +182,153 @@ export function evaluateDateExpression(
   const conversionTarget = conversionMatch ? conversionMatch[2].trim() : null;
 
   const baseResult = parseDateValueAtStart(baseExpr, variableContext);
-  if (!baseResult) {
-    if (looksLikeDateLiteral(baseExpr)) {
-      return ErrorValue.semanticError("Invalid date literal");
-    }
-    return null;
-  }
+  if (baseResult) {
+    let current = baseResult.value;
+    let result: DateValue | UnitValue | DurationValue = current;
+    let cursor = baseResult.length;
 
-  let current = baseResult.value;
-  let result: DateValue | UnitValue = current;
-  let cursor = baseResult.length;
-
-  while (cursor < baseExpr.length) {
-    const rest = baseExpr.slice(cursor);
-    const operatorMatch = rest.match(/^\s*([+-])/);
-    if (!operatorMatch) {
-      return ErrorValue.semanticError(`Invalid date expression near "${rest.trim()}"`);
-    }
-    const operator = operatorMatch[1];
-    cursor += operatorMatch[0].length;
-
-    const remaining = baseExpr.slice(cursor);
-    const duration = parseDurationAtStart(remaining);
-    if (duration) {
-      const signedValue = operator === '-' ? -duration.token.value : duration.token.value;
-      const applied = applyDuration(current, {
-        value: signedValue,
-        unit: duration.token.unit,
-      });
-      if (applied instanceof ErrorValue) {
-        return applied;
+    while (cursor < baseExpr.length) {
+      const rest = baseExpr.slice(cursor);
+      const operatorMatch = rest.match(/^\s*([+-])/);
+      if (!operatorMatch) {
+        return ErrorValue.semanticError(`Invalid date expression near "${rest.trim()}"`);
       }
-      current = applied;
-      result = current;
-      cursor += duration.length;
-      continue;
-    }
+      const operator = operatorMatch[1];
+      cursor += operatorMatch[0].length;
 
-    if (operator === '-') {
-      const dateToken = parseDateValueAtStart(remaining, variableContext);
-      if (dateToken) {
-        cursor += dateToken.length;
-        const remainder = baseExpr.slice(cursor).trim();
-        if (remainder.length > 0) {
-          return ErrorValue.semanticError(`Unexpected token after date difference: "${remainder}"`);
+      const remaining = baseExpr.slice(cursor);
+      const durationLiteral = parseDurationLiteralAtStart(remaining, { allowMinuteAlias: false });
+      if (durationLiteral) {
+        const applied = applyDurationToDate(
+          current,
+          scaleDuration(durationLiteral.value, operator === "-" ? -1 : 1)
+        );
+        if (applied instanceof ErrorValue) {
+          return applied;
         }
-        result = diffDates(current, dateToken.value);
-        cursor = baseExpr.length;
-        break;
+        current = applied;
+        result = current;
+        cursor += durationLiteral.length;
+        continue;
       }
+
+      const timeLiteral = parseTimeValueAtStart(remaining);
+      if (timeLiteral) {
+        if (operator !== "+") {
+          return ErrorValue.semanticError("Cannot subtract a clock time from a date");
+        }
+        if (current.hasTimeComponent()) {
+          return ErrorValue.semanticError("Cannot add a clock time to a datetime");
+        }
+        current = combineDateAndTime(current, timeLiteral.value);
+        result = current;
+        cursor += timeLiteral.length;
+        continue;
+      }
+
+      if (operator === '-') {
+        const dateToken = parseDateValueAtStart(remaining, variableContext);
+        if (dateToken) {
+          cursor += dateToken.length;
+          const remainder = baseExpr.slice(cursor).trim();
+          if (remainder.length > 0) {
+            return ErrorValue.semanticError(`Unexpected token after date difference: "${remainder}"`);
+          }
+          if (current.hasTimeComponent() || dateToken.value.hasTimeComponent()) {
+            result = diffDateTimes(current, dateToken.value);
+          } else {
+            result = diffDates(current, dateToken.value);
+          }
+          cursor = baseExpr.length;
+          break;
+        }
+      }
+
+      return ErrorValue.semanticError(`Expected duration after '${operator}'`);
     }
 
-    return ErrorValue.semanticError(`Expected duration after '${operator}'`);
+    if (conversionTarget && conversionKeyword) {
+      return applyConversion(result, conversionTarget, conversionKeyword);
+    }
+
+    return result;
   }
 
-  if (conversionTarget && conversionKeyword) {
-    return applyConversion(result, conversionTarget, conversionKeyword);
+  const timeResult = parseTimeValueAtStart(baseExpr);
+  if (timeResult) {
+    let current = timeResult.value;
+    let result: TimeValue | DurationValue = current;
+    let cursor = timeResult.length;
+
+    while (cursor < baseExpr.length) {
+      const rest = baseExpr.slice(cursor);
+      const operatorMatch = rest.match(/^\s*([+-])/);
+      if (!operatorMatch) {
+        return ErrorValue.semanticError(`Invalid time expression near "${rest.trim()}"`);
+      }
+      const operator = operatorMatch[1];
+      cursor += operatorMatch[0].length;
+
+      const remaining = baseExpr.slice(cursor);
+      const durationLiteral = parseDurationLiteralAtStart(remaining, { allowMinuteAlias: true });
+      if (durationLiteral) {
+        current = applyDurationToTime(
+          current,
+          scaleDuration(durationLiteral.value, operator === "-" ? -1 : 1)
+        );
+        result = current;
+        cursor += durationLiteral.length;
+        continue;
+      }
+
+      if (operator === "-") {
+        const timeToken = parseTimeValueAtStart(remaining);
+        if (timeToken) {
+          cursor += timeToken.length;
+          const remainder = baseExpr.slice(cursor).trim();
+          if (remainder.length > 0) {
+            return ErrorValue.semanticError(`Unexpected token after time difference: "${remainder}"`);
+          }
+          result = diffTimes(current, timeToken.value);
+          cursor = baseExpr.length;
+          break;
+        }
+      }
+
+      if (operator === "+") {
+        const timeToken = parseTimeValueAtStart(remaining);
+        if (timeToken) {
+          return ErrorValue.semanticError(
+            "Cannot add two clock times. Did you mean a duration?"
+          );
+        }
+      }
+
+      return ErrorValue.semanticError(`Expected duration after '${operator}'`);
+    }
+
+    if (conversionTarget && conversionKeyword) {
+      return applyConversion(result, conversionTarget, conversionKeyword);
+    }
+
+    return result;
   }
 
-  return result;
+  const durationLiteral = DurationValue.parseLiteral(baseExpr, {
+    allowMinuteAlias: false,
+    requireMultipleComponents: false,
+  });
+  if (durationLiteral) {
+    if (conversionTarget && conversionKeyword) {
+      return applyConversion(durationLiteral, conversionTarget, conversionKeyword);
+    }
+    return durationLiteral;
+  }
+
+  if (looksLikeDateLiteral(baseExpr)) {
+    return ErrorValue.semanticError("Invalid date literal");
+  }
+  return null;
 }
 
 function looksLikeDateLiteral(expression: string): boolean {
@@ -260,10 +343,10 @@ function looksLikeDateLiteral(expression: string): boolean {
 }
 
 function applyConversion(
-  value: DateValue | UnitValue,
+  value: DateValue | UnitValue | DurationValue | TimeValue,
   target: string,
   keyword: string
-): DateValue | UnitValue | ErrorValue {
+): DateValue | UnitValue | DurationValue | TimeValue | ErrorValue {
   const trimmed = target.trim();
   if (!trimmed) {
     return ErrorValue.semanticError(`Expected unit after '${keyword}'`);
@@ -275,6 +358,34 @@ function applyConversion(
     }
     const zone = parseZone(trimmed);
     return value.withZone(zone);
+  }
+
+  if (value instanceof TimeValue) {
+    return ErrorValue.semanticError(
+      "Cannot convert a time-of-day without a date anchor"
+    );
+  }
+
+  if (value instanceof DurationValue) {
+    const normalized = normalizeDurationUnitTarget(trimmed);
+    if (!normalized) {
+      return ErrorValue.semanticError(`Cannot convert a duration to ${trimmed}`);
+    }
+    const converted = value.toFixedUnit(normalized);
+    if (converted instanceof ErrorValue) {
+      return converted;
+    }
+    const unitLabel =
+      normalized === "minute"
+        ? "min"
+        : normalized === "second"
+          ? "s"
+          : normalized === "hour"
+            ? "h"
+            : normalized === "millisecond"
+              ? "ms"
+              : normalized;
+    return UnitValue.fromValueAndUnit(converted, unitLabel, { forceUnitDisplay: true });
   }
 
   if (value instanceof UnitValue) {
@@ -365,4 +476,120 @@ function getWeekday(date: DateTime, zone: DateZone): number {
     return date.setZone(zoneToLuxon(zone)).weekday;
   }
   return date.weekday;
+}
+
+const secondsPerDay = 24 * 60 * 60;
+
+function normalizeDurationUnitTarget(
+  input: string
+): Exclude<DurationUnit, "businessDay"> | null {
+  const unit = input.trim().toLowerCase();
+  if (["year", "years", "y"].includes(unit)) return "year";
+  if (["month", "months", "mo", "mos"].includes(unit)) return "month";
+  if (["week", "weeks", "w"].includes(unit)) return "week";
+  if (["day", "days", "d"].includes(unit)) return "day";
+  if (["hour", "hours", "hr", "hrs", "h"].includes(unit)) return "hour";
+  if (["minute", "minutes", "min", "mins"].includes(unit)) return "minute";
+  if (["second", "seconds", "sec", "secs", "s"].includes(unit)) return "second";
+  if (["millisecond", "milliseconds", "ms"].includes(unit)) return "millisecond";
+  return null;
+}
+
+function scaleDuration(duration: DurationValue, factor: number): DurationValue {
+  const parts = duration.getParts();
+  const scaled: Record<string, number> = {};
+  for (const [unit, value] of Object.entries(parts)) {
+    scaled[unit] = (value ?? 0) * factor;
+  }
+  return new DurationValue(scaled);
+}
+
+function applyDurationToDate(
+  current: DateValue,
+  duration: DurationValue
+): DateValue | ErrorValue {
+  const parts = duration.getParts();
+  const hasTimeUnits =
+    (parts.hour ?? 0) !== 0 ||
+    (parts.minute ?? 0) !== 0 ||
+    (parts.second ?? 0) !== 0 ||
+    (parts.millisecond ?? 0) !== 0;
+
+  if (hasTimeUnits && !current.hasTimeComponent()) {
+    return ErrorValue.semanticError("Cannot add time to a date-only value");
+  }
+
+  const zone = current.getZone();
+  const hasTime = current.hasTimeComponent();
+  let dt = current.getDateTime();
+
+  const years = parts.year ?? 0;
+  const months = parts.month ?? 0;
+  if (years || months) {
+    dt = dt.plus({ years, months });
+  }
+
+  const weeks = parts.week ?? 0;
+  const days = parts.day ?? 0;
+  if (weeks || days) {
+    dt = dt.plus({ days: weeks * 7 + days });
+  }
+
+  const businessDays = parts.businessDay ?? 0;
+  if (businessDays) {
+    const temp = DateValue.fromDateTime(dt, zone, hasTime);
+    dt = addBusinessDays(temp, businessDays).getDateTime();
+  }
+
+  if (hasTimeUnits) {
+    dt = dt.plus({
+      hours: parts.hour ?? 0,
+      minutes: parts.minute ?? 0,
+      seconds: parts.second ?? 0,
+      milliseconds: parts.millisecond ?? 0,
+    });
+  }
+
+  return DateValue.fromDateTime(dt, zone, hasTime);
+}
+
+function applyDurationToTime(current: TimeValue, duration: DurationValue): TimeValue {
+  const parts = duration.getParts();
+  const durationSeconds = duration.getTotalSeconds();
+  const baseSeconds = current.getSeconds() + current.getDayOffset() * secondsPerDay;
+  const totalSeconds = baseSeconds + durationSeconds;
+  const roundedSeconds = Math.round(totalSeconds);
+  const dayOffset = Math.floor(roundedSeconds / secondsPerDay);
+  let secondsFromMidnight = roundedSeconds - dayOffset * secondsPerDay;
+  if (secondsFromMidnight < 0) {
+    secondsFromMidnight += secondsPerDay;
+  }
+
+  const hasExplicitSeconds =
+    (parts.second ?? 0) !== 0 || (parts.millisecond ?? 0) !== 0;
+  const hasSubMinute = Math.abs(durationSeconds % 60) > 1e-9;
+  const showSeconds = current.getShowSeconds() || hasExplicitSeconds || hasSubMinute;
+
+  return new TimeValue(secondsFromMidnight, showSeconds, dayOffset);
+}
+
+function combineDateAndTime(date: DateValue, time: TimeValue): DateValue {
+  const base = date.getDateTime().plus({ days: time.getDayOffset() });
+  const seconds = time.getSeconds();
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  const dt = base.set({ hour: hours, minute: minutes, second: secs, millisecond: 0 });
+  return DateValue.fromDateTime(dt, date.getZone(), true);
+}
+
+function diffTimes(left: TimeValue, right: TimeValue): DurationValue {
+  const leftSeconds = left.getSeconds() + left.getDayOffset() * secondsPerDay;
+  const rightSeconds = right.getSeconds() + right.getDayOffset() * secondsPerDay;
+  return DurationValue.fromSeconds(leftSeconds - rightSeconds);
+}
+
+function diffDateTimes(left: DateValue, right: DateValue): DurationValue {
+  const diffSeconds = (left.getDateTime().toMillis() - right.getDateTime().toMillis()) / 1000;
+  return DurationValue.fromSeconds(diffSeconds);
 }

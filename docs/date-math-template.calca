@@ -33,7 +33,34 @@ last Friday =>
 # Date differences (in days)
 2024-06-30 - 2024-06-01 =>
 
+# Duration literals and normalization
+duration = 2hours 1min
+duration =>
+duration in min =>
+125s =>
+-90min =>
+
 # Mixed: chain operations
 trip = 2024-09-12 08:00 +05:00
 trip + 3 days + 4 hours =>
 trip in UTC =>
+
+# Clock math and conversions
+time = 19:30
+time + 5h 20min 3s =>
+time - 18:00 =>
+time + 18:00 =>
+time - 19:30 =>
+1h to s =>
+3h 7min 12s to min =>
+
+# DateTime + duration
+trip2 = 2025-04-01 19:30
+trip2 - 2hours 1min =>
+trip2 + 24h =>
+today + 19:30 =>
+
+# Date/time range guardrails
+09:00..11:00 =>
+slots = 2026-01-01 09:00..2026-01-01 11:00 step 30 min
+slots =>

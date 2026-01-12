@@ -21,8 +21,9 @@ import { SmartPadQuantity } from '../units/unitsnetAdapter';
  */
 export class UnitValue extends SemanticValue {
   private readonly quantity: SmartPadQuantity;
+  private readonly forceUnitDisplay: boolean;
 
-  constructor(quantity: SmartPadQuantity) {
+  constructor(quantity: SmartPadQuantity, options?: { forceUnitDisplay?: boolean }) {
     super();
     
     if (!quantity) {
@@ -30,6 +31,7 @@ export class UnitValue extends SemanticValue {
     }
     
     this.quantity = quantity;
+    this.forceUnitDisplay = options?.forceUnitDisplay ?? false;
   }
 
   getType(): SemanticValueType {
@@ -67,7 +69,10 @@ export class UnitValue extends SemanticValue {
     const precision = options?.precision ?? 6;
     
     // Use SmartPadQuantity's built-in formatting which handles units intelligently
-    const quantityString = this.quantity.toString(precision, options);
+    const quantityString = this.quantity.toString(precision, {
+      ...options,
+      forceUnit: options?.forceUnit ?? this.forceUnitDisplay,
+    });
     
     if (options?.showType) {
       return `${quantityString} (unit)`;
@@ -250,7 +255,7 @@ export class UnitValue extends SemanticValue {
   }
 
   clone(): UnitValue {
-    return new UnitValue(this.quantity.clone());
+    return new UnitValue(this.quantity.clone(), { forceUnitDisplay: this.forceUnitDisplay });
   }
 
   /**
@@ -259,7 +264,7 @@ export class UnitValue extends SemanticValue {
   convertTo(targetUnit: string): UnitValue {
     try {
       const converted = this.quantity.convertTo(targetUnit);
-      return new UnitValue(converted);
+      return new UnitValue(converted, { forceUnitDisplay: this.forceUnitDisplay });
     } catch (error) {
       throw new Error(`Unit conversion failed: ${(error as Error).message}`);
     }
@@ -290,9 +295,13 @@ export class UnitValue extends SemanticValue {
   /**
    * Create UnitValue from value and unit string
    */
-  static fromValueAndUnit(value: number, unit: string): UnitValue {
+  static fromValueAndUnit(
+    value: number,
+    unit: string,
+    options?: { forceUnitDisplay?: boolean }
+  ): UnitValue {
     const quantity = SmartPadQuantity.fromValueAndUnit(value, unit);
-    return new UnitValue(quantity);
+    return new UnitValue(quantity, options);
   }
 
   /**
