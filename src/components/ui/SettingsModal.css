@@ -21,8 +21,8 @@
   border: 1px solid var(--color-border);
   border-radius: 16px;
   box-shadow: var(--shadow-lg);
-  max-width: 500px;
-  width: 100%;
+  max-width: 1100px;
+  width: min(1100px, 94vw);
   max-height: 80vh;
   display: flex;
   flex-direction: column;
@@ -72,12 +72,21 @@
 /* Content */
 .settings-content {
   flex: 1;
-  padding: 1rem 2rem;
+  padding: 1.5rem 2.5rem 2rem;
   overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  align-items: start;
+  gap: 1.5rem;
 }
 
 .settings-section {
-  margin-bottom: 2rem;
+  margin-bottom: 0;
+  background: var(--color-surface-light);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 1.5rem 1.5rem 0.75rem;
+  break-inside: avoid;
 }
 
 .settings-section:last-child {
@@ -85,7 +94,7 @@
 }
 
 .settings-section-title {
-  margin: 0 0 1rem 0;
+  margin: 0 0 1.25rem 0;
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-text-secondary);
@@ -98,7 +107,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1rem 0;
+  padding: 0.9rem 0;
   border-bottom: 1px solid var(--color-border);
 }
 

@@ -3,7 +3,6 @@ import Editor, { EditorProvider } from "./components/Editor";
 import { VariableProvider } from "./state";
 import { SettingsProvider, useSettingsContext } from "./state/SettingsContext";
 import AppHeader from "./components/Layout/AppHeader";
-import AppContainer from "./components/Layout/AppContainer";
 import VariablePanel from "./components/VariablePanel/VariablePanel";
 import TemplatePanel from "./components/VariablePanel/TemplatePanel";
 import SaveLoadButtons from "./components/VariablePanel/SaveLoadButtons";
@@ -63,6 +62,8 @@ function AppContent() {
   // Show sidebar only if at least one panel is enabled
   const showSidebar =
     settings.showVariablePanel || settings.showTemplatePanel || settings.showSettingsPanel;
+  const layoutClassName = showSidebar ? "app-layout has-right-panel" : "app-layout";
+  const sheetList = ["Q4 Budget Plan", "Commute Analysis", "Physics Lab 01"];
   const appClassName = [
     "app",
     settings.showResultPulse ? "results-pulse-on" : "results-pulse-off",
@@ -78,12 +79,35 @@ function AppContent() {
       <VariableProvider>
         <EditorProvider>
           <AppHeader onSettingsClick={handleOpenSettings} />
-          <main className="app-main">
-            <AppContainer className="main-grid-layout">
+          <main className={layoutClassName}>
+            <aside className="left-sidebar">
+              <div className="left-sidebar-header panel-title">
+                <span>My Sheets</span>
+                <button type="button" aria-label="Create new sheet">
+                  +
+                </button>
+              </div>
+              <ul className="sheet-list">
+                {sheetList.map((sheet, index) => (
+                  <li key={sheet} className={index === 0 ? "sheet-item active" : "sheet-item"}>
+                    <div className="sheet-title">
+                      <span className="sheet-dot" aria-hidden="true" />
+                      {sheet}
+                    </div>
+                    <span className="sheet-actions" aria-hidden="true">
+                      ...
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </aside>
+            <section className="editor-pane">
               <div className="editor-card-container">
                 <Editor />
               </div>
-              {showSidebar && (
+            </section>
+            {showSidebar && (
+              <aside className="right-panel">
                 <div className="sidebar-container">
                   {settings.showVariablePanel && (
                     <>
@@ -94,8 +118,8 @@ function AppContent() {
                   {settings.showTemplatePanel && <TemplatePanel />}
                   {settings.showSettingsPanel && <SettingsPanel />}
                 </div>
-              )}
-            </AppContainer>
+              </aside>
+            )}
           </main>
           <SettingsModal isOpen={isSettingsOpen} onClose={handleCloseSettings} />
         </EditorProvider>

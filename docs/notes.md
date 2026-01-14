@@ -24,6 +24,8 @@ sheets/tabs, remember docs
 plots
 FX
 # bugs/ideas
+thousand separator not working
+
 capital=30000€=>€30000
 roi=7%
 ganancias brutas=capital*roi=>€2100
