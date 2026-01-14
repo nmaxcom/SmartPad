@@ -7,7 +7,6 @@ import { SheetProvider, useSheetContext } from "./state/SheetContext";
 import AppHeader from "./components/Layout/AppHeader";
 import VariablePanel from "./components/VariablePanel/VariablePanel";
 import TemplatePanel from "./components/VariablePanel/TemplatePanel";
-import SaveLoadButtons from "./components/VariablePanel/SaveLoadButtons";
 import { SettingsModal } from "./components/ui/SettingsModal";
 import { SettingsPanel } from "./components/ui/SettingsPanel";
 import SheetSync from "./components/SheetSync";
@@ -96,12 +95,11 @@ function AppContent() {
               {showSidebar && (
                 <aside className="right-panel">
                   <div className="sidebar-container">
-                    {settings.showVariablePanel && (
-                      <>
-                        <VariablePanel />
-                        <SaveLoadButtons />
-                      </>
-                    )}
+                  {settings.showVariablePanel && (
+                    <>
+                      <VariablePanel />
+                    </>
+                  )}
                     {settings.showTemplatePanel && <TemplatePanel />}
                     {settings.showSettingsPanel && <SettingsPanel />}
                   </div>
