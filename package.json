@@ -42,6 +42,7 @@
     "@tiptap/react": "^2.14.0",
     "@tiptap/starter-kit": "^2.14.0",
     "@types/mathjs": "^9.4.1",
+    "jszip": "^3.10.1",
     "luxon": "^3.7.2",
     "mathjs": "^14.6.0",
     "react": "^18.2.0",
