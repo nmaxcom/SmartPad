@@ -24,6 +24,7 @@ sheets/tabs, remember docs
 plots
 FX
 # bugs/ideas
+10 mod 3 => 1
 thousand separator not working
 
 capital=30000€=>€30000
@@ -38,7 +39,6 @@ roi real = ganancia limpia / capital as %=>ganancia limpia / capital as %
 ganancia mensual = ganancia limpia/12=>ganancia limpia/12
 
 
-lists should take this speeds = 3, 4, 5, 6 to m/s
 - smartpad can't paste correctly:
 0.1 + 0.2 = 0.3 =>true
 1 = 1.000001 =>false

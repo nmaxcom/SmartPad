@@ -2,7 +2,7 @@ import { parseContent } from "../../src/parsing/astParser";
 import { setupDefaultEvaluators, defaultRegistry, EvaluationContext } from "../../src/eval";
 import { ReactiveVariableStore } from "../../src/state/variableStore";
 import { Variable } from "../../src/state/types";
-import { NumberValue } from "../../src/types";
+import { NumberValue, CurrencyValue } from "../../src/types";
 import type { RenderNode } from "../../src/eval/renderNodes";
 
 type EvalOverrides = Partial<EvaluationContext>;
@@ -44,6 +44,15 @@ describe("Thousands grouping formatting", () => {
 
     expect(defaultFormatted).toBe("1234567.89");
     expect(groupedFormatted).toBe("1,234,567.89");
+  });
+
+  test("CurrencyValue obeys groupThousands flag", () => {
+    const euros = new CurrencyValue("€", 30000);
+    const defaultFormatted = euros.toString();
+    const groupedFormatted = euros.toString({ groupThousands: true });
+
+    expect(defaultFormatted).toBe("€30000");
+    expect(groupedFormatted).toBe("€30,000");
   });
 
   test("Evaluation result strings update with grouping setting", () => {

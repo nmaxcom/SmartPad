@@ -10,6 +10,7 @@ import { NumberValue } from './NumberValue';
 import { PercentageValue } from './PercentageValue';
 import { UnitValue } from './UnitValue';
 import { CurrencyUnitValue } from './CurrencyUnitValue';
+import { applyThousandsSeparator } from '../utils/numberFormatting';
 
 export type CurrencySymbol = '$' | '€' | '£' | '¥' | '₹' | '₿' | 'CHF' | 'CAD' | 'AUD';
 
@@ -98,7 +99,7 @@ export class CurrencyValue extends SemanticValue {
 
   toString(options?: DisplayOptions): string {
     const precision = options?.precision ?? this.currencyInfo.decimalPlaces;
-    const formattedAmount = this.formatCurrencyAmount(this.amount, precision);
+    const formattedAmount = this.formatCurrencyAmount(this.amount, precision, options);
     
     if (this.currencyInfo.symbolPosition === 'before') {
       return `${this.symbol}${formattedAmount}`;
@@ -264,31 +265,25 @@ export class CurrencyValue extends SemanticValue {
   /**
    * Format currency amount according to currency rules
    */
-  private formatCurrencyAmount(amount: number, precision: number): string {
+  private formatCurrencyAmount(amount: number, precision: number, options?: DisplayOptions): string {
+    let formatted: string;
     const rounded = Math.round(amount);
     if (Math.abs(amount - rounded) < 1e-9) {
-      return rounded.toString();
-    }
-
-    // Special handling for currencies with no decimal places (like JPY)
-    if (this.currencyInfo.decimalPlaces === 0) {
-      return Math.round(amount).toString();
-    }
-    
-    // For other currencies, format with appropriate decimal places
-    const fixed = amount.toFixed(precision);
-    
-    // Remove trailing zeros after decimal point
-    const parts = fixed.split(".");
-    if (parts.length === 2) {
-      const trimmed = parts[1].replace(/0+$/, "");
-      if (!trimmed) {
-        return parts[0];
+      formatted = rounded.toString();
+    } else if (this.currencyInfo.decimalPlaces === 0) {
+      formatted = Math.round(amount).toString();
+    } else {
+      const fixed = amount.toFixed(precision);
+      const parts = fixed.split(".");
+      if (parts.length === 2) {
+        const trimmed = parts[1].replace(/0+$/, "");
+        formatted = trimmed ? `${parts[0]}.${trimmed}` : parts[0];
+      } else {
+        formatted = fixed;
       }
-      return `${parts[0]}.${trimmed}`;
     }
 
-    return fixed;
+    return options?.groupThousands ? applyThousandsSeparator(formatted) : formatted;
   }
 
   /**
