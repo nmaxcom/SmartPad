@@ -14,6 +14,7 @@ export default function SheetSync() {
   const prevSheetIdRef = useRef<string | null>(null);
   const lastSavedByIdRef = useRef<Map<string, string>>(new Map());
   const stateCacheRef = useRef<Map<string, { state: EditorState; content: string }>>(new Map());
+  const scrollCacheRef = useRef<Map<string, number>>(new Map());
 
   const flushPendingSave = (sheetId: string, content: string) => {
     if (saveTimeoutRef.current) {
@@ -54,6 +55,8 @@ export default function SheetSync() {
 
     if (prevSheetIdRef.current && prevSheetIdRef.current !== activeSheet.id) {
       const currentContent = getSmartPadText(editor);
+      const scrollTop = editor.view.dom.parentElement?.scrollTop ?? 0;
+      scrollCacheRef.current.set(prevSheetIdRef.current, scrollTop);
       flushPendingSave(prevSheetIdRef.current, currentContent);
       stateCacheRef.current.set(prevSheetIdRef.current, {
         state: editor.state,
@@ -66,6 +69,11 @@ export default function SheetSync() {
       skipNextSaveRef.current = true;
       lastSavedByIdRef.current.set(activeSheet.id, activeSheet.content);
       editor.view.updateState(cached.state);
+      const nextScroll = scrollCacheRef.current.get(activeSheet.id) ?? 0;
+      setTimeout(() => {
+        const scroller = editor.view.dom.parentElement;
+        if (scroller) scroller.scrollTop = nextScroll;
+      }, 0);
       prevSheetIdRef.current = activeSheet.id;
       return;
     }
@@ -73,6 +81,11 @@ export default function SheetSync() {
     const editorContent = getSmartPadText(editor);
     if (editorContent === activeSheet.content) {
       lastSavedByIdRef.current.set(activeSheet.id, activeSheet.content);
+      const nextScroll = scrollCacheRef.current.get(activeSheet.id) ?? 0;
+      setTimeout(() => {
+        const scroller = editor.view.dom.parentElement;
+        if (scroller) scroller.scrollTop = nextScroll;
+      }, 0);
       prevSheetIdRef.current = activeSheet.id;
       return;
     }
@@ -80,6 +93,11 @@ export default function SheetSync() {
     skipNextSaveRef.current = true;
     lastSavedByIdRef.current.set(activeSheet.id, activeSheet.content);
     applyContentWithoutHistory(activeSheet.content);
+    const nextScroll = scrollCacheRef.current.get(activeSheet.id) ?? 0;
+    setTimeout(() => {
+      const scroller = editor.view.dom.parentElement;
+      if (scroller) scroller.scrollTop = nextScroll;
+    }, 0);
     prevSheetIdRef.current = activeSheet.id;
   }, [activeSheet?.id, activeSheet?.content, editor]);
 
@@ -112,9 +130,18 @@ export default function SheetSync() {
       stateCacheRef.current.set(activeSheet.id, { state: editor.state, content });
     };
 
+    const scroller = editor.view.dom.parentElement;
+    const handleScroll = () => {
+      if (!activeSheet) return;
+      const scrollTop = scroller?.scrollTop ?? 0;
+      scrollCacheRef.current.set(activeSheet.id, scrollTop);
+    };
+
     editor.on("update", handleUpdate);
+    scroller?.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
       editor.off("update", handleUpdate);
+      scroller?.removeEventListener("scroll", handleScroll);
       if (saveTimeoutRef.current) {
         window.clearTimeout(saveTimeoutRef.current);
       }

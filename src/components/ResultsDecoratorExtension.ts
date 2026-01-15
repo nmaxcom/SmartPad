@@ -336,11 +336,13 @@ export const ResultsDecoratorExtension = Extension.create({
 
                 if (!hasExpected) {
                   tr.delete(afterArrowPos, lineEndPos);
+                  const spaceNode = view.state.schema.text(" ");
                   const content = normalizedResult
                     ? view.state.schema.text(normalizedResult)
                     : undefined;
+                  tr.insert(afterArrowPos, spaceNode);
                   tr.insert(
-                    afterArrowPos,
+                    afterArrowPos + spaceNode.nodeSize,
                     resultNodeType.create(
                       { value: normalizedResult, isError, flash: flashValue, delta: deltaValue },
                       content

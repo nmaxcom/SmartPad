@@ -6,7 +6,9 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  height: 100vh;
   background-color: var(--color-background);
+  overflow: hidden;
 }
 
 .app-layout {
@@ -14,6 +16,7 @@
   display: grid;
   grid-template-columns: 240px minmax(0, 1fr);
   min-height: 0;
+  overflow: hidden;
 }
 
 .app-layout.has-right-panel {
@@ -211,8 +214,9 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-6);
-  overflow-y: auto;
+  overflow: hidden;
   min-height: 0;
+  overflow-x: hidden;
 }
 
 /* 
@@ -221,11 +225,15 @@
 .editor-card-container {
   border-radius: var(--border-radius-xl);
   padding: var(--spacing-4);
-  min-height: 500px;
+  min-height: 0;
+  flex: 1;
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* Subtle gradient glow effect */

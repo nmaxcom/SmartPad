@@ -44,9 +44,32 @@ const getResultRangeInSelection = (state: any, selection: any): ResultRange | nu
 const getTriggerEndPos = (state: any, range: ResultRange): number | null => {
   const end = range.from;
   if (end < 2) return null;
-  const trigger = state.doc.textBetween(end - 2, end, "", "");
-  if (trigger === "=>") return end;
+  const tailTwo = state.doc.textBetween(end - 2, end, "", "");
+  if (tailTwo === "=>") return end;
+  if (end >= 3) {
+    const tailThree = state.doc.textBetween(end - 3, end, "", "");
+    if (tailThree === "=> ") return end - 1;
+  }
   return null;
+};
+
+const getDeletionRangeForResult = (
+  state: any,
+  range: ResultRange
+): { from: number; to: number; selectionFrom: number } => {
+  const triggerEnd = getTriggerEndPos(state, range);
+  if (triggerEnd !== null && triggerEnd > 0) {
+    return { from: triggerEnd - 1, to: range.to, selectionFrom: triggerEnd - 1 };
+  }
+
+  const beforePos = range.from - 1;
+  if (beforePos >= 0) {
+    const maybeSpace = state.doc.textBetween(beforePos, range.from, "", "");
+    if (maybeSpace === " ") {
+      return { from: beforePos, to: range.to, selectionFrom: beforePos };
+    }
+  }
+  return { from: range.from, to: range.to, selectionFrom: range.from };
 };
 
 export const ResultInteractionExtension = Extension.create({
@@ -55,6 +78,34 @@ export const ResultInteractionExtension = Extension.create({
 
   addKeyboardShortcuts() {
     return {
+      "Mod-Backspace": () => {
+        const { state, view } = this.editor;
+        const { $from } = state.selection;
+        const { tr } = state;
+        if ($from.depth === 0) return true;
+        const depth = $from.depth;
+        const from = $from.start(depth);
+        const to = $from.end(depth);
+        tr.delete(from, to);
+        const anchor = Math.min(from, tr.doc.content.size);
+        tr.setSelection(Selection.near(tr.doc.resolve(anchor), -1));
+        view.dispatch(tr);
+        return true;
+      },
+      "Mod-Delete": () => {
+        const { state, view } = this.editor;
+        const { $from } = state.selection;
+        const { tr } = state;
+        if ($from.depth === 0) return true;
+        const depth = $from.depth;
+        const from = $from.start(depth);
+        const to = $from.end(depth);
+        tr.delete(from, to);
+        const anchor = Math.min(from, tr.doc.content.size);
+        tr.setSelection(Selection.near(tr.doc.resolve(anchor), -1));
+        view.dispatch(tr);
+        return true;
+      },
       Backspace: () => {
         const { state, view } = this.editor;
         const { selection } = state;
@@ -69,28 +120,28 @@ export const ResultInteractionExtension = Extension.create({
           return true;
         }
 
-        const triggerEnd = getTriggerEndPos(state, range);
-        if (!triggerEnd) {
-          return true;
-        }
-
-        if (triggerEnd - 1 < 0 || triggerEnd > state.doc.content.size) {
-          return true;
-        }
-
-        const tr = state.tr.delete(triggerEnd - 1, triggerEnd);
-        tr.setSelection(TextSelection.create(tr.doc, triggerEnd - 1));
+        const deletion = getDeletionRangeForResult(state, range);
+        const tr = state.tr.delete(deletion.from, deletion.to);
+        tr.setSelection(TextSelection.create(tr.doc, deletion.selectionFrom));
         view.dispatch(tr);
         return true;
       },
 
       Delete: () => {
-        const { state } = this.editor;
+        const { state, view } = this.editor;
         const { selection } = state;
         const range = getResultRangeInSelection(state, selection);
         if (!range) return false;
-        if (!selection.empty) return true;
+        if (!selection.empty) {
+          const tr = state.tr.delete(selection.from, selection.to);
+          view.dispatch(tr);
+          return true;
+        }
 
+        const deletion = getDeletionRangeForResult(state, range);
+        const tr = state.tr.delete(deletion.from, deletion.to);
+        tr.setSelection(TextSelection.create(tr.doc, deletion.selectionFrom));
+        view.dispatch(tr);
         return true;
       },
 
