@@ -21,6 +21,25 @@ interface SheetContextValue {
 const SheetContext = createContext<SheetContextValue | null>(null);
 
 const CHANNEL_NAME = "smartpad-sheets";
+const ACTIVE_SHEET_STORAGE_KEY = "smartpad-active-sheet-id";
+
+const loadActiveSheetId = (): string | null => {
+  try {
+    return localStorage.getItem(ACTIVE_SHEET_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+};
+
+const persistActiveSheetId = (id: string | null) => {
+  try {
+    if (id) {
+      localStorage.setItem(ACTIVE_SHEET_STORAGE_KEY, id);
+    } else {
+      localStorage.removeItem(ACTIVE_SHEET_STORAGE_KEY);
+    }
+  } catch {}
+};
 
 function sortSheets(a: SheetRecord, b: SheetRecord): number {
   if (a.order !== b.order) {
@@ -31,10 +50,14 @@ function sortSheets(a: SheetRecord, b: SheetRecord): number {
 
 export function SheetProvider({ children }: { children: React.ReactNode }) {
   const [sheets, setSheets] = useState<SheetRecord[]>([]);
-  const [activeSheetId, setActiveSheetId] = useState<string | null>(null);
+  const [activeSheetId, setActiveSheetIdState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const channelRef = useRef<BroadcastChannel | null>(null);
   const clientIdRef = useRef<string>(generateSheetId());
+  const setActiveSheetId = useCallback((id: string) => {
+    setActiveSheetIdState(id);
+    persistActiveSheetId(id);
+  }, []);
 
   const upsertSheet = useCallback((record: SheetRecord) => {
     setSheets((prev) => {
@@ -258,8 +281,18 @@ export function SheetProvider({ children }: { children: React.ReactNode }) {
       }
       const sorted = [...withOrder].sort(sortSheets);
       setSheets(sorted);
+      const storedActiveId = loadActiveSheetId();
+      const storedActive =
+        storedActiveId && sorted.find((sheet) => sheet.id === storedActiveId && !sheet.is_trashed);
       const firstActive = sorted.find((sheet) => !sheet.is_trashed) || sorted[0];
-      setActiveSheetId(firstActive ? firstActive.id : null);
+      if (storedActive) {
+        setActiveSheetId(storedActive.id);
+      } else if (firstActive) {
+        setActiveSheetId(firstActive.id);
+      } else {
+        setActiveSheetIdState(null);
+        persistActiveSheetId(null);
+      }
       setIsLoading(false);
     };
     init();
@@ -318,6 +351,7 @@ export function SheetProvider({ children }: { children: React.ReactNode }) {
       restoreSheet,
       emptyTrash,
       reorderSheets,
+      setActiveSheetId,
     ]
   );
 

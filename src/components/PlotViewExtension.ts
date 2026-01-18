@@ -267,6 +267,14 @@ const createPlotSvg = (
     return fixed.replace(/\.00$/, "").replace(/(\.\d)0$/, "$1");
   };
 
+  const buildTicks = (min: number, max: number, count: number) => {
+    if (!Number.isFinite(min) || !Number.isFinite(max)) return [];
+    if (min === max) return [min];
+    const safeCount = Math.max(2, count);
+    const step = (max - min) / (safeCount - 1);
+    return Array.from({ length: safeCount }, (_, index) => min + step * index);
+  };
+
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
   svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
@@ -287,7 +295,29 @@ const createPlotSvg = (
   axisY.setAttribute("class", "plot-view-axis");
   svg.appendChild(axisY);
 
-  const xTicks = [viewRange.min, (viewRange.min + viewRange.max) / 2, viewRange.max];
+  if (viewRange.min <= 0 && viewRange.max >= 0) {
+    const zeroLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    const xZero = xScale(0);
+    zeroLine.setAttribute("x1", `${xZero}`);
+    zeroLine.setAttribute("x2", `${xZero}`);
+    zeroLine.setAttribute("y1", `${padding.top}`);
+    zeroLine.setAttribute("y2", `${height - padding.bottom}`);
+    zeroLine.setAttribute("class", "plot-view-axis-zero");
+    svg.appendChild(zeroLine);
+  }
+  if (yMin <= 0 && yMax >= 0) {
+    const zeroLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    const yZero = yScale(0);
+    zeroLine.setAttribute("x1", `${padding.left}`);
+    zeroLine.setAttribute("x2", `${width - padding.right}`);
+    zeroLine.setAttribute("y1", `${yZero}`);
+    zeroLine.setAttribute("y2", `${yZero}`);
+    zeroLine.setAttribute("class", "plot-view-axis-zero");
+    svg.appendChild(zeroLine);
+  }
+
+  const xTickCount = Math.min(7, Math.max(5, Math.round(plotWidth / 160) + 1));
+  const xTicks = buildTicks(viewRange.min, viewRange.max, xTickCount);
   xTicks.forEach((tick) => {
     const x = xScale(tick);
     const tickLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -307,7 +337,8 @@ const createPlotSvg = (
     svg.appendChild(label);
   });
 
-  const yTicks = [yMin, (yMin + yMax) / 2, yMax];
+  const yTickCount = Math.min(7, Math.max(5, Math.round(plotHeight / 140) + 1));
+  const yTicks = buildTicks(yMin, yMax, yTickCount);
   yTicks.forEach((tick) => {
     const y = yScale(tick);
     const tickLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
