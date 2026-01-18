@@ -205,6 +205,13 @@ function tokenize(expression: string): Token[] {
     if (!matched && lastTokenType === 'number' && /[a-zA-Z°µμΩ]/.test(expression[pos])) {
       const unitMatch = expression.substring(pos).match(unitPattern);
       if (unitMatch && unitMatch[0].toLowerCase() !== "per") {
+        if (unitMatch[0].toLowerCase() === "mod") {
+          tokens.push({ type: 'operator', value: 'mod', start: pos, end: pos + unitMatch[0].length });
+          pos += unitMatch[0].length;
+          lastTokenType = 'operator';
+          matched = true;
+          continue;
+        }
         tokens.push({ type: 'unit', value: unitMatch[0], start: pos, end: pos + unitMatch[0].length });
         pos += unitMatch[0].length;
         lastTokenType = 'unit';
@@ -214,6 +221,20 @@ function tokenize(expression: string): Token[] {
 
     // Match identifiers (including phrase-based variables)
     if (!matched && /[a-zA-Z_]/.test(expression[pos])) {
+      const modMatch = expression.slice(pos).match(/^mod\b/i);
+      if (modMatch) {
+        tokens.push({
+          type: 'operator',
+          value: 'mod',
+          start: pos,
+          end: pos + modMatch[0].length,
+        });
+        pos += modMatch[0].length;
+        lastTokenType = 'operator';
+        matched = true;
+        continue;
+      }
+
       const start = pos;
       let value = "";
 
@@ -231,6 +252,12 @@ function tokenize(expression: string): Token[] {
           while (lookahead < expression.length && isWhitespace(expression[lookahead])) {
             lookahead++;
           }
+          if (
+            lookahead < expression.length &&
+            expression.slice(lookahead).match(/^mod\b/i)
+          ) {
+            break;
+          }
           if (lookahead < expression.length && isIdentChar(expression[lookahead])) {
             value += " ";
             pos = lookahead;
@@ -242,6 +269,12 @@ function tokenize(expression: string): Token[] {
       }
 
       const normalized = value.replace(/\s+/g, " ").trim();
+      if (normalized.toLowerCase() === "mod") {
+        tokens.push({ type: 'operator', value: '%', start, end: pos });
+        lastTokenType = 'operator';
+        matched = true;
+        continue;
+      }
       tokens.push({ type: 'identifier', value: normalized, start, end: pos });
       lastTokenType = 'identifier';
       matched = true;
@@ -533,9 +566,8 @@ export function parseExpressionComponents(expression: string): ExpressionCompone
             throw new Error('Empty parentheses');
           }
 
-          const subComponents = parseExpressionComponents(
-            innerTokens.map((t) => t.value).join('')
-          );
+          const innerExpression = innerTokens.map((t) => t.value).join(" ");
+          const subComponents = parseExpressionComponents(innerExpression);
           components.push({
             type: 'parentheses',
             value: '()',

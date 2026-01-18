@@ -81,11 +81,15 @@ export const ResultInteractionExtension = Extension.create({
       "Mod-Backspace": () => {
         const { state, view } = this.editor;
         const { $from } = state.selection;
+        if ($from.depth === 0) return false;
+        let depth = $from.depth;
+        while (depth > 0 && !$from.node(depth).isTextblock) {
+          depth -= 1;
+        }
+        if (depth === 0) return false;
         const { tr } = state;
-        if ($from.depth === 0) return true;
-        const depth = $from.depth;
-        const from = $from.start(depth);
-        const to = $from.end(depth);
+        const from = $from.before(depth);
+        const to = $from.after(depth);
         tr.delete(from, to);
         const anchor = Math.min(from, tr.doc.content.size);
         tr.setSelection(Selection.near(tr.doc.resolve(anchor), -1));
@@ -96,10 +100,14 @@ export const ResultInteractionExtension = Extension.create({
         const { state, view } = this.editor;
         const { $from } = state.selection;
         const { tr } = state;
-        if ($from.depth === 0) return true;
-        const depth = $from.depth;
-        const from = $from.start(depth);
-        const to = $from.end(depth);
+        if ($from.depth === 0) return false;
+        let depth = $from.depth;
+        while (depth > 0 && !$from.node(depth).isTextblock) {
+          depth -= 1;
+        }
+        if (depth === 0) return false;
+        const from = $from.before(depth);
+        const to = $from.after(depth);
         tr.delete(from, to);
         const anchor = Math.min(from, tr.doc.content.size);
         tr.setSelection(Selection.near(tr.doc.resolve(anchor), -1));

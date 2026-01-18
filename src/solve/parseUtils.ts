@@ -4,7 +4,7 @@ export type SolveEquation = {
 };
 
 export const isVariableReferenceExpression = (expr: string): boolean =>
-  /^[a-zA-Z_][a-zA-Z0-9_\s]*$/.test(expr.trim());
+  /^[a-zA-Z_][a-zA-Z0-9_\s]*$/.test(expr.trim()) && !/\bmod\b/i.test(expr);
 
 export const splitTopLevelEquation = (input: string): SolveEquation | null => {
   let depth = 0;

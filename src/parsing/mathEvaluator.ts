@@ -123,6 +123,13 @@ export function tokenize(expression: string): Token[] {
 
     // Functions and identifiers (variables)
     if (/[a-zA-Z_]/.test(char)) {
+      const modMatch = expression.slice(position).match(/^mod\b/i);
+      if (modMatch) {
+        tokens.push({ type: TokenType.OPERATOR, value: "%", position });
+        position += modMatch[0].length;
+        continue;
+      }
+
       let identifier = "";
       while (position < expression.length && /[a-zA-Z0-9_\s]/.test(expression[position])) {
         identifier += expression[position];
@@ -134,6 +141,11 @@ export function tokenize(expression: string): Token[] {
 
       // Normalize internal whitespace to single spaces to match store keys
       identifier = identifier.replace(/\s+/g, " ");
+
+      if (identifier.toLowerCase() === "mod") {
+        tokens.push({ type: TokenType.OPERATOR, value: "%", position });
+        continue;
+      }
 
       // Check if it's a function
       const nextChar = position < expression.length ? expression[position] : "";

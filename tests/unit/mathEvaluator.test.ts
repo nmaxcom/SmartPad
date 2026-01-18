@@ -104,6 +104,7 @@ describe("Mathematical Evaluator", () => {
     test("should evaluate modulo", () => {
       expect(evaluateMath("10 % 3")).toEqual({ value: 1 });
       expect(evaluateMath("17 % 5")).toEqual({ value: 2 });
+      expect(evaluateMath("10 mod 3")).toEqual({ value: 1 });
     });
 
     test("should evaluate exponentiation", () => {

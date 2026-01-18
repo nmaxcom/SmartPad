@@ -98,7 +98,8 @@ export class SimpleExpressionParser {
    * Parse simple arithmetic expressions like "100 + 20" or "$100 * 2"
    */
   static parseArithmetic(expr: string, context: EvaluationContext): SemanticValue | null {
-    const trimmed = expr.trim();
+    const normalizedExpr = expr.replace(/\bmod\b/gi, "%");
+    const trimmed = normalizedExpr.trim();
     if (
       /[()]/.test(trimmed) ||
       /\b(sqrt|abs|round|floor|ceil|max|min|sum|total|avg|mean|median|count|stddev|sin|cos|tan|log|log10|ln|exp)\s*\(/.test(trimmed)
@@ -107,10 +108,10 @@ export class SimpleExpressionParser {
     }
 
     // Handle basic operators
-    const operators = ['+', '-', '*', '/', '^'];
+    const operators = ['+', '-', '*', '/', '%', '^'];
     
     for (const op of operators) {
-      const parts = expr.split(op).map(p => p.trim());
+      const parts = normalizedExpr.split(op).map(p => p.trim());
       if (parts.length === 2 && parts[0] && parts[1]) {
         let suffixValue: SemanticValue | null = null;
         let rightOperand = parts[1];
@@ -273,7 +274,7 @@ export class SimpleExpressionParser {
 
   private static wrapExpression(expr: string): string {
     const trimmed = expr.trim();
-    if (!/\s|[+\-*/^]/.test(trimmed)) {
+    if (!/\s|[+\-*/^%]/.test(trimmed)) {
       return trimmed;
     }
     return `(${trimmed})`;
@@ -289,6 +290,8 @@ export class SimpleExpressionParser {
       "^": 3,
       "*": 2,
       "/": 2,
+      "%": 2,
+      "mod": 2,
       "+": 1,
       "-": 1,
     };
@@ -318,6 +321,10 @@ export class SimpleExpressionParser {
           return SemanticArithmetic.multiply(left, right);
         case "/":
           return SemanticArithmetic.divide(left, right);
+        case "%":
+          return SemanticArithmetic.modulo(left, right);
+        case "mod":
+          return SemanticArithmetic.modulo(left, right);
         case "^": {
           if (SemanticValueTypes.isSymbolic(right)) {
             const leftExpr = SimpleExpressionParser.wrapExpression(left.toString());
@@ -890,6 +897,10 @@ export class SimpleExpressionParser {
         return SemanticArithmetic.multiply(left, right);
       case '/':
         return SemanticArithmetic.divide(left, right);
+      case '%':
+        return SemanticArithmetic.modulo(left, right);
+      case 'mod':
+        return SemanticArithmetic.modulo(left, right);
       case '^':
         if (SemanticValueTypes.isSymbolic(right)) {
           const leftExpr = SimpleExpressionParser.wrapExpression(left.toString());
@@ -1917,7 +1928,7 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
    * Check if expression is simple arithmetic
    */
   private isSimpleArithmetic(expr: string): boolean {
-    return /[\+\-\*\/\^]/.test(expr);
+    return /[\+\-\*\/\^%]/.test(expr) || /\bmod\b/i.test(expr);
   }
   
   /**
@@ -1939,7 +1950,10 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
    * Check if expression is a variable reference
    */
   private isVariableReference(expr: string): boolean {
-    return /^[a-zA-Z_][a-zA-Z0-9_\s]*$/.test(expr.trim());
+    return (
+      /^[a-zA-Z_][a-zA-Z0-9_\s]*$/.test(expr.trim()) &&
+      !/\bmod\b/i.test(expr)
+    );
   }
 
   private containsFunctionCall(expr: string): boolean {

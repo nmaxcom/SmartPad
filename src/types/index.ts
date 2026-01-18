@@ -543,6 +543,40 @@ export const SemanticArithmetic = {
       return ErrorValue.fromError(error as Error, 'runtime');
     }
   },
+
+  /**
+   * Modulo two semantic values with proper error handling
+   */
+  modulo: (left: SemanticValue, right: SemanticValue): SemanticValue => {
+    try {
+      const wrap = (expr: string) => {
+        const trimmed = expr.trim();
+        if (!/\s|[+\-*/^%]/.test(trimmed)) {
+          return trimmed;
+        }
+        return `(${trimmed})`;
+      };
+
+      return handleListOperation(left, right, (a, b) => {
+        if (SemanticValueTypes.isSymbolic(a) || SemanticValueTypes.isSymbolic(b)) {
+          return SymbolicValue.from(`${wrap(a.toString())} mod ${wrap(b.toString())}`);
+        }
+        if (a.getType() !== "number") {
+          return ErrorValue.typeError("Modulo requires numbers", "number", a.getType());
+        }
+        if (b.getType() !== "number") {
+          return ErrorValue.typeError("Modulo requires numbers", "number", b.getType());
+        }
+        const divisor = b.getNumericValue();
+        if (divisor === 0) {
+          return ErrorValue.runtimeError("Division by zero");
+        }
+        return new NumberValue(a.getNumericValue() % divisor);
+      });
+    } catch (error) {
+      return ErrorValue.fromError(error as Error, 'runtime');
+    }
+  },
   
   /**
    * Raise semantic value to power with proper error handling
