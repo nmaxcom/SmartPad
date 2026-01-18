@@ -400,3 +400,301 @@ body.number-scrubbing * {
 .errors-bg-off .semantic-error {
   background-color: transparent;
 }
+
+/* Plotting views */
+.plotting-selecting .semantic-variable {
+  background-color: var(--color-teal-soft);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.plotting-selecting .semantic-result-display,
+.plotting-selecting .semantic-error-result {
+  box-shadow: 0 0 0 1px var(--color-accent);
+}
+
+.plot-view {
+  margin: 6px 0 12px;
+  padding: 10px 12px 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+
+.plot-view-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.85em;
+  color: var(--color-text-secondary);
+}
+
+.plot-view-title {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.plot-view-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.plot-view-controls {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--color-text-secondary);
+  font-size: 0.75em;
+}
+
+.plot-view-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.plot-view-domain-control {
+  align-items: flex-start;
+}
+
+.plot-view-domain-slider-stack {
+  position: relative;
+  width: 100%;
+  height: 22px;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+}
+
+.plot-view-domain-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.plot-view-domain-track-fill {
+  position: absolute;
+  height: 100%;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.plot-view-domain-track-fill.plot-view-domain-slider-x {
+  background: var(--color-accent);
+}
+
+.plot-view-domain-track-fill.plot-view-domain-slider-y {
+  background: var(--color-teal);
+}
+
+.plot-view-domain-handle {
+  position: absolute;
+  top: 50%;
+  height: 16px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  background: rgba(255, 255, 255, 0.08);
+  cursor: grab;
+  z-index: 1;
+}
+
+.plot-view-domain-handle:active {
+  cursor: grabbing;
+}
+
+.plot-view-domain-slider {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  margin: 0;
+  background: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 22px;
+  pointer-events: none;
+}
+
+.plot-view-domain-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  background: transparent;
+}
+
+.plot-view-domain-slider::-moz-range-track {
+  height: 4px;
+  background: transparent;
+}
+
+.plot-view-domain-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: currentColor;
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.15);
+  pointer-events: auto;
+}
+
+.plot-view-domain-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: currentColor;
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.15);
+  pointer-events: auto;
+}
+
+.plot-view-domain-slider-min {
+  z-index: 2;
+}
+
+.plot-view-domain-slider-max {
+  z-index: 3;
+}
+
+.plot-view-domain-slider-x {
+  accent-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.plot-view-domain-slider-y {
+  accent-color: var(--color-teal);
+  color: var(--color-teal);
+}
+
+.plot-view-control input[type="number"] {
+  width: 90px;
+  background: var(--color-surface-light);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text-primary);
+  padding: 2px 6px;
+  font-size: 0.9em;
+}
+
+.plot-view-control input[type="range"] {
+  flex: 1;
+  min-width: 120px;
+}
+
+.plot-view-reset {
+  margin-left: auto;
+}
+
+.plot-view-action {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.75em;
+  cursor: pointer;
+}
+
+.plot-view-action:hover {
+  border-color: var(--color-accent);
+  color: var(--color-text-primary);
+  background: var(--color-accent-soft);
+}
+
+.plot-view-close {
+  border-color: transparent;
+  padding: 0 6px;
+  font-size: 0.7em;
+  opacity: 0.7;
+}
+
+.plot-view-close:hover {
+  border-color: var(--color-border);
+  background: var(--color-surface-light);
+  opacity: 1;
+}
+
+.plot-view-body {
+  margin-top: 8px;
+}
+
+.plot-view-chart {
+  width: 100%;
+  height: 320px;
+  background: var(--color-surface-light);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.plot-view-chart svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.plot-view-size-sm .plot-view-chart {
+  height: 240px;
+}
+
+.plot-view-size-md .plot-view-chart {
+  height: 320px;
+}
+
+.plot-view-size-lg .plot-view-chart {
+  height: 440px;
+}
+
+.plot-view-size-xl .plot-view-chart {
+  height: 560px;
+}
+
+.plot-view-axis {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.plot-view-axis-tick {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.plot-view-axis-text {
+  fill: var(--color-text-secondary);
+  font-size: 10px;
+}
+
+.plot-view-axis-label {
+  fill: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.plot-view-line {
+  stroke: var(--color-accent);
+  stroke-width: 2;
+  fill: none;
+}
+
+.plot-view-dot {
+  fill: var(--color-teal);
+}
+
+.plot-view-message {
+  color: var(--color-text-secondary);
+  font-size: 0.85em;
+}
+
+.plot-view-disconnected {
+  border-color: rgba(255, 107, 157, 0.35);
+}

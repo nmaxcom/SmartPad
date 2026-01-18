@@ -38,6 +38,15 @@ export interface CommentNode extends BaseASTNode {
 }
 
 /**
+ * Represents a persistent view directive line: `@view plot x=years`
+ */
+export interface ViewDirectiveNode extends BaseASTNode {
+  readonly type: "viewDirective";
+  readonly kind: string;
+  readonly params: Record<string, string>;
+}
+
+/**
  * Represents a variable assignment: `variableName = value`
  * Value is now parsed as a SemanticValue during parsing phase
  */
@@ -158,6 +167,7 @@ export interface FunctionDefinitionNode extends BaseASTNode {
 export type ASTNode =
   | PlainTextNode
   | CommentNode
+  | ViewDirectiveNode
   | VariableAssignmentNode
   | ExpressionNode
   | CombinedAssignmentNode
@@ -173,6 +183,10 @@ export function isPlainTextNode(node: ASTNode): node is PlainTextNode {
 
 export function isCommentNode(node: ASTNode): node is CommentNode {
   return node.type === "comment";
+}
+
+export function isViewDirectiveNode(node: ASTNode): node is ViewDirectiveNode {
+  return node.type === "viewDirective";
 }
 
 export function isVariableAssignmentNode(node: ASTNode): node is VariableAssignmentNode {

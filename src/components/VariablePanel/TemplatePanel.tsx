@@ -268,6 +268,39 @@ sum(volume) => 1095 kg
 `,
   },
   {
+    id: "plotting-lab",
+    emoji: "📈",
+    name: "Plotting Lab",
+    content: `# Plotting Lab (interactive dependency views)
+# Click any result, then click a variable to explore dependency.
+
+time = 5
+distance = 120 m
+speed = distance / time =>
+
+principal = $12000
+annual return = 7%
+years = 15
+future value = principal * (1 + annual return)^years =>
+
+growth rate = 12%
+baseline = 80
+result = baseline * (1 + growth rate)^years =>
+
+pressure = 101 kPa
+volume = 2 L
+work = pressure * volume =>
+
+# After exploring, detach to create a persistent view:
+# (Press Detach View button under the transient plot)
+# @view plot x=years domain=0..30 size=lg
+
+# Manual @view lines (paste under an expression):
+# @view plot x=time domain=1..10 view=2..8 size=md
+# @view plot x=years domain=0..40 size=lg
+`,
+  },
+  {
     id: "range-spec",
     emoji: "🔢",
     name: "Range Spec Lab",

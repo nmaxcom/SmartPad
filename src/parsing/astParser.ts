@@ -12,6 +12,7 @@ import {
   ASTNode,
   PlainTextNode,
   CommentNode,
+  ViewDirectiveNode,
   VariableAssignmentNode,
   ExpressionNode,
   CombinedAssignmentNode,
@@ -47,6 +48,11 @@ export function parseLine(line: string, lineNumber: number = 1): ASTNode {
   // Handle comments: lines starting with # (markdown-style)
   if (trimmedLine.startsWith("#")) {
     return createCommentNode(line, lineNumber);
+  }
+
+  // Handle view directives
+  if (trimmedLine.startsWith("@view")) {
+    return parseViewDirective(trimmedLine, line, lineNumber);
   }
 
   try {
@@ -193,6 +199,49 @@ function parseExpression(line: string, lineNumber: number): ExpressionNode | Err
 }
 
 /**
+ * Parse a view directive line: @view <kind> key=value ...
+ */
+function parseViewDirective(
+  trimmedLine: string,
+  rawLine: string,
+  lineNumber: number
+): ViewDirectiveNode | ErrorNode {
+  try {
+    const parts = trimmedLine.split(/\s+/).filter(Boolean);
+    if (parts.length === 0 || parts[0] !== "@view") {
+      return createErrorNode("Invalid view directive", "syntax", rawLine, lineNumber);
+    }
+
+    let kind = "plot";
+    let paramStart = 1;
+    if (parts[1] && !parts[1].includes("=")) {
+      kind = parts[1];
+      paramStart = 2;
+    }
+
+    const params: Record<string, string> = {};
+    for (let i = paramStart; i < parts.length; i++) {
+      const part = parts[i];
+      const eqIndex = part.indexOf("=");
+      if (eqIndex <= 0) continue;
+      const key = part.substring(0, eqIndex).trim();
+      const value = part.substring(eqIndex + 1).trim();
+      if (!key) continue;
+      params[key] = value;
+    }
+
+    return createViewDirectiveNode(kind, params, rawLine, lineNumber);
+  } catch (error) {
+    return createErrorNode(
+      `View directive parse error: ${error instanceof Error ? error.message : "Unknown error"}`,
+      "parse",
+      rawLine,
+      lineNumber
+    );
+  }
+}
+
+/**
  * Factory functions for creating AST nodes
  */
 function createPlainTextNode(raw: string, line: number): PlainTextNode {
@@ -210,6 +259,21 @@ function createCommentNode(raw: string, line: number): CommentNode {
     line,
     raw,
     content: raw,
+  };
+}
+
+function createViewDirectiveNode(
+  kind: string,
+  params: Record<string, string>,
+  raw: string,
+  line: number
+): ViewDirectiveNode {
+  return {
+    type: "viewDirective",
+    line,
+    raw,
+    kind,
+    params,
   };
 }
 

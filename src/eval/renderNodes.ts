@@ -79,6 +79,39 @@ export interface SliderRenderNode extends BaseRenderNode {
   readonly displayText: string;
 }
 
+export type PlotKind = "plot" | "scatter" | "hist" | "box" | "auto";
+export type PlotSize = "sm" | "md" | "lg" | "xl";
+
+export interface PlotRange {
+  readonly min: number;
+  readonly max: number;
+  readonly raw?: string;
+}
+
+export interface PlotPoint {
+  readonly x: number;
+  readonly y: number | null;
+}
+
+/**
+ * Render node for persistent plot views declared by @view directives
+ */
+export interface PlotViewRenderNode extends BaseRenderNode {
+  readonly type: "plotView";
+  readonly kind: PlotKind;
+  readonly x?: string;
+  readonly size?: PlotSize;
+  readonly expression?: string;
+  readonly targetLine?: number;
+  readonly status: "connected" | "disconnected";
+  readonly message?: string;
+  readonly domain?: PlotRange;
+  readonly view?: PlotRange;
+  readonly data?: PlotPoint[];
+  readonly currentX?: number;
+  readonly currentY?: number | null;
+}
+
 /**
  * Future extension point for charts and plots
  */
@@ -99,6 +132,7 @@ export type RenderNode =
   | VariableRenderNode
   | CombinedRenderNode
   | SliderRenderNode
+  | PlotViewRenderNode
   | ChartRenderNode;
 
 /**
@@ -126,6 +160,10 @@ export function isCombinedRenderNode(node: RenderNode): node is CombinedRenderNo
 
 export function isSliderRenderNode(node: RenderNode): node is SliderRenderNode {
   return node.type === "slider";
+}
+
+export function isPlotViewRenderNode(node: RenderNode): node is PlotViewRenderNode {
+  return node.type === "plotView";
 }
 
 export function isChartRenderNode(node: RenderNode): node is ChartRenderNode {

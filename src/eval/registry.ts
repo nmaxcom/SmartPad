@@ -26,6 +26,7 @@ export interface EvaluationContext {
   variableContext: Map<string, Variable>;
   functionStore?: Map<string, FunctionDefinitionNode>;
   equationStore?: EquationEntry[];
+  astNodes?: ASTNode[];
   lineNumber: number;
   decimalPlaces: number;
   scientificUpperThreshold?: number;

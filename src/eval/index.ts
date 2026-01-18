@@ -34,6 +34,7 @@ import { UnitsNetExpressionEvaluator } from "../units/unitsnetAstEvaluator";
 import { FunctionDefinitionEvaluator } from "./functionDefinitionEvaluator";
 import { DateMathEvaluator } from "./dateMathEvaluator";
 import { SolveEvaluator } from "./solveEvaluator";
+import { PlotViewEvaluator } from "./plotViewEvaluator";
 
 /**
  * Sets up the V2 evaluator registry with semantic-aware evaluators.
@@ -55,6 +56,7 @@ export function setupDefaultEvaluators(): void {
   const variableEvaluatorV2 = new VariableEvaluatorV2();
   const expressionEvaluatorV2 = new ExpressionEvaluatorV2();
   const functionDefinitionEvaluator = new FunctionDefinitionEvaluator();
+  const plotViewEvaluator = new PlotViewEvaluator();
 
   // Register V2 evaluators in order of priority
   // Percentage evaluator first - handles complex percentage operations
@@ -80,6 +82,9 @@ export function setupDefaultEvaluators(): void {
 
   // Function definition evaluator - registers user-defined functions
   defaultRegistry.register(functionDefinitionEvaluator);
+
+  // Plot view evaluator - handles @view directives
+  defaultRegistry.register(plotViewEvaluator);
   
   // Expression evaluator - handles simple arithmetic and literals  
   defaultRegistry.register(expressionEvaluatorV2);

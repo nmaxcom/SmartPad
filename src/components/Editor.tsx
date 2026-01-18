@@ -28,6 +28,7 @@ import { VariableHoverExtension } from "./VariableHoverExtension";
 import { normalizePastedHTML } from "./pasteTransforms";
 import { ResultInlineNode } from "./ResultInlineNode";
 import { ResultInteractionExtension } from "./ResultInteractionExtension";
+import { PlotViewExtension } from "./PlotViewExtension";
 import { getSmartPadText } from "./editorText";
 import { getDateLocaleEffective } from "../types/DateValue";
 // Import helper to identify combined assignment nodes (e.g. "speed = slider(...)")
@@ -200,6 +201,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
             variableContext: createCurrentVariableContext(),
             functionStore,
             equationStore,
+            astNodes,
             lineNumber: index + 1,
             decimalPlaces: settings.decimalPlaces,
             scientificUpperThreshold: Math.pow(10, settings.scientificUpperExponent),
@@ -365,6 +367,14 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       }),
       // The ResultsDecoratorExtension is responsible for rendering the results of calculations.
       ResultsDecoratorExtension,
+      // Plot view extension for dependency exploration and @view rendering.
+      PlotViewExtension.configure({
+        getVariableContext: () => {
+          const variables = reactiveStore.getAllVariables();
+          return new Map(variables.map((variable) => [variable.name, variable]));
+        },
+        getSettings: () => settings,
+      }),
       // The VariableHoverExtension provides hover-to-highlight functionality for variables.
       VariableHoverExtension.configure({
         getVariableContext: () => {
