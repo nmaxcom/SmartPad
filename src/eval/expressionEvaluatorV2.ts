@@ -1306,6 +1306,29 @@ const ensureRangeStep = (value: SemanticValue): number | ErrorValue => {
 };
 
 const ensureDurationStep = (value: SemanticValue): DurationStep | ErrorValue => {
+  if (value.getType() === "duration") {
+    const duration = value as DurationValue;
+    const parts = duration.getParts();
+    const entries = Object.entries(parts).filter(([, amount]) => amount);
+    if (entries.length !== 1) {
+      return ErrorValue.semanticError(
+        `Invalid range step: expected a single duration unit, got ${describeSemanticValue(value)}`
+      );
+    }
+    const [unit, amount] = entries[0];
+    const normalized = DURATION_UNIT_ALIASES[unit];
+    if (!normalized) {
+      return ErrorValue.semanticError(
+        `Invalid range step: expected duration, got ${describeSemanticValue(value)}`
+      );
+    }
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return ErrorValue.semanticError(
+        `Invalid range step: expected a positive duration, got ${describeSemanticValue(value)}`
+      );
+    }
+    return { value: amount, unit: normalized };
+  }
   if (value.getType() !== "unit") {
     const got =
       value.getType() === "number" ? "number" : canonicalTypeName(value);

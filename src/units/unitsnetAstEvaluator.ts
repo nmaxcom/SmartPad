@@ -156,6 +156,9 @@ function convertVariablesToUnitsNetQuantities(
     if (variable.value instanceof DateValue) {
       return;
     }
+    if (variable.value instanceof ListValue) {
+      return;
+    }
     if (variable.value instanceof SymbolicValue || variable.value instanceof ErrorValue) {
       return;
     }

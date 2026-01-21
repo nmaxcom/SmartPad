@@ -1,0 +1,87 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: 
+      - text: SmartPad
+    - generic [ref=e7]:
+      - group "Panels" [ref=e8]:
+        - button "Toggle Variables" [pressed] [ref=e9] [cursor=pointer]:
+          - generic [ref=e10] [cursor=pointer]: 
+        - button "Toggle Templates" [pressed] [ref=e11] [cursor=pointer]:
+          - generic [ref=e12] [cursor=pointer]: 
+        - button "Toggle Inspector" [ref=e13] [cursor=pointer]:
+          - generic [ref=e14] [cursor=pointer]: 
+      - button "Open Settings" [ref=e15] [cursor=pointer]:
+        - generic [ref=e16] [cursor=pointer]: 
+  - main [ref=e17]:
+    - complementary [ref=e18]:
+      - generic [ref=e19]:
+        - generic [ref=e20]: My Sheets
+        - button "Create new sheet" [ref=e21] [cursor=pointer]: +
+      - list [ref=e22]:
+        - listitem [ref=e23] [cursor=pointer]:
+          - generic [ref=e25] [cursor=pointer]: Untitled
+          - generic [ref=e26] [cursor=pointer]:
+            - button "Rename Untitled" [ref=e27] [cursor=pointer]:
+              - generic [ref=e28] [cursor=pointer]: 
+            - button "Download Untitled" [ref=e29] [cursor=pointer]:
+              - generic [ref=e30] [cursor=pointer]: 
+            - button "Move Untitled to trash" [ref=e31] [cursor=pointer]:
+              - generic [ref=e32] [cursor=pointer]: 
+      - generic [ref=e33]:
+        - button "Trash" [ref=e34] [cursor=pointer]:
+          - generic [ref=e35] [cursor=pointer]: 
+          - text: Trash
+        - button "Download All" [ref=e36] [cursor=pointer]:
+          - generic [ref=e37] [cursor=pointer]: 
+          - text: Download All
+    - textbox [active] [ref=e42]:
+      - paragraph [ref=e43]:
+        - generic [ref=e44]: "10"
+        - generic [ref=e45]: =>
+      - paragraph [ref=e49]
+    - complementary [ref=e50]:
+      - generic [ref=e51]:
+        - complementary [ref=e52]:
+          - heading "Variables" [level=2] [ref=e53]
+          - paragraph [ref=e55]: No variables defined yet.
+        - complementary [ref=e56]:
+          - heading "Quick Templates" [level=2] [ref=e57]
+          - generic [ref=e58]:
+            - button "✨ Quick Tour" [ref=e59] [cursor=pointer]:
+              - generic [ref=e60] [cursor=pointer]: ✨
+              - generic [ref=e61] [cursor=pointer]: Quick Tour
+            - button "🧾 List Spec Lab" [ref=e62] [cursor=pointer]:
+              - generic [ref=e63] [cursor=pointer]: 🧾
+              - generic [ref=e64] [cursor=pointer]: List Spec Lab
+            - button "📈 Plotting Lab" [ref=e65] [cursor=pointer]:
+              - generic [ref=e66] [cursor=pointer]: 📈
+              - generic [ref=e67] [cursor=pointer]: Plotting Lab
+            - button "🔢 Range Spec Lab" [ref=e68] [cursor=pointer]:
+              - generic [ref=e69] [cursor=pointer]: 🔢
+              - generic [ref=e70] [cursor=pointer]: Range Spec Lab
+            - button "🧩 Functions Showcase" [ref=e71] [cursor=pointer]:
+              - generic [ref=e72] [cursor=pointer]: 🧩
+              - generic [ref=e73] [cursor=pointer]: Functions Showcase
+            - button "🎟️ Event Profit" [ref=e74] [cursor=pointer]:
+              - generic [ref=e75] [cursor=pointer]: 🎟️
+              - generic [ref=e76] [cursor=pointer]: Event Profit
+            - button "🚲 Commute Planner" [ref=e77] [cursor=pointer]:
+              - generic [ref=e78] [cursor=pointer]: 🚲
+              - generic [ref=e79] [cursor=pointer]: Commute Planner
+            - button "⚗️ Physics Lab" [ref=e80] [cursor=pointer]:
+              - generic [ref=e81] [cursor=pointer]: ⚗️
+              - generic [ref=e82] [cursor=pointer]: Physics Lab
+            - button "📅 Date Math" [ref=e83] [cursor=pointer]:
+              - generic [ref=e84] [cursor=pointer]: 📅
+              - generic [ref=e85] [cursor=pointer]: Date Math
+            - button "✅ Regression Pass" [ref=e86] [cursor=pointer]:
+              - generic [ref=e87] [cursor=pointer]: ✅
+              - generic [ref=e88] [cursor=pointer]: Regression Pass
+            - button "🤓 Nerd stuff" [ref=e89] [cursor=pointer]:
+              - generic [ref=e90] [cursor=pointer]: 🤓
+              - generic [ref=e91] [cursor=pointer]: Nerd stuff
+```

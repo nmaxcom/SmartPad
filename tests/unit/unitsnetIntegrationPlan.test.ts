@@ -112,6 +112,15 @@ describe("UnitsNet Integration Plan - Comprehensive Feature Tests", () => {
       }
     });
 
+    test("unit conversions ignore list variables in context", () => {
+      evaluateExpression("period = 2026-01-01..2026-01-05 step 1 day");
+      const result = evaluateExpression("100 ft to m");
+      expect(result?.type).toBe("mathResult");
+      if (result?.type === "mathResult") {
+        expect((result as any).result).toMatch(/30\.48\s*m/);
+      }
+    });
+
     test("converts full expressions with to/in suffix", () => {
       const result1 = evaluateExpression("100 kg + 30 lb to kg =>");
       expect(result1?.type).toBe("mathResult");

@@ -1,0 +1,107 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: 
+      - text: SmartPad
+    - generic [ref=e7]:
+      - group "Panels" [ref=e8]:
+        - button "Toggle Variables" [pressed] [ref=e9] [cursor=pointer]:
+          - generic [ref=e10] [cursor=pointer]: 
+        - button "Toggle Templates" [pressed] [ref=e11] [cursor=pointer]:
+          - generic [ref=e12] [cursor=pointer]: 
+        - button "Toggle Inspector" [ref=e13] [cursor=pointer]:
+          - generic [ref=e14] [cursor=pointer]: 
+      - button "Open Settings" [ref=e15] [cursor=pointer]:
+        - generic [ref=e16] [cursor=pointer]: 
+  - main [ref=e17]:
+    - complementary [ref=e18]:
+      - generic [ref=e19]:
+        - generic [ref=e20]: My Sheets
+        - button "Create new sheet" [ref=e21] [cursor=pointer]: +
+      - list [ref=e22]:
+        - listitem [ref=e23] [cursor=pointer]:
+          - generic [ref=e25] [cursor=pointer]: Untitled
+          - generic [ref=e26] [cursor=pointer]:
+            - button "Rename Untitled" [ref=e27] [cursor=pointer]:
+              - generic [ref=e28] [cursor=pointer]: 
+            - button "Download Untitled" [ref=e29] [cursor=pointer]:
+              - generic [ref=e30] [cursor=pointer]: 
+            - button "Move Untitled to trash" [ref=e31] [cursor=pointer]:
+              - generic [ref=e32] [cursor=pointer]: 
+      - generic [ref=e33]:
+        - button "Trash" [ref=e34] [cursor=pointer]:
+          - generic [ref=e35] [cursor=pointer]: 
+          - text: Trash
+        - button "Download All" [ref=e36] [cursor=pointer]:
+          - generic [ref=e37] [cursor=pointer]: 
+          - text: Download All
+    - textbox [ref=e42]:
+      - paragraph [ref=e43]:
+        - generic [ref=e44]: "10"
+        - generic [ref=e45]: /
+        - generic [ref=e46]: "3"
+        - generic [ref=e47]: =>
+        - generic [ref=e49]:
+          - generic: updated
+      - paragraph [ref=e51]:
+        - generic [ref=e52]: pi
+        - generic [ref=e53]: =
+        - generic [ref=e54]: "3.14159"
+        - generic [ref=e55]: =>
+        - generic [ref=e57]:
+          - generic: updated
+      - paragraph [ref=e59]
+    - complementary [ref=e60]:
+      - generic [ref=e61]:
+        - complementary [ref=e62]:
+          - heading "Variables" [level=2] [ref=e63]
+          - list [ref=e65]:
+            - listitem [ref=e66]:
+              - generic [ref=e67]:
+                - generic [ref=e68]: pi
+                - generic [ref=e69]:
+                  - generic [ref=e70]: "3.14159"
+                  - generic [ref=e71]: =
+                  - generic [ref=e72]:
+                    - generic [ref=e73]: "3.1"
+                    - generic [ref=e74]: number
+        - complementary [ref=e75]:
+          - heading "Quick Templates" [level=2] [ref=e76]
+          - generic [ref=e77]:
+            - button "✨ Quick Tour" [ref=e78] [cursor=pointer]:
+              - generic [ref=e79] [cursor=pointer]: ✨
+              - generic [ref=e80] [cursor=pointer]: Quick Tour
+            - button "🧾 List Spec Lab" [ref=e81] [cursor=pointer]:
+              - generic [ref=e82] [cursor=pointer]: 🧾
+              - generic [ref=e83] [cursor=pointer]: List Spec Lab
+            - button "📈 Plotting Lab" [ref=e84] [cursor=pointer]:
+              - generic [ref=e85] [cursor=pointer]: 📈
+              - generic [ref=e86] [cursor=pointer]: Plotting Lab
+            - button "🔢 Range Spec Lab" [ref=e87] [cursor=pointer]:
+              - generic [ref=e88] [cursor=pointer]: 🔢
+              - generic [ref=e89] [cursor=pointer]: Range Spec Lab
+            - button "🧩 Functions Showcase" [ref=e90] [cursor=pointer]:
+              - generic [ref=e91] [cursor=pointer]: 🧩
+              - generic [ref=e92] [cursor=pointer]: Functions Showcase
+            - button "🎟️ Event Profit" [ref=e93] [cursor=pointer]:
+              - generic [ref=e94] [cursor=pointer]: 🎟️
+              - generic [ref=e95] [cursor=pointer]: Event Profit
+            - button "🚲 Commute Planner" [ref=e96] [cursor=pointer]:
+              - generic [ref=e97] [cursor=pointer]: 🚲
+              - generic [ref=e98] [cursor=pointer]: Commute Planner
+            - button "⚗️ Physics Lab" [ref=e99] [cursor=pointer]:
+              - generic [ref=e100] [cursor=pointer]: ⚗️
+              - generic [ref=e101] [cursor=pointer]: Physics Lab
+            - button "📅 Date Math" [ref=e102] [cursor=pointer]:
+              - generic [ref=e103] [cursor=pointer]: 📅
+              - generic [ref=e104] [cursor=pointer]: Date Math
+            - button "✅ Regression Pass" [ref=e105] [cursor=pointer]:
+              - generic [ref=e106] [cursor=pointer]: ✅
+              - generic [ref=e107] [cursor=pointer]: Regression Pass
+            - button "🤓 Nerd stuff" [ref=e108] [cursor=pointer]:
+              - generic [ref=e109] [cursor=pointer]: 🤓
+              - generic [ref=e110] [cursor=pointer]: Nerd stuff
+```

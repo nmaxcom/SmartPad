@@ -11,7 +11,7 @@ import {
   parseWeekday,
   zoneToLuxon,
 } from '../types/DateValue';
-import { UnitValue, ErrorValue, DurationValue, TimeValue } from '../types';
+import { UnitValue, ErrorValue, DurationValue, TimeValue, SemanticParsers } from '../types';
 import type { DurationUnit } from '../types/DurationValue';
 import { Variable } from '../state/types';
 
@@ -28,6 +28,10 @@ export interface DurationToken {
 export function looksLikeDateExpression(expression: string): boolean {
   const text = expression.trim();
   if (!text) return false;
+  const parsed = SemanticParsers.parse(text);
+  if (parsed && parsed.getType() === "unit" && UnitValue.isUnitString(text)) {
+    return false;
+  }
   if (/\b(today|tomorrow|yesterday|now|next|last)\b/i.test(text)) return true;
   if (/\b\d{4}-\d{2}-\d{2}\b/.test(text)) return true;
   if (/\b\d{1,2}[\/.-]\d{1,2}[\/.-]\d{4,}\b/.test(text)) return true;

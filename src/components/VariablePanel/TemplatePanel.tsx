@@ -530,6 +530,51 @@ trip + 3 days + 4 hours =>
 trip in UTC =>`,
   },
   {
+    id: "regression-pass",
+    emoji: "✅",
+    name: "Regression Pass",
+    content: `# Regression Pass: recent fixes
+
+# Date ranges (explicit duration steps)
+period = 2026-01-01..2026-01-05 step 1 day
+weekly = 2026-01-01..2026-02-01 step 1 week
+monthly = 2026-01-15..2026-05-15 step 1 month
+month end = 2026-01-31..2026-05-31 step 1 month
+slots = 2026-01-01 09:00..2026-01-01 11:00 step 30 min
+slots = 2026-01-01 09:00..2026-01-01 12:00 step 1 h
+
+# Locale-ish date range (normalized)
+2023-02-01..2023-02-05 step 1 day =>
+# If your locale is day-first, this should also work:
+# 01/02/2023..05/02/2023 step 1 day =>
+
+# Compact datetime list formatting
+2026-01-01 09:00..2026-01-01 11:00 step 18 min =>
+
+# Currency rates and duration rates
+price per m2 = $8 / m^2
+area = 3 m * 2.5 m
+total = area * price per m2 =>
+rate per s = $0.5 per s
+time = 8 s
+total7 = time * rate per s =>
+
+# Unit-only rates
+freq = 2 per s
+duration = 7 s
+cycles = freq * duration =>
+
+# UnitsNet conversions and strictness
+100 ft to m =>
+100 C to K =>
+1000000 W =>
+5 + 3 m =>
+
+# List mismatch error
+weird = 3 m, 2 h =>
+`,
+  },
+  {
     id: "nerd-stuff",
     emoji: "🤓",
     name: "Nerd stuff",

@@ -1,0 +1,135 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: 
+      - text: SmartPad
+    - generic [ref=e7]:
+      - group "Panels" [ref=e8]:
+        - button "Toggle Variables" [pressed] [ref=e9] [cursor=pointer]:
+          - generic [ref=e10] [cursor=pointer]: 
+        - button "Toggle Templates" [pressed] [ref=e11] [cursor=pointer]:
+          - generic [ref=e12] [cursor=pointer]: 
+        - button "Toggle Inspector" [ref=e13] [cursor=pointer]:
+          - generic [ref=e14] [cursor=pointer]: 
+      - button "Open Settings" [ref=e15] [cursor=pointer]:
+        - generic [ref=e16] [cursor=pointer]: 
+  - main [ref=e17]:
+    - complementary [ref=e18]:
+      - generic [ref=e19]:
+        - generic [ref=e20]: My Sheets
+        - button "Create new sheet" [ref=e21] [cursor=pointer]: +
+      - list [ref=e22]:
+        - listitem [ref=e23] [cursor=pointer]:
+          - generic [ref=e25] [cursor=pointer]: pfirst=1
+          - generic [ref=e26] [cursor=pointer]:
+            - button "Rename pfirst=1" [ref=e27] [cursor=pointer]:
+              - generic [ref=e28] [cursor=pointer]: 
+            - button "Download pfirst=1" [ref=e29] [cursor=pointer]:
+              - generic [ref=e30] [cursor=pointer]: 
+            - button "Move pfirst=1 to trash" [ref=e31] [cursor=pointer]:
+              - generic [ref=e32] [cursor=pointer]: 
+      - generic [ref=e33]:
+        - button "Trash" [ref=e34] [cursor=pointer]:
+          - generic [ref=e35] [cursor=pointer]: 
+          - text: Trash
+        - button "Download All" [ref=e36] [cursor=pointer]:
+          - generic [ref=e37] [cursor=pointer]: 
+          - text: Download All
+    - textbox [active] [ref=e42]:
+      - paragraph [ref=e43]:
+        - generic [ref=e44]: pfirst
+        - generic [ref=e45]: =
+        - generic [ref=e46]: "1"
+      - paragraph [ref=e47]:
+        - generic [ref=e48]: dummy
+        - generic [ref=e49]: =
+        - generic [ref=e50]: "1"
+      - paragraph [ref=e51]:
+        - generic [ref=e52]: second
+        - generic [ref=e53]: =
+        - generic [ref=e54]: first
+        - generic [ref=e55]: "*"
+        - generic [ref=e56]: "2"
+        - generic [ref=e57]: =>
+      - paragraph [ref=e61]:
+        - generic [ref=e62]: third
+        - generic [ref=e63]: =
+        - generic [ref=e64]: second
+        - generic [ref=e65]: "*"
+        - generic [ref=e66]: "2"
+        - generic [ref=e67]: =>
+    - complementary [ref=e71]:
+      - generic [ref=e72]:
+        - complementary [ref=e73]:
+          - heading "Variables" [level=2] [ref=e74]
+          - list [ref=e76]:
+            - listitem [ref=e77]:
+              - generic [ref=e78]:
+                - generic [ref=e79]: pfirst
+                - generic [ref=e80]:
+                  - generic [ref=e81]: "1"
+                  - generic [ref=e82]: number
+            - listitem [ref=e83]:
+              - generic [ref=e84]:
+                - generic [ref=e85]: dummy
+                - generic [ref=e86]:
+                  - generic [ref=e87]: "1"
+                  - generic [ref=e88]: number
+            - listitem [ref=e89]:
+              - generic [ref=e90]:
+                - generic [ref=e91]: second
+                - generic [ref=e92]:
+                  - generic [ref=e93]: first*2
+                  - generic [ref=e94]: =
+                  - generic [ref=e95]:
+                    - generic [ref=e96]: first * 2
+                    - generic [ref=e97]: symbolic
+            - listitem [ref=e98]:
+              - generic [ref=e99]:
+                - generic [ref=e100]: third
+                - generic [ref=e101]:
+                  - generic [ref=e102]: second*2
+                  - generic [ref=e103]: =
+                  - generic [ref=e104]:
+                    - generic [ref=e105]: (first * 2) * 2
+                    - generic [ref=e106]: symbolic
+        - complementary [ref=e107]:
+          - heading "Quick Templates" [level=2] [ref=e108]
+          - generic [ref=e109]:
+            - button "✨ Quick Tour" [ref=e110] [cursor=pointer]:
+              - generic [ref=e111] [cursor=pointer]: ✨
+              - generic [ref=e112] [cursor=pointer]: Quick Tour
+            - button "🧾 List Spec Lab" [ref=e113] [cursor=pointer]:
+              - generic [ref=e114] [cursor=pointer]: 🧾
+              - generic [ref=e115] [cursor=pointer]: List Spec Lab
+            - button "📈 Plotting Lab" [ref=e116] [cursor=pointer]:
+              - generic [ref=e117] [cursor=pointer]: 📈
+              - generic [ref=e118] [cursor=pointer]: Plotting Lab
+            - button "🔢 Range Spec Lab" [ref=e119] [cursor=pointer]:
+              - generic [ref=e120] [cursor=pointer]: 🔢
+              - generic [ref=e121] [cursor=pointer]: Range Spec Lab
+            - button "🧩 Functions Showcase" [ref=e122] [cursor=pointer]:
+              - generic [ref=e123] [cursor=pointer]: 🧩
+              - generic [ref=e124] [cursor=pointer]: Functions Showcase
+            - button "🎟️ Event Profit" [ref=e125] [cursor=pointer]:
+              - generic [ref=e126] [cursor=pointer]: 🎟️
+              - generic [ref=e127] [cursor=pointer]: Event Profit
+            - button "🚲 Commute Planner" [ref=e128] [cursor=pointer]:
+              - generic [ref=e129] [cursor=pointer]: 🚲
+              - generic [ref=e130] [cursor=pointer]: Commute Planner
+            - button "⚗️ Physics Lab" [ref=e131] [cursor=pointer]:
+              - generic [ref=e132] [cursor=pointer]: ⚗️
+              - generic [ref=e133] [cursor=pointer]: Physics Lab
+            - button "📅 Date Math" [ref=e134] [cursor=pointer]:
+              - generic [ref=e135] [cursor=pointer]: 📅
+              - generic [ref=e136] [cursor=pointer]: Date Math
+            - button "✅ Regression Pass" [ref=e137] [cursor=pointer]:
+              - generic [ref=e138] [cursor=pointer]: ✅
+              - generic [ref=e139] [cursor=pointer]: Regression Pass
+            - button "🤓 Nerd stuff" [ref=e140] [cursor=pointer]:
+              - generic [ref=e141] [cursor=pointer]: 🤓
+              - generic [ref=e142] [cursor=pointer]: Nerd stuff
+```

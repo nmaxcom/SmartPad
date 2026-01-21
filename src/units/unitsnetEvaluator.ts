@@ -126,6 +126,10 @@ function rewriteTrailingUnitSuffix(expr: string): string {
   const match = trimmed.match(/^(.*?)([a-zA-Z°µμΩ][a-zA-Z0-9°µμΩ\/\^\-\*\·]*)$/);
   if (!match) return expr;
 
+  if (/\s$/.test(match[1])) {
+    return expr;
+  }
+
   const before = match[1].trimEnd();
   const unitStr = match[2];
   if (!before) return expr;
@@ -436,8 +440,16 @@ export class UnitsNetParser {
     ) {
       const operator = this.consume().value;
       const right = this.parseTerm();
+      const leftType = left.getType();
+      const rightType = right.getType();
 
       if (operator === "+") {
+        if (
+          (leftType === "number" && rightType === "unit") ||
+          (leftType === "unit" && rightType === "number")
+        ) {
+          throw new Error("Cannot add dimensionless number to physical quantity");
+        }
         const result = left.add(right);
         if (result instanceof UnitValue || result instanceof NumberValue) {
           left = result;
@@ -445,6 +457,12 @@ export class UnitsNetParser {
           throw new Error("Invalid addition result type");
         }
       } else {
+        if (
+          (leftType === "number" && rightType === "unit") ||
+          (leftType === "unit" && rightType === "number")
+        ) {
+          throw new Error("Cannot subtract dimensionless number from physical quantity");
+        }
         const result = left.subtract(right);
         if (result instanceof UnitValue || result instanceof NumberValue) {
           left = result;
@@ -710,6 +728,28 @@ export function evaluateUnitsNetExpression(
     const aliasedExprRewritten = rewriteSimpleTimeQuantities(aliasedExpr);
 
     const tokens = tokenizeWithUnitsNet(aliasedExprRewritten);
+    for (let i = 0; i < tokens.length; i += 1) {
+      const token = tokens[i];
+      if (token.type !== UnitsNetTokenType.OPERATOR || (token.value !== "+" && token.value !== "-")) {
+        continue;
+      }
+      const prev = tokens[i - 1];
+      const next = tokens[i + 1];
+      if (!prev || !next) {
+        continue;
+      }
+      const leftIsNumber = prev.type === UnitsNetTokenType.NUMBER;
+      const rightIsNumber = next.type === UnitsNetTokenType.NUMBER;
+      const leftIsQuantity = prev.type === UnitsNetTokenType.QUANTITY;
+      const rightIsQuantity = next.type === UnitsNetTokenType.QUANTITY;
+      if ((leftIsNumber && rightIsQuantity) || (leftIsQuantity && rightIsNumber)) {
+        throw new Error(
+          token.value === "+"
+            ? "Cannot add dimensionless number to physical quantity"
+            : "Cannot subtract dimensionless number from physical quantity"
+        );
+      }
+    }
     if (aliasedExpr.includes("1 h")) {
       console.log(
         "TOKENS FOR '1 h':",

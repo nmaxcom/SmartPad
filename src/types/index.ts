@@ -241,6 +241,14 @@ const parseSingleValue = (input: string): SemanticValue | null => {
     }
   }
 
+  if (/[A-Z]/.test(trimmed) && UnitValue.isUnitString(trimmed)) {
+    try {
+      return UnitValue.fromString(trimmed);
+    } catch {
+      return null;
+    }
+  }
+
   const durationLiteral = DurationValue.parseLiteral(trimmed, {
     allowMinuteAlias: false,
     requireMultipleComponents: false,
@@ -410,6 +418,12 @@ const createListResult = (items: SemanticValue[], delimiter = ", "): SemanticVal
   }
   for (const item of items) {
     if (item.getType() !== baseType) {
+      if (
+        (baseType === "unit" && item.getType() === "duration") ||
+        (baseType === "duration" && item.getType() === "unit")
+      ) {
+        return ErrorValue.semanticError("Cannot create list: incompatible dimensions");
+      }
       return ErrorValue.semanticError("Cannot create list: incompatible units");
     }
     if (baseType === "unit") {
@@ -522,6 +536,24 @@ export const SemanticArithmetic = {
       if (SemanticValueTypes.isSymbolic(left) || SemanticValueTypes.isSymbolic(right)) {
         const base = SemanticValueTypes.isSymbolic(left) ? left : SymbolicValue.from(left.toString());
         return base.multiply(right);
+      }
+      if (SemanticValueTypes.isDuration(left) && (right.getType() === "unit" || right.getType() === "currencyUnit")) {
+        const durationUnit = UnitValue.fromValueAndUnit(
+          (left as DurationValue).getTotalSeconds(),
+          "s"
+        );
+        return right.getType() === "currencyUnit"
+          ? (right as CurrencyUnitValue).multiply(durationUnit)
+          : durationUnit.multiply(right);
+      }
+      if (SemanticValueTypes.isDuration(right) && (left.getType() === "unit" || left.getType() === "currencyUnit")) {
+        const durationUnit = UnitValue.fromValueAndUnit(
+          (right as DurationValue).getTotalSeconds(),
+          "s"
+        );
+        return left.getType() === "currencyUnit"
+          ? (left as CurrencyUnitValue).multiply(durationUnit)
+          : (left as UnitValue).multiply(durationUnit);
       }
       return handleListOperation(left, right, (a, b) => a.multiply(b));
     } catch (error) {

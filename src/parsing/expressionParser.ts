@@ -394,12 +394,16 @@ function containsUnitsOrMathExpression(line: string): boolean {
         continue;
       }
       const start = match.index ?? 0;
+      const prefix = line.slice(0, start);
       let idx = start - 1;
       while (idx >= 0 && /\s/.test(line[idx])) idx -= 1;
       if (idx < 0) {
         return false;
       }
       if (!/[0-9.)/\^]/.test(line[idx])) {
+        if (/\b(to|in)\s*$/i.test(prefix)) {
+          continue;
+        }
         return false;
       }
     }
