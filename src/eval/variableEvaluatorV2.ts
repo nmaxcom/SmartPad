@@ -35,6 +35,8 @@ import { SimpleExpressionParser } from "./expressionEvaluatorV2";
 import { expressionContainsUnitsNet } from "../units/unitsnetEvaluator";
 import { inferListDelimiter } from "../utils/listExpression";
 import { rewriteLocaleDateLiterals } from "../utils/localeDateNormalization";
+import { attemptPerUnitConversion } from "./unitConversionUtils";
+import { extractConversionSuffix } from "../utils/conversionSuffix";
 import {
   containsRangeOperatorOutsideString,
   isValidRangeExpressionCandidate,
@@ -352,6 +354,9 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
     if (!expression) {
       return false;
     }
+    if (/[$€£¥₹₿]/.test(expression) || /\b(CHF|CAD|AUD)\b/.test(expression)) {
+      return false;
+    }
 
     if (expressionContainsUnitsNet(expression)) {
       return true;
@@ -485,19 +490,7 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
   private extractConversionSuffix(
     expression: string
   ): { baseExpression: string; target: string; keyword: string } | null {
-    const match = expression.match(/\b(to|in)\b\s+(.+)$/i);
-    if (!match || match.index === undefined) {
-      return null;
-    }
-    const baseExpression = expression.slice(0, match.index).trim();
-    if (!baseExpression) {
-      return null;
-    }
-    const target = match[2].trim();
-    if (!target) {
-      return null;
-    }
-    return { baseExpression, target, keyword: match[1].toLowerCase() };
+    return extractConversionSuffix(expression);
   }
 
   private parseConversionTarget(
@@ -559,6 +552,14 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
       try {
         return (value as UnitValue).convertTo(parsed.unit);
       } catch (error) {
+        const fallback = attemptPerUnitConversion(value as UnitValue, {
+          unit: parsed.unit,
+          scale: 1,
+          displayUnit: parsed.unit,
+        });
+        if (fallback) {
+          return fallback;
+        }
         return ErrorValue.semanticError(
           error instanceof Error ? error.message : String(error)
         );

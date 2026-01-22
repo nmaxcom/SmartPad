@@ -148,6 +148,16 @@ More:
 * `2 days 3h to h => 51 h`
 * `1h to s => 3600 s`
 
+Fixed-length defaults for conversion math:
+
+* `1 month = 30 days`
+* `1 year = 365 days`
+
+Examples:
+
+* `21 months to weeks => 90 weeks`
+* `1 year in days => 365 days`
+
 ### 3.2 Time conversions
 
 This is optional but useful:

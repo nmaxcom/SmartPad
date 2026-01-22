@@ -13,6 +13,7 @@ import { PercentageValue, type PercentageContext } from './PercentageValue';
 import { CurrencyValue, type CurrencySymbol } from './CurrencyValue';
 import { CurrencyUnitValue } from './CurrencyUnitValue';
 import { UnitValue } from './UnitValue';
+import { UnitValueWithDisplay } from './UnitValueWithDisplay';
 import { DateValue } from './DateValue';
 import { TimeValue } from './TimeValue';
 import { DurationValue } from './DurationValue';
@@ -31,6 +32,7 @@ export { PercentageValue, type PercentageContext };
 export { CurrencyValue, type CurrencySymbol };
 export { CurrencyUnitValue };
 export { UnitValue };
+export { UnitValueWithDisplay };
 export { DateValue };
 export { TimeValue };
 export { DurationValue };
@@ -292,6 +294,13 @@ const parseSingleValue = (input: string): SemanticValue | null => {
   return null;
 };
 
+const preferredDurationUnit = (unitString: string): string | null => {
+  if (!unitString) return null;
+  const match = unitString.match(/\/([A-Za-z°µμΩ]+)/);
+  if (match) return match[1];
+  return null;
+};
+
 const parseListLiteral = (input: string): SemanticValue | null => {
   const normalized = stripEnclosingParentheses(input);
   const currencyLiteralPatterns = [
@@ -538,22 +547,30 @@ export const SemanticArithmetic = {
         return base.multiply(right);
       }
       if (SemanticValueTypes.isDuration(left) && (right.getType() === "unit" || right.getType() === "currencyUnit")) {
-        const durationUnit = UnitValue.fromValueAndUnit(
-          (left as DurationValue).getTotalSeconds(),
-          "s"
+        const durationSeconds = (left as DurationValue).getTotalSeconds();
+        const durationUnit = UnitValue.fromValueAndUnit(durationSeconds, "s");
+        const targetUnit = preferredDurationUnit(
+          right.getType() === "currencyUnit"
+            ? (right as CurrencyUnitValue).getUnit()
+            : (right as UnitValue).getUnit()
         );
+        const adjustedDuration = targetUnit ? durationUnit.convertTo(targetUnit) : durationUnit;
         return right.getType() === "currencyUnit"
-          ? (right as CurrencyUnitValue).multiply(durationUnit)
-          : durationUnit.multiply(right);
+          ? (right as CurrencyUnitValue).multiply(adjustedDuration)
+          : adjustedDuration.multiply(right);
       }
       if (SemanticValueTypes.isDuration(right) && (left.getType() === "unit" || left.getType() === "currencyUnit")) {
-        const durationUnit = UnitValue.fromValueAndUnit(
-          (right as DurationValue).getTotalSeconds(),
-          "s"
+        const durationSeconds = (right as DurationValue).getTotalSeconds();
+        const durationUnit = UnitValue.fromValueAndUnit(durationSeconds, "s");
+        const targetUnit = preferredDurationUnit(
+          left.getType() === "currencyUnit"
+            ? (left as CurrencyUnitValue).getUnit()
+            : (left as UnitValue).getUnit()
         );
+        const adjustedDuration = targetUnit ? durationUnit.convertTo(targetUnit) : durationUnit;
         return left.getType() === "currencyUnit"
-          ? (left as CurrencyUnitValue).multiply(durationUnit)
-          : (left as UnitValue).multiply(durationUnit);
+          ? (left as CurrencyUnitValue).multiply(adjustedDuration)
+          : (left as UnitValue).multiply(adjustedDuration);
       }
       return handleListOperation(left, right, (a, b) => a.multiply(b));
     } catch (error) {

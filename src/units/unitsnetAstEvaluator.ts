@@ -53,6 +53,8 @@ import {
 import { Variable } from "../state/types";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
 import { applyThousandsSeparator } from "../utils/numberFormatting";
+import { parseUnitTargetWithScale } from "./unitConversionTarget";
+import { extractConversionSuffix } from "../utils/conversionSuffix";
 
 function rewriteSimpleTimeLiterals(expression: string): string {
   return expression.replace(/(\d+(?:\.\d+)?)\s*(h|min|day)\b/g, (_m, num, unit) => {
@@ -291,12 +293,19 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
       // For expressions, use smart thresholds for units
       let formattedResult: string;
       if (result.value instanceof UnitValue) {
-        formattedResult = this.formatQuantityWithSmartThresholds(
-          result.value.getQuantity(),
-          displayOptions,
-          this.shouldPreferBaseUnit(node.expression, result.value.getQuantity()),
-          this.hasExplicitConversion(node.expression)
+        const scaledOverride = this.formatScaledConversionTarget(
+          node.expression,
+          result.value,
+          displayOptions
         );
+        formattedResult =
+          scaledOverride ??
+          this.formatQuantityWithSmartThresholds(
+            result.value.getQuantity(),
+            displayOptions,
+            this.shouldPreferBaseUnit(node.expression, result.value.getQuantity()),
+            this.hasExplicitConversion(node.expression)
+          );
       } else {
         const numericValue = result.value.getNumericValue();
         formattedResult = this.isMathematicalConstant(numericValue)
@@ -576,7 +585,8 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
 
       const displayValue =
         value instanceof UnitValue
-          ? this.formatQuantity(value.getQuantity(), displayOptions)
+          ? this.formatScaledConversionTarget(valueStr, value, displayOptions) ??
+            this.formatQuantity(value.getQuantity(), displayOptions)
           : value.toString(displayOptions);
       const displayText = `${node.variableName} = ${displayValue}`;
 
@@ -685,6 +695,24 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     return /\b(to|in)\b/.test(expression);
   }
 
+  private formatScaledConversionTarget(
+    expression: string,
+    value: UnitValue,
+    displayOptions: DisplayOptions
+  ): string | null {
+    const conversion = extractConversionSuffix(expression);
+    if (!conversion) return null;
+    const rawTarget = conversion.target.trim();
+    if (!rawTarget) return null;
+    const parsed = parseUnitTargetWithScale(rawTarget);
+    if (!parsed || parsed.scale === 1) return null;
+
+    const displayValue = value.getNumericValue() / parsed.scale;
+    const precision = displayOptions.precision ?? 6;
+    const displayQuantity = new SmartPadQuantity(displayValue, parsed.displayUnit);
+    return displayQuantity.toString(precision, { ...displayOptions, forceUnit: true });
+  }
+
   private resolveUnitsPrecision(unit: string, value: number, defaultPlaces: number): number {
     // Follow the configured decimalPlaces consistently for all units.
     return defaultPlaces;
@@ -692,15 +720,27 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
 
   private formatUnitLabel(unit: string, value: number): string {
     const absValue = Math.abs(value);
-    const pluralizableUnits = new Set(["day", "week", "month", "year"]);
+    const pluralForms: Record<string, string> = {
+      day: "days",
+      week: "weeks",
+      month: "months",
+      year: "years",
+      unit: "units",
+      person: "people",
+      request: "requests",
+      word: "words",
+      serving: "servings",
+      defect: "defects",
+      batch: "batches",
+    };
     if (
-      pluralizableUnits.has(unit) &&
+      pluralForms[unit] &&
       absValue !== 1 &&
       !unit.includes("/") &&
       !unit.includes("^") &&
       !unit.includes("*")
     ) {
-      return `${unit}s`;
+      return pluralForms[unit];
     }
     return unit;
   }

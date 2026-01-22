@@ -11,6 +11,7 @@ import { ReactiveVariableStore } from "../state/variableStore";
 import { Variable } from "../state/types";
 import { tracer, requireContract, ensure } from "./tracing";
 import type { EquationEntry } from "../solve/equationStore";
+import { applyDynamicUnitAliases } from "../units/unitAliases";
 
 // Legacy logger - kept for backward compatibility but replaced by tracing system
 const logger = {
@@ -79,6 +80,7 @@ export class EvaluatorRegistry {
     const traceId = tracer.startTrace(expression);
 
     try {
+      applyDynamicUnitAliases(context.variableContext);
       // Pre-condition: node must be valid
       requireContract(!!(node && typeof node === "object"), "Node must be a valid object");
       requireContract(!!node.type, "Node must have a type");

@@ -54,7 +54,16 @@ export class CompositeUnit {
         const componentDimension = powerDimension(component.unit.dimension, component.power);
         return multiplyDimensions(dimension, componentDimension);
       },
-      { length: 0, mass: 0, time: 0, current: 0, temperature: 0, amount: 0, luminosity: 0 }
+      {
+        length: 0,
+        mass: 0,
+        time: 0,
+        current: 0,
+        temperature: 0,
+        amount: 0,
+        luminosity: 0,
+        count: 0,
+      }
     );
   }
 
@@ -70,7 +79,8 @@ export class CompositeUnit {
    */
   isDimensionless(): boolean {
     const dimension = this.getDimension();
-    return dimensionsEqual(dimension, {
+    if (
+      !dimensionsEqual(dimension, {
       length: 0,
       mass: 0,
       time: 0,
@@ -78,7 +88,12 @@ export class CompositeUnit {
       temperature: 0,
       amount: 0,
       luminosity: 0,
-    });
+      count: 0,
+      })
+    ) {
+      return false;
+    }
+    return !this.components.some((component) => component.unit.dimension.count !== 0);
   }
 
   /**
@@ -312,6 +327,24 @@ export class Quantity {
       throw new Error("Division by zero");
     }
 
+    if (this.unit.isCompatibleWith(other.unit)) {
+      const thisBaseFactor = this.unit.getBaseConversionFactor();
+      const otherBaseFactor = other.unit.getBaseConversionFactor();
+      const newValue = (this.value * thisBaseFactor) / (other.value * otherBaseFactor);
+      const dimension = this.unit.getDimension();
+      const isPureCount =
+        dimension.length === 0 &&
+        dimension.mass === 0 &&
+        dimension.time === 0 &&
+        dimension.current === 0 &&
+        dimension.temperature === 0 &&
+        dimension.amount === 0 &&
+        dimension.luminosity === 0 &&
+        dimension.count !== 0;
+      const newUnit = isPureCount ? this.unit.divide(other.unit) : CompositeUnit.dimensionless();
+      return new Quantity(newValue, newUnit);
+    }
+
     const newValue = this.value / other.value;
     const newUnit = this.unit.divide(other.unit);
     return new Quantity(newValue, newUnit);
@@ -378,15 +411,27 @@ export class Quantity {
     // Format the unit
     let unitStr = this.unit.toString();
     const absValue = Math.abs(formattedValue);
-    const pluralizableUnits = new Set(["day", "week", "month", "year"]);
+    const pluralForms: Record<string, string> = {
+      day: "days",
+      week: "weeks",
+      month: "months",
+      year: "years",
+      unit: "units",
+      person: "people",
+      request: "requests",
+      word: "words",
+      serving: "servings",
+      defect: "defects",
+      batch: "batches",
+    };
     if (
-      pluralizableUnits.has(unitStr) &&
+      pluralForms[unitStr] &&
       absValue !== 1 &&
       !unitStr.includes("/") &&
       !unitStr.includes("^") &&
       !unitStr.includes("*")
     ) {
-      unitStr = `${unitStr}s`;
+      unitStr = pluralForms[unitStr];
     }
 
     if (unitStr === "1") {

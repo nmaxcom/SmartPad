@@ -35,6 +35,7 @@ import {
 import { splitTopLevelCommas } from '../utils/listExpression';
 import { rewriteLocaleDateLiterals } from "../utils/localeDateNormalization";
 import { containsRangeOperatorOutsideString } from "../utils/rangeExpression";
+import { expressionContainsUnitsNet } from "../units/unitsnetEvaluator";
 
 const containsRangeOperator = (text?: string): boolean =>
   !!text && containsRangeOperatorOutsideString(text);
@@ -43,6 +44,9 @@ export class DateMathEvaluator implements NodeEvaluator {
   canHandle(node: ASTNode): boolean {
     if (isVariableAssignmentNode(node)) {
       const raw = (node.rawValue || '').trim();
+      if (expressionContainsUnitsNet(raw)) {
+        return false;
+      }
       if (containsRangeOperator(raw)) {
         return false;
       }
@@ -54,6 +58,9 @@ export class DateMathEvaluator implements NodeEvaluator {
 
     if (isCombinedAssignmentNode(node) || isExpressionNode(node)) {
       const expr = isExpressionNode(node) ? node.expression : node.expression;
+      if (expressionContainsUnitsNet(expr)) {
+        return false;
+      }
       if (containsRangeOperator(expr)) {
         return false;
       }

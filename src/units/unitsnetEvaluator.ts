@@ -12,6 +12,7 @@ import {
   MATHEMATICAL_CONSTANTS,
 } from "./unitsnetAdapter";
 import { UnitValue, NumberValue } from "../types";
+import { parseUnitTargetWithScale } from "./unitConversionTarget";
 
 /**
  * Enhanced token types for units
@@ -62,7 +63,9 @@ function aliasVariablesInExpression(
   // Normalize internal whitespace to single spaces so matches are reliable
   let expr = expression.replace(/\s+/g, " ").trim();
 
-  const names = Object.keys(variables).sort((a, b) => b.length - a.length);
+  const names = Object.keys(variables)
+    .filter((name) => !/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name))
+    .sort((a, b) => b.length - a.length);
   if (names.length === 0) return { expression: expr, variables };
 
   const nameToAlias = new Map<string, string>();
@@ -84,6 +87,26 @@ function aliasVariablesInExpression(
     return /[\s+\-*/^%()=<>!,]/.test(ch);
   };
 
+  const prevNonSpaceChar = (value: string, index: number): string | undefined => {
+    for (let i = index; i >= 0; i -= 1) {
+      const ch = value[i];
+      if (!/\s/.test(ch)) return ch;
+    }
+    return undefined;
+  };
+
+  const isUnitPosition = (value: string, start: number): boolean => {
+    const before = value.slice(0, start);
+    if (/(?:^|\\s)(to|in)\\s*$/i.test(before)) {
+      return true;
+    }
+    const prevNonSpace = prevNonSpaceChar(value, start - 1);
+    if (!prevNonSpace) return false;
+    if (/[0-9.)]/.test(prevNonSpace)) return true;
+    if (/[/*^]/.test(prevNonSpace)) return true;
+    return false;
+  };
+
   names.forEach((name, idx) => {
     const alias = toAlias(idx);
     nameToAlias.set(name, alias);
@@ -100,6 +123,11 @@ function aliasVariablesInExpression(
       const before = j > 0 ? expr[j - 1] : undefined;
       const after = expr[j + name.length];
       if (isBoundary(before) && isBoundary(after)) {
+        if (isUnitPosition(expr, j)) {
+          out += expr.substring(i, j) + name;
+          i = j + name.length;
+          continue;
+        }
         out += expr.substring(i, j) + alias;
         i = j + name.length;
       } else {
@@ -481,9 +509,12 @@ export class UnitsNetParser {
         const t = this.currentToken();
         if (
           t.type === UnitsNetTokenType.IDENTIFIER ||
+          t.type === UnitsNetTokenType.QUANTITY ||
           (t.type === UnitsNetTokenType.OPERATOR &&
             (t.value === "/" || t.value === "^" || t.value === "*")) ||
-          t.type === UnitsNetTokenType.NUMBER
+          t.type === UnitsNetTokenType.NUMBER ||
+          t.type === UnitsNetTokenType.LEFT_PAREN ||
+          t.type === UnitsNetTokenType.RIGHT_PAREN
         ) {
           unitStr += t.value;
           this.consume();
@@ -495,11 +526,14 @@ export class UnitsNetParser {
       if (!unitStr) {
         throw new Error(`Expected unit after '${keyword}'`);
       }
-      if (left instanceof UnitValue) {
-        return left.convertTo(unitStr);
-      } else {
+      if (!(left instanceof UnitValue)) {
         throw new Error("Cannot convert non-unit value");
       }
+      const parsedTarget = parseUnitTargetWithScale(unitStr);
+      if (!parsedTarget) {
+        throw new Error(`Expected unit after '${keyword}'`);
+      }
+      return left.convertTo(parsedTarget.unit);
     }
 
     return left;
@@ -534,13 +568,16 @@ export class UnitsNetParser {
 
     // Fallback: attach a trailing simple unit identifier to a preceding bare number (e.g., '1 h')
     // This covers cases where tokenizer didn't produce a QUANTITY token.
-    while (this.currentToken().type === UnitsNetTokenType.IDENTIFIER && left instanceof NumberValue) {
+    while (
+      this.currentToken().type === UnitsNetTokenType.IDENTIFIER &&
+      left instanceof NumberValue
+    ) {
       const unitId = this.consume().value;
       try {
         const quantity = SmartPadQuantity.fromValueAndUnit(left.getNumericValue(), unitId);
         left = new UnitValue(quantity);
       } catch {
-        break;
+        throw new Error(`Unknown unit '${unitId}'`);
       }
     }
 
@@ -779,6 +816,9 @@ export function evaluateUnitsNetExpression(
  */
 export function expressionContainsUnitsNet(expression: string): boolean {
   if (UnitsNetAdapterParser.containsUnits(expression)) {
+    return true;
+  }
+  if (/\d\s*[a-zA-Z°µμΩ]/.test(expression)) {
     return true;
   }
   return rewriteTrailingUnitSuffix(expression) !== expression;

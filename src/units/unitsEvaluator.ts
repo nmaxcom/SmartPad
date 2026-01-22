@@ -52,7 +52,9 @@ export function aliasVariablesInExpression(
   expression: string,
   variables: Record<string, Quantity>
 ): { expression: string; variables: Record<string, Quantity> } {
-  const names = Object.keys(variables).sort((a, b) => b.length - a.length);
+  const names = Object.keys(variables)
+    .filter((name) => !/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name))
+    .sort((a, b) => b.length - a.length);
   if (names.length === 0) return { expression, variables };
 
   let aliasedExpr = expression;
@@ -62,6 +64,26 @@ export function aliasVariablesInExpression(
   const isBoundary = (ch: string | undefined) => {
     if (!ch) return true;
     return /[\s+\-*/^%()=<>!,]/.test(ch);
+  };
+
+  const prevNonSpaceChar = (value: string, index: number): string | undefined => {
+    for (let i = index; i >= 0; i -= 1) {
+      const ch = value[i];
+      if (!/\s/.test(ch)) return ch;
+    }
+    return undefined;
+  };
+
+  const isUnitPosition = (value: string, start: number): boolean => {
+    const before = value.slice(0, start);
+    if (/(?:^|\\s)(to|in)\\s*$/i.test(before)) {
+      return true;
+    }
+    const prevNonSpace = prevNonSpaceChar(value, start - 1);
+    if (!prevNonSpace) return false;
+    if (/[0-9.)]/.test(prevNonSpace)) return true;
+    if (/[/*^]/.test(prevNonSpace)) return true;
+    return false;
   };
 
   names.forEach((name, idx) => {
@@ -80,6 +102,11 @@ export function aliasVariablesInExpression(
       const before = j > 0 ? aliasedExpr[j - 1] : undefined;
       const after = aliasedExpr[j + name.length];
       if (isBoundary(before) && isBoundary(after)) {
+        if (isUnitPosition(aliasedExpr, j)) {
+          result += aliasedExpr.substring(i, j) + name;
+          i = j + name.length;
+          continue;
+        }
         result += aliasedExpr.substring(i, j) + alias;
         i = j + name.length;
       } else {

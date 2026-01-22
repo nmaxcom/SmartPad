@@ -142,6 +142,118 @@ qty => total / 3
 `,
   },
   {
+    id: "unit-aliases",
+    emoji: "🧭",
+    name: "Unit Aliases & Ratios",
+    content: `# Unit Aliases: define your own unit chunks
+# Any unitful variable becomes a unit alias in unit positions.
+
+workday = 8 h
+workweek = 5 workday
+workmonth = 4 workweek
+
+salary = $20/h
+salary to $/workweek =>
+salary to $/workmonth =>
+
+# Alias chaining (alias-of-alias)
+
+shift = 6 h
+block = 2 shift
+cycle = 5 block
+1 cycle to h =>
+
+# Countable aliases (dozen, person, serving, etc.)
+
+dozen = 12 unit
+3 dozen =>
+
+# Aliases inside compound units
+
+pace = 30 km/workweek
+pace to km/workday =>
+
+# Override built-ins when needed for unit math
+
+day = workday
+pace to km/day =>
+
+# Conversion targets keep the alias label
+
+time = 10 h
+time in workweek =>
+
+# Scaled conversion targets (explicit grouping)
+
+speed = 6 m/s
+speed to m/(1000 s) =>
+
+# Ratio reasoning across domains
+
+lot = 24 kg
+mix = 120 kg
+mix in lot =>
+
+unit cost = $3/kg
+unit cost to $/lot =>
+
+# Content creation
+
+writing = 500 words/h
+book = 80000 words
+time to write = book / writing =>
+time to write in workweek =>
+
+# Manufacturing
+
+batch = 10 unit
+line rate = 12 unit/h
+shift = 8 h
+output = line rate * shift =>
+output to unit/batch =>
+
+# Per-person costs
+
+household = 3 person
+rent = $1500/month
+rent / household =>
+
+# Cloud pricing
+
+Mreq = 1e6 request
+api = $0.35/Mreq
+traffic = 80 Mreq/month
+cost = api * traffic =>
+
+# Food & recipes
+
+recipe = 8 serving
+flour = 500 g
+per serving = flour / recipe =>
+need = 3 serving
+per serving * need =>
+
+# Energy & batteries
+
+battery = 60 Wh
+draw = 7 W
+runtime = battery / draw =>
+runtime in day =>
+
+# Defect rates
+
+defects = 7 defect
+production = 1200 unit
+rate = defects / production =>
+rate to defect/(1000 unit) =>
+
+# Override defaults for unit math only
+
+month = 365 days / 12
+1 year in month =>
+`,
+  },
+  {
     id: "list-spec",
     emoji: "🧾",
     name: "List Spec Lab",

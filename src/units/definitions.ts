@@ -16,6 +16,7 @@ export interface Dimension {
   readonly temperature: number; // kelvin (K)
   readonly amount: number; // mole (mol)
   readonly luminosity: number; // candela (cd)
+  readonly count: number; // countable units (unit)
 }
 
 /**
@@ -28,9 +29,10 @@ export function createDimension(
   current = 0,
   temperature = 0,
   amount = 0,
-  luminosity = 0
+  luminosity = 0,
+  count = 0
 ): Dimension {
-  return { length, mass, time, current, temperature, amount, luminosity };
+  return { length, mass, time, current, temperature, amount, luminosity, count };
 }
 
 /**
@@ -45,6 +47,7 @@ export const DIMENSIONS = {
   TEMPERATURE: createDimension(0, 0, 0, 0, 1), // K
   AMOUNT: createDimension(0, 0, 0, 0, 0, 1), // mol
   LUMINOSITY: createDimension(0, 0, 0, 0, 0, 0, 1), // cd
+  COUNT: createDimension(0, 0, 0, 0, 0, 0, 0, 1), // unit
 
   // Derived dimensions
   AREA: createDimension(2), // m^2
@@ -72,7 +75,8 @@ export function dimensionsEqual(a: Dimension, b: Dimension): boolean {
     a.current === b.current &&
     a.temperature === b.temperature &&
     a.amount === b.amount &&
-    a.luminosity === b.luminosity
+    a.luminosity === b.luminosity &&
+    a.count === b.count
   );
 }
 
@@ -87,7 +91,8 @@ export function multiplyDimensions(a: Dimension, b: Dimension): Dimension {
     a.current + b.current,
     a.temperature + b.temperature,
     a.amount + b.amount,
-    a.luminosity + b.luminosity
+    a.luminosity + b.luminosity,
+    a.count + b.count
   );
 }
 
@@ -102,7 +107,8 @@ export function divideDimensions(a: Dimension, b: Dimension): Dimension {
     a.current - b.current,
     a.temperature - b.temperature,
     a.amount - b.amount,
-    a.luminosity - b.luminosity
+    a.luminosity - b.luminosity,
+    a.count - b.count
   );
 }
 
@@ -117,7 +123,8 @@ export function powerDimension(dimension: Dimension, power: number): Dimension {
     dimension.current * power,
     dimension.temperature * power,
     dimension.amount * power,
-    dimension.luminosity * power
+    dimension.luminosity * power,
+    dimension.count * power
   );
 }
 
@@ -173,10 +180,28 @@ export class UnitRegistry {
   private units = new Map<string, UnitDefinition>();
   private aliases = new Map<string, string>(); // symbol -> canonical symbol
   private prefixedCache = new Map<string, UnitDefinition>();
+  private dynamicUnits = new Map<string, UnitDefinition>(); // lowercased symbol -> unit
 
   private getDirect(symbol: string): UnitDefinition | undefined {
     const canonical = this.aliases.get(symbol) || symbol;
     return this.units.get(canonical);
+  }
+
+  private resolveDynamicUnit(symbol: string): UnitDefinition | undefined {
+    if (!symbol) return undefined;
+    const lower = symbol.toLowerCase();
+    const direct = this.dynamicUnits.get(lower);
+    if (direct) return direct;
+    if (lower.endsWith("es")) {
+      const base = lower.slice(0, -2);
+      const plural = this.dynamicUnits.get(base);
+      if (plural) return plural;
+    }
+    if (lower.endsWith("s")) {
+      const base = lower.slice(0, -1);
+      return this.dynamicUnits.get(base);
+    }
+    return undefined;
   }
 
   private resolvePrefixedUnit(symbol: string): UnitDefinition | undefined {
@@ -236,10 +261,29 @@ export class UnitRegistry {
    * Get unit definition by symbol (including aliases)
    */
   get(symbol: string): UnitDefinition | undefined {
+    const dynamic = this.resolveDynamicUnit(symbol);
+    if (dynamic) return dynamic;
+
     const direct = this.getDirect(symbol);
     if (direct) return direct;
 
     return this.resolvePrefixedUnit(symbol);
+  }
+
+  /**
+   * Replace the current dynamic units map (used for per-context unit aliases).
+   */
+  setDynamicUnits(units: Map<string, UnitDefinition>): void {
+    this.dynamicUnits = units;
+    this.prefixedCache.clear();
+  }
+
+  /**
+   * Clear all dynamic units.
+   */
+  clearDynamicUnits(): void {
+    this.dynamicUnits.clear();
+    this.prefixedCache.clear();
   }
 
   /**
@@ -310,6 +354,83 @@ defaultUnitRegistry.register(
     category: "time",
   },
   ["second", "seconds", "sec"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "unit",
+    name: "unit",
+    dimension: DIMENSIONS.COUNT,
+    baseMultiplier: 1,
+    category: "count",
+  },
+  ["units", "count", "counts", "item", "items"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "person",
+    name: "person",
+    dimension: DIMENSIONS.COUNT,
+    baseMultiplier: 1,
+    category: "count",
+  },
+  ["people", "persons"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "request",
+    name: "request",
+    dimension: DIMENSIONS.COUNT,
+    baseMultiplier: 1,
+    category: "count",
+  },
+  ["requests"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "word",
+    name: "word",
+    dimension: DIMENSIONS.COUNT,
+    baseMultiplier: 1,
+    category: "count",
+  },
+  ["words"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "serving",
+    name: "serving",
+    dimension: DIMENSIONS.COUNT,
+    baseMultiplier: 1,
+    category: "count",
+  },
+  ["servings"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "defect",
+    name: "defect",
+    dimension: DIMENSIONS.COUNT,
+    baseMultiplier: 1,
+    category: "count",
+  },
+  ["defects"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "batch",
+    name: "batch",
+    dimension: DIMENSIONS.COUNT,
+    baseMultiplier: 1,
+    category: "count",
+  },
+  ["batches"]
 );
 
 // Length units
@@ -770,6 +891,8 @@ export function formatDimension(dimension: Dimension): string {
     components.push(dimension.amount === 1 ? "mol" : `mol^${dimension.amount}`);
   if (dimension.luminosity > 0)
     components.push(dimension.luminosity === 1 ? "cd" : `cd^${dimension.luminosity}`);
+  if (dimension.count > 0)
+    components.push(dimension.count === 1 ? "count" : `count^${dimension.count}`);
 
   // Negative exponents in denominator (in standard SI order)
   const denominatorComponents: string[] = [];
@@ -787,6 +910,8 @@ export function formatDimension(dimension: Dimension): string {
     denominatorComponents.push(dimension.amount === -1 ? "mol" : `mol^${-dimension.amount}`);
   if (dimension.luminosity < 0)
     denominatorComponents.push(dimension.luminosity === -1 ? "cd" : `cd^${-dimension.luminosity}`);
+  if (dimension.count < 0)
+    denominatorComponents.push(dimension.count === -1 ? "count" : `count^${-dimension.count}`);
 
   if (components.length === 0 && denominatorComponents.length === 0) {
     return "1"; // dimensionless

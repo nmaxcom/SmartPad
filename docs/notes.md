@@ -24,6 +24,8 @@ sheets/tabs, remember docs
 plots
 FX
 # bugs/ideas
+flashing on change not working
+
 (final speed - initial speed) / accel time x=initial
 Missing variable "initial"
 

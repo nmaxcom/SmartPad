@@ -21,6 +21,7 @@ import {
   SemanticValue,
   NumberValue,
   UnitValue,
+  UnitValueWithDisplay,
   DateValue,
   CurrencyUnitValue,
   CurrencyValue,
@@ -45,6 +46,9 @@ import { PercentageValue } from "../types/PercentageValue";
 import { isAggregatorExpression } from "./aggregatorUtils";
 import { rewriteLocaleDateLiterals } from "../utils/localeDateNormalization";
 import { containsRangeOperatorOutsideString } from "../utils/rangeExpression";
+import { parseUnitTargetWithScale } from "../units/unitConversionTarget";
+import { attemptPerUnitConversion } from "./unitConversionUtils";
+import { extractConversionSuffix } from "../utils/conversionSuffix";
 
 function applyAbsToSemanticValue(value: SemanticValue): SemanticValue {
   if (!value.isNumeric()) {
@@ -1990,19 +1994,7 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
   private extractConversionSuffix(
     expression: string
   ): { baseExpression: string; target: string; keyword: string } | null {
-    const match = expression.match(/\b(to|in)\b\s+(.+)$/i);
-    if (!match || match.index === undefined) {
-      return null;
-    }
-    const baseExpression = expression.slice(0, match.index).trim();
-    if (!baseExpression) {
-      return null;
-    }
-    const target = match[2].trim();
-    if (!target) {
-      return null;
-    }
-    return { baseExpression, target, keyword: match[1].toLowerCase() };
+    return extractConversionSuffix(expression);
   }
 
   private applyUnitConversion(
@@ -2039,8 +2031,17 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
         return ErrorValue.semanticError("Cannot convert non-unit value");
       }
       try {
-        return (value as UnitValue).convertTo(parsed.unit);
+        const converted = (value as UnitValue).convertTo(parsed.unit);
+        if (parsed.scale !== 1) {
+          const displayValue = converted.getNumericValue() / parsed.scale;
+          return new UnitValueWithDisplay(converted, displayValue, parsed.displayUnit);
+        }
+        return converted;
       } catch (error) {
+        const fallback = attemptPerUnitConversion(value as UnitValue, parsed);
+        if (fallback) {
+          return fallback;
+        }
         return ErrorValue.semanticError(
           error instanceof Error ? error.message : String(error)
         );
@@ -2056,7 +2057,37 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
         return ErrorValue.semanticError("Cannot convert between different currencies");
       }
       try {
-        return currencyValue.convertTo(parsed.unit);
+        const converted = currencyValue.convertTo(parsed.unit);
+        if (parsed.scale !== 1) {
+          const displayAmount = converted.getNumericValue() / parsed.scale;
+          return new CurrencyUnitValue(
+            converted.getSymbol() as CurrencySymbol,
+            displayAmount,
+            parsed.displayUnit,
+            converted.isPerUnit()
+          );
+        }
+        return converted;
+      } catch (error) {
+        return ErrorValue.semanticError(
+          error instanceof Error ? error.message : String(error)
+        );
+      }
+    }
+
+    if (value.getType() === "duration") {
+      if (!parsed.unit) {
+        return ErrorValue.semanticError("Cannot convert non-unit value");
+      }
+      const duration = value as DurationValue;
+      try {
+        const baseUnit = UnitValue.fromValueAndUnit(duration.getTotalSeconds(), "s");
+        const converted = baseUnit.convertTo(parsed.unit);
+        if (parsed.scale !== 1) {
+          const displayValue = converted.getNumericValue() / parsed.scale;
+          return new UnitValueWithDisplay(converted, displayValue, parsed.displayUnit);
+        }
+        return converted;
       } catch (error) {
         return ErrorValue.semanticError(
           error instanceof Error ? error.message : String(error)
@@ -2078,6 +2109,11 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
         return new CurrencyValue(parsed.symbol as CurrencySymbol, numeric);
       }
       if (parsed.unit) {
+        if (parsed.scale !== 1) {
+          const baseValue = numeric * parsed.scale;
+          const converted = UnitValue.fromValueAndUnit(baseValue, parsed.unit);
+          return new UnitValueWithDisplay(converted, numeric, parsed.displayUnit);
+        }
         return UnitValue.fromValueAndUnit(numeric, parsed.unit);
       }
     }
@@ -2155,7 +2191,7 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
 
   private parseConversionTarget(
     target: string
-  ): { unit: string; symbol?: string } | null {
+  ): { unit: string; symbol?: string; scale: number; displayUnit: string } | null {
     let raw = target.trim();
     if (!raw) {
       return null;
@@ -2171,15 +2207,24 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
     raw = raw.replace(/^per\b/i, "").trim();
     raw = raw.replace(/^[/*]+/, "").trim();
 
-    const unit = raw.replace(/\s+/g, "");
-    if (!unit) {
+    if (!raw) {
       if (symbol) {
-        return { unit: "", symbol };
+        return { unit: "", symbol, scale: 1, displayUnit: "" };
       }
       return null;
     }
 
-    return { unit, symbol };
+    const parsedUnit = parseUnitTargetWithScale(raw);
+    if (!parsedUnit) {
+      return null;
+    }
+
+    return {
+      unit: parsedUnit.unit,
+      symbol,
+      scale: parsedUnit.scale,
+      displayUnit: parsedUnit.displayUnit,
+    };
   }
   
   /**

@@ -176,6 +176,8 @@ describe("Duration and time math", () => {
       ["125s to min =>", "2.083333 min"],
       ["2 days 3h to h =>", "51 h"],
       ["1h to s =>", "3600 s"],
+      ["21 months to weeks =>", "90 weeks"],
+      ["1 year in days =>", "365 days"],
     ];
 
     cases.forEach(([input, expected], index) => {

@@ -116,7 +116,7 @@ Duration literals accept compact or spaced units. A leading sign applies to the 
 ```
 
 ### Convert Date Differences
-Date differences return a duration unit (days by default). You can convert it:
+Date differences return a duration unit (days by default). Conversions use fixed-length time units (1 month = 30 days, 1 year = 365 days); date stepping with `+ 1 month` / `+ 1 year` stays calendar-aware.
 ```
 2024-06-30 - 2024-06-01 in months => 0.966667 months
 2024-06-30 - 2024-06-01 in weeks => 4.142857 weeks
@@ -229,5 +229,4 @@ Examples:
 - Locale parsing defaults to system locale.
 - UTC/GMT/Z and offsets parse and convert.
 - Business day skips weekends.
-
 

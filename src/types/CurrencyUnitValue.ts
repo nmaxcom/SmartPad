@@ -119,7 +119,23 @@ export class CurrencyUnitValue extends SemanticValue {
           return new CurrencyValue(this.symbol, this.amount * converted);
         }
         const combined = this.combineUnits(unitValue.getUnit(), this.unitString, '/');
-        return new CurrencyUnitValue(this.symbol, this.amount * unitValue.getNumericValue(), combined, false);
+        if (combined === "1") {
+          return new CurrencyValue(this.symbol, this.amount * unitValue.getNumericValue());
+        }
+        if (combined.startsWith("1/")) {
+          return new CurrencyUnitValue(
+            this.symbol,
+            this.amount * unitValue.getNumericValue(),
+            combined.slice(2),
+            true
+          );
+        }
+        return new CurrencyUnitValue(
+          this.symbol,
+          this.amount * unitValue.getNumericValue(),
+          combined,
+          false
+        );
       }
 
       const combined = this.combineUnits(this.unitString, unitValue.getUnit(), '*');
