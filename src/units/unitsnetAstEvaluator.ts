@@ -35,6 +35,8 @@ import {
 import { NodeEvaluator, EvaluationContext } from "../eval/registry";
 import { evaluateUnitsNetExpression, expressionContainsUnitsNet } from "./unitsnetEvaluator";
 import { SmartPadQuantity } from "./unitsnetAdapter";
+import { defaultUnitRegistry } from "./definitions";
+import { formatUnitLabel } from "./unitDisplay";
 import {
   CurrencyValue,
   CurrencyUnitValue,
@@ -188,6 +190,47 @@ export interface UnitsNetRenderNode extends MathResultRenderNode {
  * AST Evaluator for expressions with units using unitsnet-js
  */
 export class UnitsNetExpressionEvaluator implements NodeEvaluator {
+  private containsPhraseAlias(expression: string, context: EvaluationContext): boolean {
+    const normalizedExpr = expression.toLowerCase();
+    for (const name of context.variableContext.keys()) {
+      const normalizedName = name.replace(/\s+/g, " ").trim();
+      if (!normalizedName || !normalizedName.includes(" ")) {
+        continue;
+      }
+      if (normalizedExpr.includes(normalizedName.toLowerCase())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private containsBlockedAlias(expression: string, context: EvaluationContext): boolean {
+    const normalizedExpr = expression.toLowerCase();
+    for (const name of context.variableContext.keys()) {
+      const normalizedName = name.replace(/\s+/g, " ").trim();
+      if (!normalizedName) continue;
+      if (!defaultUnitRegistry.isBlocked(normalizedName)) continue;
+      if (normalizedExpr.includes(normalizedName.toLowerCase())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private getBlockedAliasMessage(expression: string, context: EvaluationContext): string | null {
+    const normalizedExpr = expression.toLowerCase();
+    for (const name of context.variableContext.keys()) {
+      const normalizedName = name.replace(/\s+/g, " ").trim();
+      if (!normalizedName) continue;
+      const message = defaultUnitRegistry.getBlockedMessage(normalizedName);
+      if (!message) continue;
+      if (normalizedExpr.includes(normalizedName.toLowerCase())) {
+        return message;
+      }
+    }
+    return null;
+  }
+
   canHandle(node: ASTNode): boolean {
     // Check if node type is supported
     if (
@@ -235,10 +278,53 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
 
   evaluate(node: ASTNode, context: EvaluationContext): RenderNode | null {
     if (isExpressionNode(node)) {
+      const blockedMessage = this.getBlockedAliasMessage(node.expression, context);
+      if (blockedMessage) {
+        return {
+          type: "error",
+          error: blockedMessage,
+          errorType: "runtime" as const,
+          displayText: `${node.expression} => ⚠️ ${blockedMessage}`,
+          line: context.lineNumber,
+          originalRaw: node.expression,
+        } as ErrorRenderNode;
+      }
+      if (this.containsPhraseAlias(node.expression, context)) {
+        return null;
+      }
       return this.evaluateUnitsNetExpression(node, context);
     } else if (isCombinedAssignmentNode(node)) {
+      const blockedMessage = this.getBlockedAliasMessage(node.expression, context);
+      if (blockedMessage) {
+        return {
+          type: "error",
+          error: blockedMessage,
+          errorType: "runtime" as const,
+          displayText: `${node.variableName} = ${node.expression} => ⚠️ ${blockedMessage}`,
+          line: context.lineNumber,
+          originalRaw: `${node.variableName} = ${node.expression}`,
+        } as ErrorRenderNode;
+      }
+      if (this.containsPhraseAlias(node.expression, context)) {
+        return null;
+      }
       return this.evaluateUnitsNetCombinedAssignment(node, context);
     } else if (isVariableAssignmentNode(node)) {
+      const rawValue = (node.rawValue || node.parsedValue?.toString() || "").trim();
+      const blockedMessage = this.getBlockedAliasMessage(rawValue, context);
+      if (blockedMessage) {
+        return {
+          type: "error",
+          error: blockedMessage,
+          errorType: "runtime" as const,
+          displayText: `${node.variableName} => ⚠️ ${blockedMessage}`,
+          line: context.lineNumber,
+          originalRaw: node.variableName,
+        } as ErrorRenderNode;
+      }
+      if (this.containsPhraseAlias(rawValue, context)) {
+        return null;
+      }
       return this.evaluateUnitsNetVariableAssignment(node, context);
     }
 
@@ -719,30 +805,7 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
   }
 
   private formatUnitLabel(unit: string, value: number): string {
-    const absValue = Math.abs(value);
-    const pluralForms: Record<string, string> = {
-      day: "days",
-      week: "weeks",
-      month: "months",
-      year: "years",
-      unit: "units",
-      person: "people",
-      request: "requests",
-      word: "words",
-      serving: "servings",
-      defect: "defects",
-      batch: "batches",
-    };
-    if (
-      pluralForms[unit] &&
-      absValue !== 1 &&
-      !unit.includes("/") &&
-      !unit.includes("^") &&
-      !unit.includes("*")
-    ) {
-      return pluralForms[unit];
-    }
-    return unit;
+    return formatUnitLabel(unit, value);
   }
 
   private formatScalarValue(

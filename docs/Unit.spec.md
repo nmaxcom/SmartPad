@@ -55,7 +55,7 @@ Currency is treated as a **unit dimension**, not a special primitive.
 
 ### 2.2 Countables are first-class units (decision)
 
-Countable nouns like `person`, `request`, `serving`, `defect`, `batch`, `word`, `unit` are treated as real units:
+Smartpad treats **unknown unit tokens** as count units by default. This means domain nouns do not need to be pre-registered.
 
 * They appear in outputs (`$500/person/month`)
 * They participate in dimensional cancellation (`defect/unit`)
@@ -65,7 +65,7 @@ This preserves meaning in ratios and rates instead of collapsing to a bare numbe
 
 ---
 
-### 2.2 Unit Alias (new, generalized)
+### 2.3 Unit Alias (new, generalized)
 
 A variable `X` is a **Unit Alias** if and only if it evaluates to:
 
@@ -80,6 +80,12 @@ dozen = 12 unit
 batch = 24 item
 Mreq = 1e6 request
 serving = 1 serving
+```
+
+If you want a **domain tag** to behave like a known dimension, define it explicitly:
+
+```text
+kgCO2 = 1 kg
 ```
 
 Not eligible:
@@ -131,12 +137,9 @@ When parsing a unit token `t` (case-insensitive):
 
 1. If `t` matches a defined Unit Alias → use it.
 2. Else if `t` is a built-in unit → use it.
-3. Else if `t` is plural:
+3. Else → treat `t` as a count unit (with regular plural handling).
 
-   * strip trailing `s`
-   * strip trailing `es`
-   * retry steps 1–2
-4. Else → unknown unit error.
+Tokens with invalid unit characters still produce an error.
 
 ### Precedence
 

@@ -319,15 +319,16 @@ export const ResultsDecoratorExtension = Extension.create({
 
               const isError = matched.type === "error";
               const normalizedResult = resultText.trim();
-              const previousValue = resultHistory.get(historyKey);
+              const existingResult = slice.childCount === 1 ? slice.child(0) : null;
+              const existingText = existingResult ? existingResult.textContent || "" : "";
+              const previousValue =
+                existingText.trim() || resultHistory.get(historyKey);
               const hasChanged =
                 previousValue !== undefined && previousValue !== normalizedResult && !isError;
               const deltaValue = hasChanged
                 ? computeDelta(previousValue, normalizedResult) || "updated"
                 : "";
               const flashValue = hasChanged;
-              const existingResult = slice.childCount === 1 ? slice.child(0) : null;
-              const existingText = existingResult ? existingResult.textContent || "" : "";
               const hasExpected =
                 !!existingResult &&
                 existingResult.type === resultNodeType &&

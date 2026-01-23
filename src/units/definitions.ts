@@ -134,6 +134,7 @@ export function powerDimension(dimension: Dimension, power: number): Dimension {
 export interface UnitDefinition {
   readonly symbol: string; // "m", "kg", "km", "mph"
   readonly name: string; // "meter", "kilogram", "kilometer", "miles per hour"
+  readonly plural?: string; // optional display plural (e.g., person -> people)
   readonly dimension: Dimension; // Physical dimension
   readonly baseMultiplier: number; // Factor to convert to base SI unit
   readonly baseOffset?: number; // Offset for temperature conversions
@@ -181,6 +182,7 @@ export class UnitRegistry {
   private aliases = new Map<string, string>(); // symbol -> canonical symbol
   private prefixedCache = new Map<string, UnitDefinition>();
   private dynamicUnits = new Map<string, UnitDefinition>(); // lowercased symbol -> unit
+  private blockedUnits = new Map<string, string>();
 
   private getDirect(symbol: string): UnitDefinition | undefined {
     const canonical = this.aliases.get(symbol) || symbol;
@@ -189,19 +191,78 @@ export class UnitRegistry {
 
   private resolveDynamicUnit(symbol: string): UnitDefinition | undefined {
     if (!symbol) return undefined;
-    const lower = symbol.toLowerCase();
-    const direct = this.dynamicUnits.get(lower);
+    const direct = this.dynamicUnits.get(symbol);
     if (direct) return direct;
-    if (lower.endsWith("es")) {
-      const base = lower.slice(0, -2);
+    const hasUpper = /[A-Z]/.test(symbol);
+    const lower = symbol.toLowerCase();
+    if (!hasUpper) {
+      const directLower = this.dynamicUnits.get(lower);
+      if (directLower) return directLower;
+    }
+    const baseSymbol = hasUpper ? symbol : lower;
+    if (baseSymbol.endsWith("es")) {
+      const base = baseSymbol.slice(0, -2);
       const plural = this.dynamicUnits.get(base);
       if (plural) return plural;
     }
-    if (lower.endsWith("s")) {
-      const base = lower.slice(0, -1);
+    if (baseSymbol.endsWith("s")) {
+      const base = baseSymbol.slice(0, -1);
       return this.dynamicUnits.get(base);
     }
     return undefined;
+  }
+
+  private singularizeCountSymbol(symbol: string): string {
+    if (symbol.endsWith("ies")) {
+      return `${symbol.slice(0, -3)}y`;
+    }
+    if (
+      symbol.endsWith("es") &&
+      /(s|x|z|ch|sh)$/.test(symbol.slice(0, -2))
+    ) {
+      return symbol.slice(0, -2);
+    }
+    if (symbol.endsWith("s") && symbol.length > 1) {
+      return symbol.slice(0, -1);
+    }
+    return symbol;
+  }
+
+  private pluralizeCountSymbol(symbol: string): string {
+    if (symbol.endsWith("y") && !/[aeiou]y$/i.test(symbol)) {
+      return `${symbol.slice(0, -1)}ies`;
+    }
+    if (/(s|x|z|ch|sh)$/.test(symbol)) {
+      return `${symbol}es`;
+    }
+    return `${symbol}s`;
+  }
+
+  private resolveAdHocUnit(symbol: string): UnitDefinition | undefined {
+    if (!/^[A-Za-z][A-Za-z0-9]*$/.test(symbol)) return undefined;
+
+    const normalized = /[A-Z]/.test(symbol) ? symbol : symbol.toLowerCase();
+    const singular = this.singularizeCountSymbol(normalized);
+    const plural = this.pluralizeCountSymbol(singular);
+    const definition: UnitDefinition = {
+      symbol: singular,
+      name: singular,
+      plural,
+      dimension: DIMENSIONS.COUNT,
+      baseMultiplier: 1,
+      category: "count",
+    };
+
+    if (!this.units.has(singular)) {
+      this.units.set(singular, definition);
+      this.aliases.set(plural, singular);
+    }
+
+    if (symbol !== singular && !this.aliases.has(symbol)) {
+      this.aliases.set(symbol, singular);
+    }
+
+    return this.units.get(singular);
   }
 
   private resolvePrefixedUnit(symbol: string): UnitDefinition | undefined {
@@ -267,14 +328,30 @@ export class UnitRegistry {
     const direct = this.getDirect(symbol);
     if (direct) return direct;
 
-    return this.resolvePrefixedUnit(symbol);
+    const prefixed = this.resolvePrefixedUnit(symbol);
+    if (prefixed) return prefixed;
+
+    return this.resolveAdHocUnit(symbol);
+  }
+
+  getOrError(symbol: string): UnitDefinition {
+    const message = this.getBlockedMessage(symbol);
+    if (message) {
+      throw new Error(message);
+    }
+    const unit = this.get(symbol);
+    if (!unit) {
+      throw new Error(`Unknown unit factor: ${symbol}`);
+    }
+    return unit;
   }
 
   /**
    * Replace the current dynamic units map (used for per-context unit aliases).
    */
-  setDynamicUnits(units: Map<string, UnitDefinition>): void {
+  setDynamicUnits(units: Map<string, UnitDefinition>, blocked: Map<string, string> = new Map()): void {
     this.dynamicUnits = units;
+    this.blockedUnits = blocked;
     this.prefixedCache.clear();
   }
 
@@ -283,7 +360,22 @@ export class UnitRegistry {
    */
   clearDynamicUnits(): void {
     this.dynamicUnits.clear();
+    this.blockedUnits.clear();
     this.prefixedCache.clear();
+  }
+
+  isBlocked(symbol: string): boolean {
+    return Boolean(this.getBlockedMessage(symbol));
+  }
+
+  getBlockedMessage(symbol: string): string | undefined {
+    return this.getBlockedMessageInternal(symbol);
+  }
+
+  private getBlockedMessageInternal(symbol: string): string | undefined {
+    if (this.blockedUnits.has(symbol)) return this.blockedUnits.get(symbol);
+    const lower = symbol.toLowerCase();
+    return this.blockedUnits.get(lower);
   }
 
   /**
@@ -365,72 +457,6 @@ defaultUnitRegistry.register(
     category: "count",
   },
   ["units", "count", "counts", "item", "items"]
-);
-
-defaultUnitRegistry.register(
-  {
-    symbol: "person",
-    name: "person",
-    dimension: DIMENSIONS.COUNT,
-    baseMultiplier: 1,
-    category: "count",
-  },
-  ["people", "persons"]
-);
-
-defaultUnitRegistry.register(
-  {
-    symbol: "request",
-    name: "request",
-    dimension: DIMENSIONS.COUNT,
-    baseMultiplier: 1,
-    category: "count",
-  },
-  ["requests"]
-);
-
-defaultUnitRegistry.register(
-  {
-    symbol: "word",
-    name: "word",
-    dimension: DIMENSIONS.COUNT,
-    baseMultiplier: 1,
-    category: "count",
-  },
-  ["words"]
-);
-
-defaultUnitRegistry.register(
-  {
-    symbol: "serving",
-    name: "serving",
-    dimension: DIMENSIONS.COUNT,
-    baseMultiplier: 1,
-    category: "count",
-  },
-  ["servings"]
-);
-
-defaultUnitRegistry.register(
-  {
-    symbol: "defect",
-    name: "defect",
-    dimension: DIMENSIONS.COUNT,
-    baseMultiplier: 1,
-    category: "count",
-  },
-  ["defects"]
-);
-
-defaultUnitRegistry.register(
-  {
-    symbol: "batch",
-    name: "batch",
-    dimension: DIMENSIONS.COUNT,
-    baseMultiplier: 1,
-    category: "count",
-  },
-  ["batches"]
 );
 
 // Length units
@@ -601,6 +627,7 @@ defaultUnitRegistry.register(
   },
   ["gram", "grams"]
 );
+
 
 defaultUnitRegistry.register(
   {

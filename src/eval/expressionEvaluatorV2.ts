@@ -1721,6 +1721,18 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       return false;
     }
 
+    const conversion = this.extractConversionSuffix(expr);
+    if (conversion) {
+      const baseExpr = conversion.baseExpression;
+      if (
+        this.isSimpleArithmetic(baseExpr) ||
+        this.isSimpleLiteral(baseExpr) ||
+        this.isVariableReference(baseExpr)
+      ) {
+        return true;
+      }
+    }
+
     // Handle simple arithmetic expressions
     return (
       this.isSimpleArithmetic(expr) ||

@@ -16,6 +16,7 @@ import {
   defaultUnitRegistry,
   createDimension,
 } from "./definitions";
+import { formatUnitLabel } from "./unitDisplay";
 
 /**
  * A component of a composite unit (e.g., "m" with power 2 for "m^2")
@@ -410,29 +411,7 @@ export class Quantity {
 
     // Format the unit
     let unitStr = this.unit.toString();
-    const absValue = Math.abs(formattedValue);
-    const pluralForms: Record<string, string> = {
-      day: "days",
-      week: "weeks",
-      month: "months",
-      year: "years",
-      unit: "units",
-      person: "people",
-      request: "requests",
-      word: "words",
-      serving: "servings",
-      defect: "defects",
-      batch: "batches",
-    };
-    if (
-      pluralForms[unitStr] &&
-      absValue !== 1 &&
-      !unitStr.includes("/") &&
-      !unitStr.includes("^") &&
-      !unitStr.includes("*")
-    ) {
-      unitStr = pluralForms[unitStr];
-    }
+    unitStr = formatUnitLabel(unitStr, formattedValue);
 
     if (unitStr === "1") {
       return formattedValue.toString();
@@ -519,10 +498,7 @@ export class UnitParser {
         throw new Error("Unexpected end of unit expression");
       }
       if (token.type === "unit") {
-        const unitDef = defaultUnitRegistry.get(token.value);
-        if (!unitDef) {
-          throw new Error(`Unknown unit factor: ${token.value}`);
-        }
+        const unitDef = defaultUnitRegistry.getOrError(token.value);
         consume("unit");
         return CompositeUnit.fromUnit(unitDef);
       }
@@ -572,7 +548,7 @@ export class UnitParser {
   private static tokenize(expr: string): Array<{ type: string; value: string }> {
     const tokens: Array<{ type: string; value: string }> = [];
     let pos = 0;
-    const isUnitChar = (ch: string) => /[A-Za-z°µμΩ]/.test(ch);
+    const isUnitChar = (ch: string) => /[A-Za-z°µμΩ0-9]/.test(ch);
     const isNumberChar = (ch: string) => /[\d.]/.test(ch);
 
     while (pos < expr.length) {
@@ -607,9 +583,25 @@ export class UnitParser {
       }
       if (isUnitChar(ch)) {
         let value = "";
-        while (pos < expr.length && isUnitChar(expr[pos])) {
-          value += expr[pos];
-          pos++;
+        while (pos < expr.length) {
+          const current = expr[pos];
+          if (isUnitChar(current)) {
+            value += current;
+            pos++;
+            continue;
+          }
+          if (/\s/.test(current)) {
+            let lookahead = pos;
+            while (lookahead < expr.length && /\s/.test(expr[lookahead])) {
+              lookahead++;
+            }
+            if (lookahead < expr.length && isUnitChar(expr[lookahead])) {
+              value += " ";
+              pos = lookahead;
+              continue;
+            }
+          }
+          break;
         }
         tokens.push({ type: "unit", value });
         continue;

@@ -31,6 +31,7 @@ describe("Dimension Operations", () => {
       temperature: 0,
       amount: 0,
       luminosity: 0,
+      count: 0,
     });
 
     const velocity = createDimension(1, 0, -1);
@@ -42,6 +43,7 @@ describe("Dimension Operations", () => {
       temperature: 0,
       amount: 0,
       luminosity: 0,
+      count: 0,
     });
   });
 
@@ -109,7 +111,7 @@ describe("Unit Registry", () => {
     expect(registry.get("meters")).toEqual(meterUnit);
     expect(registry.has("m")).toBe(true);
     expect(registry.has("meter")).toBe(true);
-    expect(registry.has("unknown")).toBe(false);
+    expect(registry.has("unknown")).toBe(true);
   });
 
   test("should get units by category", () => {
@@ -266,8 +268,8 @@ describe("Default Unit Registry", () => {
     expect(kwh?.baseMultiplier).toBe(3600000);
   });
 
-  test("should reject double-prefixed units", () => {
-    expect(defaultUnitRegistry.has("dcm")).toBe(false);
-    expect(defaultUnitRegistry.has("mmh")).toBe(false);
+  test("should default unknown tokens to count units", () => {
+    expect(defaultUnitRegistry.has("dcm")).toBe(true);
+    expect(defaultUnitRegistry.has("mmh")).toBe(true);
   });
 });

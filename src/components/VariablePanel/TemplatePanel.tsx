@@ -197,6 +197,13 @@ mix in lot =>
 unit cost = $3/kg
 unit cost to $/lot =>
 
+# Tagged units: define domain-specific labels explicitly
+
+kgCO2 = 1 kg
+intensity = 0.45 kgCO2/kWh
+usage = 120 kWh
+emissions = intensity * usage =>
+
 # Content creation
 
 writing = 500 words/h

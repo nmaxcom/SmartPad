@@ -28,6 +28,7 @@ import {
   UnitValue,
   CurrencyValue,
   CurrencySymbol,
+  SemanticParsers,
 } from "../types";
 import { parseAndEvaluateExpression } from "../parsing/expressionParser";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
@@ -107,6 +108,13 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
     try {
       // The value is already parsed as a SemanticValue!
       let semanticValue = varNode.parsedValue;
+
+      if (semanticValue instanceof UnitValue && expressionRawValue) {
+        const reparsed = SemanticParsers.parse(expressionRawValue);
+        if (reparsed && !SemanticValueTypes.isError(reparsed) && reparsed.getType() === "unit") {
+          semanticValue = reparsed;
+        }
+      }
       
       // Check if parsing resulted in an error
       if (SemanticValueTypes.isError(semanticValue)) {

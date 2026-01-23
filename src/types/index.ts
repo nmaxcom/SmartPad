@@ -309,9 +309,11 @@ const parseListLiteral = (input: string): SemanticValue | null => {
     new RegExp(`^${groupedNumberPattern}\\s+(CHF|CAD|AUD)$`),
   ];
   const numberLiteralPattern = new RegExp(`^${groupedNumberPattern}$`);
+  const groupedUnitPattern = new RegExp(`^${groupedNumberPattern}\\s*[A-Za-z°µμΩ]`);
   if (
     currencyLiteralPatterns.some((pattern) => pattern.test(normalized)) ||
-    numberLiteralPattern.test(normalized)
+    numberLiteralPattern.test(normalized) ||
+    groupedUnitPattern.test(normalized)
   ) {
     return null;
   }

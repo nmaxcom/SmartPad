@@ -11,7 +11,7 @@ interface Token {
   value: string;
 }
 
-const isUnitChar = (ch: string) => /[A-Za-z°µμΩ]/.test(ch);
+const isUnitChar = (ch: string) => /[A-Za-z°µμΩ0-9]/.test(ch);
 const isNumberChar = (ch: string) => /[\d.]/.test(ch);
 
 const tokenize = (input: string): Token[] => {
@@ -55,9 +55,25 @@ const tokenize = (input: string): Token[] => {
     }
     if (isUnitChar(ch)) {
       let value = "";
-      while (pos < input.length && isUnitChar(input[pos])) {
-        value += input[pos];
-        pos += 1;
+      while (pos < input.length) {
+        const current = input[pos];
+        if (isUnitChar(current)) {
+          value += current;
+          pos += 1;
+          continue;
+        }
+        if (/\s/.test(current)) {
+          let lookahead = pos;
+          while (lookahead < input.length && /\s/.test(input[lookahead])) {
+            lookahead += 1;
+          }
+          if (lookahead < input.length && isUnitChar(input[lookahead])) {
+            value += " ";
+            pos = lookahead;
+            continue;
+          }
+        }
+        break;
       }
       tokens.push({ type: "ident", value });
       continue;
@@ -191,7 +207,7 @@ export const parseUnitTargetWithScale = (raw: string): ParsedUnitTarget | null =
   if (!trimmed) return null;
 
   const displayUnit = trimmed.replace(/\s+/g, " ").trim();
-  const tokens = tokenize(displayUnit.replace(/\s+/g, ""));
+  const tokens = tokenize(displayUnit);
   if (tokens.length === 0) return null;
   const parser = new UnitTargetParser(tokens);
   const parsed = parser.parse();

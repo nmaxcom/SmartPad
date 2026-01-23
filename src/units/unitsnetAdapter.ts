@@ -49,6 +49,7 @@ import {
 } from "unitsnet-js";
 import { CompositeUnit, Quantity, UnitParser } from "./quantity";
 import { formatDimension } from "./definitions";
+import { formatUnitLabel } from "./unitDisplay";
 import { applyThousandsSeparator } from "../utils/numberFormatting";
 
 // Type for any unitsnet-js value - using any for now to avoid complex type issues
@@ -1159,18 +1160,7 @@ export class SmartPadQuantity {
       return formattedValue;
     }
 
-    const absValue = Math.abs(value);
-    const pluralizableUnits = new Set(["day", "week", "month", "year"]);
-    if (
-      pluralizableUnits.has(unit) &&
-      absValue !== 1 &&
-      !unit.includes("/") &&
-      !unit.includes("^") &&
-      !unit.includes("*")
-    ) {
-      unit = `${unit}s`;
-    }
-
+    unit = formatUnitLabel(unit, value);
     return `${formattedValue} ${unit}`;
   }
 

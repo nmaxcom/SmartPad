@@ -346,10 +346,12 @@ export class UnitValue extends SemanticValue {
     const trimmed = str.trim();
     if (!trimmed) return null;
 
-    const match = trimmed.match(/^([+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)(.*)$/);
+    const match = trimmed.match(
+      /^([+-]?(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d+)?(?:[eE][+-]?\d+)?)(.*)$/
+    );
     if (!match) return null;
 
-    const value = parseFloat(match[1]);
+    const value = parseFloat(match[1].replace(/,/g, ""));
     const unit = match[2].trim();
 
     if (!unit) return null;
