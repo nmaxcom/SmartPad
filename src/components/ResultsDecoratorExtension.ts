@@ -319,10 +319,14 @@ export const ResultsDecoratorExtension = Extension.create({
 
               const isError = matched.type === "error";
               const normalizedResult = resultText.trim();
-              const existingResult = slice.childCount === 1 ? slice.child(0) : null;
+              let existingResult: ProseMirrorNode | null = null;
+              slice.forEach((child) => {
+                if (!existingResult && resultNodeType && child.type === resultNodeType) {
+                  existingResult = child;
+                }
+              });
               const existingText = existingResult ? existingResult.textContent || "" : "";
-              const previousValue =
-                existingText.trim() || resultHistory.get(historyKey);
+              const previousValue = existingText.trim() || resultHistory.get(historyKey);
               const hasChanged =
                 previousValue !== undefined && previousValue !== normalizedResult && !isError;
               const deltaValue = hasChanged

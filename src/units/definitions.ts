@@ -183,6 +183,8 @@ export class UnitRegistry {
   private prefixedCache = new Map<string, UnitDefinition>();
   private dynamicUnits = new Map<string, UnitDefinition>(); // lowercased symbol -> unit
   private blockedUnits = new Map<string, string>();
+  private staticUnits = new Set<string>();
+  private staticAliases = new Set<string>();
 
   private getDirect(symbol: string): UnitDefinition | undefined {
     const canonical = this.aliases.get(symbol) || symbol;
@@ -311,10 +313,12 @@ export class UnitRegistry {
    */
   register(unit: UnitDefinition, aliases: string[] = []): void {
     this.units.set(unit.symbol, unit);
+    this.staticUnits.add(unit.symbol);
 
     // Register aliases
     for (const alias of aliases) {
       this.aliases.set(alias, unit.symbol);
+      this.staticAliases.add(alias);
     }
   }
 
@@ -383,6 +387,39 @@ export class UnitRegistry {
    */
   has(symbol: string): boolean {
     return !!this.get(symbol);
+  }
+
+  isBuiltinSymbol(symbol: string): boolean {
+    if (!symbol) return false;
+    const hasUpper = /[A-Z]/.test(symbol);
+    const candidates = hasUpper ? [symbol] : [symbol, symbol.toLowerCase()];
+    for (const cand of candidates) {
+      if (this.staticUnits.has(cand) || this.staticAliases.has(cand)) {
+        return true;
+      }
+    }
+    for (const prefix of SI_PREFIXES_DESC) {
+      if (!symbol.startsWith(prefix.symbol)) continue;
+      const baseSymbol = symbol.slice(prefix.symbol.length);
+      if (!baseSymbol) continue;
+      if (this.staticUnits.has(baseSymbol)) return true;
+      if (!/[A-Z]/.test(baseSymbol)) {
+        const lowerBase = baseSymbol.toLowerCase();
+        if (this.staticUnits.has(lowerBase)) return true;
+      }
+    }
+    return false;
+  }
+
+  isKnownSymbol(symbol: string): boolean {
+    if (!symbol) return false;
+    const dynamic = this.resolveDynamicUnit(symbol);
+    if (dynamic) return true;
+    const direct = this.getDirect(symbol);
+    if (direct) return true;
+    const prefixed = this.resolvePrefixedUnit(symbol);
+    if (prefixed) return true;
+    return false;
   }
 
   /**

@@ -22,6 +22,7 @@ import { SymbolicValue } from './SymbolicValue';
 import { ListValue } from './ListValue';
 import { getListMaxLength } from './listConfig';
 import { SmartPadQuantity } from '../units/unitsnetAdapter';
+import { defaultUnitRegistry } from '../units/definitions';
 
 // Re-export base types
 export { SemanticValue, type SemanticValueType, type DisplayOptions };
@@ -189,6 +190,9 @@ const parseSingleValue = (input: string): SemanticValue | null => {
     }
     const unitString = unit.replace(/\s+/g, "");
     if (!unitString || !/[a-zA-Z°µμΩ]/.test(unitString)) return null;
+    if (!/[*/^]/.test(unitString) && !defaultUnitRegistry.isKnownSymbol(unitString)) {
+      return null;
+    }
     try {
       SmartPadQuantity.fromValueAndUnit(1, unitString);
     } catch {
@@ -213,6 +217,9 @@ const parseSingleValue = (input: string): SemanticValue | null => {
     if (!left.match(/^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/)) return null;
     const unitString = unit.replace(/\s+/g, "");
     if (!unitString || !/[a-zA-Z°µμΩ]/.test(unitString)) return null;
+    if (!/[*/^]/.test(unitString) && !defaultUnitRegistry.isKnownSymbol(unitString)) {
+      return null;
+    }
     try {
       SmartPadQuantity.fromValueAndUnit(1, `1/${unitString}`);
     } catch {

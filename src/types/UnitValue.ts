@@ -347,7 +347,7 @@ export class UnitValue extends SemanticValue {
     if (!trimmed) return null;
 
     const match = trimmed.match(
-      /^([+-]?(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d+)?(?:[eE][+-]?\d+)?)(.*)$/
+      /^([+-]?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?:[eE][+-]?\d+)?)(.*)$/
     );
     if (!match) return null;
 

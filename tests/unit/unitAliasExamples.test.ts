@@ -149,6 +149,23 @@ describe("Unit alias examples", () => {
     expect(result).toMatch(/month/);
   });
 
+  test("currency rates can be converted using bare time units", () => {
+    const context = createContext();
+    evaluateLine("result = $33400", context, 1);
+    const annual = expectMathResult(
+      evaluateLine("annual salary = result / year =>", context, 2)
+    );
+    expect(annual).toMatch(/\$?33,?400\s*\/\s*year/);
+    const monthly = expectMathResult(
+      evaluateLine("monthly salary = annual salary to $/month =>", context, 3)
+    );
+    expect(monthly).toMatch(/\$?\d+(\.\d+)?\s*\/\s*month/);
+    const weekly = expectMathResult(
+      evaluateLine("weekly salary = annual salary to $/week =>", context, 4)
+    );
+    expect(weekly).toMatch(/\$?\d+(\.\d+)?\s*\/\s*week/);
+  });
+
   test("cloud pricing example uses chained aliases", () => {
     const context = createContext();
     evaluateLine("Mreq = 1e6 request", context, 1);

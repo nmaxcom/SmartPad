@@ -352,6 +352,11 @@ workweek = 5 workday
 salary = $20/h
 salary to $/workweek => $800/workweek
 salary to $/month => $4800/month   # using 30-day month
+
+# Converting a plain currency total into a periodic rate:
+# first attach the time unit, then convert.
+annual salary = $33400/year
+monthly salary = annual salary to $/month
 ```
 
 ---

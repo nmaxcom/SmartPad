@@ -1102,6 +1102,7 @@ export class SolveEvaluator implements NodeEvaluator {
     const mergedContext: EvaluationContext = {
       ...context,
       variableContext: mergeVariableContext(context, localValues),
+      implicitUnitSymbols: false,
     };
 
     const components = parseExpressionComponents(expression);

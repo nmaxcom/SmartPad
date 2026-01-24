@@ -36,14 +36,32 @@ import { splitTopLevelCommas } from '../utils/listExpression';
 import { rewriteLocaleDateLiterals } from "../utils/localeDateNormalization";
 import { containsRangeOperatorOutsideString } from "../utils/rangeExpression";
 import { expressionContainsUnitsNet } from "../units/unitsnetEvaluator";
+import { defaultUnitRegistry } from "../units/definitions";
 
 const containsRangeOperator = (text?: string): boolean =>
   !!text && containsRangeOperatorOutsideString(text);
+
+const hasDynamicTimeAlias = (text: string): boolean => {
+  const matches = text.match(
+    /\b(years?|months?|weeks?|days?|hours?|minutes?|seconds?|ms)\b/gi
+  );
+  if (!matches) return false;
+  return matches.some((token) => defaultUnitRegistry.get(token)?.category === "alias");
+};
 
 export class DateMathEvaluator implements NodeEvaluator {
   canHandle(node: ASTNode): boolean {
     if (isVariableAssignmentNode(node)) {
       const raw = (node.rawValue || '').trim();
+      if (raw.includes(',') && !/[a-zA-Z]/.test(raw) && splitTopLevelCommas(raw).length > 1) {
+        return false;
+      }
+      if (hasDynamicTimeAlias(raw)) {
+        return false;
+      }
+      if (parseDateLiteral(raw)) {
+        return true;
+      }
       if (expressionContainsUnitsNet(raw)) {
         return false;
       }
@@ -58,13 +76,25 @@ export class DateMathEvaluator implements NodeEvaluator {
 
     if (isCombinedAssignmentNode(node) || isExpressionNode(node)) {
       const expr = isExpressionNode(node) ? node.expression : node.expression;
-      if (expressionContainsUnitsNet(expr)) {
+      if (hasDynamicTimeAlias(expr)) {
         return false;
+      }
+      if (looksLikeDateExpression(expr)) {
+        if (containsRangeOperator(expr)) {
+          return false;
+        }
+        if (expr.includes(',') && splitTopLevelCommas(expr).length > 1) {
+          return false;
+        }
+        return true;
       }
       if (containsRangeOperator(expr)) {
         return false;
       }
       if (expr.includes(',') && splitTopLevelCommas(expr).length > 1) {
+        return false;
+      }
+      if (expressionContainsUnitsNet(expr)) {
         return false;
       }
       return looksLikeDateExpression(expr);
@@ -152,6 +182,10 @@ export class DateMathEvaluator implements NodeEvaluator {
     }
 
     if (SemanticValueTypes.isError(result)) {
+      const message = (result as ErrorValue).getMessage();
+      if (/Cannot convert a duration to/i.test(message)) {
+        return null;
+      }
       return this.createErrorNode((result as ErrorValue).getMessage(), node.variableName, context.lineNumber, node.expression);
     }
 
@@ -196,6 +230,10 @@ export class DateMathEvaluator implements NodeEvaluator {
     }
 
     if (SemanticValueTypes.isError(result)) {
+      const message = (result as ErrorValue).getMessage();
+      if (/Cannot convert a duration to/i.test(message)) {
+        return null;
+      }
       return this.createErrorNode((result as ErrorValue).getMessage(), node.expression, context.lineNumber);
     }
 

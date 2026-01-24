@@ -49,6 +49,7 @@ import { containsRangeOperatorOutsideString } from "../utils/rangeExpression";
 import { parseUnitTargetWithScale } from "../units/unitConversionTarget";
 import { attemptPerUnitConversion } from "./unitConversionUtils";
 import { extractConversionSuffix } from "../utils/conversionSuffix";
+import { defaultUnitRegistry } from "../units/definitions";
 
 function applyAbsToSemanticValue(value: SemanticValue): SemanticValue {
   if (!value.isNumeric()) {
@@ -235,6 +236,14 @@ export class SimpleExpressionParser {
     const parsed = SemanticParsers.parse(normalized);
     if (parsed) {
       return parsed;
+    }
+
+    if (context.implicitUnitSymbols !== false && defaultUnitRegistry.isBuiltinSymbol(normalized)) {
+      try {
+        return UnitValue.fromValueAndUnit(1, normalized);
+      } catch {
+        // fall through to symbolic
+      }
     }
 
     if (normalized === "PI") {
@@ -449,6 +458,16 @@ export class SimpleExpressionParser {
       case "variable": {
         const variable = context.variableContext.get(component.value);
         if (!variable) {
+          if (
+            context.implicitUnitSymbols !== false &&
+            defaultUnitRegistry.isBuiltinSymbol(component.value)
+          ) {
+            try {
+              return UnitValue.fromValueAndUnit(1, component.value);
+            } catch {
+              return SymbolicValue.from(component.value);
+            }
+          }
           if (component.value === "PI") {
             return NumberValue.from(Math.PI);
           }
@@ -2255,6 +2274,13 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
     const variable = context.variableContext.get(normalized);
     
     if (!variable) {
+      if (context.implicitUnitSymbols !== false && defaultUnitRegistry.isBuiltinSymbol(normalized)) {
+        try {
+          return UnitValue.fromValueAndUnit(1, normalized);
+        } catch {
+          return SymbolicValue.from(normalized);
+        }
+      }
       return SymbolicValue.from(normalized);
     }
     

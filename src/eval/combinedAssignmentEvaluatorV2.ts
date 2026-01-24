@@ -139,8 +139,8 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
 
       if (!semanticValue) {
         semanticValue =
-          SemanticParsers.parse(expression) ||
-          this.resolveVariableReference(expression, context);
+          this.resolveVariableReference(expression, context) ||
+          SemanticParsers.parse(expression);
 
         if (!semanticValue && components.length > 0) {
           semanticValue = SimpleExpressionParser.parseComponents(

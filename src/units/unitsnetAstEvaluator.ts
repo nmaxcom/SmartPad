@@ -771,6 +771,10 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
       return false;
     }
     const unit = quantity.unit;
+    const def = defaultUnitRegistry.get(unit);
+    if (def?.category === "count") {
+      return false;
+    }
     if (unit === "C" || unit === "F" || unit === "K") {
       return false;
     }
@@ -861,6 +865,9 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     expression: string,
     context: EvaluationContext
   ): boolean {
+    if (/\bmod\b/i.test(expression)) {
+      return true;
+    }
     const variableNames = this.collectVariableNames(components);
 
     const { hasCurrency, hasUnit, hasPercentage, hasList } = this.collectVariableMetadata(

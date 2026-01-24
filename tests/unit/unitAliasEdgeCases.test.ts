@@ -86,12 +86,15 @@ describe("Unit alias edge cases", () => {
     expect((back as any).result).toMatch(/1000\s*s/);
   });
 
-  test("rejects numeric-only aliases in unit positions", () => {
+  test("numeric-only aliases do not block count-based units", () => {
     const context = createContext();
     evaluateLine("dozen = 12", context, 1);
 
     const result = evaluateLine("3 dozen =>", context, 2);
-    expect(result?.type).toBe("error");
+    expect(result?.type).toBe("mathResult");
+    if (result?.type === "mathResult") {
+      expect((result as any).result).toMatch(/3\s*dozens?/);
+    }
   });
 
   test("supports scaled conversion targets with numeric factors", () => {

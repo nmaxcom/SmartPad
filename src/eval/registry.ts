@@ -30,6 +30,7 @@ export interface EvaluationContext {
   astNodes?: ASTNode[];
   lineNumber: number;
   decimalPlaces: number;
+  implicitUnitSymbols?: boolean;
   scientificUpperThreshold?: number;
   scientificLowerThreshold?: number;
   scientificTrimTrailingZeros?: boolean;

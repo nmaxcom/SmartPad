@@ -24,24 +24,8 @@ sheets/tabs, remember docs
 plots
 FX
 # bugs/ideas
-flashing on change not working
-
-(final speed - initial speed) / accel time x=initial
-Missing variable "initial"
-
-make mod backspace to also delete line if empty
-
-10 mod 3 => 1
-
-capital=30000€=>€30000
-roi=7%
-ganancias brutas=capital*roi=>€2100
-hacienda=16%
-ganancia limpia = hacienda off ganancias brutas per year=>hacienda off ganancias brutas per year
-ganancia limpia=>16% off €2100 per year
-porc=ganancia limpia / ganancias brutas as %=>ganancia limpia / ganancias brutas as %
-roi real = ganancia limpia / capital as %=>ganancia limpia / capital as %
-ganancia mensual = ganancia limpia/12=>ganancia limpia/12
+flow2 = 1000 mL/min
+flow2 to L/h => ⚠️ Unexpected token: 2 to
 
 - figure out / unify all the as, in, to, etc keywords
 

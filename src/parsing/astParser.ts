@@ -513,8 +513,15 @@ function normalizeTrailingUnitSuffix(expression: string): string {
   const before = match[1].trimEnd();
   const unitStr = match[2];
   if (!before) return expression;
+  if (/\s$/.test(match[1])) {
+    return expression;
+  }
 
   if (/[A-Za-z°µμΩ]/.test(before)) {
+    return expression;
+  }
+
+  if (/[+\-*/^%]$/.test(before)) {
     return expression;
   }
 

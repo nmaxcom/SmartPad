@@ -32,6 +32,7 @@ export function looksLikeDateExpression(expression: string): boolean {
   if (parsed && parsed.getType() === "unit" && UnitValue.isUnitString(text)) {
     return false;
   }
+  if (/\b\d+(?:\.\d+)?\s*W\b/.test(text)) return false;
   if (/\b(today|tomorrow|yesterday|now|next|last)\b/i.test(text)) return true;
   if (/\b\d{4}-\d{2}-\d{2}\b/.test(text)) return true;
   if (/\b\d{1,2}[\/.-]\d{1,2}[\/.-]\d{4,}\b/.test(text)) return true;

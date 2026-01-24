@@ -15,6 +15,7 @@ import { NodeEvaluator, EvaluationContext } from "./registry";
 import {
   RenderNode,
   VariableRenderNode,
+  CombinedRenderNode,
   ErrorRenderNode,
 } from "./renderNodes";
 import {
@@ -108,6 +109,7 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
     try {
       // The value is already parsed as a SemanticValue!
       let semanticValue = varNode.parsedValue;
+      let evaluatedExpression = false;
 
       if (semanticValue instanceof UnitValue && expressionRawValue) {
         const reparsed = SemanticParsers.parse(expressionRawValue);
@@ -228,6 +230,7 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
             }
           }
 
+          evaluatedExpression = true;
           if (resolvedValue) {
             semanticValue = resolvedValue;
           }
@@ -301,6 +304,17 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
       }
       
       // Create render node showing the assignment
+      if (evaluatedExpression && semanticValue instanceof UnitValue) {
+        return this.createCombinedRenderNode(
+          varNode.variableName,
+          expressionRawValue,
+          semanticValue,
+          context.lineNumber,
+          varNode.raw,
+          this.getDisplayOptions(context)
+        );
+      }
+
       return this.createVariableRenderNode(
         varNode.variableName,
         semanticValue,
@@ -362,6 +376,15 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
     if (!expression) {
       return false;
     }
+    for (const name of context.variableContext.keys()) {
+      const normalizedName = name.replace(/\s+/g, " ").trim();
+      if (!normalizedName || !normalizedName.includes(" ")) {
+        continue;
+      }
+      if (expression.replace(/\s+/g, " ").includes(normalizedName)) {
+        return false;
+      }
+    }
     if (/[$€£¥₹₿]/.test(expression) || /\b(CHF|CAD|AUD)\b/.test(expression)) {
       return false;
     }
@@ -409,6 +432,27 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
       type: "variable",
       variableName,
       value: valueString,
+      displayText,
+      line: lineNumber,
+      originalRaw,
+    };
+  }
+
+  private createCombinedRenderNode(
+    variableName: string,
+    expression: string,
+    value: import("../types").SemanticValue,
+    lineNumber: number,
+    originalRaw: string,
+    displayOptions: DisplayOptions
+  ): CombinedRenderNode {
+    const valueString = value.toString(displayOptions);
+    const displayText = `${variableName} = ${valueString}`;
+    return {
+      type: "combined",
+      variableName,
+      expression,
+      result: valueString,
       displayText,
       line: lineNumber,
       originalRaw,
