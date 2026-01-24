@@ -30,6 +30,8 @@ This makes time rates, per-person costs, per-batch production, per-distance emis
 > **Any value that evaluates to a unitful quantity may act as a unit alias.**
 
 No new syntax. No new operators.
+
+Clarification: `per` (or `/`) forms a **rate literal only when the unit token is known** (built-in unit or user-defined alias). Unknown tokens remain plain identifiers in math expressions, so `1 / period` is treated as algebra unless `period` is defined as a unit alias.
 Just predictable substitution + unit algebra.
 
 ---

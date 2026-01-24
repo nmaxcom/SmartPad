@@ -63,6 +63,7 @@ Non-goals (for now): calendars/holiday sets, named schedules, inference prompts,
 * Date math (DateValue + month/year) remains calendar-aware.
 * A user-defined alias named `month` or `year` overrides defaults for unit conversions.
 * `to` / `in` bind to the full expression on their left; only one per expression.
+* `per` (or `/`) forms a **rate literal only if the unit token is known** (built-in or user-defined alias). Unknown tokens are treated as plain identifiers in expressions.
 
 # 1) Value Types (existing + clarified)
 
