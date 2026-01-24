@@ -170,6 +170,18 @@ rate to defect/kunit => 5.83 defect/kunit
 
 The system preserves the requested target formatting for reporting and readability rather than simplifying it away.
 
+### 4.2 Unit token adjacency (lexical sugar)
+
+Smartpad accepts numeric literals immediately followed by a unit token, with no whitespace:
+
+```text
+22workdays
+125s
+0.75kW
+```
+
+This works for built-in units and user-defined unit aliases (including plurals). It is purely syntactic sugar — the semantic meaning still comes from the unit or alias definition.
+
 ---
 
 ## 5. Semantics: Alias Substitution Model
@@ -294,6 +306,7 @@ Rules already defined:
 
 * end-of-month carry
 * real calendar days
+* business days are calendar stepping for dates
 
 #### B) Unit / Rate Conversions (fixed-length)
 
@@ -448,6 +461,38 @@ rate to defect/(1000 unit) => 5.83 defect/(1000 unit)
 ```
 
 ---
+
+### 10.9 Operational budgeting
+
+```text
+server cost = $0.15/h
+budget = $500
+max uptime = budget / server cost => 3333.33 h
+max uptime in days => 138.89 days
+max uptime in months => 4.63 months
+```
+
+---
+
+### 10.10 Data usage plans
+
+```text
+usage = 2.5 GB/day
+limit = 100 GB/month
+daily allowance = limit to GB/day => 3.33 GB/day
+overage = usage - daily allowance => -0.83 GB/day
+```
+
+---
+
+### 10.11 Practice / mastery pacing
+
+```text
+practice = 10000 h
+daily = 3 h/day
+time = practice / daily => 3333.33 days
+time in years => 9.13 years
+```
 
 ## 11. Guardrails (keep Smartpad sane)
 
