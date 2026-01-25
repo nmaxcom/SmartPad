@@ -128,9 +128,11 @@ const inferAutoDomain = (value: SemanticValue): PlotRange => {
     return { min: 0, max: 1 };
   }
 
+  const widen = (span: number): number => span * 1.5;
+
   const type = value.getType();
   if (type === "percentage") {
-    const span = Math.max(0.1, Math.abs(numeric) * 0.8);
+    const span = widen(Math.max(0.1, Math.abs(numeric) * 0.8));
     return normalizeRange({
       min: clamp(numeric - span, 0, 1),
       max: clamp(numeric + span, 0, 1),
@@ -138,16 +140,16 @@ const inferAutoDomain = (value: SemanticValue): PlotRange => {
   }
 
   if (type === "date") {
-    const span = 1000 * 60 * 60 * 24 * 30;
+    const span = widen(1000 * 60 * 60 * 24 * 30);
     return normalizeRange({ min: numeric - span, max: numeric + span });
   }
 
   if (type === "time") {
-    const span = 60 * 60;
+    const span = widen(60 * 60);
     return normalizeRange({ min: numeric - span, max: numeric + span });
   }
 
-  const span = Math.max(2, Math.abs(numeric) * 0.8);
+  const span = widen(Math.max(2, Math.abs(numeric) * 0.8));
   return normalizeRange({ min: numeric - span, max: numeric + span });
 };
 
