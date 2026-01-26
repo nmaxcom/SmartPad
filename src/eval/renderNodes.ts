@@ -93,6 +93,13 @@ export interface PlotPoint {
   readonly y: number | null;
 }
 
+export interface PlotSeries {
+  readonly label?: string;
+  readonly expression: string;
+  readonly data?: PlotPoint[];
+  readonly currentY?: number | null;
+}
+
 /**
  * Render node for persistent plot views declared by @view directives
  */
@@ -102,6 +109,7 @@ export interface PlotViewRenderNode extends BaseRenderNode {
   readonly x?: string;
   readonly size?: PlotSize;
   readonly expression?: string;
+  readonly series?: PlotSeries[];
   readonly targetLine?: number;
   readonly status: "connected" | "disconnected";
   readonly message?: string;
@@ -121,6 +129,8 @@ export interface ChartRenderNode extends BaseRenderNode {
   readonly data: any[];
   readonly displayText: string;
 }
+
+
 
 /**
  * Union type for all possible render nodes

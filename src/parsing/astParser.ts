@@ -220,13 +220,20 @@ function parseViewDirective(
     }
 
     const params: Record<string, string> = {};
-    for (let i = paramStart; i < parts.length; i++) {
-      const part = parts[i];
-      const eqIndex = part.indexOf("=");
-      if (eqIndex <= 0) continue;
-      const key = part.substring(0, eqIndex).trim();
-      const value = part.substring(eqIndex + 1).trim();
+    const remainder = parts.slice(paramStart).join(" ");
+    const keyRegex = /(\w+)=/g;
+    const matches = Array.from(remainder.matchAll(keyRegex));
+    for (let i = 0; i < matches.length; i++) {
+      const match = matches[i];
+      const key = match[1];
       if (!key) continue;
+      const valueStart = (match.index ?? 0) + match[0].length;
+      const valueEnd = i + 1 < matches.length ? (matches[i + 1].index ?? remainder.length) : remainder.length;
+      let value = remainder.slice(valueStart, valueEnd).trim();
+      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1);
+      }
+      if (!value) continue;
       params[key] = value;
     }
 

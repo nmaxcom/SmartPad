@@ -84,6 +84,7 @@ export interface SettingsState {
   showResultBackground: boolean;
   showErrorBorders: boolean;
   showErrorBackground: boolean;
+  showPlotDetails: boolean;
   // Future: theme, fontSize, autoSave, etc.
 }
 

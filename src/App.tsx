@@ -76,6 +76,7 @@ function AppContent() {
     settings.showResultBackground ? "results-bg-on" : "results-bg-off",
     settings.showErrorBorders ? "errors-borders-on" : "errors-borders-off",
     settings.showErrorBackground ? "errors-bg-on" : "errors-bg-off",
+    settings.showPlotDetails ? "plot-details-on" : "plot-details-off",
   ].join(" ");
 
   return (

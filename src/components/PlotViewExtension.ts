@@ -8,7 +8,9 @@ import {
   isCombinedAssignmentNode,
   ExpressionNode,
   CombinedAssignmentNode,
+  isVariableAssignmentNode,
 } from "../parsing/ast";
+import { parseExpressionComponents } from "../parsing/expressionComponents";
 import { Variable } from "../state/types";
 import {
   PlotViewRenderNode,
@@ -21,11 +23,42 @@ import {
 import { computePlotData } from "../plotting/plottingUtils";
 import { defaultRegistry } from "../eval/registry";
 import { ReactiveVariableStore } from "../state/variableStore";
+import {
+  SemanticParsers,
+  SemanticValueTypes,
+  CurrencyValue,
+  CurrencyUnitValue,
+  UnitValue,
+  PercentageValue,
+} from "../types";
 import { getDateLocaleEffective } from "../types/DateValue";
 
 const plotViewPluginKey = new PluginKey("plotView");
 
 type PlotSource = "persistent" | "transient";
+
+const PLOT_SERIES_COLORS = [
+  "var(--plot-series-1)",
+  "var(--plot-series-2)",
+  "var(--plot-series-3)",
+  "var(--plot-series-4)",
+  "var(--plot-series-5)",
+];
+
+interface PlotSeriesModel {
+  label?: string;
+  expression: string;
+  data?: PlotPoint[];
+  currentY?: number | null;
+  color?: string;
+  unit?: PlotUnitFormat | null;
+}
+
+interface PlotUnitFormat {
+  prefix?: string;
+  suffix?: string;
+  scale?: number;
+}
 
 interface PlotViewModel {
   source: PlotSource;
@@ -33,6 +66,8 @@ interface PlotViewModel {
   size: PlotSize;
   x?: string;
   expression?: string;
+  series: PlotSeriesModel[];
+  xUnit?: PlotUnitFormat | null;
   status: "connected" | "disconnected";
   message?: string;
   domain?: PlotRange;
@@ -43,6 +78,32 @@ interface PlotViewModel {
   currentX?: number;
   currentY?: number | null;
   targetLine?: number;
+}
+
+interface PlotSeriesLayout {
+  index: number;
+  label?: string;
+  expression: string;
+  color: string;
+  points: Array<{ x: number; y: number }>;
+}
+
+interface PlotSvgLayout {
+  width: number;
+  height: number;
+  padding: { left: number; right: number; top: number; bottom: number };
+  viewRange: PlotRange;
+  yMin: number;
+  yMax: number;
+  xScale: (value: number) => number;
+  yScale: (value: number) => number;
+  series: PlotSeriesLayout[];
+}
+
+interface PlotSvgResult {
+  svg: SVGSVGElement;
+  layout: PlotSvgLayout;
+  lineElements: Map<number, SVGPathElement>;
 }
 
 interface PlotViewState {
@@ -68,6 +129,55 @@ const buildExpressionNode = (node: CombinedAssignmentNode): ExpressionNode => ({
   components: node.components,
   expectedType: node.expectedType,
 });
+
+const buildExpressionNodeFromText = (expression: string, line: number): ExpressionNode | null => {
+  try {
+    return {
+      type: "expression",
+      line,
+      raw: expression,
+      expression,
+      components: parseExpressionComponents(expression),
+    };
+  } catch (error) {
+    return null;
+  }
+};
+
+const buildEvaluationContext = (
+  expressionNode: ExpressionNode,
+  variableContext: Map<string, Variable>,
+  variableStore: ReactiveVariableStore,
+  settings: any
+) => ({
+  variableStore,
+  variableContext,
+  functionStore: undefined,
+  equationStore: undefined,
+  lineNumber: expressionNode.line,
+  decimalPlaces: settings.decimalPlaces,
+  scientificUpperThreshold: settings.scientificUpperThreshold,
+  scientificLowerThreshold: settings.scientificLowerThreshold,
+  scientificTrimTrailingZeros: settings.scientificTrimTrailingZeros,
+  groupThousands: settings.groupThousands,
+  dateDisplayFormat: settings.dateDisplayFormat,
+  dateLocale: settings.dateLocale,
+  functionCallDepth: 0,
+});
+
+const evaluateExpressionSemantic = (
+  expressionNode: ExpressionNode,
+  variableContext: Map<string, Variable>,
+  settings: any
+) => {
+  const store = new ReactiveVariableStore();
+  variableContext.forEach((variable) => store.setVariableWithMetadata(variable));
+  const context = buildEvaluationContext(expressionNode, variableContext, store, settings);
+  const renderNode = defaultRegistry.evaluate(expressionNode, context as any);
+  if (!renderNode || renderNode.type === "error") return null;
+  const rawResult = (renderNode as any).result ?? "";
+  return SemanticParsers.parse(String(rawResult));
+};
 
 const resolveExpressionNode = (node: ProseMirrorNode, lineNumber: number): ExpressionNode | null => {
   const astNode = parseLine(node.textContent, lineNumber);
@@ -99,23 +209,47 @@ const buildLineIndex = (doc: ProseMirrorNode) => {
 const buildPlotModel = (
   plotNode: PlotViewRenderNode,
   source: PlotSource
-): PlotViewModel => ({
-  source,
-  kind: plotNode.kind,
-  size: plotNode.size || "md",
-  x: plotNode.x,
-  expression: plotNode.expression,
-  status: plotNode.status,
-  message: plotNode.message,
-  domain: plotNode.domain,
-  view: plotNode.view,
-  yDomain: deriveYDomain(plotNode.data),
-  yView: deriveYDomain(plotNode.data),
-  data: plotNode.data,
-  currentX: plotNode.currentX,
-  currentY: plotNode.currentY,
-  targetLine: plotNode.targetLine,
-});
+): PlotViewModel => {
+  const series: PlotSeriesModel[] =
+    plotNode.series && plotNode.series.length
+      ? plotNode.series.map((entry, index) => ({
+          label: entry.label,
+          expression: entry.expression,
+          data: entry.data,
+          currentY: entry.currentY,
+          color: PLOT_SERIES_COLORS[index % PLOT_SERIES_COLORS.length],
+        }))
+      : plotNode.data
+        ? [
+            {
+              label: plotNode.expression,
+              expression: plotNode.expression || "y",
+              data: plotNode.data,
+              currentY: plotNode.currentY,
+              color: PLOT_SERIES_COLORS[0],
+            },
+          ]
+        : [];
+  const derivedY = deriveYDomainFromSeries(series);
+  return {
+    source,
+    kind: plotNode.kind,
+    size: plotNode.size || "md",
+    x: plotNode.x,
+    expression: plotNode.expression,
+    series,
+    status: plotNode.status,
+    message: plotNode.message,
+    domain: plotNode.domain,
+    view: plotNode.view,
+    yDomain: derivedY,
+    yView: derivedY,
+    data: series[0]?.data,
+    currentX: plotNode.currentX,
+    currentY: series[0]?.currentY ?? plotNode.currentY,
+    targetLine: plotNode.targetLine,
+  };
+};
 
 const buildPlotKey = (model: PlotViewModel, fallbackLine?: number): string => {
   const line = model.targetLine ?? fallbackLine ?? 0;
@@ -124,11 +258,14 @@ const buildPlotKey = (model: PlotViewModel, fallbackLine?: number): string => {
     model.currentY !== undefined && model.currentY !== null
       ? Math.round(model.currentY * 1000)
       : "na";
+  const seriesKey = model.series
+    .map((series) => series.expression || "")
+    .join("|");
   const domainKey = model.domain ? `${model.domain.min}:${model.domain.max}` : "auto";
   const viewKey = model.view ? `${model.view.min}:${model.view.max}` : "auto";
   const yDomainKey = model.yDomain ? `${model.yDomain.min}:${model.yDomain.max}` : "auto";
   const yViewKey = model.yView ? `${model.yView.min}:${model.yView.max}` : "auto";
-  return `plot-${model.source}-${line}-${xKey}-${yKey}-${domainKey}-${viewKey}-${yDomainKey}-${yViewKey}`;
+  return `plot-${model.source}-${line}-${xKey}-${yKey}-${seriesKey}-${domainKey}-${viewKey}-${yDomainKey}-${yViewKey}`;
 };
 
 const deriveYDomain = (data?: PlotPoint[]): PlotRange | undefined => {
@@ -149,6 +286,71 @@ const deriveYDomain = (data?: PlotPoint[]): PlotRange | undefined => {
   return { min, max };
 };
 
+const deriveYDomainFromSeries = (series: PlotSeriesModel[]): PlotRange | undefined => {
+  const points = series.flatMap((entry) =>
+    (entry.data || []).filter((point) => point.y !== null)
+  ) as Array<{ x: number; y: number }>;
+  if (points.length === 0) return undefined;
+  let min = points[0].y;
+  let max = points[0].y;
+  points.forEach((point) => {
+    min = Math.min(min, point.y);
+    max = Math.max(max, point.y);
+  });
+  if (min === max) {
+    const delta = min === 0 ? 1 : Math.abs(min) * 0.1;
+    min -= delta;
+    max += delta;
+  }
+  return { min, max };
+};
+
+const formatPlotValue = (value: number) => {
+  if (!Number.isFinite(value)) return "";
+  const abs = Math.abs(value);
+  if (abs > 0 && (abs >= 1e6 || abs < 1e-3)) {
+    return value.toExponential(2);
+  }
+  const fixed = abs >= 100 ? value.toFixed(0) : value.toFixed(2);
+  return fixed.replace(/\.00$/, "").replace(/(\.\d)0$/, "$1");
+};
+
+const formatPlotValueWithUnit = (value: number, unit?: PlotUnitFormat | null) => {
+  if (!Number.isFinite(value)) return "";
+  const scaled = value * (unit?.scale ?? 1);
+  const formatted = formatPlotValue(scaled);
+  const prefix = unit?.prefix ?? "";
+  const suffix = unit?.suffix ?? "";
+  return `${prefix}${formatted}${suffix}`;
+};
+
+const getPlotUnitFormat = (value: any): PlotUnitFormat | null => {
+  if (!value || typeof value.getType !== "function") return null;
+  if (SemanticValueTypes.isPercentage(value as PercentageValue)) {
+    return { suffix: "%", scale: 100 };
+  }
+  if (SemanticValueTypes.isCurrency(value as CurrencyValue)) {
+    const info = (value as CurrencyValue).getCurrencyInfo();
+    if (info.symbolPosition === "before") {
+      return { prefix: info.symbol };
+    }
+    return { suffix: ` ${info.symbol}` };
+  }
+  if (SemanticValueTypes.isCurrencyUnit(value as CurrencyUnitValue)) {
+    const unitValue = value as CurrencyUnitValue;
+    const info = new CurrencyValue(unitValue.getSymbol() as any, 0).getCurrencyInfo();
+    const unitSuffix = unitValue.isPerUnit() ? `/${unitValue.getUnit()}` : `*${unitValue.getUnit()}`;
+    if (info.symbolPosition === "before") {
+      return { prefix: info.symbol, suffix: unitSuffix };
+    }
+    return { suffix: ` ${info.symbol}${unitSuffix}` };
+  }
+  if (SemanticValueTypes.isUnit(value as UnitValue)) {
+    return { suffix: ` ${(value as UnitValue).getUnit()}` };
+  }
+  return null;
+};
+
 const computeModelFromExpression = (
   targetLine: number,
   xVariable: string,
@@ -158,6 +360,7 @@ const computeModelFromExpression = (
   yViewOverride: PlotRange | undefined,
   source: PlotSource,
   size: PlotSize,
+  seriesDefinitions: Array<{ label?: string; expression: string }> | undefined,
   lineIndex: ReturnType<typeof buildLineIndex>,
   variableContext: Map<string, Variable>,
   settings: any
@@ -167,44 +370,87 @@ const computeModelFromExpression = (
   const expressionNode = resolveExpressionNode(info.node, targetLine);
   if (!expressionNode) return null;
 
+  const seriesSpecs =
+    seriesDefinitions && seriesDefinitions.length
+      ? seriesDefinitions
+      : [{ label: expressionNode.expression, expression: expressionNode.expression }];
+  const seriesNodes = seriesSpecs.map((spec) => {
+    if (spec.expression === expressionNode.expression) return expressionNode;
+    return buildExpressionNodeFromText(spec.expression, targetLine);
+  });
+  if (seriesNodes.some((node) => !node)) return null;
+
   const isScrubbing =
     typeof document !== "undefined" && document.body?.classList.contains("number-scrubbing");
   const sampleCount = isScrubbing ? 40 : 60;
 
-  const plotResult = computePlotData({
-    expressionNode,
-    xVariable,
-    variableContext,
-    variableStore: (() => {
-      const store = new ReactiveVariableStore();
-      variableContext.forEach((variable) => store.setVariableWithMetadata(variable));
-      return store;
-    })(),
-    registry: defaultRegistry,
-    settings,
-    domainSpec: domainOverride ? `${domainOverride.min}..${domainOverride.max}` : undefined,
-    sampleCount,
-  });
+  const seriesResults = (seriesNodes as ExpressionNode[]).map((node) =>
+    computePlotData({
+      expressionNode: node,
+      xVariable,
+      variableContext,
+      variableStore: (() => {
+        const store = new ReactiveVariableStore();
+        variableContext.forEach((variable) => store.setVariableWithMetadata(variable));
+        return store;
+      })(),
+      registry: defaultRegistry,
+      settings,
+      domainSpec: domainOverride ? `${domainOverride.min}..${domainOverride.max}` : undefined,
+      sampleCount,
+    })
+  );
+  const firstResult = seriesResults[0];
+  if (!firstResult) return null;
+  const failedResult = seriesResults.find((result) => result.status === "disconnected");
 
   const viewOverrideSafe = viewOverride ? { ...viewOverride } : undefined;
-  const computedYDomain = yDomainOverride || deriveYDomain(plotResult.data);
+  const computedYDomain =
+    yDomainOverride ||
+    deriveYDomainFromSeries(
+      seriesSpecs.map((spec, index) => ({
+        label: spec.label,
+        expression: spec.expression,
+        data: seriesResults[index]?.data,
+        currentY: seriesResults[index]?.currentY,
+      }))
+    );
   const computedYView = yViewOverride || computedYDomain;
+  const xUnit = getPlotUnitFormat(variableContext.get(xVariable)?.value);
+  const seriesUnits = (seriesNodes as ExpressionNode[]).map((node, index) => {
+    const seriesLabel = seriesSpecs[index]?.label;
+    const directValue = seriesLabel ? variableContext.get(seriesLabel)?.value : undefined;
+    if (directValue) {
+      return getPlotUnitFormat(directValue);
+    }
+    return getPlotUnitFormat(evaluateExpressionSemantic(node, variableContext, settings));
+  });
+  const series: PlotSeriesModel[] = seriesSpecs.map((spec, index) => ({
+    label: spec.label,
+    expression: spec.expression,
+    data: seriesResults[index]?.data,
+    currentY: seriesResults[index]?.currentY,
+    color: PLOT_SERIES_COLORS[index % PLOT_SERIES_COLORS.length],
+    unit: seriesUnits[index],
+  }));
 
   return {
     source,
     kind: "plot",
     size,
     x: xVariable,
-    expression: expressionNode.expression,
-    status: plotResult.status,
-    message: plotResult.message,
-    domain: plotResult.domain,
-    view: viewOverrideSafe || plotResult.view,
+    expression: series[0]?.expression || expressionNode.expression,
+    series,
+    xUnit,
+    status: failedResult ? "disconnected" : firstResult.status,
+    message: failedResult?.message || firstResult.message,
+    domain: firstResult.domain,
+    view: viewOverrideSafe || firstResult.view,
     yDomain: computedYDomain,
     yView: computedYView,
-    data: plotResult.data,
-    currentX: plotResult.currentX,
-    currentY: plotResult.currentY,
+    data: series[0]?.data,
+    currentX: firstResult.currentX,
+    currentY: series[0]?.currentY ?? firstResult.currentY,
     targetLine,
   };
 };
@@ -215,17 +461,29 @@ const createPlotSvg = (
   height: number,
   viewOverride?: PlotRange,
   yViewOverride?: PlotRange
-): SVGSVGElement | null => {
-  if (!model.data || !model.domain) return null;
+): PlotSvgResult | null => {
+  if (!model.series.length) return null;
 
   const padding = { left: 64, right: 20, top: 22, bottom: 44 };
   const viewRange = viewOverride || model.view || model.domain;
+  if (!viewRange) return null;
 
-  const pointsInView = model.data.filter(
-    (point) => point.x >= viewRange.min && point.x <= viewRange.max && point.y !== null
-  ) as Array<{ x: number; y: number }>;
+  const seriesLayouts: PlotSeriesLayout[] = model.series.map((series, index) => {
+    const points = (series.data || []).filter(
+      (point) =>
+        point.y !== null && point.x >= viewRange.min && point.x <= viewRange.max
+    ) as Array<{ x: number; y: number }>;
+    return {
+      index,
+      label: series.label,
+      expression: series.expression,
+      color: series.color || PLOT_SERIES_COLORS[index % PLOT_SERIES_COLORS.length],
+      points,
+    };
+  });
 
-  if (pointsInView.length === 0) return null;
+  const visiblePoints = seriesLayouts.flatMap((series) => series.points);
+  if (visiblePoints.length === 0) return null;
 
   const yRangeBase = yViewOverride || model.yView || model.yDomain;
   let yMin: number;
@@ -234,7 +492,7 @@ const createPlotSvg = (
     yMin = yRangeBase.min;
     yMax = yRangeBase.max;
   } else {
-    const derived = deriveYDomain(pointsInView);
+    const derived = deriveYDomain(visiblePoints);
     if (!derived) return null;
     yMin = derived.min;
     yMax = derived.max;
@@ -257,16 +515,6 @@ const createPlotSvg = (
     padding.bottom -
     ((value - yMin) / (yMax - yMin)) * plotHeight;
 
-  const formatTick = (value: number) => {
-    if (!Number.isFinite(value)) return "";
-    const abs = Math.abs(value);
-    if (abs > 0 && (abs >= 1e6 || abs < 1e-3)) {
-      return value.toExponential(2);
-    }
-    const fixed = abs >= 100 ? value.toFixed(0) : value.toFixed(2);
-    return fixed.replace(/\.00$/, "").replace(/(\.\d)0$/, "$1");
-  };
-
   const buildTicks = (min: number, max: number, count: number) => {
     if (!Number.isFinite(min) || !Number.isFinite(max)) return [];
     if (min === max) return [min];
@@ -278,6 +526,8 @@ const createPlotSvg = (
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
   svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+  const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+  svg.appendChild(defs);
 
   const axisX = document.createElementNS("http://www.w3.org/2000/svg", "line");
   axisX.setAttribute("x1", `${padding.left}`);
@@ -285,6 +535,8 @@ const createPlotSvg = (
   axisX.setAttribute("y1", `${height - padding.bottom}`);
   axisX.setAttribute("y2", `${height - padding.bottom}`);
   axisX.setAttribute("class", "plot-view-axis");
+  axisX.setAttribute("data-axis", "x");
+  axisX.setAttribute("pointer-events", "stroke");
   svg.appendChild(axisX);
 
   const axisY = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -293,6 +545,8 @@ const createPlotSvg = (
   axisY.setAttribute("y1", `${padding.top}`);
   axisY.setAttribute("y2", `${height - padding.bottom}`);
   axisY.setAttribute("class", "plot-view-axis");
+  axisY.setAttribute("data-axis", "y");
+  axisY.setAttribute("pointer-events", "stroke");
   svg.appendChild(axisY);
 
   if (viewRange.min <= 0 && viewRange.max >= 0) {
@@ -333,7 +587,7 @@ const createPlotSvg = (
     label.setAttribute("y", `${height - padding.bottom + 18}`);
     label.setAttribute("text-anchor", "middle");
     label.setAttribute("class", "plot-view-axis-text");
-    label.textContent = formatTick(tick);
+    label.textContent = formatPlotValue(tick);
     svg.appendChild(label);
   });
 
@@ -354,7 +608,7 @@ const createPlotSvg = (
     label.setAttribute("y", `${y + 4}`);
     label.setAttribute("text-anchor", "end");
     label.setAttribute("class", "plot-view-axis-text");
-    label.textContent = formatTick(tick);
+    label.textContent = formatPlotValue(tick);
     svg.appendChild(label);
   });
 
@@ -372,81 +626,181 @@ const createPlotSvg = (
   yLabel.setAttribute("text-anchor", "middle");
   yLabel.setAttribute("class", "plot-view-axis-label");
   yLabel.setAttribute("transform", `rotate(-90 12 ${padding.top + plotHeight / 2})`);
-  yLabel.textContent = model.expression ? model.expression : "y";
+  if (model.series.length > 1) {
+    yLabel.textContent = "y";
+  } else {
+    const label = model.series[0]?.label || model.series[0]?.expression || model.expression;
+    yLabel.textContent = label || "y";
+  }
   svg.appendChild(yLabel);
 
-  const currentPoint =
-    model.currentX !== undefined &&
-    model.currentY !== undefined &&
-    model.currentY !== null &&
-    model.currentX >= viewRange.min &&
-    model.currentX <= viewRange.max
-      ? { x: model.currentX, y: model.currentY }
-      : null;
+  const lineElements = new Map<number, SVGPathElement>();
   const epsilon = 1e-9;
-  let pathData = "";
-  let hasStarted = false;
-  let insertedCurrent = false;
-  for (const point of model.data) {
-    if (point.y === null) {
-      hasStarted = false;
-      continue;
-    }
-    if (point.x < viewRange.min || point.x > viewRange.max) {
-      continue;
-    }
-    if (currentPoint && !insertedCurrent && currentPoint.x < point.x - epsilon) {
-      const x = xScale(currentPoint.x);
-      const y = yScale(currentPoint.y);
+
+  model.series.forEach((series, index) => {
+    const seriesLayout = seriesLayouts[index];
+    if (!seriesLayout || seriesLayout.points.length === 0) return;
+    const currentPoint =
+      model.currentX !== undefined &&
+      series.currentY !== undefined &&
+      series.currentY !== null &&
+      model.currentX >= viewRange.min &&
+      model.currentX <= viewRange.max
+        ? { x: model.currentX, y: series.currentY }
+        : null;
+
+    let pathData = "";
+    const pathPoints: Array<{ x: number; y: number }> = [];
+    let hasStarted = false;
+    let insertedCurrent = false;
+    for (const point of seriesLayout.points) {
+      if (currentPoint && !insertedCurrent && currentPoint.x < point.x - epsilon) {
+        const x = xScale(currentPoint.x);
+        const y = yScale(currentPoint.y);
+        if (!hasStarted) {
+          pathData += `M ${x} ${y}`;
+          hasStarted = true;
+        } else {
+          pathData += ` L ${x} ${y}`;
+        }
+        pathPoints.push({ x, y });
+        insertedCurrent = true;
+      }
+      let yValue = point.y;
+      if (currentPoint && !insertedCurrent && Math.abs(point.x - currentPoint.x) <= epsilon) {
+        yValue = currentPoint.y;
+        insertedCurrent = true;
+      }
+      const x = xScale(point.x);
+      const y = yScale(yValue);
       if (!hasStarted) {
         pathData += `M ${x} ${y}`;
         hasStarted = true;
       } else {
         pathData += ` L ${x} ${y}`;
       }
-      insertedCurrent = true;
+      pathPoints.push({ x, y });
     }
-    let yValue = point.y;
-    if (currentPoint && !insertedCurrent && Math.abs(point.x - currentPoint.x) <= epsilon) {
-      yValue = currentPoint.y;
-      insertedCurrent = true;
+    if (currentPoint && !insertedCurrent) {
+      const x = xScale(currentPoint.x);
+      const y = yScale(currentPoint.y);
+      if (!hasStarted) {
+        pathData += `M ${x} ${y}`;
+      } else {
+        pathData += ` L ${x} ${y}`;
+      }
+      pathPoints.push({ x, y });
     }
-    const x = xScale(point.x);
-    const y = yScale(yValue);
-    if (!hasStarted) {
-      pathData += `M ${x} ${y}`;
-      hasStarted = true;
-    } else {
-      pathData += ` L ${x} ${y}`;
+
+    if (pathData) {
+      if (pathPoints.length > 1) {
+        const gradientId = `plot-series-fill-${index}`;
+        const gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+        gradient.setAttribute("id", gradientId);
+        gradient.setAttribute("x1", "0");
+        gradient.setAttribute("y1", "0");
+        gradient.setAttribute("x2", "0");
+        gradient.setAttribute("y2", "1");
+        const stopTop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+        stopTop.setAttribute("offset", "0%");
+        stopTop.setAttribute("stop-color", seriesLayout.color);
+        stopTop.setAttribute("stop-opacity", "0.35");
+        const stopBottom = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+        stopBottom.setAttribute("offset", "100%");
+        stopBottom.setAttribute("stop-color", seriesLayout.color);
+        stopBottom.setAttribute("stop-opacity", "0");
+        gradient.appendChild(stopTop);
+        gradient.appendChild(stopBottom);
+        defs.appendChild(gradient);
+
+        const baseline = yScale(yMin);
+        let areaData = `M ${pathPoints[0].x} ${baseline}`;
+        areaData += ` L ${pathPoints[0].x} ${pathPoints[0].y}`;
+        for (let i = 1; i < pathPoints.length; i++) {
+          areaData += ` L ${pathPoints[i].x} ${pathPoints[i].y}`;
+        }
+        areaData += ` L ${pathPoints[pathPoints.length - 1].x} ${baseline} Z`;
+        const area = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        area.setAttribute("d", areaData);
+        area.setAttribute("class", "plot-view-area");
+        area.setAttribute("fill", `url(#${gradientId})`);
+        svg.appendChild(area);
+      }
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", pathData);
+      path.setAttribute("class", "plot-view-line");
+      path.setAttribute("data-series-index", String(index));
+      path.style.stroke = seriesLayout.color;
+      svg.appendChild(path);
+      lineElements.set(index, path);
     }
-  }
-  if (currentPoint && !insertedCurrent) {
-    const x = xScale(currentPoint.x);
-    const y = yScale(currentPoint.y);
-    if (!hasStarted) {
-      pathData += `M ${x} ${y}`;
-    } else {
-      pathData += ` L ${x} ${y}`;
+
+    if (currentPoint) {
+      const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      dot.setAttribute("cx", `${xScale(currentPoint.x)}`);
+      dot.setAttribute("cy", `${yScale(currentPoint.y)}`);
+      dot.setAttribute("r", "3.5");
+      dot.setAttribute("class", "plot-view-dot");
+      dot.setAttribute("data-series-index", String(index));
+      dot.style.fill = seriesLayout.color;
+      svg.appendChild(dot);
     }
+  });
+
+  if (seriesLayouts.length > 1) {
+    const intersections: Array<{ x: number; y: number }> = [];
+    for (let i = 0; i < seriesLayouts.length; i++) {
+      for (let j = i + 1; j < seriesLayouts.length; j++) {
+        const pointsA = seriesLayouts[i].points;
+        const pointsB = seriesLayouts[j].points;
+        const length = Math.min(pointsA.length, pointsB.length);
+        for (let k = 0; k < length - 1; k++) {
+          const a0 = pointsA[k];
+          const a1 = pointsA[k + 1];
+          const b0 = pointsB[k];
+          const b1 = pointsB[k + 1];
+          const d0 = a0.y - b0.y;
+          const d1 = a1.y - b1.y;
+          if (!Number.isFinite(d0) || !Number.isFinite(d1)) continue;
+          if (d0 === 0) {
+            intersections.push({ x: a0.x, y: a0.y });
+            continue;
+          }
+          if (d0 * d1 < 0) {
+            const t = d0 / (d0 - d1);
+            const x = a0.x + t * (a1.x - a0.x);
+            const y = a0.y + t * (a1.y - a0.y);
+            intersections.push({ x, y });
+          }
+        }
+      }
+    }
+    intersections.forEach((point) => {
+      if (point.x < viewRange.min || point.x > viewRange.max) return;
+      const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      dot.setAttribute("cx", `${xScale(point.x)}`);
+      dot.setAttribute("cy", `${yScale(point.y)}`);
+      dot.setAttribute("r", "4");
+      dot.setAttribute("class", "plot-view-intersection-dot");
+      svg.appendChild(dot);
+    });
   }
 
-  if (pathData) {
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", pathData);
-    path.setAttribute("class", "plot-view-line");
-    svg.appendChild(path);
-  }
-
-  if (currentPoint) {
-    const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    dot.setAttribute("cx", `${xScale(currentPoint.x)}`);
-    dot.setAttribute("cy", `${yScale(currentPoint.y)}`);
-    dot.setAttribute("r", "3.5");
-    dot.setAttribute("class", "plot-view-dot");
-    svg.appendChild(dot);
-  }
-
-  return svg;
+  return {
+    svg,
+    layout: {
+      width,
+      height,
+      padding,
+      viewRange,
+      yMin,
+      yMax,
+      xScale,
+      yScale,
+      series: seriesLayouts,
+    },
+    lineElements,
+  };
 };
 
 const createPlotWidget = (
@@ -458,7 +812,8 @@ const createPlotWidget = (
     yDomain?: PlotRange | null;
     yView?: PlotRange | null;
   }) => void,
-  onClose?: () => void
+  onClose?: () => void,
+  editorView?: EditorView | null
 ): HTMLElement => {
   let currentXView: PlotRange | undefined = model.view || model.domain;
   let currentYView: PlotRange | undefined = model.yView || model.yDomain;
@@ -478,7 +833,16 @@ const createPlotWidget = (
   const title = document.createElement("div");
   title.className = "plot-view-title";
   const xLabel = model.x ? ` x=${model.x}` : "";
-  title.textContent = model.expression ? `${model.expression}${xLabel}` : `Plot${xLabel}`;
+  const seriesLabels = model.series
+    .map((series) => series.label || series.expression)
+    .filter(Boolean);
+  let titleText = "Plot";
+  if (seriesLabels.length === 1) {
+    titleText = seriesLabels[0] as string;
+  } else if (seriesLabels.length > 1) {
+    titleText = `Plot (${seriesLabels.join(", ")})`;
+  }
+  title.textContent = `${titleText}${xLabel}`;
 
   const actions = document.createElement("div");
   actions.className = "plot-view-actions";
@@ -923,9 +1287,453 @@ const createPlotWidget = (
   } else {
     const chart = document.createElement("div");
     chart.className = "plot-view-chart";
+    chart.style.touchAction = "none";
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
     chart.appendChild(svg);
+    const tooltip = document.createElement("div");
+    tooltip.className = "plot-view-tooltip";
+    tooltip.style.opacity = "0";
+    chart.appendChild(tooltip);
+    const legend = document.createElement("div");
+    legend.className = "plot-view-legend";
+    legend.style.opacity = "0";
+    chart.appendChild(legend);
+
+    let plotLayout: PlotSvgLayout | null = null;
+    let hoverDot: SVGCircleElement | null = null;
+    let lineElements = new Map<number, SVGPathElement>();
+    let activeSeriesIndex: number | null = null;
+    let draggingSeriesIndex: number | null = null;
+    let dragMode: "line" | "pan" | "zoom-x" | "zoom-y" | null = null;
+    let dragStartPos: { x: number; y: number } | null = null;
+    let dragStartXView: PlotRange | null = null;
+    let dragStartYView: PlotRange | null = null;
+
+    const updateLineHighlight = (index: number | null) => {
+      lineElements.forEach((line, seriesIndex) => {
+        line.classList.toggle("is-hover", index === seriesIndex);
+      });
+    };
+
+    const hideHover = () => {
+      if (hoverDot) hoverDot.style.opacity = "0";
+      tooltip.style.opacity = "0";
+      legend.style.opacity = "0";
+      activeSeriesIndex = null;
+      updateLineHighlight(null);
+    };
+
+    const showHover = (
+      seriesIndex: number,
+      screenX: number,
+      screenY: number,
+      dataX: number,
+      dataY: number
+    ) => {
+      activeSeriesIndex = seriesIndex;
+      updateLineHighlight(seriesIndex);
+      if (hoverDot) {
+        hoverDot.setAttribute("cx", `${screenX}`);
+        hoverDot.setAttribute("cy", `${screenY}`);
+        const seriesColor = model.series[seriesIndex]?.color;
+        if (seriesColor) hoverDot.style.fill = seriesColor;
+        hoverDot.style.opacity = "1";
+      }
+
+      const series = model.series[seriesIndex];
+      const label = series?.label || series?.expression;
+      const lines = [];
+      if (label && model.series.length > 1) {
+        lines.push(label);
+      }
+      lines.push(`${model.x || "x"} = ${formatPlotValueWithUnit(dataX, model.xUnit)}`);
+      lines.push(`y = ${formatPlotValueWithUnit(dataY, series?.unit)}`);
+      if (model.series.length > 1 && plotLayout) {
+        const compareIndex = seriesIndex === 0 ? 1 : 0;
+        const compareValue = getSeriesValueAtX(compareIndex, dataX);
+        if (compareValue !== null) {
+          const compareSeries = model.series[compareIndex];
+          const delta = dataY - compareValue;
+          const compareLabel =
+            compareSeries?.label || compareSeries?.expression || `Series ${compareIndex + 1}`;
+          lines.push(
+            `Δ to ${compareLabel} = ${formatPlotValueWithUnit(delta, series?.unit)}`
+          );
+        }
+      }
+      tooltip.textContent = lines.join("\n");
+      if (series?.color) {
+        tooltip.style.borderColor = series.color;
+      }
+      if (model.series.length > 1) {
+        legend.innerHTML = model.series
+          .map((entry, index) => {
+            const labelText = entry.label || entry.expression || `Series ${index + 1}`;
+            const color = entry.color || "var(--color-text-primary)";
+            return `<span class="plot-view-legend-item"><span class="plot-view-legend-swatch" style="background:${color}"></span>${labelText}</span>`;
+          })
+          .join("");
+        legend.style.opacity = "1";
+      }
+      const rect = svg.getBoundingClientRect();
+      const pixelX = rect.width ? (screenX / (plotLayout?.width || 1)) * rect.width : 0;
+      const pixelY = rect.height ? (screenY / (plotLayout?.height || 1)) * rect.height : 0;
+      tooltip.style.left = `${Math.round(pixelX + 12)}px`;
+      tooltip.style.top = `${Math.round(pixelY - 24)}px`;
+      tooltip.style.opacity = "1";
+    };
+
+    const getSeriesValueAtX = (seriesIndex: number, xValue: number) => {
+      if (!plotLayout) return null;
+      const series = plotLayout.series[seriesIndex];
+      if (!series || series.points.length < 2) return null;
+      const points = series.points;
+      if (xValue <= points[0].x) return points[0].y;
+      if (xValue >= points[points.length - 1].x) return points[points.length - 1].y;
+      for (let i = 0; i < points.length - 1; i++) {
+        const p1 = points[i];
+        const p2 = points[i + 1];
+        if (xValue >= p1.x && xValue <= p2.x) {
+          const span = p2.x - p1.x;
+          const t = span === 0 ? 0 : (xValue - p1.x) / span;
+          return p1.y + t * (p2.y - p1.y);
+        }
+      }
+      return null;
+    };
+
+    const getPointerPosition = (event: MouseEvent | PointerEvent) => {
+      if (!plotLayout) return null;
+      const rect = svg.getBoundingClientRect();
+      if (!rect.width || !rect.height) return null;
+      const scaleX = plotLayout.width / rect.width;
+      const scaleY = plotLayout.height / rect.height;
+      return {
+        x: (event.clientX - rect.left) * scaleX,
+        y: (event.clientY - rect.top) * scaleY,
+      };
+    };
+
+    const clampViewToDomain = (view: PlotRange, domain?: PlotRange | null) => {
+      if (!domain) return view;
+      const span = view.max - view.min;
+      if (span <= 0) return view;
+      let min = view.min;
+      let max = view.max;
+      if (min < domain.min) {
+        min = domain.min;
+        max = min + span;
+      }
+      if (max > domain.max) {
+        max = domain.max;
+        min = max - span;
+      }
+      return { min, max };
+    };
+
+    const findNearestPoint = (
+      position: { x: number; y: number },
+      onlySeries: number | null,
+      threshold: number | null
+    ) => {
+      if (!plotLayout) return null;
+      let best: {
+        seriesIndex: number;
+        screenX: number;
+        screenY: number;
+        dataX: number;
+        dataY: number;
+        dist2: number;
+      } | null = null;
+      const thresholdSq = threshold !== null ? threshold * threshold : null;
+      plotLayout.series.forEach((series) => {
+        if (onlySeries !== null && series.index !== onlySeries) return;
+        const points = series.points;
+        if (points.length === 0) return;
+        if (points.length === 1) {
+          const single = points[0];
+          const sx = plotLayout.xScale(single.x);
+          const sy = plotLayout.yScale(single.y);
+          const dist2 = (position.x - sx) ** 2 + (position.y - sy) ** 2;
+          if (!best || dist2 < best.dist2) {
+            best = {
+              seriesIndex: series.index,
+              screenX: sx,
+              screenY: sy,
+              dataX: single.x,
+              dataY: single.y,
+              dist2,
+            };
+          }
+          return;
+        }
+        for (let i = 0; i < points.length - 1; i++) {
+          const p1 = points[i];
+          const p2 = points[i + 1];
+          const x1 = plotLayout.xScale(p1.x);
+          const y1 = plotLayout.yScale(p1.y);
+          const x2 = plotLayout.xScale(p2.x);
+          const y2 = plotLayout.yScale(p2.y);
+          const dx = x2 - x1;
+          const dy = y2 - y1;
+          const len2 = dx * dx + dy * dy;
+          let t = len2 > 0 ? ((position.x - x1) * dx + (position.y - y1) * dy) / len2 : 0;
+          t = Math.max(0, Math.min(1, t));
+          const projX = x1 + t * dx;
+          const projY = y1 + t * dy;
+          const dist2 = (position.x - projX) ** 2 + (position.y - projY) ** 2;
+          if (!best || dist2 < best.dist2) {
+            best = {
+              seriesIndex: series.index,
+              screenX: projX,
+              screenY: projY,
+              dataX: p1.x + t * (p2.x - p1.x),
+              dataY: p1.y + t * (p2.y - p1.y),
+              dist2,
+            };
+          }
+        }
+      });
+      if (!best) return null;
+      if (thresholdSq !== null && best.dist2 > thresholdSq) return null;
+      return best;
+    };
+
+    const updateVariableValue = (nextValue: number) => {
+      if (!Number.isFinite(nextValue)) return false;
+      if (!editorView || !model.x) return false;
+      const lineIndex = buildLineIndex(editorView.state.doc);
+      let targetLine: number | null = null;
+      for (let i = 1; i < lineIndex.length; i++) {
+        const info = lineIndex[i];
+        if (!info) continue;
+        const parsed = parseLine(info.text, i);
+        if (isVariableAssignmentNode(parsed) && parsed.variableName === model.x) {
+          targetLine = i;
+        }
+        if (isCombinedAssignmentNode(parsed) && parsed.variableName === model.x) {
+          targetLine = i;
+        }
+      }
+      if (!targetLine) return false;
+      const info = lineIndex[targetLine];
+      if (!info) return false;
+      const lineText = info.text;
+      const eqIndex = lineText.indexOf("=");
+      if (eqIndex === -1) return false;
+      const valueText = lineText.slice(eqIndex + 1);
+      const match = valueText.match(/[+-]?\d[\d,]*(?:\.\d+)?(?:[eE][+-]?\d+)?/);
+      if (!match || match.index === undefined) return false;
+      const numberText = match[0];
+      const dotIndex = numberText.indexOf(".");
+      const exponentIndex = numberText.search(/[eE]/);
+      const decimalPart =
+        dotIndex >= 0
+          ? numberText.slice(dotIndex + 1, exponentIndex >= 0 ? exponentIndex : undefined)
+          : "";
+      const decimalPlaces = decimalPart.length;
+      const formatted =
+        decimalPlaces === 0 ? Math.round(nextValue).toString() : nextValue.toFixed(decimalPlaces);
+      const from = info.start + eqIndex + 1 + match.index;
+      const to = from + numberText.length;
+      const tr = editorView.state.tr.replaceWith(
+        from,
+        to,
+        editorView.state.schema.text(formatted)
+      );
+      editorView.dispatch(tr);
+      return true;
+    };
+
+    const handlePointerMove = (event: MouseEvent | PointerEvent) => {
+      if (!plotLayout) return;
+      const position = getPointerPosition(event);
+      if (!position) return;
+      if (dragMode === "line" && draggingSeriesIndex !== null) {
+        const nearest = findNearestPoint(position, draggingSeriesIndex, null);
+        if (nearest) {
+          showHover(
+            nearest.seriesIndex,
+            nearest.screenX,
+            nearest.screenY,
+            nearest.dataX,
+            nearest.dataY
+          );
+          updateVariableValue(nearest.dataX);
+        }
+        return;
+      }
+
+      if (dragMode === "pan" && dragStartPos && dragStartXView) {
+        const plotWidth =
+          plotLayout.width - plotLayout.padding.left - plotLayout.padding.right;
+        const plotHeight =
+          plotLayout.height - plotLayout.padding.top - plotLayout.padding.bottom;
+        const spanX = dragStartXView.max - dragStartXView.min;
+        const spanY = dragStartYView
+          ? dragStartYView.max - dragStartYView.min
+          : 0;
+        const deltaX = plotWidth ? (position.x - dragStartPos.x) / plotWidth : 0;
+        const deltaY = plotHeight ? (position.y - dragStartPos.y) / plotHeight : 0;
+        const nextXView = clampViewToDomain(
+          {
+            min: dragStartXView.min - deltaX * spanX,
+            max: dragStartXView.max - deltaX * spanX,
+          },
+          model.domain
+        );
+        currentXView = nextXView;
+        if (dragStartYView) {
+          const nextYView = clampViewToDomain(
+            {
+              min: dragStartYView.min + deltaY * spanY,
+              max: dragStartYView.max + deltaY * spanY,
+            },
+            model.yDomain
+          );
+          currentYView = nextYView;
+        }
+        if (drawWithView) drawWithView(currentXView, currentYView);
+        return;
+      }
+
+      if (dragMode === "zoom-x" && dragStartPos && dragStartXView) {
+        const delta = position.x - dragStartPos.x;
+        const scale = Math.max(0.2, 1 + delta / 200);
+        const center = (dragStartXView.min + dragStartXView.max) / 2;
+        const span = (dragStartXView.max - dragStartXView.min) * scale;
+        const nextXView = clampViewToDomain(
+          { min: center - span / 2, max: center + span / 2 },
+          model.domain
+        );
+        currentXView = nextXView;
+        if (drawWithView) drawWithView(currentXView, currentYView);
+        return;
+      }
+
+      if (dragMode === "zoom-y" && dragStartPos && dragStartYView) {
+        const delta = position.y - dragStartPos.y;
+        const scale = Math.max(0.2, 1 + delta / 200);
+        const center = (dragStartYView.min + dragStartYView.max) / 2;
+        const span = (dragStartYView.max - dragStartYView.min) * scale;
+        const nextYView = clampViewToDomain(
+          { min: center - span / 2, max: center + span / 2 },
+          model.yDomain
+        );
+        currentYView = nextYView;
+        if (drawWithView) drawWithView(currentXView, currentYView);
+        return;
+      }
+
+      const nearest = findNearestPoint(position, null, 10);
+      if (!nearest) {
+        hideHover();
+        return;
+      }
+      showHover(
+        nearest.seriesIndex,
+        nearest.screenX,
+        nearest.screenY,
+        nearest.dataX,
+        nearest.dataY
+      );
+    };
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (event.button !== 0) return;
+      if (!plotLayout) return;
+      const position = getPointerPosition(event);
+      if (!position) return;
+      const target = event.target as Element | null;
+      const axis = target?.getAttribute?.("data-axis");
+
+      if (axis === "x" || axis === "y") {
+        if (axis === "y" && !model.yDomain) return;
+        event.preventDefault();
+        dragMode = axis === "x" ? "zoom-x" : "zoom-y";
+        dragStartPos = position;
+        dragStartXView = currentXView || model.domain || null;
+        dragStartYView = currentYView || model.yDomain || null;
+      } else {
+        const nearest = findNearestPoint(position, null, 10);
+        if (nearest) {
+          event.preventDefault();
+          showHover(
+            nearest.seriesIndex,
+            nearest.screenX,
+            nearest.screenY,
+            nearest.dataX,
+            nearest.dataY
+          );
+          const updated = updateVariableValue(nearest.dataX);
+          if (updated) {
+            draggingSeriesIndex = nearest.seriesIndex;
+            dragMode = "line";
+          } else {
+            dragMode = "pan";
+            dragStartPos = position;
+            dragStartXView = currentXView || model.domain || null;
+            dragStartYView = currentYView || model.yDomain || null;
+          }
+        } else {
+          event.preventDefault();
+          dragMode = "pan";
+          dragStartPos = position;
+          dragStartXView = currentXView || model.domain || null;
+          dragStartYView = currentYView || model.yDomain || null;
+        }
+      }
+
+      const onMove = (moveEvent: PointerEvent) => handlePointerMove(moveEvent);
+      const onUp = () => {
+        if (dragMode === "pan" || dragMode === "zoom-x") {
+          if (onUpdate && currentXView) {
+            onUpdate({ view: currentXView });
+          }
+        }
+        if (dragMode === "pan" || dragMode === "zoom-y") {
+          if (onUpdate && currentYView) {
+            onUpdate({ yView: currentYView });
+          }
+        }
+        dragMode = null;
+        draggingSeriesIndex = null;
+        dragStartPos = null;
+        dragStartXView = null;
+        dragStartYView = null;
+        document.removeEventListener("pointermove", onMove);
+        document.removeEventListener("pointerup", onUp);
+        document.removeEventListener("pointercancel", onUp);
+      };
+      document.addEventListener("pointermove", onMove);
+      document.addEventListener("pointerup", onUp);
+      document.addEventListener("pointercancel", onUp);
+    };
+
+    chart.addEventListener("mousemove", handlePointerMove);
+    chart.addEventListener("mouseleave", () => {
+      if (!dragMode) hideHover();
+    });
+    chart.addEventListener("pointerdown", handlePointerDown);
+    chart.addEventListener("dblclick", (event) => {
+      event.preventDefault();
+      if (model.domain) {
+        currentXView = model.domain;
+      }
+      if (model.yDomain) {
+        currentYView = model.yDomain;
+      }
+      if (drawWithView) drawWithView(currentXView, currentYView);
+      if (onUpdate) {
+        const patch: { view?: PlotRange | null; yView?: PlotRange | null } = {};
+        if (currentXView) patch.view = currentXView;
+        if (currentYView) patch.yView = currentYView;
+        if (Object.keys(patch).length) {
+          onUpdate(patch);
+        }
+      }
+    });
     const draw = (xOverride?: PlotRange, yOverride?: PlotRange) => {
       if (xOverride) currentXView = xOverride;
       if (yOverride) currentYView = yOverride;
@@ -936,8 +1744,16 @@ const createPlotWidget = (
       }
       const rendered = createPlotSvg(model, width, height, currentXView, currentYView);
       if (rendered) {
-        svg.setAttribute("viewBox", rendered.getAttribute("viewBox") || `0 0 ${width} ${height}`);
-        Array.from(rendered.childNodes).forEach((node) => svg.appendChild(node));
+        svg.setAttribute("viewBox", rendered.svg.getAttribute("viewBox") || `0 0 ${width} ${height}`);
+        Array.from(rendered.svg.childNodes).forEach((node) => svg.appendChild(node));
+        plotLayout = rendered.layout;
+        lineElements = rendered.lineElements;
+        hoverDot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        hoverDot.setAttribute("r", "4.5");
+        hoverDot.setAttribute("class", "plot-view-hover-dot");
+        hoverDot.style.opacity = "0";
+        svg.appendChild(hoverDot);
+        hideHover();
       } else {
         const message = document.createElementNS("http://www.w3.org/2000/svg", "text");
         message.setAttribute("x", `${width / 2}`);
@@ -946,6 +1762,10 @@ const createPlotWidget = (
         message.setAttribute("class", "plot-view-axis-text");
         message.textContent = "No plottable data";
         svg.appendChild(message);
+        plotLayout = null;
+        lineElements = new Map();
+        hoverDot = null;
+        hideHover();
       }
     };
     drawWithView = (nextX: PlotRange | undefined, nextY: PlotRange | undefined) =>
@@ -1109,28 +1929,29 @@ export const PlotViewExtension = Extension.create({
               const overrideKey = `persistent-${plotNode.line}`;
               const override = pluginState.overrides?.[overrideKey];
               let model = buildPlotModel(plotNode, "persistent");
-              if (override && model.targetLine) {
-                const targetInfo = lineIndex[model.targetLine];
-                const expressionNode = targetInfo
-                  ? resolveExpressionNode(targetInfo.node, model.targetLine)
-                  : null;
-                if (expressionNode && model.x) {
-                  const settings = buildSettingsSnapshot(getSettings());
-                  model =
-                    computeModelFromExpression(
-                      model.targetLine,
-                      model.x,
-                      override.domain,
-                      override.view,
-                      override.yDomain,
-                      override.yView,
-                      "persistent",
-                      model.size,
-                      lineIndex,
-                      getVariableContext(),
-                      settings
-                    ) || model;
-                } else {
+              if (model.targetLine && model.x) {
+                const settings = buildSettingsSnapshot(getSettings());
+                const seriesDefinitions = plotNode.series?.map((entry) => ({
+                  label: entry.label,
+                  expression: entry.expression,
+                }));
+                const recomputed = computeModelFromExpression(
+                  model.targetLine,
+                  model.x,
+                  override?.domain,
+                  override?.view,
+                  override?.yDomain,
+                  override?.yView,
+                  "persistent",
+                  model.size,
+                  seriesDefinitions,
+                  lineIndex,
+                  getVariableContext(),
+                  settings
+                );
+                if (recomputed) {
+                  model = recomputed;
+                } else if (override) {
                   if (override.domain) model.domain = override.domain;
                   if (override.view) model.view = override.view;
                   if (override.yDomain) model.yDomain = override.yDomain;
@@ -1139,9 +1960,14 @@ export const PlotViewExtension = Extension.create({
               }
               const widget = Decoration.widget(
                 info.insertPos,
-                () => createPlotWidget(model, undefined, (patch) =>
-                  handleOverrideUpdate(overrideKey, patch)
-                ),
+                () =>
+                  createPlotWidget(
+                    model,
+                    undefined,
+                    (patch) => handleOverrideUpdate(overrideKey, patch),
+                    undefined,
+                    currentView
+                  ),
                 {
                   key: buildPlotKey(model, plotNode.line),
                   side: 1,
@@ -1166,6 +1992,7 @@ export const PlotViewExtension = Extension.create({
                 override?.yView,
                 "transient",
                 "md",
+                undefined,
                 lineIndex,
                 getVariableContext(),
                 settings
@@ -1180,7 +2007,8 @@ export const PlotViewExtension = Extension.create({
                         model,
                         handleDetach,
                         (patch) => handleOverrideUpdate(overrideKey, patch),
-                        () => handleCloseTransient(overrideKey)
+                        () => handleCloseTransient(overrideKey),
+                        currentView
                       ),
                     {
                       key: buildPlotKey(model, pluginState.transient.targetLine),

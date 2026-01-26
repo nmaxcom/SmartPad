@@ -20,6 +20,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
   showResultBackground: true,
   showErrorBorders: true,
   showErrorBackground: true,
+  showPlotDetails: false,
 };
 
 // localStorage key for settings persistence

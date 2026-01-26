@@ -405,6 +405,32 @@ export function SettingsSections() {
       </div>
 
       <div className="settings-section">
+        <h3 className="settings-section-title">Plots</h3>
+
+        <div className="settings-item">
+          <div className="settings-item-info">
+            <label htmlFor="show-plot-details" className="settings-label">
+              Show Plot Details
+            </label>
+            <p className="settings-description">
+              Toggle plot headers, controls, and metadata. Off = chart only.
+            </p>
+          </div>
+          <div className="settings-control">
+            <label className="toggle-switch">
+              <input
+                id="show-plot-details"
+                type="checkbox"
+                checked={settings.showPlotDetails}
+                onChange={(e) => updateSetting("showPlotDetails", e.target.checked)}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div className="settings-section">
         <h3 className="settings-section-title">Layout</h3>
 
         <div className="settings-item">

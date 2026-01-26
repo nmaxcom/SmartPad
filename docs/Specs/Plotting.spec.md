@@ -230,6 +230,23 @@ Basic:
 @view plot x=years
 ```
 
+Multiple series (comma-separated):
+
+```smartpad
+f = 2*x + 1
+g = x^2
+@view plot x=x y=f,g
+```
+
+Multiple series with spaces (quote the value or rely on space-tolerant parsing):
+
+```smartpad
+f = 2*x + 1
+g = x^2
+@view plot x=x y=f, g
+@view plot x=x y="2*x + 1, x^2"
+```
+
 With explicit domain:
 
 ```smartpad

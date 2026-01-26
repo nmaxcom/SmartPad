@@ -415,8 +415,36 @@ work = pressure * volume =>
 # @view plot x=years domain=0..30 size=lg
 
 # Manual @view lines (paste under an expression):
-# @view plot x=time domain=1..10 view=2..8 size=md
-# @view plot x=years domain=0..40 size=lg
+@view plot x=time domain=1..10 view=2..8 size=md
+@view plot x=years domain=0..40 size=lg
+
+# Multi-series plots (comma list supports spaces):
+x = 13
+f = 2*x + 1
+g = x^2
+@view plot x=x y=f,g
+@view plot x=x y=f, g
+@view plot x=x y="2*x + 1, x^2"
+
+# Real-world comparisons
+# Drive vs Fly (break-even distance)
+distance = 800 km
+drive fixed = $35
+drive cost per km = $0.18/km
+drive cost = drive fixed + distance * drive cost per km
+flight base = $120
+flight cost per km = $0.08/km
+flight cost = flight base + distance * flight cost per km
+@view plot x=distance y=drive cost, flight cost domain=0..2000 size=lg
+
+# Renting vs Buying (break-even years)
+years = 10
+rent per month = $1800/month
+rent total = rent per month * 12 * years
+down payment = $40000
+mortgage per month = $2200/month
+own total = down payment + mortgage per month * 12 * years
+@view plot x=years y=rent total, own total domain=0..30 size=lg
 `,
   },
   {

@@ -69,6 +69,35 @@ const normalizeRange = (range: PlotRange): PlotRange => {
   return range;
 };
 
+const expandRange = (range: PlotRange, factor: number): PlotRange => {
+  const span = range.max - range.min;
+  if (!Number.isFinite(span) || span <= 0) {
+    return range;
+  }
+  const center = range.min + span / 2;
+  const nextSpan = span * factor;
+  return normalizeRange({ min: center - nextSpan / 2, max: center + nextSpan / 2 });
+};
+
+const fitViewToDomain = (view: PlotRange, domain: PlotRange): PlotRange => {
+  const viewSpan = view.max - view.min;
+  const domainSpan = domain.max - domain.min;
+  if (viewSpan >= domainSpan) {
+    return { min: domain.min, max: domain.max };
+  }
+  let min = view.min;
+  let max = view.max;
+  if (min < domain.min) {
+    min = domain.min;
+    max = min + viewSpan;
+  }
+  if (max > domain.max) {
+    max = domain.max;
+    min = max - viewSpan;
+  }
+  return { min, max };
+};
+
 export const parsePlotRange = (raw?: string): PlotRange | null => {
   if (!raw) return null;
   if (raw.startsWith("@auto")) return null;
@@ -226,10 +255,19 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
     return { status: "disconnected", message: `Variable "${xVariable}" is not numeric` };
   }
 
-  const domain = parsePlotRange(domainSpec) ?? inferAutoDomain(baseValue);
-  const view = parsePlotRange(viewSpec) ?? domain;
-  const normalizedDomain = normalizeRange(domain);
-  const normalizedView = normalizeRange(view);
+  const parsedDomain = parsePlotRange(domainSpec);
+  const parsedView = parsePlotRange(viewSpec);
+  const baseDomain = parsedDomain ?? inferAutoDomain(baseValue);
+  const normalizedBaseDomain = normalizeRange(baseDomain);
+  const expandedDomain = parsedDomain
+    ? normalizedBaseDomain
+    : expandRange(normalizedBaseDomain, 1.6);
+  const viewCandidate = parsedView ?? normalizedBaseDomain;
+  const normalizedView = normalizeRange(viewCandidate);
+  const normalizedDomain = normalizeRange(expandedDomain);
+  const clampedView = parsedView
+    ? fitViewToDomain(normalizedView, normalizedDomain)
+    : normalizedView;
 
   const totalSamples = Math.max(2, sampleCount ?? DEFAULT_SAMPLE_COUNT);
   const step = (normalizedDomain.max - normalizedDomain.min) / (totalSamples - 1);
@@ -275,7 +313,7 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
     status: "connected",
     data,
     domain: normalizedDomain,
-    view: normalizedView,
+    view: clampedView,
     currentX: baseNumeric,
     currentY,
   };
