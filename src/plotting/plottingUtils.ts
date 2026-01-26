@@ -1,4 +1,4 @@
-import { ExpressionNode } from "../parsing/ast";
+import { ExpressionNode, ExpressionComponent } from "../parsing/ast";
 import { EvaluatorRegistry, EvaluationContext } from "../eval/registry";
 import { Variable } from "../state/types";
 import { ReactiveVariableStore } from "../state/variableStore";
@@ -52,6 +52,18 @@ export interface PlotComputationInput {
 
 const DEFAULT_SAMPLE_COUNT = 60;
 const DEFAULT_DOMAIN_EXPANSION = 16;
+const PLOT_CACHE_MAX = 80;
+
+interface PlotCacheEntry {
+  key: string;
+  data: PlotPoint[];
+  domain: PlotRange;
+  view: PlotRange;
+  totalSamples: number;
+  depsSignature: string;
+}
+
+const plotDataCache = new Map<string, PlotCacheEntry>();
 
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, value));
@@ -97,6 +109,56 @@ const fitViewToDomain = (view: PlotRange, domain: PlotRange): PlotRange => {
     min = max - viewSpan;
   }
   return { min, max };
+};
+
+const collectVariableDependencies = (components: ExpressionComponent[]): Set<string> => {
+  const names = new Set<string>();
+  const walk = (component: ExpressionComponent) => {
+    if (component.type === "variable") {
+      names.add(component.value);
+    }
+    if (component.children) {
+      component.children.forEach(walk);
+    }
+    if (component.args) {
+      component.args.forEach((arg) => {
+        arg.components.forEach(walk);
+      });
+    }
+  };
+  components.forEach(walk);
+  return names;
+};
+
+const buildDependencySignature = (
+  dependencies: Set<string>,
+  xVariable: string,
+  variableContext: Map<string, Variable>
+): string => {
+  const names = Array.from(dependencies).filter((name) => name !== xVariable).sort();
+  return names
+    .map((name) => {
+      const variable = variableContext.get(name);
+      if (!variable) return `${name}=undefined`;
+      const raw = variable.rawValue ?? variable.value?.toString();
+      return `${name}=${raw ?? "undefined"}`;
+    })
+    .join("|");
+};
+
+const readCache = (key: string): PlotCacheEntry | null => {
+  const entry = plotDataCache.get(key);
+  if (!entry) return null;
+  plotDataCache.delete(key);
+  plotDataCache.set(key, entry);
+  return entry;
+};
+
+const writeCache = (entry: PlotCacheEntry) => {
+  plotDataCache.set(entry.key, entry);
+  if (plotDataCache.size <= PLOT_CACHE_MAX) return;
+  const oldestKey = plotDataCache.keys().next().value;
+  if (oldestKey) plotDataCache.delete(oldestKey);
 };
 
 export const parsePlotRange = (raw?: string): PlotRange | null => {
@@ -215,7 +277,10 @@ const evaluateExpressionAt = (
   const renderNode = registry.evaluate(expressionNode, context);
   if (!renderNode || renderNode.type === "error") return null;
   const rawResult = (renderNode as any).result ?? "";
-  const parsed = SemanticParsers.parse(String(rawResult));
+  const rawText = typeof rawResult === "string" ? rawResult : String(rawResult);
+  // Remove thousands separators so parsing doesn't drop large values.
+  const normalized = rawText.replace(/(\d),(?=\d{3}(\D|$))/g, "$1");
+  const parsed = SemanticParsers.parse(normalized);
   if (!parsed) return null;
   return getPlotNumericValue(parsed);
 };
@@ -260,7 +325,7 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
   const parsedView = parsePlotRange(viewSpec);
   const baseDomain = parsedDomain ?? inferAutoDomain(baseValue);
   const normalizedBaseDomain = normalizeRange(baseDomain);
-  const expandedDomain = parsedDomain
+  let expandedDomain = parsedDomain
     ? normalizedBaseDomain
     : expandRange(normalizedBaseDomain, DEFAULT_DOMAIN_EXPANSION);
   if (baseValue.getType() === "percentage") {
@@ -268,8 +333,7 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
       min: clamp(expandedDomain.min, 0, 1),
       max: clamp(expandedDomain.max, 0, 1),
     });
-    expandedDomain.min = clampedDomain.min;
-    expandedDomain.max = clampedDomain.max;
+    expandedDomain = clampedDomain;
   }
   const viewCandidate = parsedView ?? normalizedBaseDomain;
   const normalizedView = normalizeRange(viewCandidate);
@@ -286,11 +350,40 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
     Number.isFinite(viewSpan) && viewSpan > 0 ? Math.max(1, domainSpan / viewSpan) : 1;
   let totalSamples = Math.max(minSamples, Math.round(baseSamples * densityFactor));
   totalSamples = Math.min(2400, totalSamples);
-  const step = (normalizedDomain.max - normalizedDomain.min) / (totalSamples - 1);
 
   const baseContext = new Map(variableContext);
   const baseStore = cloneVariableStore(baseContext);
 
+  const dependencies = collectVariableDependencies(expressionNode.components);
+  const depsSignature = buildDependencySignature(dependencies, xVariable, variableContext);
+  const cacheKey = [
+    expressionNode.expression,
+    xVariable,
+    normalizedDomain.min,
+    normalizedDomain.max,
+    totalSamples,
+    depsSignature,
+  ].join("|");
+  const cached = readCache(cacheKey);
+  if (cached) {
+    const currentY = evaluateExpressionAt(
+      registry,
+      expressionNode,
+      baseContext,
+      variableStore,
+      settings
+    );
+    return {
+      status: "connected",
+      data: cached.data,
+      domain: cached.domain,
+      view: cached.view,
+      currentX: baseNumeric,
+      currentY,
+    };
+  }
+
+  const step = (normalizedDomain.max - normalizedDomain.min) / (totalSamples - 1);
   const data: PlotPoint[] = [];
   for (let i = 0; i < totalSamples; i++) {
     const sampleX = normalizedDomain.min + step * i;
@@ -324,6 +417,15 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
     variableStore,
     settings
   );
+
+  writeCache({
+    key: cacheKey,
+    data,
+    domain: normalizedDomain,
+    view: clampedView,
+    totalSamples,
+    depsSignature,
+  });
 
   return {
     status: "connected",

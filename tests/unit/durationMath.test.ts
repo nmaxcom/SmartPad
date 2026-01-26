@@ -120,6 +120,43 @@ describe("Duration and time math", () => {
     }
   });
 
+  test("bare numeric assignments to duration-named variables behave as durations", () => {
+    const context = createContext();
+
+    evaluateLine("years = 10", context, 1);
+    const yearsVar = context.variableStore.getVariable("years");
+    expect(yearsVar?.value.getType()).toBe("duration");
+
+    evaluateLine("rent per month = $1800/month", context, 2);
+    evaluateLine("rent total = rent per month * 12 * years", context, 3);
+    const rentTotal = context.variableStore.getVariable("rent total");
+    expect(rentTotal?.value.getType()).toBe("currency");
+
+    evaluateLine("down payment = $40000", context, 4);
+    evaluateLine("mortgage per month = $2200/month", context, 5);
+    evaluateLine("own total = down payment + mortgage per month * 12 * years", context, 6);
+    const ownTotal = context.variableStore.getVariable("own total");
+    expect(ownTotal?.value.getType()).toBe("currency");
+  });
+
+  test("duration-based year exponent uses the year count", () => {
+    const context = createContext();
+
+    evaluateLine("principal = $12000", context, 1);
+    evaluateLine("annual return = 7%", context, 2);
+    evaluateLine("years = 15", context, 3);
+    const result = evaluateLine(
+      "future value = principal * (1 + annual return)^years =>",
+      context,
+      4
+    );
+    expect(result?.type).toBe("combined");
+
+    const futureValue = context.variableStore.getVariable("future value");
+    expect(futureValue?.value.getType()).toBe("currency");
+    expect(futureValue?.value.getNumericValue()).toBeCloseTo(33108.378489, 3);
+  });
+
   test("date plus time combines into a datetime", () => {
     const context = createContext();
     const result = evaluateLine("2025-04-01 + 19:30 =>", context, 1);

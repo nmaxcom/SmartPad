@@ -26,6 +26,7 @@ import {
   CurrencyUnitValue,
   CurrencyValue,
   CurrencySymbol,
+  DurationValue,
   DisplayOptions,
   SemanticParsers,
   SemanticValue,
@@ -34,6 +35,7 @@ import {
   createListResult,
   ListValue,
 } from "../types";
+import type { DurationUnit } from "../types/DurationValue";
 import { inferListDelimiter, splitTopLevelCommas } from "../utils/listExpression";
 import { parseAndEvaluateExpression } from "../parsing/expressionParser";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
@@ -47,6 +49,33 @@ import {
 } from "../utils/rangeExpression";
 import { attemptPerUnitConversion } from "./unitConversionUtils";
 import { extractConversionSuffix } from "../utils/conversionSuffix";
+
+const durationUnitByVariableName: Record<string, DurationUnit> = {
+  "business day": "businessDay",
+  "business days": "businessDay",
+  year: "year",
+  years: "year",
+  month: "month",
+  months: "month",
+  week: "week",
+  weeks: "week",
+  day: "day",
+  days: "day",
+  hour: "hour",
+  hours: "hour",
+  minute: "minute",
+  minutes: "minute",
+  second: "second",
+  seconds: "second",
+  millisecond: "millisecond",
+  milliseconds: "millisecond",
+};
+
+const normalizeDurationVariableName = (name: string): string =>
+  name.trim().toLowerCase().replace(/\s+/g, " ");
+
+const isBareNumberLiteral = (value: string): boolean =>
+  /^\s*[+-]?\d+(?:\.\d+)?\s*$/.test(value);
 
 /**
  * Evaluator for combined assignment operations with semantic types
@@ -184,8 +213,16 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
         }
       }
 
+      if (!conversion && semanticValue instanceof NumberValue && isBareNumberLiteral(expression)) {
+        const normalizedVarName = normalizeDurationVariableName(combNode.variableName);
+        const durationUnit = durationUnitByVariableName[normalizedVarName];
+        if (durationUnit) {
+          semanticValue = new DurationValue({ [durationUnit]: semanticValue.getNumericValue() });
+        }
+      }
+
       if (conversion) {
-      semanticValue = this.applyUnitConversion(semanticValue, conversion.target, conversion.keyword);
+        semanticValue = this.applyUnitConversion(semanticValue, conversion.target, conversion.keyword);
       }
 
       if (SemanticValueTypes.isError(semanticValue)) {

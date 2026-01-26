@@ -37,6 +37,21 @@ const plotViewPluginKey = new PluginKey("plotView");
 
 type PlotSource = "persistent" | "transient";
 
+const isPlotDebugEnabled = (): boolean =>
+  typeof window !== "undefined" && Boolean((window as any).__SP_PLOT_DEBUG);
+
+const logPlotDebug = (...args: any[]) => {
+  if (!isPlotDebugEnabled()) return;
+  if (typeof window !== "undefined") {
+    const store = (window as any).__SP_PLOT_DEBUG_LOGS;
+    const logs = Array.isArray(store) ? store : [];
+    logs.push({ ts: Date.now(), args });
+    (window as any).__SP_PLOT_DEBUG_LOGS = logs;
+  }
+  // Use log to avoid debug-level filtering.
+  console.log(...args);
+};
+
 const PLOT_SERIES_COLORS = [
   "var(--plot-series-1)",
   "var(--plot-series-2)",
@@ -74,6 +89,8 @@ interface PlotViewModel {
   view?: PlotRange;
   yDomain?: PlotRange;
   yView?: PlotRange;
+  yViewAuto?: boolean;
+  yDomainAuto?: boolean;
   data?: PlotPoint[];
   currentX?: number;
   currentY?: number | null;
@@ -244,6 +261,8 @@ const buildPlotModel = (
     view: plotNode.view,
     yDomain: derivedY,
     yView: derivedY,
+    yViewAuto: true,
+    yDomainAuto: true,
     data: series[0]?.data,
     currentX: plotNode.currentX,
     currentY: series[0]?.currentY ?? plotNode.currentY,
@@ -431,8 +450,32 @@ const computeModelFromExpression = (
   const baseYDomain =
     deriveYDomainFromSeries(seriesData, viewCandidate) || deriveYDomainFromSeries(seriesData);
   const baseYView = expandPlotRange(baseYDomain, 1.15) || baseYDomain;
-  const computedYDomain = yDomainOverride || expandPlotRange(baseYView, 8) || baseYView;
+  let computedYDomain = yDomainOverride || expandPlotRange(baseYView, 8) || baseYView;
+  if (yViewOverride) {
+    if (computedYDomain) {
+      computedYDomain = {
+        min: Math.min(computedYDomain.min, yViewOverride.min),
+        max: Math.max(computedYDomain.max, yViewOverride.max),
+      };
+    } else {
+      computedYDomain = yViewOverride;
+    }
+  }
   const computedYView = yViewOverride || baseYView || computedYDomain;
+  const yViewAuto = !yViewOverride && !yDomainOverride;
+  const yDomainAuto = !yDomainOverride;
+  if (isPlotDebugEnabled()) {
+    logPlotDebug("[plot] computeModel", {
+      line: targetLine,
+      xVariable,
+      yViewOverride,
+      yDomainOverride,
+      computedYView,
+      computedYDomain,
+      yViewAuto,
+      yDomainAuto,
+    });
+  }
   const xUnit = getPlotUnitFormat(variableContext.get(xVariable)?.value);
   const seriesUnits = (seriesNodes as ExpressionNode[]).map((node, index) => {
     const seriesLabel = seriesSpecs[index]?.label;
@@ -465,6 +508,8 @@ const computeModelFromExpression = (
     view: viewOverrideSafe || firstResult.view,
     yDomain: computedYDomain,
     yView: computedYView,
+    yViewAuto,
+    yDomainAuto,
     data: series[0]?.data,
     currentX: firstResult.currentX,
     currentY: series[0]?.currentY ?? firstResult.currentY,
@@ -477,7 +522,8 @@ const createPlotSvg = (
   width: number,
   height: number,
   viewOverride?: PlotRange,
-  yViewOverride?: PlotRange
+  yViewOverride?: PlotRange,
+  yViewAuto?: boolean
 ): PlotSvgResult | null => {
   if (!model.series.length) return null;
 
@@ -514,6 +560,10 @@ const createPlotSvg = (
   if (!yRangeBase) return null;
   let yMin = yRangeBase.min;
   let yMax = yRangeBase.max;
+  if (yViewAuto && derivedRange) {
+    yMin = Math.min(yMin, derivedRange.min);
+    yMax = Math.max(yMax, derivedRange.max);
+  }
 
   const plotWidth = Math.max(1, width - padding.left - padding.right);
   const plotHeight = Math.max(1, height - padding.top - padding.bottom);
@@ -827,6 +877,8 @@ const createPlotWidget = (
 ): HTMLElement => {
   let currentXView: PlotRange | undefined = model.view || model.domain;
   let currentYView: PlotRange | undefined = model.yView || model.yDomain;
+  let yViewAuto = model.yViewAuto ?? true;
+  let yDomainAuto = model.yDomainAuto ?? true;
   let drawWithView: ((nextX: PlotRange | undefined, nextY: PlotRange | undefined) => void) | null =
     null;
   const container = document.createElement("div");
@@ -1256,13 +1308,19 @@ const createPlotWidget = (
         "plot-view-domain-slider-y",
         "Reset Y",
         (next) => {
-          currentYView = next;
-          if (drawWithView) drawWithView(currentXView, currentYView);
-        },
-        (next) => onUpdate({ yDomain: next, yView: next }),
-        () => onUpdate({ yDomain: null, yView: null })
-      );
-    }
+        currentYView = next;
+        yViewAuto = false;
+        yDomainAuto = false;
+        if (drawWithView) drawWithView(currentXView, currentYView);
+      },
+      (next) => onUpdate({ yDomain: next, yView: next }),
+      () => {
+        yViewAuto = true;
+        yDomainAuto = true;
+        onUpdate({ yDomain: null, yView: null });
+      }
+    );
+  }
 
     controls.appendChild(domainRow);
     controls.appendChild(viewRow);
@@ -1276,6 +1334,7 @@ const createPlotWidget = (
         currentYView,
         (next) => {
           currentYView = next;
+          yViewAuto = false;
           if (drawWithView) drawWithView(currentXView, currentYView);
         },
         (next) => onUpdate({ yView: next })
@@ -1595,14 +1654,12 @@ const createPlotWidget = (
         );
         currentXView = nextXView;
         if (dragStartYView) {
-          const nextYView = clampViewToDomain(
-            {
-              min: dragStartYView.min + deltaY * spanY,
-              max: dragStartYView.max + deltaY * spanY,
-            },
-            model.yDomain
-          );
-          currentYView = nextYView;
+          const nextYView = {
+            min: dragStartYView.min + deltaY * spanY,
+            max: dragStartYView.max + deltaY * spanY,
+          };
+          currentYView = yDomainAuto ? nextYView : clampViewToDomain(nextYView, model.yDomain);
+          yViewAuto = false;
         }
         if (drawWithView) drawWithView(currentXView, currentYView);
         return;
@@ -1627,11 +1684,9 @@ const createPlotWidget = (
         const scale = Math.max(0.2, 1 + delta / 200);
         const center = (dragStartYView.min + dragStartYView.max) / 2;
         const span = (dragStartYView.max - dragStartYView.min) * scale;
-        const nextYView = clampViewToDomain(
-          { min: center - span / 2, max: center + span / 2 },
-          model.yDomain
-        );
-        currentYView = nextYView;
+        const nextYView = { min: center - span / 2, max: center + span / 2 };
+        currentYView = yDomainAuto ? nextYView : clampViewToDomain(nextYView, model.yDomain);
+        yViewAuto = false;
         if (drawWithView) drawWithView(currentXView, currentYView);
         return;
       }
@@ -1683,6 +1738,14 @@ const createPlotWidget = (
           dragStartPos = position;
           dragStartXView = currentXView || model.domain || null;
           dragStartYView = currentYView || model.yDomain || null;
+          if (isPlotDebugEnabled()) {
+            logPlotDebug("[plot] drag start", {
+              axis,
+              dragStartXView,
+              dragStartYView,
+              yDomain: model.yDomain,
+            });
+          }
         } else {
           const dragThreshold = 6;
           const nearest = findNearestPoint(position, null, dragThreshold);
@@ -1717,6 +1780,14 @@ const createPlotWidget = (
 
       const onMove = (moveEvent: PointerEvent) => handlePointerMove(moveEvent);
       const onUp = () => {
+        if (isPlotDebugEnabled()) {
+          logPlotDebug("[plot] drag end", {
+            mode: dragMode,
+            currentXView,
+            currentYView,
+            yDomain: model.yDomain,
+          });
+        }
         if (dragMode === "pan" || dragMode === "zoom-x") {
           if (onUpdate && currentXView) {
             onUpdate({ view: currentXView });
@@ -1724,7 +1795,17 @@ const createPlotWidget = (
         }
         if (dragMode === "pan" || dragMode === "zoom-y") {
           if (onUpdate && currentYView) {
-            onUpdate({ yView: currentYView });
+            const patch: { yView: PlotRange; yDomain?: PlotRange } = {
+              yView: currentYView,
+            };
+            if (yDomainAuto) {
+              const expanded = expandPlotRange(currentYView, 6);
+              if (expanded) {
+                patch.yDomain = expanded;
+              }
+              yDomainAuto = false;
+            }
+            onUpdate(patch);
           }
         }
         dragMode = null;
@@ -1772,7 +1853,25 @@ const createPlotWidget = (
       while (svg.firstChild) {
         svg.removeChild(svg.firstChild);
       }
-      const rendered = createPlotSvg(model, width, height, currentXView, currentYView);
+      const rendered = createPlotSvg(
+        model,
+        width,
+        height,
+        currentXView,
+        currentYView,
+        yViewAuto
+      );
+      if (isPlotDebugEnabled()) {
+        logPlotDebug("[plot] draw", {
+          line: model.targetLine,
+          xView: currentXView,
+          yView: currentYView,
+          yDomain: model.yDomain,
+          yViewAuto,
+          yDomainAuto,
+          rendered: Boolean(rendered),
+        });
+      }
       if (rendered) {
         svg.setAttribute("viewBox", rendered.svg.getAttribute("viewBox") || `0 0 ${width} ${height}`);
         Array.from(rendered.svg.childNodes).forEach((node) => svg.appendChild(node));
@@ -1876,31 +1975,34 @@ export const PlotViewExtension = Extension.create({
               const existingState = plotViewPluginKey.getState(currentView.state) as PlotViewState;
               const overrides = { ...(existingState.overrides || {}) };
               const currentOverride = { ...(overrides[key] || {}) };
+              if (isPlotDebugEnabled()) {
+                logPlotDebug("[plot] override patch", { key, patch, currentOverride });
+              }
 
               if ("domain" in patch) {
                 if (patch.domain) {
-                  currentOverride.domain = patch.domain;
+                  currentOverride.domain = { ...patch.domain };
                 } else {
                   delete currentOverride.domain;
                 }
               }
               if ("view" in patch) {
                 if (patch.view) {
-                  currentOverride.view = patch.view;
+                  currentOverride.view = { ...patch.view };
                 } else {
                   delete currentOverride.view;
                 }
               }
               if ("yDomain" in patch) {
                 if (patch.yDomain) {
-                  currentOverride.yDomain = patch.yDomain;
+                  currentOverride.yDomain = { ...patch.yDomain };
                 } else {
                   delete currentOverride.yDomain;
                 }
               }
               if ("yView" in patch) {
                 if (patch.yView) {
-                  currentOverride.yView = patch.yView;
+                  currentOverride.yView = { ...patch.yView };
                 } else {
                   delete currentOverride.yView;
                 }
@@ -1910,6 +2012,10 @@ export const PlotViewExtension = Extension.create({
                 delete overrides[key];
               } else {
                 overrides[key] = currentOverride;
+              }
+
+              if (isPlotDebugEnabled()) {
+                logPlotDebug("[plot] override result", { key, override: overrides[key] });
               }
 
               const tr = currentView.state.tr.setMeta(plotViewPluginKey, {
@@ -1986,6 +2092,12 @@ export const PlotViewExtension = Extension.create({
                   if (override.view) model.view = override.view;
                   if (override.yDomain) model.yDomain = override.yDomain;
                   if (override.yView) model.yView = override.yView;
+                }
+                if (override?.yView || override?.yDomain) {
+                  model.yViewAuto = false;
+                }
+                if (override?.yDomain) {
+                  model.yDomainAuto = false;
                 }
               }
               const widget = Decoration.widget(

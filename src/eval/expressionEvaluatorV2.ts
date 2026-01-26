@@ -348,10 +348,11 @@ export class SimpleExpressionParser {
           if (suffixResult) {
             return suffixResult;
           }
-          if (!right.isNumeric()) {
-            return ErrorValue.typeError("Exponent must be numeric", "number", right.getType());
+          const exponentValue = this.resolveExponentValue(right);
+          if (exponentValue instanceof ErrorValue) {
+            return exponentValue;
           }
-          return SemanticArithmetic.power(left, right.getNumericValue());
+          return SemanticArithmetic.power(left, exponentValue);
         }
         default:
           return ErrorValue.semanticError(`Unknown operator: ${op}`);
@@ -934,13 +935,33 @@ export class SimpleExpressionParser {
         if (suffixResult) {
           return suffixResult;
         }
-        if (!right.isNumeric()) {
-          return ErrorValue.typeError("Exponent must be numeric", 'number', right.getType());
+        const exponentValue = this.resolveExponentValue(right);
+        if (exponentValue instanceof ErrorValue) {
+          return exponentValue;
         }
-        return SemanticArithmetic.power(left, right.getNumericValue());
+        return SemanticArithmetic.power(left, exponentValue);
       default:
         return ErrorValue.semanticError(`Unknown operator: ${operator}`);
     }
+  }
+
+  private static resolveExponentValue(value: SemanticValue): number | ErrorValue {
+    if (value instanceof DurationValue) {
+      const parts = value.getParts();
+      const entries = Object.entries(parts).filter(([, amount]) => amount !== 0);
+      if (entries.length !== 1) {
+        return ErrorValue.semanticError("Exponent must use a single duration unit");
+      }
+      const amount = entries[0][1];
+      if (!Number.isFinite(amount)) {
+        return ErrorValue.semanticError("Exponent must be numeric");
+      }
+      return amount;
+    }
+    if (!value.isNumeric()) {
+      return ErrorValue.typeError("Exponent must be numeric", "number", value.getType());
+    }
+    return value.getNumericValue();
   }
 }
 

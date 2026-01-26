@@ -29,8 +29,10 @@ import {
   UnitValue,
   CurrencyValue,
   CurrencySymbol,
+  DurationValue,
   SemanticParsers,
 } from "../types";
+import type { DurationUnit } from "../types/DurationValue";
 import { parseAndEvaluateExpression } from "../parsing/expressionParser";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
 import { SimpleExpressionParser } from "./expressionEvaluatorV2";
@@ -44,6 +46,33 @@ import {
   isValidRangeExpressionCandidate,
   normalizeRangeErrorMessage,
 } from "../utils/rangeExpression";
+
+const durationUnitByVariableName: Record<string, DurationUnit> = {
+  "business day": "businessDay",
+  "business days": "businessDay",
+  year: "year",
+  years: "year",
+  month: "month",
+  months: "month",
+  week: "week",
+  weeks: "week",
+  day: "day",
+  days: "day",
+  hour: "hour",
+  hours: "hour",
+  minute: "minute",
+  minutes: "minute",
+  second: "second",
+  seconds: "second",
+  millisecond: "millisecond",
+  milliseconds: "millisecond",
+};
+
+const normalizeDurationVariableName = (name: string): string =>
+  name.trim().toLowerCase().replace(/\s+/g, " ");
+
+const isBareNumberLiteral = (value: string): boolean =>
+  /^\s*[+-]?\d+(?:\.\d+)?\s*$/.test(value);
 
 /**
  * Semantic-aware variable evaluator
@@ -115,6 +144,14 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
         const reparsed = SemanticParsers.parse(expressionRawValue);
         if (reparsed && !SemanticValueTypes.isError(reparsed) && reparsed.getType() === "unit") {
           semanticValue = reparsed;
+        }
+      }
+
+      if (!conversion && semanticValue instanceof NumberValue && isBareNumberLiteral(expressionRawValue)) {
+        const normalizedVarName = normalizeDurationVariableName(varNode.variableName);
+        const durationUnit = durationUnitByVariableName[normalizedVarName];
+        if (durationUnit) {
+          semanticValue = new DurationValue({ [durationUnit]: semanticValue.getNumericValue() });
         }
       }
       
