@@ -286,9 +286,16 @@ const deriveYDomain = (data?: PlotPoint[]): PlotRange | undefined => {
   return { min, max };
 };
 
-const deriveYDomainFromSeries = (series: PlotSeriesModel[]): PlotRange | undefined => {
+const deriveYDomainFromSeries = (
+  series: PlotSeriesModel[],
+  range?: PlotRange
+): PlotRange | undefined => {
   const points = series.flatMap((entry) =>
-    (entry.data || []).filter((point) => point.y !== null)
+    (entry.data || []).filter((point) => {
+      if (point.y === null) return false;
+      if (!range) return true;
+      return point.x >= range.min && point.x <= range.max;
+    })
   ) as Array<{ x: number; y: number }>;
   if (points.length === 0) return undefined;
   let min = points[0].y;
@@ -303,6 +310,15 @@ const deriveYDomainFromSeries = (series: PlotSeriesModel[]): PlotRange | undefin
     max += delta;
   }
   return { min, max };
+};
+
+const expandPlotRange = (range: PlotRange | undefined, factor: number): PlotRange | undefined => {
+  if (!range || !Number.isFinite(range.min) || !Number.isFinite(range.max)) return range;
+  const span = range.max - range.min;
+  if (span <= 0) return range;
+  const center = range.min + span / 2;
+  const nextSpan = span * factor;
+  return { min: center - nextSpan / 2, max: center + nextSpan / 2 };
 };
 
 const formatPlotValue = (value: number) => {
@@ -405,17 +421,18 @@ const computeModelFromExpression = (
   const failedResult = seriesResults.find((result) => result.status === "disconnected");
 
   const viewOverrideSafe = viewOverride ? { ...viewOverride } : undefined;
-  const computedYDomain =
-    yDomainOverride ||
-    deriveYDomainFromSeries(
-      seriesSpecs.map((spec, index) => ({
-        label: spec.label,
-        expression: spec.expression,
-        data: seriesResults[index]?.data,
-        currentY: seriesResults[index]?.currentY,
-      }))
-    );
-  const computedYView = yViewOverride || computedYDomain;
+  const viewCandidate = viewOverrideSafe || firstResult.view || firstResult.domain;
+  const seriesData = seriesSpecs.map((spec, index) => ({
+    label: spec.label,
+    expression: spec.expression,
+    data: seriesResults[index]?.data,
+    currentY: seriesResults[index]?.currentY,
+  }));
+  const baseYDomain =
+    deriveYDomainFromSeries(seriesData, viewCandidate) || deriveYDomainFromSeries(seriesData);
+  const baseYView = expandPlotRange(baseYDomain, 1.15) || baseYDomain;
+  const computedYDomain = yDomainOverride || expandPlotRange(baseYView, 8) || baseYView;
+  const computedYView = yViewOverride || baseYView || computedYDomain;
   const xUnit = getPlotUnitFormat(variableContext.get(xVariable)?.value);
   const seriesUnits = (seriesNodes as ExpressionNode[]).map((node, index) => {
     const seriesLabel = seriesSpecs[index]?.label;
@@ -468,10 +485,17 @@ const createPlotSvg = (
   const viewRange = viewOverride || model.view || model.domain;
   if (!viewRange) return null;
 
+  const domainMin = model.domain?.min ?? viewRange.min;
+  const domainMax = model.domain?.max ?? viewRange.max;
+  const renderRange = {
+    min: domainMin,
+    max: domainMax,
+  };
+
   const seriesLayouts: PlotSeriesLayout[] = model.series.map((series, index) => {
     const points = (series.data || []).filter(
       (point) =>
-        point.y !== null && point.x >= viewRange.min && point.x <= viewRange.max
+        point.y !== null && point.x >= renderRange.min && point.x <= renderRange.max
     ) as Array<{ x: number; y: number }>;
     return {
       index,
@@ -485,25 +509,11 @@ const createPlotSvg = (
   const visiblePoints = seriesLayouts.flatMap((series) => series.points);
   if (visiblePoints.length === 0) return null;
 
-  const yRangeBase = yViewOverride || model.yView || model.yDomain;
-  let yMin: number;
-  let yMax: number;
-  if (yRangeBase) {
-    yMin = yRangeBase.min;
-    yMax = yRangeBase.max;
-  } else {
-    const derived = deriveYDomain(visiblePoints);
-    if (!derived) return null;
-    yMin = derived.min;
-    yMax = derived.max;
-  }
-
-  const ySpan = Math.max(1e-9, yMax - yMin);
-  if (!yRangeBase) {
-    const yPadding = Math.max(0.1, ySpan * 0.08);
-    yMin -= yPadding;
-    yMax += yPadding;
-  }
+  const derivedRange = deriveYDomain(visiblePoints);
+  const yRangeBase = yViewOverride || model.yView || model.yDomain || derivedRange;
+  if (!yRangeBase) return null;
+  let yMin = yRangeBase.min;
+  let yMax = yRangeBase.max;
 
   const plotWidth = Math.max(1, width - padding.left - padding.right);
   const plotHeight = Math.max(1, height - padding.top - padding.bottom);
@@ -1646,42 +1656,62 @@ const createPlotWidget = (
       const position = getPointerPosition(event);
       if (!position) return;
       const target = event.target as Element | null;
-      const axis = target?.getAttribute?.("data-axis");
+      if (plotLayout) {
+        const withinPlotX =
+          position.x >= plotLayout.padding.left &&
+          position.x <= plotLayout.width - plotLayout.padding.right;
+        const withinPlotY =
+          position.y >= plotLayout.padding.top &&
+          position.y <= plotLayout.height - plotLayout.padding.bottom;
+        const insidePlotArea = withinPlotX && withinPlotY;
+        const inXAxisZone = withinPlotX && position.y >= plotLayout.height - plotLayout.padding.bottom;
+        const inYAxisZone = withinPlotY && position.x <= plotLayout.padding.left;
+        const axisFromTarget = target?.closest?.("[data-axis]")?.getAttribute("data-axis");
+        const axis =
+          axisFromTarget === "x" || axisFromTarget === "y"
+            ? axisFromTarget
+            : !insidePlotArea && (inXAxisZone || inYAxisZone)
+              ? inXAxisZone
+                ? "x"
+                : "y"
+              : null;
 
-      if (axis === "x" || axis === "y") {
-        if (axis === "y" && !model.yDomain) return;
-        event.preventDefault();
-        dragMode = axis === "x" ? "zoom-x" : "zoom-y";
-        dragStartPos = position;
-        dragStartXView = currentXView || model.domain || null;
-        dragStartYView = currentYView || model.yDomain || null;
-      } else {
-        const nearest = findNearestPoint(position, null, 10);
-        if (nearest) {
+        if (axis) {
+          if (axis === "y" && !model.yDomain) return;
           event.preventDefault();
-          showHover(
-            nearest.seriesIndex,
-            nearest.screenX,
-            nearest.screenY,
-            nearest.dataX,
-            nearest.dataY
-          );
-          const updated = updateVariableValue(nearest.dataX);
-          if (updated) {
-            draggingSeriesIndex = nearest.seriesIndex;
-            dragMode = "line";
+          dragMode = axis === "x" ? "zoom-x" : "zoom-y";
+          dragStartPos = position;
+          dragStartXView = currentXView || model.domain || null;
+          dragStartYView = currentYView || model.yDomain || null;
+        } else {
+          const dragThreshold = 6;
+          const nearest = findNearestPoint(position, null, dragThreshold);
+          if (nearest) {
+            event.preventDefault();
+            showHover(
+              nearest.seriesIndex,
+              nearest.screenX,
+              nearest.screenY,
+              nearest.dataX,
+              nearest.dataY
+            );
+            const updated = updateVariableValue(nearest.dataX);
+            if (updated) {
+              draggingSeriesIndex = nearest.seriesIndex;
+              dragMode = "line";
+            } else {
+              dragMode = "pan";
+              dragStartPos = position;
+              dragStartXView = currentXView || model.domain || null;
+              dragStartYView = currentYView || model.yDomain || null;
+            }
           } else {
+            event.preventDefault();
             dragMode = "pan";
             dragStartPos = position;
             dragStartXView = currentXView || model.domain || null;
             dragStartYView = currentYView || model.yDomain || null;
           }
-        } else {
-          event.preventDefault();
-          dragMode = "pan";
-          dragStartPos = position;
-          dragStartXView = currentXView || model.domain || null;
-          dragStartYView = currentYView || model.yDomain || null;
         }
       }
 

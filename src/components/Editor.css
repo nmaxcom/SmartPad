@@ -731,6 +731,8 @@ body.number-scrubbing * {
 .plot-view-line {
   stroke: var(--color-accent);
   stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
   fill: none;
   opacity: 0.82;
   transition: opacity 0.2s ease, stroke-width 0.2s ease;

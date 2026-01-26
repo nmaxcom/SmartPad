@@ -51,6 +51,7 @@ export interface PlotComputationInput {
 }
 
 const DEFAULT_SAMPLE_COUNT = 60;
+const DEFAULT_DOMAIN_EXPANSION = 16;
 
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, value));
@@ -261,7 +262,15 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
   const normalizedBaseDomain = normalizeRange(baseDomain);
   const expandedDomain = parsedDomain
     ? normalizedBaseDomain
-    : expandRange(normalizedBaseDomain, 1.6);
+    : expandRange(normalizedBaseDomain, DEFAULT_DOMAIN_EXPANSION);
+  if (baseValue.getType() === "percentage") {
+    const clampedDomain = normalizeRange({
+      min: clamp(expandedDomain.min, 0, 1),
+      max: clamp(expandedDomain.max, 0, 1),
+    });
+    expandedDomain.min = clampedDomain.min;
+    expandedDomain.max = clampedDomain.max;
+  }
   const viewCandidate = parsedView ?? normalizedBaseDomain;
   const normalizedView = normalizeRange(viewCandidate);
   const normalizedDomain = normalizeRange(expandedDomain);
@@ -269,7 +278,14 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
     ? fitViewToDomain(normalizedView, normalizedDomain)
     : normalizedView;
 
-  const totalSamples = Math.max(2, sampleCount ?? DEFAULT_SAMPLE_COUNT);
+  const baseSamples = Math.max(2, sampleCount ?? DEFAULT_SAMPLE_COUNT);
+  const minSamples = !domainSpec ? Math.max(baseSamples, 240) : baseSamples;
+  const viewSpan = normalizedView.max - normalizedView.min;
+  const domainSpan = normalizedDomain.max - normalizedDomain.min;
+  const densityFactor =
+    Number.isFinite(viewSpan) && viewSpan > 0 ? Math.max(1, domainSpan / viewSpan) : 1;
+  let totalSamples = Math.max(minSamples, Math.round(baseSamples * densityFactor));
+  totalSamples = Math.min(2400, totalSamples);
   const step = (normalizedDomain.max - normalizedDomain.min) / (totalSamples - 1);
 
   const baseContext = new Map(variableContext);
