@@ -212,13 +212,15 @@ Where:
 
 ### 5.2 Supported fields (v1)
 
-| Field    | Required | Description                              |
-| -------- | -------- | ---------------------------------------- |
-| `kind`   | no       | `plot`, `scatter`, `hist`, `box`, `auto` |
-| `x`      | no       | Independent variable (symbol name)       |
-| `domain` | no       | Semantic domain of X                     |
-| `view`   | no       | Viewport (pan/zoom state)                |
-| `size`   | no       | `sm`, `md`, `lg`, `xl`                   |
+| Field     | Required | Description                              |
+| --------- | -------- | ---------------------------------------- |
+| `kind`    | no       | `plot`, `scatter`, `hist`, `box`, `auto` |
+| `x`       | no       | Independent variable (symbol name)       |
+| `domain`  | no       | Semantic domain of X                     |
+| `view`    | no       | X viewport (pan/zoom state)              |
+| `ydomain` | no       | Semantic domain of Y                     |
+| `yview`   | no       | Y viewport (pan/zoom state)              |
+| `size`    | no       | `sm`, `md`, `lg`, `xl`                   |
 
 ---
 
@@ -263,6 +265,18 @@ With viewport:
 
 ```smartpad
 @view plot x=years domain=0..40 view=5..25
+```
+
+With explicit Y domain:
+
+```smartpad
+@view plot x=years ydomain=0..100000
+```
+
+With explicit Y viewport:
+
+```smartpad
+@view plot x=years yview=1000..8000
 ```
 
 Size:
@@ -397,7 +411,7 @@ Pan/zoom only affects the **viewport**.
 
 * Scroll = zoom X
 * Shift + scroll = pan
-* Small “Reset view” control restores viewport to domain
+* Small “Reset view” control restores viewport to computed view (instead of the full domain)
 
 ---
 

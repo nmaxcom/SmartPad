@@ -24,6 +24,7 @@ export interface PlotComputationResult {
   data?: PlotPoint[];
   domain?: PlotRange;
   view?: PlotRange;
+  autoView?: PlotRange;
   currentX?: number;
   currentY?: number | null;
 }
@@ -59,6 +60,7 @@ interface PlotCacheEntry {
   data: PlotPoint[];
   domain: PlotRange;
   view: PlotRange;
+  autoView: PlotRange;
   totalSamples: number;
   depsSignature: string;
 }
@@ -341,6 +343,7 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
   const clampedView = parsedView
     ? fitViewToDomain(normalizedView, normalizedDomain)
     : normalizedView;
+  const autoView = parsedView ? clampedView : normalizedBaseDomain;
 
   const baseSamples = Math.max(2, sampleCount ?? DEFAULT_SAMPLE_COUNT);
   const minSamples = !domainSpec ? Math.max(baseSamples, 240) : baseSamples;
@@ -378,6 +381,7 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
       data: cached.data,
       domain: cached.domain,
       view: cached.view,
+      autoView: cached.autoView || cached.view,
       currentX: baseNumeric,
       currentY,
     };
@@ -423,6 +427,7 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
     data,
     domain: normalizedDomain,
     view: clampedView,
+    autoView,
     totalSamples,
     depsSignature,
   });
@@ -432,6 +437,7 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
     data,
     domain: normalizedDomain,
     view: clampedView,
+    autoView,
     currentX: baseNumeric,
     currentY,
   };

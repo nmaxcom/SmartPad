@@ -10,7 +10,7 @@ import {
 import { parseExpressionComponents } from "../parsing/expressionComponents";
 import { NodeEvaluator, EvaluationContext } from "./registry";
 import { PlotKind, PlotSize, PlotViewRenderNode } from "./renderNodes";
-import { computePlotData } from "../plotting/plottingUtils";
+import { computePlotData, parsePlotRange } from "../plotting/plottingUtils";
 import { defaultRegistry } from "./registry";
 
 const SUPPORTED_KINDS: PlotKind[] = ["plot", "scatter", "hist", "box", "auto"];
@@ -157,6 +157,11 @@ export class PlotViewEvaluator implements NodeEvaluator {
     const kind = normalizeKind(node.kind);
     const size = normalizeSize(node.params.size);
     const xParam = node.params.x;
+    const yDomainRaw =
+      node.params.yDomain || node.params.ydomain || node.params.y_domain;
+    const yViewRaw = node.params.yView || node.params.yview || node.params.y_view;
+    const yDomain = yDomainRaw ? parsePlotRange(yDomainRaw) || undefined : undefined;
+    const yView = yViewRaw ? parsePlotRange(yViewRaw) || undefined : undefined;
     const seriesParam = parseSeriesList(node.params.y);
     const seriesDefinitions = seriesParam.length
       ? seriesParam.map((entry) => resolveSeriesExpression(entry, context))
@@ -174,6 +179,8 @@ export class PlotViewEvaluator implements NodeEvaluator {
         size,
         status: "disconnected",
         message: "Expression unavailable",
+        yDomain,
+        yView,
       };
     }
     const safeSeriesNodes = seriesNodes as ExpressionNode[];
@@ -225,6 +232,8 @@ export class PlotViewEvaluator implements NodeEvaluator {
         targetLine: expressionNode.line,
         status: "disconnected",
         message: failedResult?.message || firstResult?.message || "Expression unavailable",
+        yDomain,
+        yView,
       };
     }
 
@@ -247,6 +256,8 @@ export class PlotViewEvaluator implements NodeEvaluator {
       message: firstResult.message,
       domain: firstResult.domain,
       view: firstResult.view,
+      yDomain,
+      yView,
       data: firstResult.data,
       currentX: firstResult.currentX,
       currentY: firstResult.currentY,

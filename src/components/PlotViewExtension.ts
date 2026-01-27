@@ -87,8 +87,11 @@ interface PlotViewModel {
   message?: string;
   domain?: PlotRange;
   view?: PlotRange;
+  autoView?: PlotRange;
   yDomain?: PlotRange;
   yView?: PlotRange;
+  autoYDomain?: PlotRange;
+  autoYView?: PlotRange;
   yViewAuto?: boolean;
   yDomainAuto?: boolean;
   data?: PlotPoint[];
@@ -115,6 +118,7 @@ interface PlotSvgLayout {
   xScale: (value: number) => number;
   yScale: (value: number) => number;
   series: PlotSeriesLayout[];
+  intersections?: Array<{ x: number; y: number; seriesA: number; seriesB: number }>;
 }
 
 interface PlotSvgResult {
@@ -248,6 +252,8 @@ const buildPlotModel = (
           ]
         : [];
   const derivedY = deriveYDomainFromSeries(series);
+  const resolvedYDomain = plotNode.yDomain || derivedY;
+  const resolvedYView = plotNode.yView || plotNode.yDomain || derivedY;
   return {
     source,
     kind: plotNode.kind,
@@ -259,10 +265,13 @@ const buildPlotModel = (
     message: plotNode.message,
     domain: plotNode.domain,
     view: plotNode.view,
-    yDomain: derivedY,
-    yView: derivedY,
-    yViewAuto: true,
-    yDomainAuto: true,
+    autoView: plotNode.view || plotNode.domain,
+    yDomain: resolvedYDomain,
+    yView: resolvedYView,
+    autoYDomain: derivedY,
+    autoYView: derivedY,
+    yViewAuto: !plotNode.yView && !plotNode.yDomain,
+    yDomainAuto: !plotNode.yDomain,
     data: series[0]?.data,
     currentX: plotNode.currentX,
     currentY: series[0]?.currentY ?? plotNode.currentY,
@@ -450,7 +459,9 @@ const computeModelFromExpression = (
   const baseYDomain =
     deriveYDomainFromSeries(seriesData, viewCandidate) || deriveYDomainFromSeries(seriesData);
   const baseYView = expandPlotRange(baseYDomain, 1.15) || baseYDomain;
-  let computedYDomain = yDomainOverride || expandPlotRange(baseYView, 8) || baseYView;
+  const autoYView = yViewOverride?.raw ? yViewOverride : baseYView || baseYDomain;
+  const autoYDomain = yDomainOverride?.raw ? yDomainOverride : expandPlotRange(autoYView, 8) || autoYView;
+  let computedYDomain = yDomainOverride || autoYDomain;
   if (yViewOverride) {
     if (computedYDomain) {
       computedYDomain = {
@@ -461,7 +472,7 @@ const computeModelFromExpression = (
       computedYDomain = yViewOverride;
     }
   }
-  const computedYView = yViewOverride || baseYView || computedYDomain;
+  const computedYView = yViewOverride || autoYView || computedYDomain;
   const yViewAuto = !yViewOverride && !yDomainOverride;
   const yDomainAuto = !yDomainOverride;
   if (isPlotDebugEnabled()) {
@@ -506,8 +517,11 @@ const computeModelFromExpression = (
     message: failedResult?.message || firstResult.message,
     domain: firstResult.domain,
     view: viewOverrideSafe || firstResult.view,
+    autoView: firstResult.autoView || firstResult.view,
     yDomain: computedYDomain,
     yView: computedYView,
+    autoYDomain,
+    autoYView,
     yViewAuto,
     yDomainAuto,
     data: series[0]?.data,
@@ -807,8 +821,9 @@ const createPlotSvg = (
     }
   });
 
+  let intersectionPoints: Array<{ x: number; y: number; seriesA: number; seriesB: number }> = [];
   if (seriesLayouts.length > 1) {
-    const intersections: Array<{ x: number; y: number }> = [];
+    const intersections: Array<{ x: number; y: number; seriesA: number; seriesB: number }> = [];
     for (let i = 0; i < seriesLayouts.length; i++) {
       for (let j = i + 1; j < seriesLayouts.length; j++) {
         const pointsA = seriesLayouts[i].points;
@@ -823,14 +838,14 @@ const createPlotSvg = (
           const d1 = a1.y - b1.y;
           if (!Number.isFinite(d0) || !Number.isFinite(d1)) continue;
           if (d0 === 0) {
-            intersections.push({ x: a0.x, y: a0.y });
+            intersections.push({ x: a0.x, y: a0.y, seriesA: i, seriesB: j });
             continue;
           }
           if (d0 * d1 < 0) {
             const t = d0 / (d0 - d1);
             const x = a0.x + t * (a1.x - a0.x);
             const y = a0.y + t * (a1.y - a0.y);
-            intersections.push({ x, y });
+            intersections.push({ x, y, seriesA: i, seriesB: j });
           }
         }
       }
@@ -844,6 +859,7 @@ const createPlotSvg = (
       dot.setAttribute("class", "plot-view-intersection-dot");
       svg.appendChild(dot);
     });
+    intersectionPoints = intersections;
   }
 
   return {
@@ -858,6 +874,7 @@ const createPlotSvg = (
       xScale,
       yScale,
       series: seriesLayouts,
+      intersections: intersectionPoints.length ? intersectionPoints : undefined,
     },
     lineElements,
   };
@@ -875,10 +892,20 @@ const createPlotWidget = (
   onClose?: () => void,
   editorView?: EditorView | null
 ): HTMLElement => {
-  let currentXView: PlotRange | undefined = model.view || model.domain;
-  let currentYView: PlotRange | undefined = model.yView || model.yDomain;
+  const rangesMatch = (a?: PlotRange, b?: PlotRange) =>
+    !!a &&
+    !!b &&
+    Math.abs(a.min - b.min) < 1e-9 &&
+    Math.abs(a.max - b.max) < 1e-9;
+  let currentXView: PlotRange | undefined =
+    model.view || model.autoView || model.domain;
+  let currentYView: PlotRange | undefined =
+    model.yView || model.autoYView || model.yDomain;
   let yViewAuto = model.yViewAuto ?? true;
   let yDomainAuto = model.yDomainAuto ?? true;
+  if (model.autoYView && currentYView && rangesMatch(currentYView, model.autoYView)) {
+    yViewAuto = false;
+  }
   let drawWithView: ((nextX: PlotRange | undefined, nextY: PlotRange | undefined) => void) | null =
     null;
   const container = document.createElement("div");
@@ -1398,7 +1425,14 @@ const createPlotWidget = (
       screenX: number,
       screenY: number,
       dataX: number,
-      dataY: number
+      dataY: number,
+      nearbyIntersections: Array<{
+        x: number;
+        y: number;
+        seriesA: number;
+        seriesB: number;
+        dist2: number;
+      }> = []
     ) => {
       activeSeriesIndex = seriesIndex;
       updateLineHighlight(seriesIndex);
@@ -1430,6 +1464,22 @@ const createPlotWidget = (
             `Δ to ${compareLabel} = ${formatPlotValueWithUnit(delta, series?.unit)}`
           );
         }
+      }
+      if (nearbyIntersections.length > 0) {
+        nearbyIntersections.forEach((intersection) => {
+          const seriesA = model.series[intersection.seriesA];
+          const seriesB = model.series[intersection.seriesB];
+          const labelA =
+            seriesA?.label || seriesA?.expression || `Series ${intersection.seriesA + 1}`;
+          const labelB =
+            seriesB?.label || seriesB?.expression || `Series ${intersection.seriesB + 1}`;
+          lines.push(
+            `Intersection (${labelA} × ${labelB}): x=${formatPlotValueWithUnit(
+              intersection.x,
+              model.xUnit
+            )}, y=${formatPlotValueWithUnit(intersection.y, series?.unit)}`
+          );
+        });
       }
       tooltip.textContent = lines.join("\n");
       if (series?.color) {
@@ -1569,6 +1619,31 @@ const createPlotWidget = (
       return best;
     };
 
+    const findNearbyIntersections = (
+      position: { x: number; y: number },
+      threshold: number
+    ) => {
+      if (!plotLayout?.intersections?.length) return [];
+      const thresholdSq = threshold * threshold;
+      const matches: Array<{
+        x: number;
+        y: number;
+        seriesA: number;
+        seriesB: number;
+        dist2: number;
+      }> = [];
+      plotLayout.intersections.forEach((point) => {
+        const sx = plotLayout.xScale(point.x);
+        const sy = plotLayout.yScale(point.y);
+        const dist2 = (position.x - sx) ** 2 + (position.y - sy) ** 2;
+        if (dist2 <= thresholdSq) {
+          matches.push({ ...point, dist2 });
+        }
+      });
+      matches.sort((a, b) => a.dist2 - b.dist2);
+      return matches;
+    };
+
     const updateVariableValue = (nextValue: number) => {
       if (!Number.isFinite(nextValue)) return false;
       if (!editorView || !model.x) return false;
@@ -1619,6 +1694,7 @@ const createPlotWidget = (
       if (!plotLayout) return;
       const position = getPointerPosition(event);
       if (!position) return;
+      const nearbyIntersections = findNearbyIntersections(position, 12);
       if (dragMode === "line" && draggingSeriesIndex !== null) {
         const nearest = findNearestPoint(position, draggingSeriesIndex, null);
         if (nearest) {
@@ -1627,7 +1703,8 @@ const createPlotWidget = (
             nearest.screenX,
             nearest.screenY,
             nearest.dataX,
-            nearest.dataY
+            nearest.dataY,
+            nearbyIntersections
           );
           updateVariableValue(nearest.dataX);
         }
@@ -1701,7 +1778,8 @@ const createPlotWidget = (
         nearest.screenX,
         nearest.screenY,
         nearest.dataX,
-        nearest.dataY
+        nearest.dataY,
+        nearbyIntersections
       );
     };
 
@@ -1751,12 +1829,14 @@ const createPlotWidget = (
           const nearest = findNearestPoint(position, null, dragThreshold);
           if (nearest) {
             event.preventDefault();
+            const nearbyIntersections = findNearbyIntersections(position, 12);
             showHover(
               nearest.seriesIndex,
               nearest.screenX,
               nearest.screenY,
               nearest.dataX,
-              nearest.dataY
+              nearest.dataY,
+              nearbyIntersections
             );
             const updated = updateVariableValue(nearest.dataX);
             if (updated) {
@@ -1829,20 +1909,15 @@ const createPlotWidget = (
     chart.addEventListener("pointerdown", handlePointerDown);
     chart.addEventListener("dblclick", (event) => {
       event.preventDefault();
-      if (model.domain) {
-        currentXView = model.domain;
-      }
-      if (model.yDomain) {
-        currentYView = model.yDomain;
-      }
+      const resetXView = model.autoView || model.view || model.domain;
+      const resetYView = model.autoYView || model.yView || model.yDomain;
+      if (resetXView) currentXView = resetXView;
+      if (resetYView) currentYView = resetYView;
+      yViewAuto = false;
+      yDomainAuto = model.yDomainAuto ?? true;
       if (drawWithView) drawWithView(currentXView, currentYView);
       if (onUpdate) {
-        const patch: { view?: PlotRange | null; yView?: PlotRange | null } = {};
-        if (currentXView) patch.view = currentXView;
-        if (currentYView) patch.yView = currentYView;
-        if (Object.keys(patch).length) {
-          onUpdate(patch);
-        }
+        onUpdate({ view: null, yView: null, yDomain: null });
       }
     });
     const draw = (xOverride?: PlotRange, yOverride?: PlotRange) => {
@@ -2074,10 +2149,10 @@ export const PlotViewExtension = Extension.create({
                 const recomputed = computeModelFromExpression(
                   model.targetLine,
                   model.x,
-                  override?.domain,
-                  override?.view,
-                  override?.yDomain,
-                  override?.yView,
+                  override?.domain || (model.domain?.raw ? model.domain : undefined),
+                  override?.view || (model.view?.raw ? model.view : undefined),
+                  override?.yDomain || (model.yDomain?.raw ? model.yDomain : undefined),
+                  override?.yView || (model.yView?.raw ? model.yView : undefined),
                   "persistent",
                   model.size,
                   seriesDefinitions,

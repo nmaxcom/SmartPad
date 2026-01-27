@@ -115,6 +115,8 @@ export interface PlotViewRenderNode extends BaseRenderNode {
   readonly message?: string;
   readonly domain?: PlotRange;
   readonly view?: PlotRange;
+  readonly yDomain?: PlotRange;
+  readonly yView?: PlotRange;
   readonly data?: PlotPoint[];
   readonly currentX?: number;
   readonly currentY?: number | null;
