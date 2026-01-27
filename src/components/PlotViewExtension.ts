@@ -77,6 +77,14 @@ interface PlotUnitFormat {
   scale?: number;
 }
 
+interface PlotFormatSettings {
+  decimalPlaces: number;
+  scientificUpperThreshold?: number;
+  scientificLowerThreshold?: number;
+  scientificTrimTrailingZeros?: boolean;
+  groupThousands?: boolean;
+}
+
 interface PlotViewModel {
   source: PlotSource;
   kind: PlotKind;
@@ -96,6 +104,7 @@ interface PlotViewModel {
   autoYView?: PlotRange;
   yViewAuto?: boolean;
   yDomainAuto?: boolean;
+  formatSettings?: PlotFormatSettings;
   data?: PlotPoint[];
   currentX?: number;
   currentY?: number | null;
@@ -351,21 +360,44 @@ const expandPlotRange = (range: PlotRange | undefined, factor: number): PlotRang
   return { min: center - nextSpan / 2, max: center + nextSpan / 2 };
 };
 
-const formatPlotValue = (value: number) => {
+const trimScientificZeros = (value: string) =>
+  value
+    .replace(/(\.\d*?[1-9])0+e/i, "$1e")
+    .replace(/\.0+e/i, "e");
+
+const formatPlotValue = (value: number, settings?: PlotFormatSettings) => {
   if (!Number.isFinite(value)) return "";
   const abs = Math.abs(value);
-  if (abs > 0 && (abs >= 1e6 || abs < 1e-3)) {
-    return value.toExponential(2);
+  const upperThreshold = settings?.scientificUpperThreshold ?? 1e6;
+  const lowerThreshold = settings?.scientificLowerThreshold ?? 1e-3;
+  const decimals =
+    typeof settings?.decimalPlaces === "number"
+      ? settings.decimalPlaces
+      : abs >= 100
+        ? 0
+        : 2;
+  if (abs > 0 && (abs >= upperThreshold || abs < lowerThreshold)) {
+    const scientific = value.toExponential(Math.max(0, decimals));
+    return settings?.scientificTrimTrailingZeros
+      ? trimScientificZeros(scientific)
+      : scientific;
   }
   const fixed = abs >= 100 ? value.toFixed(0) : value.toFixed(2);
   const trimmed = fixed.replace(/\.00$/, "").replace(/(\.\d)0$/, "$1");
+  if (settings?.groupThousands === false) {
+    return trimmed;
+  }
   return applyThousandsSeparator(trimmed);
 };
 
-const formatPlotValueWithUnit = (value: number, unit?: PlotUnitFormat | null) => {
+const formatPlotValueWithUnit = (
+  value: number,
+  unit?: PlotUnitFormat | null,
+  settings?: PlotFormatSettings
+) => {
   if (!Number.isFinite(value)) return "";
   const scaled = value * (unit?.scale ?? 1);
-  const formatted = formatPlotValue(scaled);
+  const formatted = formatPlotValue(scaled, settings);
   const prefix = unit?.prefix ?? "";
   const suffix = unit?.suffix ?? "";
   return `${prefix}${formatted}${suffix}`;
@@ -400,7 +432,18 @@ const resolveDurationUnitLabel = (value: DurationValue): string => {
   const entries = Object.entries(parts).filter(([, partValue]) => (partValue ?? 0) !== 0);
   if (entries.length === 1) {
     const unit = entries[0][0];
-    return durationUnitLabels[unit] || unit;
+    if (unit !== "second") {
+      return durationUnitLabels[unit] || unit;
+    }
+    const totalSeconds = value.getTotalSeconds();
+    if (Math.abs(totalSeconds) >= 365 * 24 * 60 * 60) return "years";
+    if (Math.abs(totalSeconds) >= 30 * 24 * 60 * 60) return "months";
+    if (Math.abs(totalSeconds) >= 7 * 24 * 60 * 60) return "weeks";
+    if (Math.abs(totalSeconds) >= 24 * 60 * 60) return "days";
+    if (Math.abs(totalSeconds) >= 60 * 60) return "hours";
+    if (Math.abs(totalSeconds) >= 60) return "minutes";
+    if (Math.abs(totalSeconds) >= 1) return "seconds";
+    return "ms";
   }
   for (const unit of durationUnitOrder) {
     if (parts[unit]) {
@@ -594,6 +637,7 @@ const computeModelFromExpression = (
     autoYView,
     yViewAuto,
     yDomainAuto,
+    formatSettings: settings,
     data: series[0]?.data,
     currentX: firstResult.currentX,
     currentY: series[0]?.currentY ?? firstResult.currentY,
@@ -731,7 +775,7 @@ const createPlotSvg = (
     label.setAttribute("y", `${height - padding.bottom + 18}`);
     label.setAttribute("text-anchor", "middle");
     label.setAttribute("class", "plot-view-axis-text");
-    label.textContent = formatPlotValue(tick);
+    label.textContent = formatPlotValue(tick, model.formatSettings);
     svg.appendChild(label);
   });
 
@@ -752,7 +796,7 @@ const createPlotSvg = (
     label.setAttribute("y", `${y + 4}`);
     label.setAttribute("text-anchor", "end");
     label.setAttribute("class", "plot-view-axis-text");
-    label.textContent = formatPlotValue(tick);
+    label.textContent = formatPlotValue(tick, model.formatSettings);
     svg.appendChild(label);
   });
 
@@ -762,7 +806,10 @@ const createPlotSvg = (
   xLabel.setAttribute("text-anchor", "middle");
   xLabel.setAttribute("class", "plot-view-axis-label");
   const xAxisName = model.x || "x";
-  xLabel.textContent = formatAxisLabel(xAxisName, formatPlotUnitLabel(model.xUnit));
+  xLabel.textContent = formatAxisLabel(
+    xAxisName,
+    formatPlotUnitLabel(model.xUnit)
+  );
   svg.appendChild(xLabel);
 
   const yLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -1583,9 +1630,21 @@ const createPlotWidget = (
       const series = model.series[seriesIndex];
       const label = series?.label || series?.expression;
       const lines = [];
-      lines.push(`${model.x || "x"} = ${formatPlotValueWithUnit(dataX, model.xUnit)}`);
+      lines.push(
+        `${model.x || "x"} = ${formatPlotValueWithUnit(
+          dataX,
+          model.xUnit,
+          model.formatSettings
+        )}`
+      );
       const yLabel = label || "value";
-      lines.push(`${yLabel} = ${formatPlotValueWithUnit(dataY, series?.unit)}`);
+      lines.push(
+        `${yLabel} = ${formatPlotValueWithUnit(
+          dataY,
+          series?.unit,
+          model.formatSettings
+        )}`
+      );
       if (model.series.length > 1 && plotLayout) {
         const compareIndex = seriesIndex === 0 ? 1 : 0;
         const compareValue = getSeriesValueAtX(compareIndex, dataX);
@@ -1595,7 +1654,11 @@ const createPlotWidget = (
           const compareLabel =
             compareSeries?.label || compareSeries?.expression || `Series ${compareIndex + 1}`;
           lines.push(
-            `Δ to ${compareLabel} = ${formatPlotValueWithUnit(delta, series?.unit)}`
+            `Δ to ${compareLabel} = ${formatPlotValueWithUnit(
+              delta,
+              series?.unit,
+              model.formatSettings
+            )}`
           );
         }
       }
@@ -1610,8 +1673,13 @@ const createPlotWidget = (
           lines.push(
             `Intersection (${labelA} × ${labelB}): x=${formatPlotValueWithUnit(
               intersection.x,
-              model.xUnit
-            )}, y=${formatPlotValueWithUnit(intersection.y, series?.unit)}`
+              model.xUnit,
+              model.formatSettings
+            )}, y=${formatPlotValueWithUnit(
+              intersection.y,
+              series?.unit,
+              model.formatSettings
+            )}`
           );
         });
       }

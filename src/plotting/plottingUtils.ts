@@ -189,16 +189,42 @@ const durationUnitOrder: DurationUnit[] = [
   "millisecond",
 ];
 
+const durationUnitSeconds: Record<DurationUnit, number> = {
+  year: 365 * 24 * 60 * 60,
+  month: 30 * 24 * 60 * 60,
+  week: 7 * 24 * 60 * 60,
+  businessDay: 24 * 60 * 60,
+  day: 24 * 60 * 60,
+  hour: 60 * 60,
+  minute: 60,
+  second: 1,
+  millisecond: 1 / 1000,
+};
+
+const chooseDurationUnitByMagnitude = (seconds: number): DurationUnit => {
+  const abs = Math.abs(seconds);
+  if (abs >= durationUnitSeconds.year) return "year";
+  if (abs >= durationUnitSeconds.month) return "month";
+  if (abs >= durationUnitSeconds.week) return "week";
+  if (abs >= durationUnitSeconds.day) return "day";
+  if (abs >= durationUnitSeconds.hour) return "hour";
+  if (abs >= durationUnitSeconds.minute) return "minute";
+  if (abs >= durationUnitSeconds.second) return "second";
+  return "millisecond";
+};
+
 const resolveDurationPlotUnit = (value: DurationValue): DurationUnit => {
   const parts = value.getParts();
   const entries = Object.entries(parts).filter(([, partValue]) => (partValue ?? 0) !== 0);
   if (entries.length === 1) {
-    return entries[0][0] as DurationUnit;
+    const unit = entries[0][0] as DurationUnit;
+    if (unit !== "second") return unit;
+    return chooseDurationUnitByMagnitude(value.getTotalSeconds());
   }
   for (const unit of durationUnitOrder) {
     if (parts[unit]) return unit;
   }
-  return "second";
+  return chooseDurationUnitByMagnitude(value.getTotalSeconds());
 };
 
 const getDurationPlotNumeric = (value: DurationValue, unit: DurationUnit): number => {

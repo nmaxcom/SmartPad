@@ -17,6 +17,7 @@ import { UnitValueWithDisplay } from './UnitValueWithDisplay';
 import { DateValue } from './DateValue';
 import { TimeValue } from './TimeValue';
 import { DurationValue } from './DurationValue';
+import type { DurationUnit } from './DurationValue';
 import { ErrorValue, type ErrorType, type ErrorContext } from './ErrorValue';
 import { SymbolicValue } from './SymbolicValue';
 import { ListValue } from './ListValue';
@@ -169,6 +170,12 @@ const parseSingleValue = (input: string): SemanticValue | null => {
   const trimmed = input.trim();
   if (!trimmed) return null;
 
+  const isBuiltinUnitExpression = (unitString: string): boolean => {
+    const tokens = unitString.split(/[^A-Za-z°µμΩ]+/).filter(Boolean);
+    if (tokens.length === 0) return false;
+    return tokens.every((token) => defaultUnitRegistry.isBuiltinSymbol(token));
+  };
+
   const parseCurrencyUnit = (value: string): SemanticValue | null => {
     const perMatch = value.match(/^(.*?)\bper\b(.+)$/i);
     let left: string | null = null;
@@ -190,7 +197,9 @@ const parseSingleValue = (input: string): SemanticValue | null => {
     }
     const unitString = unit.replace(/\s+/g, "");
     if (!unitString || !/[a-zA-Z°µμΩ]/.test(unitString)) return null;
-    if (!/[*/^]/.test(unitString) && !defaultUnitRegistry.isKnownSymbol(unitString)) {
+    if (/[*/^()]/.test(unitString)) {
+      if (!isBuiltinUnitExpression(unitString)) return null;
+    } else if (!defaultUnitRegistry.isKnownSymbol(unitString)) {
       return null;
     }
     try {
@@ -217,7 +226,9 @@ const parseSingleValue = (input: string): SemanticValue | null => {
     if (!left.match(/^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/)) return null;
     const unitString = unit.replace(/\s+/g, "");
     if (!unitString || !/[a-zA-Z°µμΩ]/.test(unitString)) return null;
-    if (!/[*/^]/.test(unitString) && !defaultUnitRegistry.isKnownSymbol(unitString)) {
+    if (/[*/^()]/.test(unitString)) {
+      if (!isBuiltinUnitExpression(unitString)) return null;
+    } else if (!defaultUnitRegistry.isKnownSymbol(unitString)) {
       return null;
     }
     try {
@@ -307,6 +318,67 @@ const preferredDurationUnit = (unitString: string): string | null => {
   if (match) return match[1];
   return null;
 };
+
+const parseDurationUnitString = (unitString: string): DurationUnit | null => {
+  const normalized = unitString.trim().toLowerCase();
+  const base = normalized.replace(/[^a-z]/g, "");
+  switch (base) {
+    case "h":
+    case "hr":
+    case "hrs":
+    case "hour":
+    case "hours":
+      return "hour";
+    case "day":
+    case "days":
+    case "d":
+      return "day";
+    case "week":
+    case "weeks":
+    case "wk":
+    case "w":
+      return "week";
+    case "month":
+    case "months":
+    case "mo":
+    case "mos":
+      return "month";
+    case "year":
+    case "years":
+    case "yr":
+    case "y":
+      return "year";
+    case "min":
+    case "minute":
+    case "minutes":
+      return "minute";
+    case "s":
+    case "sec":
+    case "secs":
+    case "second":
+    case "seconds":
+      return "second";
+    case "ms":
+      return "millisecond";
+    default:
+      return null;
+  }
+};
+
+const durationUnitSeconds: Record<DurationUnit, number> = {
+  year: 365 * 24 * 60 * 60,
+  month: 30 * 24 * 60 * 60,
+  week: 7 * 24 * 60 * 60,
+  businessDay: 24 * 60 * 60,
+  day: 24 * 60 * 60,
+  hour: 60 * 60,
+  minute: 60,
+  second: 1,
+  millisecond: 1 / 1000,
+};
+
+const convertDurationScalar = (value: number, fromUnit: DurationUnit, toUnit: DurationUnit): number =>
+  (value * durationUnitSeconds[fromUnit]) / durationUnitSeconds[toUnit];
 
 const parseListLiteral = (input: string): SemanticValue | null => {
   const normalized = stripEnclosingParentheses(input);
@@ -555,7 +627,52 @@ export const SemanticArithmetic = {
         const base = SemanticValueTypes.isSymbolic(left) ? left : SymbolicValue.from(left.toString());
         return base.multiply(right);
       }
+      if (left.getType() === "currencyUnit" && right.getType() === "unit") {
+        const currencyUnit = left as CurrencyUnitValue;
+        const leftUnit = parseDurationUnitString(currencyUnit.getUnit());
+        const rightUnit = parseDurationUnitString((right as UnitValue).getUnit());
+        if (leftUnit && rightUnit) {
+          const scalar = convertDurationScalar(
+            (right as UnitValue).getNumericValue(),
+            rightUnit,
+            leftUnit
+          );
+          return new CurrencyValue(
+            currencyUnit.getSymbol() as CurrencySymbol,
+            currencyUnit.getNumericValue() * scalar
+          );
+        }
+      }
+      if (right.getType() === "currencyUnit" && left.getType() === "unit") {
+        const currencyUnit = right as CurrencyUnitValue;
+        const rightUnit = parseDurationUnitString(currencyUnit.getUnit());
+        const leftUnit = parseDurationUnitString((left as UnitValue).getUnit());
+        if (leftUnit && rightUnit) {
+          const scalar = convertDurationScalar(
+            (left as UnitValue).getNumericValue(),
+            leftUnit,
+            rightUnit
+          );
+          return new CurrencyValue(
+            currencyUnit.getSymbol() as CurrencySymbol,
+            currencyUnit.getNumericValue() * scalar
+          );
+        }
+      }
       if (SemanticValueTypes.isDuration(left) && (right.getType() === "unit" || right.getType() === "currencyUnit")) {
+        if (right.getType() === "currencyUnit") {
+          const currencyUnit = right as CurrencyUnitValue;
+          const unit = parseDurationUnitString(currencyUnit.getUnit());
+          if (unit) {
+            const scalar = (left as DurationValue).toFixedUnit(unit === "businessDay" ? "day" : unit);
+            if (typeof scalar === "number") {
+              return new CurrencyValue(
+                currencyUnit.getSymbol() as CurrencySymbol,
+                currencyUnit.getNumericValue() * scalar
+              );
+            }
+          }
+        }
         const durationSeconds = (left as DurationValue).getTotalSeconds();
         const durationUnit = UnitValue.fromValueAndUnit(durationSeconds, "s");
         const targetUnit = preferredDurationUnit(
@@ -569,6 +686,19 @@ export const SemanticArithmetic = {
           : adjustedDuration.multiply(right);
       }
       if (SemanticValueTypes.isDuration(right) && (left.getType() === "unit" || left.getType() === "currencyUnit")) {
+        if (left.getType() === "currencyUnit") {
+          const currencyUnit = left as CurrencyUnitValue;
+          const unit = parseDurationUnitString(currencyUnit.getUnit());
+          if (unit) {
+            const scalar = (right as DurationValue).toFixedUnit(unit === "businessDay" ? "day" : unit);
+            if (typeof scalar === "number") {
+              return new CurrencyValue(
+                currencyUnit.getSymbol() as CurrencySymbol,
+                currencyUnit.getNumericValue() * scalar
+              );
+            }
+          }
+        }
         const durationSeconds = (right as DurationValue).getTotalSeconds();
         const durationUnit = UnitValue.fromValueAndUnit(durationSeconds, "s");
         const targetUnit = preferredDurationUnit(

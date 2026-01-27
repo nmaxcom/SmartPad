@@ -52,6 +52,7 @@ import {
   SemanticValueTypes,
   DurationValue,
 } from "../types";
+import type { DurationUnit } from "../types/DurationValue";
 import { Variable } from "../state/types";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
 import { applyThousandsSeparator } from "../utils/numberFormatting";
@@ -147,6 +148,58 @@ function convertVariablesToUnitsNetQuantities(
   variableContext: Map<string, Variable>
 ): Record<string, UnitValue | NumberValue> {
   const quantities: Record<string, UnitValue | NumberValue> = {};
+  const durationUnitOrder: Array<DurationUnit> = [
+    "year",
+    "month",
+    "week",
+    "businessDay",
+    "day",
+    "hour",
+    "minute",
+    "second",
+    "millisecond",
+  ];
+  const durationUnitSymbols: Record<DurationUnit, string> = {
+    year: "year",
+    month: "month",
+    week: "week",
+    businessDay: "day",
+    day: "day",
+    hour: "h",
+    minute: "min",
+    second: "s",
+    millisecond: "ms",
+  };
+  const durationUnitSeconds: Record<DurationUnit, number> = {
+    year: 365 * 24 * 60 * 60,
+    month: 30 * 24 * 60 * 60,
+    week: 7 * 24 * 60 * 60,
+    businessDay: 24 * 60 * 60,
+    day: 24 * 60 * 60,
+    hour: 60 * 60,
+    minute: 60,
+    second: 1,
+    millisecond: 1 / 1000,
+  };
+  const chooseDurationUnit = (duration: DurationValue): DurationUnit => {
+    const parts = duration.getParts() as Partial<Record<DurationUnit, number>>;
+    const entries = Object.entries(parts).filter(([, value]) => (value ?? 0) !== 0);
+    if (entries.length === 1) {
+      return entries[0][0] as DurationUnit;
+    }
+    for (const unit of durationUnitOrder) {
+      if (parts[unit]) return unit;
+    }
+    const absSeconds = Math.abs(duration.getTotalSeconds());
+    if (absSeconds >= durationUnitSeconds.year) return "year";
+    if (absSeconds >= durationUnitSeconds.month) return "month";
+    if (absSeconds >= durationUnitSeconds.week) return "week";
+    if (absSeconds >= durationUnitSeconds.day) return "day";
+    if (absSeconds >= durationUnitSeconds.hour) return "hour";
+    if (absSeconds >= durationUnitSeconds.minute) return "minute";
+    if (absSeconds >= durationUnitSeconds.second) return "second";
+    return "millisecond";
+  };
 
   variableContext.forEach((variable, name) => {
     if (variable.value instanceof UnitValue || variable.value instanceof NumberValue) {
@@ -154,7 +207,12 @@ function convertVariablesToUnitsNetQuantities(
       return;
     }
     if (variable.value instanceof DurationValue) {
-      quantities[name] = UnitValue.fromValueAndUnit(variable.value.getTotalSeconds(), "s");
+      const duration = variable.value;
+      const unit = chooseDurationUnit(duration);
+      const numeric = duration.toFixedUnit(unit === "businessDay" ? "day" : unit);
+      const value = typeof numeric === "number" ? numeric : duration.getTotalSeconds();
+      const unitSymbol = durationUnitSymbols[unit] || "s";
+      quantities[name] = UnitValue.fromValueAndUnit(value, unitSymbol);
       return;
     }
     if (variable.value instanceof DateValue) {

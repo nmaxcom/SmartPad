@@ -197,6 +197,37 @@ export class DurationValue extends SemanticValue {
     }
 
     const sign = this.totalSeconds < 0 ? -1 : 1;
+    const parts = this.getParts();
+    const entries = Object.entries(parts).filter(([, value]) => (value ?? 0) !== 0);
+    if (entries.length === 1) {
+      const [unit, rawValue] = entries[0] as [DurationUnit, number];
+      const preserveSingle = new Set<DurationUnit>([
+        "year",
+        "month",
+        "week",
+        "day",
+        "businessDay",
+        "hour",
+        "millisecond",
+      ]);
+      if (preserveSingle.has(unit)) {
+        const absValue = Math.abs(rawValue);
+        const unitLabel =
+          unit === "millisecond"
+            ? "ms"
+            : unit === "minute"
+              ? "min"
+              : unit === "hour"
+                ? "h"
+                : unit === "businessDay"
+                  ? "day"
+                  : unit;
+        const plural =
+          ["day", "week", "month", "year"].includes(unitLabel) && absValue !== 1 ? "s" : "";
+        const output = `${absValue} ${unitLabel}${plural}`;
+        return sign < 0 ? `-${output}` : output;
+      }
+    }
     const absSeconds = Math.abs(this.totalSeconds);
     const components: string[] = [];
 

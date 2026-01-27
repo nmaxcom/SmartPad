@@ -115,7 +115,7 @@ export class CurrencyUnitValue extends SemanticValue {
       const unitValue = other as UnitValue;
       if (this.perUnit) {
         const converted = this.convertUnitValue(unitValue, this.unitString);
-        if (converted) {
+        if (converted !== null && Number.isFinite(converted)) {
           return new CurrencyValue(this.symbol, this.amount * converted);
         }
         const combined = this.combineUnits(unitValue.getUnit(), this.unitString, '/');
@@ -163,7 +163,7 @@ export class CurrencyUnitValue extends SemanticValue {
       const unitValue = other as UnitValue;
       if (!this.perUnit) {
         const converted = this.convertUnitValue(unitValue, this.unitString);
-        if (converted) {
+        if (converted !== null && Number.isFinite(converted)) {
           return new CurrencyValue(this.symbol, this.amount / converted);
         }
         const combined = this.combineUnits(this.unitString, unitValue.getUnit(), '/');
@@ -223,7 +223,82 @@ export class CurrencyUnitValue extends SemanticValue {
       const converted = unitValue.getQuantity().convertTo(targetUnit);
       return converted.value;
     } catch {
+      const targetNorm = this.normalizeDurationUnit(targetUnit);
+      const sourceNorm = this.normalizeDurationUnit(unitValue.getUnit());
+      if (targetNorm && sourceNorm) {
+        const seconds = unitValue.getNumericValue() * this.durationUnitSeconds(sourceNorm);
+        return seconds / this.durationUnitSeconds(targetNorm);
+      }
       return null;
+    }
+  }
+
+  private durationUnitSeconds(unit: string): number {
+    switch (unit) {
+      case "year":
+        return 365 * 24 * 60 * 60;
+      case "month":
+        return 30 * 24 * 60 * 60;
+      case "week":
+        return 7 * 24 * 60 * 60;
+      case "day":
+        return 24 * 60 * 60;
+      case "hour":
+        return 60 * 60;
+      case "minute":
+        return 60;
+      case "second":
+        return 1;
+      case "millisecond":
+        return 1 / 1000;
+      default:
+        return 1;
+    }
+  }
+
+  private normalizeDurationUnit(unit: string): string | null {
+    const normalized = unit.trim().toLowerCase();
+    const base = normalized.replace(/[^a-z]/g, "");
+    switch (base) {
+      case "h":
+      case "hr":
+      case "hrs":
+      case "hour":
+      case "hours":
+        return "hour";
+      case "day":
+      case "days":
+      case "d":
+        return "day";
+      case "week":
+      case "weeks":
+      case "wk":
+      case "w":
+        return "week";
+      case "month":
+      case "months":
+      case "mo":
+      case "mos":
+        return "month";
+      case "year":
+      case "years":
+      case "yr":
+      case "y":
+        return "year";
+      case "min":
+      case "minute":
+      case "minutes":
+        return "minute";
+      case "s":
+      case "sec":
+      case "secs":
+      case "second":
+      case "seconds":
+        return "second";
+      case "ms":
+        return "millisecond";
+      default:
+        return null;
     }
   }
 

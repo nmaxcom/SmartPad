@@ -430,6 +430,14 @@ export class SmartPadQuantity {
         return duration.Hours;
       case "day":
         return duration.Days;
+      case "week":
+        return duration.Days / 7;
+      case "month":
+        return duration.Days / 30;
+      case "year":
+        return duration.Days / 365;
+      case "ms":
+        return duration.Milliseconds;
       default:
         throw new Error(`Unknown duration unit: ${targetUnit}`);
     }

@@ -225,4 +225,32 @@ describe("Duration and time math", () => {
       }
     });
   });
+
+  test("duration display preserves single-unit inputs", () => {
+    const context = createContext();
+    const result = evaluateLine("time = 10473 h =>", context, 1);
+    expect(result?.type).toBe("combined");
+    if (result?.type === "combined") {
+      expect(result.result).toBe("10473 h");
+    }
+  });
+
+  test("currency per hour multiplies with duration hours", () => {
+    const context = createContext();
+    evaluateLine("time = 10473 h", context, 1);
+    evaluateLine("floor = $20/h * time", context, 2);
+    const floor = context.variableStore.getVariable("floor");
+    expect(floor?.value.getType()).toBe("currency");
+    expect(floor?.value.getNumericValue()).toBeCloseTo(209460, 5);
+  });
+
+  test("currency per day multiplies with duration days", () => {
+    const context = createContext();
+    evaluateLine("time = 227 days", context, 1);
+    evaluateLine("cafe price = $5.25/day", context, 2);
+    evaluateLine("cafe total = cafe price * time", context, 3);
+    const cafeTotal = context.variableStore.getVariable("cafe total");
+    expect(cafeTotal?.value.getType()).toBe("currency");
+    expect(cafeTotal?.value.getNumericValue()).toBeCloseTo(1191.75, 5);
+  });
 });
