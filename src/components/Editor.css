@@ -660,6 +660,7 @@ body.number-scrubbing * {
   overflow: hidden;
   position: relative;
   cursor: grab;
+  overscroll-behavior: contain;
 }
 
 .plot-details-off .plot-view-chart {
@@ -735,7 +736,8 @@ body.number-scrubbing * {
   stroke-linejoin: round;
   fill: none;
   opacity: 0.82;
-  transition: opacity 0.2s ease, stroke-width 0.2s ease;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.25));
+  transition: opacity 0.2s ease, stroke-width 0.2s ease, filter 0.2s ease;
 }
 
 .plot-view-area {
@@ -784,6 +786,7 @@ body.number-scrubbing * {
 .plot-view-line.is-hover {
   opacity: 1;
   stroke-width: 2.6;
+  filter: drop-shadow(0 0 9px rgba(255, 255, 255, 0.35));
 }
 
 .plot-view-dot {

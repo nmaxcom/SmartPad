@@ -267,6 +267,8 @@ With viewport:
 @view plot x=years domain=0..40 view=5..25
 ```
 
+`view=` only affects the X axis. Use `yview=` for Y.
+
 With explicit Y domain:
 
 ```smartpad

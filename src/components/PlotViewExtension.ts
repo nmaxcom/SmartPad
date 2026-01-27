@@ -368,6 +368,20 @@ const formatPlotValueWithUnit = (value: number, unit?: PlotUnitFormat | null) =>
   return `${prefix}${formatted}${suffix}`;
 };
 
+const formatPlotUnitLabel = (unit?: PlotUnitFormat | null) => {
+  if (!unit) return "";
+  const prefix = (unit.prefix ?? "").trim();
+  const suffix = (unit.suffix ?? "").trim();
+  return `${prefix}${suffix}`.trim();
+};
+
+const formatAxisLabel = (name: string, unitLabel?: string) => {
+  const base = name && name.trim().length ? name.trim() : "value";
+  if (unitLabel && unitLabel.trim().length) {
+    return `${base} (${unitLabel.trim()})`;
+  }
+  return base;
+};
 const getPlotUnitFormat = (value: any): PlotUnitFormat | null => {
   if (!value || typeof value.getType !== "function") return null;
   if (SemanticValueTypes.isPercentage(value as PercentageValue)) {
@@ -691,7 +705,8 @@ const createPlotSvg = (
   xLabel.setAttribute("y", `${height - 10}`);
   xLabel.setAttribute("text-anchor", "middle");
   xLabel.setAttribute("class", "plot-view-axis-label");
-  xLabel.textContent = model.x ? model.x : "x";
+  const xAxisName = model.x || "x";
+  xLabel.textContent = formatAxisLabel(xAxisName, formatPlotUnitLabel(model.xUnit));
   svg.appendChild(xLabel);
 
   const yLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -700,12 +715,18 @@ const createPlotSvg = (
   yLabel.setAttribute("text-anchor", "middle");
   yLabel.setAttribute("class", "plot-view-axis-label");
   yLabel.setAttribute("transform", `rotate(-90 12 ${padding.top + plotHeight / 2})`);
-  if (model.series.length > 1) {
-    yLabel.textContent = "y";
-  } else {
-    const label = model.series[0]?.label || model.series[0]?.expression || model.expression;
-    yLabel.textContent = label || "y";
-  }
+  const seriesLabels = model.series
+    .map((series) => series.label || series.expression)
+    .filter(Boolean) as string[];
+  const yAxisName = seriesLabels.length ? seriesLabels.join(", ") : "values";
+  const yUnitLabels = model.series.map((series) => formatPlotUnitLabel(series.unit));
+  const yUnitLabel =
+    yUnitLabels.length > 0 &&
+    yUnitLabels.every((label) => label === yUnitLabels[0]) &&
+    yUnitLabels[0].length > 0
+      ? yUnitLabels[0]
+      : "";
+  yLabel.textContent = formatAxisLabel(yAxisName, yUnitLabel);
   svg.appendChild(yLabel);
 
   const lineElements = new Map<number, SVGPathElement>();
@@ -787,7 +808,7 @@ const createPlotSvg = (
         gradient.appendChild(stopBottom);
         defs.appendChild(gradient);
 
-        const baseline = yScale(yMin);
+        const baseline = height - padding.bottom;
         let areaData = `M ${pathPoints[0].x} ${baseline}`;
         areaData += ` L ${pathPoints[0].x} ${pathPoints[0].y}`;
         for (let i = 1; i < pathPoints.length; i++) {
@@ -824,34 +845,93 @@ const createPlotSvg = (
   let intersectionPoints: Array<{ x: number; y: number; seriesA: number; seriesB: number }> = [];
   if (seriesLayouts.length > 1) {
     const intersections: Array<{ x: number; y: number; seriesA: number; seriesB: number }> = [];
+    const epsilon = 1e-9;
+    const dedupe = (point: { x: number; y: number; seriesA: number; seriesB: number }) => {
+      const last = intersections[intersections.length - 1];
+      if (
+        last &&
+        Math.abs(last.x - point.x) < 1e-6 &&
+        Math.abs(last.y - point.y) < 1e-4 &&
+        last.seriesA === point.seriesA &&
+        last.seriesB === point.seriesB
+      ) {
+        return;
+      }
+      intersections.push(point);
+    };
+    const pushIfInView = (point: {
+      x: number;
+      y: number;
+      seriesA: number;
+      seriesB: number;
+    }) => {
+      if (point.x < viewRange.min || point.x > viewRange.max) return;
+      dedupe(point);
+    };
     for (let i = 0; i < seriesLayouts.length; i++) {
       for (let j = i + 1; j < seriesLayouts.length; j++) {
         const pointsA = seriesLayouts[i].points;
         const pointsB = seriesLayouts[j].points;
-        const length = Math.min(pointsA.length, pointsB.length);
-        for (let k = 0; k < length - 1; k++) {
-          const a0 = pointsA[k];
-          const a1 = pointsA[k + 1];
-          const b0 = pointsB[k];
-          const b1 = pointsB[k + 1];
-          const d0 = a0.y - b0.y;
-          const d1 = a1.y - b1.y;
-          if (!Number.isFinite(d0) || !Number.isFinite(d1)) continue;
-          if (d0 === 0) {
-            intersections.push({ x: a0.x, y: a0.y, seriesA: i, seriesB: j });
+        if (pointsA.length < 2 || pointsB.length < 2) continue;
+        let aIndex = 0;
+        let bIndex = 0;
+        while (aIndex < pointsA.length - 1 && bIndex < pointsB.length - 1) {
+          const a0 = pointsA[aIndex];
+          const a1 = pointsA[aIndex + 1];
+          const b0 = pointsB[bIndex];
+          const b1 = pointsB[bIndex + 1];
+          const aMin = Math.min(a0.x, a1.x);
+          const aMax = Math.max(a0.x, a1.x);
+          const bMin = Math.min(b0.x, b1.x);
+          const bMax = Math.max(b0.x, b1.x);
+          const overlapMin = Math.max(aMin, bMin);
+          const overlapMax = Math.min(aMax, bMax);
+          if (overlapMax + epsilon < overlapMin) {
+            if (aMax < bMax) {
+              aIndex += 1;
+            } else {
+              bIndex += 1;
+            }
             continue;
           }
-          if (d0 * d1 < 0) {
-            const t = d0 / (d0 - d1);
-            const x = a0.x + t * (a1.x - a0.x);
-            const y = a0.y + t * (a1.y - a0.y);
-            intersections.push({ x, y, seriesA: i, seriesB: j });
+          const aSpan = a1.x - a0.x;
+          const bSpan = b1.x - b0.x;
+          if (Math.abs(aSpan) <= epsilon || Math.abs(bSpan) <= epsilon) {
+            if (aMax < bMax) {
+              aIndex += 1;
+            } else {
+              bIndex += 1;
+            }
+            continue;
+          }
+          const mA = (a1.y - a0.y) / aSpan;
+          const mB = (b1.y - b0.y) / bSpan;
+          const cA = a0.y - mA * a0.x;
+          const cB = b0.y - mB * b0.x;
+          if (Math.abs(mA - mB) <= epsilon) {
+            if (Math.abs(cA - cB) <= 1e-6) {
+              const x = overlapMin;
+              const y = mA * x + cA;
+              pushIfInView({ x, y, seriesA: i, seriesB: j });
+            }
+          } else {
+            const x = (cB - cA) / (mA - mB);
+            if (x + epsilon >= overlapMin && x - epsilon <= overlapMax) {
+              const y = mA * x + cA;
+              if (Number.isFinite(y)) {
+                pushIfInView({ x, y, seriesA: i, seriesB: j });
+              }
+            }
+          }
+          if (aMax < bMax) {
+            aIndex += 1;
+          } else {
+            bIndex += 1;
           }
         }
       }
     }
     intersections.forEach((point) => {
-      if (point.x < viewRange.min || point.x > viewRange.max) return;
       const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       dot.setAttribute("cx", `${xScale(point.x)}`);
       dot.setAttribute("cy", `${yScale(point.y)}`);
@@ -1534,23 +1614,6 @@ const createPlotWidget = (
       };
     };
 
-    const clampViewToDomain = (view: PlotRange, domain?: PlotRange | null) => {
-      if (!domain) return view;
-      const span = view.max - view.min;
-      if (span <= 0) return view;
-      let min = view.min;
-      let max = view.max;
-      if (min < domain.min) {
-        min = domain.min;
-        max = min + span;
-      }
-      if (max > domain.max) {
-        max = domain.max;
-        min = max - span;
-      }
-      return { min, max };
-    };
-
     const findNearestPoint = (
       position: { x: number; y: number },
       onlySeries: number | null,
@@ -1722,20 +1785,17 @@ const createPlotWidget = (
           : 0;
         const deltaX = plotWidth ? (position.x - dragStartPos.x) / plotWidth : 0;
         const deltaY = plotHeight ? (position.y - dragStartPos.y) / plotHeight : 0;
-        const nextXView = clampViewToDomain(
-          {
-            min: dragStartXView.min - deltaX * spanX,
-            max: dragStartXView.max - deltaX * spanX,
-          },
-          model.domain
-        );
+        const nextXView = {
+          min: dragStartXView.min - deltaX * spanX,
+          max: dragStartXView.max - deltaX * spanX,
+        };
         currentXView = nextXView;
         if (dragStartYView) {
           const nextYView = {
             min: dragStartYView.min + deltaY * spanY,
             max: dragStartYView.max + deltaY * spanY,
           };
-          currentYView = yDomainAuto ? nextYView : clampViewToDomain(nextYView, model.yDomain);
+          currentYView = nextYView;
           yViewAuto = false;
         }
         if (drawWithView) drawWithView(currentXView, currentYView);
@@ -1747,10 +1807,7 @@ const createPlotWidget = (
         const scale = Math.max(0.2, 1 + delta / 200);
         const center = (dragStartXView.min + dragStartXView.max) / 2;
         const span = (dragStartXView.max - dragStartXView.min) * scale;
-        const nextXView = clampViewToDomain(
-          { min: center - span / 2, max: center + span / 2 },
-          model.domain
-        );
+        const nextXView = { min: center - span / 2, max: center + span / 2 };
         currentXView = nextXView;
         if (drawWithView) drawWithView(currentXView, currentYView);
         return;
@@ -1762,7 +1819,7 @@ const createPlotWidget = (
         const center = (dragStartYView.min + dragStartYView.max) / 2;
         const span = (dragStartYView.max - dragStartYView.min) * scale;
         const nextYView = { min: center - span / 2, max: center + span / 2 };
-        currentYView = yDomainAuto ? nextYView : clampViewToDomain(nextYView, model.yDomain);
+        currentYView = nextYView;
         yViewAuto = false;
         if (drawWithView) drawWithView(currentXView, currentYView);
         return;
@@ -1781,6 +1838,135 @@ const createPlotWidget = (
         nearest.dataY,
         nearbyIntersections
       );
+    };
+
+    const applyZoomAt = (range: PlotRange, anchor: number, scale: number) => {
+      const span = range.max - range.min;
+      if (!Number.isFinite(span) || span <= 0) return range;
+      const nextMin = anchor - (anchor - range.min) * scale;
+      const nextMax = anchor + (range.max - anchor) * scale;
+      return { min: nextMin, max: nextMax };
+    };
+
+    let wheelFrame: number | null = null;
+    let wheelCommitTimer: number | null = null;
+    let pendingWheel: {
+      position: { x: number; y: number };
+      deltaY: number;
+      shiftKey: boolean;
+      altKey: boolean;
+    } | null = null;
+    let pendingWheelCommit: { view?: PlotRange; yView?: PlotRange; yDomain?: PlotRange } | null =
+      null;
+
+    const scheduleWheelCommit = (
+      patch: { view?: PlotRange; yView?: PlotRange; yDomain?: PlotRange }
+    ) => {
+      if (!onUpdate) return;
+      pendingWheelCommit = { ...patch };
+      if (wheelCommitTimer !== null) {
+        window.clearTimeout(wheelCommitTimer);
+      }
+      wheelCommitTimer = window.setTimeout(() => {
+        if (pendingWheelCommit) {
+          onUpdate(pendingWheelCommit);
+        }
+        pendingWheelCommit = null;
+        wheelCommitTimer = null;
+      }, 140);
+    };
+
+    const flushWheelZoom = () => {
+      wheelFrame = null;
+      if (!pendingWheel || !plotLayout) return;
+      const { position, deltaY, shiftKey, altKey } = pendingWheel;
+      pendingWheel = null;
+      const scale = Math.min(5, Math.max(0.2, Math.exp(deltaY * 0.0015)));
+      let zoomX = true;
+      let zoomY = true;
+      if (shiftKey) {
+        zoomY = false;
+      } else if (altKey) {
+        zoomX = false;
+      }
+
+      const xView = currentXView || plotLayout.viewRange;
+      const yView = currentYView || { min: plotLayout.yMin, max: plotLayout.yMax };
+      const plotWidth =
+        plotLayout.width - plotLayout.padding.left - plotLayout.padding.right;
+      const plotHeight =
+        plotLayout.height - plotLayout.padding.top - plotLayout.padding.bottom;
+      if (plotWidth <= 0 || plotHeight <= 0) return;
+      const xRatio = (position.x - plotLayout.padding.left) / plotWidth;
+      const yRatio =
+        (plotLayout.height - plotLayout.padding.bottom - position.y) / plotHeight;
+      const xAnchor = xView.min + xRatio * (xView.max - xView.min);
+      const yAnchor = yView.min + yRatio * (yView.max - yView.min);
+
+      if (zoomX) {
+        currentXView = applyZoomAt(xView, xAnchor, scale);
+      }
+      if (zoomY) {
+        currentYView = applyZoomAt(yView, yAnchor, scale);
+        yViewAuto = false;
+      }
+
+      if (drawWithView) drawWithView(currentXView, currentYView);
+      const patch: { view?: PlotRange; yView?: PlotRange; yDomain?: PlotRange } = {};
+      if (zoomX && currentXView) {
+        patch.view = currentXView;
+      }
+      if (zoomY && currentYView) {
+        patch.yView = currentYView;
+        if (yDomainAuto) {
+          const expanded = expandPlotRange(currentYView, 6);
+          if (expanded) {
+            patch.yDomain = expanded;
+          }
+          yDomainAuto = false;
+        }
+      }
+      if (Object.keys(patch).length) {
+        scheduleWheelCommit(patch);
+      }
+    };
+
+    const handleWheel = (event: WheelEvent) => {
+      if (!plotLayout) return;
+      const position = getPointerPosition(event);
+      if (!position) return;
+      const withinPlotX =
+        position.x >= plotLayout.padding.left &&
+        position.x <= plotLayout.width - plotLayout.padding.right;
+      const withinPlotY =
+        position.y >= plotLayout.padding.top &&
+        position.y <= plotLayout.height - plotLayout.padding.bottom;
+      const withinChart =
+        position.x >= 0 &&
+        position.x <= plotLayout.width &&
+        position.y >= 0 &&
+        position.y <= plotLayout.height;
+      if (!withinChart) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (!withinPlotX || !withinPlotY) return;
+
+      if (pendingWheel) {
+        pendingWheel.deltaY += event.deltaY;
+        pendingWheel.position = position;
+        pendingWheel.shiftKey = event.shiftKey;
+        pendingWheel.altKey = event.altKey;
+      } else {
+        pendingWheel = {
+          position,
+          deltaY: event.deltaY,
+          shiftKey: event.shiftKey,
+          altKey: event.altKey,
+        };
+      }
+      if (wheelFrame === null) {
+        wheelFrame = requestAnimationFrame(flushWheelZoom);
+      }
     };
 
     const handlePointerDown = (event: PointerEvent) => {
@@ -1907,6 +2093,7 @@ const createPlotWidget = (
       if (!dragMode) hideHover();
     });
     chart.addEventListener("pointerdown", handlePointerDown);
+    chart.addEventListener("wheel", handleWheel, { passive: false, capture: true });
     chart.addEventListener("dblclick", (event) => {
       event.preventDefault();
       const resetXView = model.autoView || model.view || model.domain;

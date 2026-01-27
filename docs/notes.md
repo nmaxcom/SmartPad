@@ -24,6 +24,8 @@ sheets/tabs, remember docs
 plots
 FX
 # bugs/ideas
+add glow to graphs
+
 flow2 = 1000 mL/min
 flow2 to L/h => ⚠️ Unexpected token: 2 to
 
