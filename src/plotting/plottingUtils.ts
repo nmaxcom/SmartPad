@@ -13,6 +13,7 @@ import {
   TimeValue,
   DurationValue,
 } from "../types";
+import type { DurationUnit } from "../types/DurationValue";
 import { SmartPadQuantity } from "../units/unitsnetAdapter";
 import type { PlotPoint, PlotRange } from "../eval/renderNodes";
 
@@ -176,18 +177,59 @@ export const parsePlotRange = (raw?: string): PlotRange | null => {
   return normalizeRange({ min, max, raw });
 };
 
+const durationUnitOrder: DurationUnit[] = [
+  "year",
+  "month",
+  "week",
+  "businessDay",
+  "day",
+  "hour",
+  "minute",
+  "second",
+  "millisecond",
+];
+
+const resolveDurationPlotUnit = (value: DurationValue): DurationUnit => {
+  const parts = value.getParts();
+  const entries = Object.entries(parts).filter(([, partValue]) => (partValue ?? 0) !== 0);
+  if (entries.length === 1) {
+    return entries[0][0] as DurationUnit;
+  }
+  for (const unit of durationUnitOrder) {
+    if (parts[unit]) return unit;
+  }
+  return "second";
+};
+
+const getDurationPlotNumeric = (value: DurationValue, unit: DurationUnit): number => {
+  if (unit === "businessDay") {
+    return value.getTotalSeconds() / (60 * 60 * 24);
+  }
+  const fixed = value.toFixedUnit(unit);
+  return typeof fixed === "number" ? fixed : value.getTotalSeconds();
+};
+
 export const getPlotNumericValue = (value: SemanticValue): number | null => {
   if (value.isNumeric()) {
+    if (value.getType() === "duration") {
+      const durationValue = value as DurationValue;
+      const unit = resolveDurationPlotUnit(durationValue);
+      return getDurationPlotNumeric(durationValue, unit);
+    }
     return value.getNumericValue();
   }
   const type = value.getType();
-  if (type === "date" || type === "time" || type === "duration") {
+  if (type === "date" || type === "time") {
     return value.getNumericValue();
   }
   return null;
 };
 
-const buildSampleValue = (baseValue: SemanticValue, sample: number): SemanticValue => {
+const buildSampleValue = (
+  baseValue: SemanticValue,
+  sample: number,
+  durationUnit?: DurationUnit | null
+): SemanticValue => {
   const type = baseValue.getType();
   if (type === "number") {
     return new NumberValue(sample);
@@ -211,6 +253,12 @@ const buildSampleValue = (baseValue: SemanticValue, sample: number): SemanticVal
     return new TimeValue(sample, false, 0);
   }
   if (type === "duration") {
+    if (durationUnit === "businessDay") {
+      return new DurationValue({ day: sample });
+    }
+    if (durationUnit) {
+      return new DurationValue({ [durationUnit]: sample });
+    }
     return DurationValue.fromSeconds(sample);
   }
   return new NumberValue(sample);
@@ -318,6 +366,10 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
   }
 
   const baseValue = baseVariable.value;
+  const durationUnit =
+    baseValue.getType() === "duration"
+      ? resolveDurationPlotUnit(baseValue as DurationValue)
+      : null;
   const baseNumeric = getPlotNumericValue(baseValue);
   if (baseNumeric === null) {
     return { status: "disconnected", message: `Variable "${xVariable}" is not numeric` };
@@ -391,7 +443,7 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
   const data: PlotPoint[] = [];
   for (let i = 0; i < totalSamples; i++) {
     const sampleX = normalizedDomain.min + step * i;
-    const sampleValue = buildSampleValue(baseValue, sampleX);
+    const sampleValue = buildSampleValue(baseValue, sampleX, durationUnit);
     const updatedVariable: Variable = {
       ...baseVariable,
       value: sampleValue,

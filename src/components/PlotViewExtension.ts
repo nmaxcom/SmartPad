@@ -30,8 +30,10 @@ import {
   CurrencyUnitValue,
   UnitValue,
   PercentageValue,
+  DurationValue,
 } from "../types";
 import { getDateLocaleEffective } from "../types/DateValue";
+import { applyThousandsSeparator } from "../utils/numberFormatting";
 
 const plotViewPluginKey = new PluginKey("plotView");
 
@@ -356,7 +358,8 @@ const formatPlotValue = (value: number) => {
     return value.toExponential(2);
   }
   const fixed = abs >= 100 ? value.toFixed(0) : value.toFixed(2);
-  return fixed.replace(/\.00$/, "").replace(/(\.\d)0$/, "$1");
+  const trimmed = fixed.replace(/\.00$/, "").replace(/(\.\d)0$/, "$1");
+  return applyThousandsSeparator(trimmed);
 };
 
 const formatPlotValueWithUnit = (value: number, unit?: PlotUnitFormat | null) => {
@@ -368,6 +371,45 @@ const formatPlotValueWithUnit = (value: number, unit?: PlotUnitFormat | null) =>
   return `${prefix}${formatted}${suffix}`;
 };
 
+const durationUnitOrder = [
+  "year",
+  "month",
+  "week",
+  "businessDay",
+  "day",
+  "hour",
+  "minute",
+  "second",
+  "millisecond",
+] as const;
+
+const durationUnitLabels: Record<string, string> = {
+  year: "years",
+  month: "months",
+  week: "weeks",
+  businessDay: "days",
+  day: "days",
+  hour: "hours",
+  minute: "minutes",
+  second: "seconds",
+  millisecond: "ms",
+};
+
+const resolveDurationUnitLabel = (value: DurationValue): string => {
+  const parts = value.getParts();
+  const entries = Object.entries(parts).filter(([, partValue]) => (partValue ?? 0) !== 0);
+  if (entries.length === 1) {
+    const unit = entries[0][0];
+    return durationUnitLabels[unit] || unit;
+  }
+  for (const unit of durationUnitOrder) {
+    if (parts[unit]) {
+      return durationUnitLabels[unit] || unit;
+    }
+  }
+  return "seconds";
+};
+
 const formatPlotUnitLabel = (unit?: PlotUnitFormat | null) => {
   if (!unit) return "";
   const prefix = (unit.prefix ?? "").trim();
@@ -377,8 +419,18 @@ const formatPlotUnitLabel = (unit?: PlotUnitFormat | null) => {
 
 const formatAxisLabel = (name: string, unitLabel?: string) => {
   const base = name && name.trim().length ? name.trim() : "value";
-  if (unitLabel && unitLabel.trim().length) {
-    return `${base} (${unitLabel.trim()})`;
+  const trimmedUnit = unitLabel ? unitLabel.trim() : "";
+  if (trimmedUnit) {
+    const normalizedBase = base.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    const normalizedUnit = trimmedUnit.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    if (
+      normalizedBase === normalizedUnit ||
+      normalizedBase === `${normalizedUnit}s` ||
+      normalizedUnit === `${normalizedBase}s`
+    ) {
+      return base;
+    }
+    return `${base} (${trimmedUnit})`;
   }
   return base;
 };
@@ -405,6 +457,10 @@ const getPlotUnitFormat = (value: any): PlotUnitFormat | null => {
   }
   if (SemanticValueTypes.isUnit(value as UnitValue)) {
     return { suffix: ` ${(value as UnitValue).getUnit()}` };
+  }
+  if (SemanticValueTypes.isDuration(value as DurationValue)) {
+    const label = resolveDurationUnitLabel(value as DurationValue);
+    return { suffix: ` ${label}` };
   }
   return null;
 };
@@ -1527,11 +1583,9 @@ const createPlotWidget = (
       const series = model.series[seriesIndex];
       const label = series?.label || series?.expression;
       const lines = [];
-      if (label && model.series.length > 1) {
-        lines.push(label);
-      }
       lines.push(`${model.x || "x"} = ${formatPlotValueWithUnit(dataX, model.xUnit)}`);
-      lines.push(`y = ${formatPlotValueWithUnit(dataY, series?.unit)}`);
+      const yLabel = label || "value";
+      lines.push(`${yLabel} = ${formatPlotValueWithUnit(dataY, series?.unit)}`);
       if (model.series.length > 1 && plotLayout) {
         const compareIndex = seriesIndex === 0 ? 1 : 0;
         const compareValue = getSeriesValueAtX(compareIndex, dataX);
