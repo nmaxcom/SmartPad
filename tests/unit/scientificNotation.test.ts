@@ -1,4 +1,4 @@
-import { parseContent } from "../../src/parsing/astParser";
+import { parseContent, parseLine } from "../../src/parsing/astParser";
 import { setupDefaultEvaluators } from "../../src/eval";
 import { defaultRegistry, EvaluationContext } from "../../src/eval/registry";
 import { ReactiveVariableStore } from "../../src/state/variableStore";
@@ -11,6 +11,7 @@ const evaluateExpression = (expression: string, overrides?: EvalOverrides) => {
   const context: EvaluationContext = {
     variableStore,
     variableContext: new Map<string, Variable>(),
+    functionStore: new Map(),
     lineNumber: 1,
     decimalPlaces: 6,
     scientificUpperThreshold: 1e12,
@@ -32,6 +33,32 @@ const evaluateExpression = (expression: string, overrides?: EvalOverrides) => {
     context.variableContext.set(variable.name, variable);
   });
 
+  return result;
+};
+
+const createContext = (overrides?: EvalOverrides): EvaluationContext => ({
+  variableStore: new ReactiveVariableStore(),
+  variableContext: new Map<string, Variable>(),
+  functionStore: new Map(),
+  lineNumber: 1,
+  decimalPlaces: 6,
+  scientificUpperThreshold: 1e12,
+  scientificLowerThreshold: 1e-4,
+  ...overrides,
+});
+
+const syncVariables = (context: EvaluationContext) => {
+  context.variableContext.clear();
+  context.variableStore.getAllVariables().forEach((variable) => {
+    context.variableContext.set(variable.name, variable);
+  });
+};
+
+const evaluateLine = (line: string, context: EvaluationContext, lineNumber: number) => {
+  const node = parseLine(line, lineNumber);
+  context.lineNumber = lineNumber;
+  const result = defaultRegistry.evaluate(node, context);
+  syncVariables(context);
   return result;
 };
 
@@ -81,6 +108,17 @@ describe("Scientific notation formatting", () => {
     if (scientific?.type === "mathResult" && standard?.type === "mathResult") {
       expect(scientific.result).toMatch(/e\+?6/);
       expect(standard.result).toBe("1000000");
+    }
+  });
+
+  test("large numbers stay in standard notation when threshold is high", () => {
+    const result = evaluateExpression("1.6987651768939713e22 =>", {
+      scientificUpperThreshold: 1e60,
+    });
+    expect(result?.type).toBe("mathResult");
+    if (result?.type === "mathResult") {
+      expect(result.result).toBe("16987651768939713000000");
+      expect(result.result).not.toMatch(/e/i);
     }
   });
 
@@ -144,6 +182,17 @@ describe("Scientific notation formatting", () => {
     if (scientific?.type === "mathResult" && standard?.type === "mathResult") {
       expect(scientific.result).toMatch(/e\+?2\s*kg$/);
       expect(standard.result).toBe("100 kg");
+    }
+  });
+
+  test("currency values respect upper threshold changes", () => {
+    const context = createContext({
+      scientificUpperThreshold: 1e5,
+    });
+    const result = evaluateLine("$12000 * (1 + 0.07)^413 =>", context, 1);
+    expect(result?.type).toBe("mathResult");
+    if (result?.type === "mathResult") {
+      expect(result.result).toMatch(/^\$.*e\+?\d+$/i);
     }
   });
 

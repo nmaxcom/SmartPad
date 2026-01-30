@@ -850,40 +850,12 @@ const createPlotSvg = (
     let pathData = "";
     const pathPoints: Array<{ x: number; y: number }> = [];
     let hasStarted = false;
-    let insertedCurrent = false;
     for (const point of seriesLayout.points) {
-      if (currentPoint && !insertedCurrent && currentPoint.x < point.x - epsilon) {
-        const x = xScale(currentPoint.x);
-        const y = yScale(currentPoint.y);
-        if (!hasStarted) {
-          pathData += `M ${x} ${y}`;
-          hasStarted = true;
-        } else {
-          pathData += ` L ${x} ${y}`;
-        }
-        pathPoints.push({ x, y });
-        insertedCurrent = true;
-      }
-      let yValue = point.y;
-      if (currentPoint && !insertedCurrent && Math.abs(point.x - currentPoint.x) <= epsilon) {
-        yValue = currentPoint.y;
-        insertedCurrent = true;
-      }
       const x = xScale(point.x);
-      const y = yScale(yValue);
+      const y = yScale(point.y);
       if (!hasStarted) {
         pathData += `M ${x} ${y}`;
         hasStarted = true;
-      } else {
-        pathData += ` L ${x} ${y}`;
-      }
-      pathPoints.push({ x, y });
-    }
-    if (currentPoint && !insertedCurrent) {
-      const x = xScale(currentPoint.x);
-      const y = yScale(currentPoint.y);
-      if (!hasStarted) {
-        pathData += `M ${x} ${y}`;
       } else {
         pathData += ` L ${x} ${y}`;
       }
@@ -1122,8 +1094,9 @@ const createPlotWidget = (
   if (model.source === "transient") {
     const detach = document.createElement("button");
     detach.type = "button";
-    detach.className = "plot-view-action plot-view-detach";
-    detach.textContent = "Detach view";
+    detach.className = "plot-view-action plot-view-detach plot-view-pin";
+    detach.textContent = "Pin";
+    detach.title = "Fix plot";
     if (onDetach) {
       const handleDetach = (event: Event) => {
         event.preventDefault();
@@ -1567,6 +1540,21 @@ const createPlotWidget = (
     const chart = document.createElement("div");
     chart.className = "plot-view-chart";
     chart.style.touchAction = "none";
+    if (model.source === "transient" && onDetach) {
+      const pinOverlay = document.createElement("button");
+      pinOverlay.type = "button";
+      pinOverlay.className = "plot-view-pin-overlay";
+      pinOverlay.textContent = "Pin";
+      pinOverlay.title = "Fix plot";
+      const handleDetach = (event: Event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onDetach(model);
+      };
+      pinOverlay.addEventListener("mousedown", handleDetach);
+      pinOverlay.addEventListener("click", handleDetach);
+      chart.appendChild(pinOverlay);
+    }
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
     chart.appendChild(svg);
@@ -2558,8 +2546,20 @@ export const PlotViewExtension = Extension.create({
               const pluginState = plotViewPluginKey.getState(view.state) as PlotViewState;
               if (!pluginState) return false;
 
+              if (target.closest(".semantic-error-result")) {
+                if (pluginState.selecting) {
+                  const tr = view.state.tr.setMeta(plotViewPluginKey, {
+                    ...pluginState,
+                    selecting: false,
+                    selectionLine: undefined,
+                  });
+                  view.dispatch(tr);
+                }
+                return false;
+              }
+
               const resultTarget = target.closest(
-                ".semantic-result-display, .semantic-error-result"
+                ".semantic-result-display"
               ) as HTMLElement | null;
               if (resultTarget) {
                 const pos = view.posAtDOM(resultTarget, 0);
@@ -2579,6 +2579,17 @@ export const PlotViewExtension = Extension.create({
 
                 const info = lineIndex[lineNumber];
                 if (!info || !info.text.includes("=>")) return false;
+                if (info.text.includes("⚠️")) {
+                  if (pluginState.selecting) {
+                    const tr = view.state.tr.setMeta(plotViewPluginKey, {
+                      ...pluginState,
+                      selecting: false,
+                      selectionLine: undefined,
+                    });
+                    view.dispatch(tr);
+                  }
+                  return false;
+                }
 
                 const expressionNode = resolveExpressionNode(info.node, lineNumber);
                 if (!expressionNode) return false;
@@ -2650,6 +2661,14 @@ export const PlotViewExtension = Extension.create({
                   ...pluginState,
                   selecting: false,
                   selectionLine: undefined,
+                });
+                view.dispatch(tr);
+              }
+
+              if (pluginState.transient && !target.closest(".plot-view")) {
+                const tr = view.state.tr.setMeta(plotViewPluginKey, {
+                  ...pluginState,
+                  transient: undefined,
                 });
                 view.dispatch(tr);
               }

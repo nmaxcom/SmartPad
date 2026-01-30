@@ -10,7 +10,6 @@ import { NumberValue } from './NumberValue';
 import { PercentageValue } from './PercentageValue';
 import { UnitValue } from './UnitValue';
 import { CurrencyUnitValue } from './CurrencyUnitValue';
-import { applyThousandsSeparator } from '../utils/numberFormatting';
 
 export type CurrencySymbol = '$' | '€' | '£' | '¥' | '₹' | '₿' | 'CHF' | 'CAD' | 'AUD';
 
@@ -99,12 +98,13 @@ export class CurrencyValue extends SemanticValue {
 
   toString(options?: DisplayOptions): string {
     const precision = options?.precision ?? this.currencyInfo.decimalPlaces;
-    const formattedAmount = this.formatCurrencyAmount(this.amount, precision, options);
+    const isNegative = this.amount < 0;
+    const formattedAmount = this.formatCurrencyAmount(Math.abs(this.amount), precision, options);
     
     if (this.currencyInfo.symbolPosition === 'before') {
-      return `${this.symbol}${formattedAmount}`;
+      return `${isNegative ? "-" : ""}${this.symbol}${formattedAmount}`;
     } else {
-      return `${formattedAmount} ${this.symbol}`;
+      return `${isNegative ? "-" : ""}${formattedAmount} ${this.symbol}`;
     }
   }
 
@@ -266,24 +266,7 @@ export class CurrencyValue extends SemanticValue {
    * Format currency amount according to currency rules
    */
   private formatCurrencyAmount(amount: number, precision: number, options?: DisplayOptions): string {
-    let formatted: string;
-    const rounded = Math.round(amount);
-    if (Math.abs(amount - rounded) < 1e-9) {
-      formatted = rounded.toString();
-    } else if (this.currencyInfo.decimalPlaces === 0) {
-      formatted = Math.round(amount).toString();
-    } else {
-      const fixed = amount.toFixed(precision);
-      const parts = fixed.split(".");
-      if (parts.length === 2) {
-        const trimmed = parts[1].replace(/0+$/, "");
-        formatted = trimmed ? `${parts[0]}.${trimmed}` : parts[0];
-      } else {
-        formatted = fixed;
-      }
-    }
-
-    return options?.groupThousands ? applyThousandsSeparator(formatted) : formatted;
+    return this.formatNumber(amount, precision, options);
   }
 
   /**
@@ -291,15 +274,16 @@ export class CurrencyValue extends SemanticValue {
    */
   static fromString(str: string): CurrencyValue {
     // Try symbol-first format: "$100", "€50.25"
-    let match = str.match(/^([\$€£¥₹₿])\s*(\d{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)$/);
+    let match = str.match(/^(-?)\s*([\$€£¥₹₿])\s*(\d{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)$/);
     if (match) {
-      const symbol = match[1] as CurrencySymbol;
-      const amount = parseFloat(match[2].replace(/,/g, ""));
+      const sign = match[1] === "-" ? -1 : 1;
+      const symbol = match[2] as CurrencySymbol;
+      const amount = parseFloat(match[3].replace(/,/g, "")) * sign;
       return new CurrencyValue(symbol, amount);
     }
 
     // Try symbol-last format: "100$", "50.25€"
-    match = str.match(/^(\d{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)\s*([\$€£¥₹₿])$/);
+    match = str.match(/^(-?\d{1,3}(?:,\d{3})*(?:\.\d+)?|-?\d+(?:\.\d+)?)\s*([\$€£¥₹₿])$/);
     if (match) {
       const amount = parseFloat(match[1].replace(/,/g, ""));
       const symbol = match[2] as CurrencySymbol;
@@ -307,7 +291,7 @@ export class CurrencyValue extends SemanticValue {
     }
     
     // Try symbol-last format: "100 CHF", "50.25 CAD"
-    match = str.match(/^(\d{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)\s+(CHF|CAD|AUD)$/);
+    match = str.match(/^(-?\d{1,3}(?:,\d{3})*(?:\.\d+)?|-?\d+(?:\.\d+)?)\s+(CHF|CAD|AUD)$/);
     if (match) {
       const amount = parseFloat(match[1].replace(/,/g, ""));
       const symbol = match[2] as CurrencySymbol;

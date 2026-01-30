@@ -244,6 +244,30 @@ describe("Duration and time math", () => {
     expect(floor?.value.getNumericValue()).toBeCloseTo(209460, 5);
   });
 
+  test("currency per hour works after duration display assignment", () => {
+    const context = createContext();
+    const timeResult = evaluateLine("time = 10473 h =>", context, 1);
+    expect(timeResult?.type).toBe("combined");
+    const floorResult = evaluateLine("floor = $20/h * time =>", context, 2);
+    expect(floorResult?.type).toBe("combined");
+    if (floorResult?.type === "combined") {
+      expect(floorResult.result).toBe("$209460");
+    }
+    const floor = context.variableStore.getVariable("floor");
+    expect(floor?.value.getType()).toBe("currency");
+  });
+
+  test("currency per hour works with compact arrow formatting", () => {
+    const context = createContext();
+    const timeResult = evaluateLine("time = 10473 h=> 10473 h", context, 1);
+    expect(timeResult?.type).toBe("combined");
+    const floorResult = evaluateLine("floor = $20/h * time=>", context, 2);
+    expect(floorResult?.type).toBe("combined");
+    if (floorResult?.type === "combined") {
+      expect(floorResult.result).toBe("$209460");
+    }
+  });
+
   test("currency per day multiplies with duration days", () => {
     const context = createContext();
     evaluateLine("time = 227 days", context, 1);

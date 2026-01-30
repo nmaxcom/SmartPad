@@ -160,6 +160,26 @@ export abstract class SemanticValue {
     if (!isFinite(value)) return this.applyGrouping("Infinity", options);
     if (value === 0) return this.applyGrouping("0", options);
     
+    const expandScientific = (scientific: string): string => {
+      const match = scientific.match(/^(-?)(\d+)(?:\.(\d+))?e([+-]?\d+)$/i);
+      if (!match) return scientific;
+      const sign = match[1] ?? "";
+      const whole = match[2] ?? "";
+      const fraction = match[3] ?? "";
+      const exponent = parseInt(match[4] ?? "0", 10);
+      const digits = `${whole}${fraction}`;
+      if (exponent >= 0) {
+        const zerosNeeded = exponent - fraction.length;
+        if (zerosNeeded >= 0) {
+          return `${sign}${digits}${"0".repeat(zerosNeeded)}`;
+        }
+        const splitIndex = whole.length + exponent;
+        return `${sign}${digits.slice(0, splitIndex)}.${digits.slice(splitIndex)}`;
+      }
+      const zeros = "0".repeat(Math.max(0, -exponent - 1));
+      return `${sign}0.${zeros}${digits}`;
+    };
+
     // Handle very large or very small numbers with scientific notation
     const abs = Math.abs(value);
     const upperThreshold = options?.scientificUpperThreshold ?? 1e12;
@@ -182,16 +202,26 @@ export abstract class SemanticValue {
     
     // For regular numbers, remove trailing zeros
     if (Number.isInteger(value)) {
-      return this.applyGrouping(value.toString(), options);
+      const asText = value.toString();
+      const expanded = /[eE]/.test(asText) ? expandScientific(asText) : asText;
+      return this.applyGrouping(expanded, options);
     }
 
     const fixed = value.toFixed(precision);
-    const fixedNumber = parseFloat(fixed);
+    const standard = /[eE]/.test(fixed)
+      ? expandScientific(value.toExponential(Math.max(0, precision)))
+      : fixed;
+    const fixedNumber = Number(standard);
     if (fixedNumber === 0) {
       return this.applyGrouping(formatScientific(value, precision), options);
     }
 
-    return this.applyGrouping(fixedNumber.toString(), options);
+    let trimmed = standard;
+    if (trimmed.includes(".")) {
+      trimmed = trimmed.replace(/0+$/, "").replace(/\.$/, "");
+    }
+
+    return this.applyGrouping(trimmed, options);
   }
 
   private applyGrouping(value: string, options?: DisplayOptions): string {

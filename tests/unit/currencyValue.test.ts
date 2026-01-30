@@ -31,6 +31,14 @@ describe("CurrencyValue", () => {
     expect(eur.getNumericValue()).toBe(250.5);
   });
 
+  test("parses negative currency amounts", () => {
+    const usd = CurrencyValue.fromString("-$1,250.50");
+    expect(usd.getNumericValue()).toBe(-1250.5);
+
+    const eur = CurrencyValue.fromString("-250.5€");
+    expect(eur.getNumericValue()).toBe(-250.5);
+  });
+
   test("formats whole currency amounts without decimals", () => {
     expect(new CurrencyValue("$", 995).toString()).toBe("$995");
     expect(new CurrencyValue("$", 1000).toString()).toBe("$1000");
