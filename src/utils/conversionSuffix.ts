@@ -1,5 +1,6 @@
 import { parseUnitTargetWithScale } from "../units/unitConversionTarget";
 import { SmartPadQuantity } from "../units/unitsnetAdapter";
+import { CurrencyValue } from "../types/CurrencyValue";
 
 const isBoundary = (char: string | undefined): boolean =>
   !char || /[\s+\-*/^%()=<>!,]/.test(char);
@@ -9,15 +10,18 @@ const looksLikeUnitTarget = (raw: string): boolean => {
   if (!trimmed) return false;
 
   const symbolMatch = trimmed.match(/^([$€£¥₹₿])\s*(.*)$/);
+  const codeMatch = trimmed.match(/^([A-Za-z]{3})\b(.*)$/);
   if (symbolMatch) {
     trimmed = symbolMatch[2].trim();
+  } else if (codeMatch && CurrencyValue.normalizeSymbol(codeMatch[1])) {
+    trimmed = codeMatch[2].trim();
   }
 
   trimmed = trimmed.replace(/^per\b/i, "").trim();
   trimmed = trimmed.replace(/^[/*]+/, "").trim();
 
   if (!trimmed) {
-    return Boolean(symbolMatch);
+    return Boolean(symbolMatch) || Boolean(codeMatch);
   }
 
   const parsed = parseUnitTargetWithScale(trimmed);

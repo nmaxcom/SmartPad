@@ -85,7 +85,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
         {/* Content */}
         <div className="settings-content">
-          <SettingsSections />
+          <SettingsSections idPrefix="settings-modal" />
         </div>
 
         {/* Footer */}

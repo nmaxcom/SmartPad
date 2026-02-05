@@ -74,6 +74,7 @@
   flex: 1;
   padding: 1.5rem 2.5rem 2rem;
   overflow-y: auto;
+  overflow-x: hidden;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   align-items: start;
@@ -111,6 +112,33 @@
   border-bottom: 1px solid var(--color-border);
 }
 
+.settings-item.settings-item-stack {
+  display: block;
+}
+
+.settings-item.settings-item-stack .settings-control {
+  width: 100%;
+  flex-shrink: 1;
+  margin-top: 0.6rem;
+}
+
+.settings-item.settings-item-stack .settings-item-info {
+  width: 100%;
+  min-width: 0;
+}
+
+.settings-item.settings-item-stack .settings-label,
+.settings-item.settings-item-stack .settings-description {
+  width: 100%;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.settings-item.settings-item-stack .settings-item-info {
+  width: 100%;
+}
+
 .settings-item:last-child {
   border-bottom: none;
 }
@@ -125,6 +153,7 @@
   color: var(--color-text-primary);
   margin-bottom: 0.25rem;
   cursor: pointer;
+  word-break: break-word;
 }
 
 .settings-description {
@@ -132,10 +161,64 @@
   font-size: 0.875rem;
   color: var(--color-text-secondary);
   line-height: 1.5;
+  word-break: break-word;
 }
 
 .settings-control {
   flex-shrink: 0;
+}
+
+.fx-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: fit-content;
+  max-width: 100%;
+}
+
+.fx-status-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+}
+
+.fx-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #7f8ea3;
+}
+
+.fx-status-text {
+  color: var(--color-text-secondary);
+}
+
+.fx-status-indicator.is-active .fx-status-dot {
+  background: #60d394;
+}
+
+.fx-status-indicator.is-inactive {
+  opacity: 0.6;
+}
+
+.fx-status-indicator.is-inactive .fx-status-dot {
+  background: #8a94a6;
+}
+
+.fx-status-meta {
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.fx-status-item + .fx-status-item {
+  margin-top: 0.6rem;
 }
 
 /* Number Input */

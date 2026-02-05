@@ -50,6 +50,9 @@ export interface PlotComputationInput {
   domainSpec?: string;
   viewSpec?: string;
   sampleCount?: number;
+  minSamples?: number;
+  maxSamples?: number;
+  domainExpansionFactor?: number;
 }
 
 const DEFAULT_SAMPLE_COUNT = 60;
@@ -380,6 +383,9 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
     domainSpec,
     viewSpec,
     sampleCount,
+    minSamples,
+    maxSamples,
+    domainExpansionFactor,
   } = input;
 
   if (!xVariable) {
@@ -405,9 +411,13 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
   const parsedView = parsePlotRange(viewSpec);
   const baseDomain = parsedDomain ?? inferAutoDomain(baseValue);
   const normalizedBaseDomain = normalizeRange(baseDomain);
+  const resolvedDomainExpansion =
+    Number.isFinite(domainExpansionFactor) && domainExpansionFactor && domainExpansionFactor > 0
+      ? domainExpansionFactor
+      : DEFAULT_DOMAIN_EXPANSION;
   let expandedDomain = parsedDomain
     ? normalizedBaseDomain
-    : expandRange(normalizedBaseDomain, DEFAULT_DOMAIN_EXPANSION);
+    : expandRange(normalizedBaseDomain, resolvedDomainExpansion);
   if (baseValue.getType() === "percentage") {
     const clampedDomain = normalizeRange({
       min: clamp(expandedDomain.min, 0, 1),
@@ -423,14 +433,24 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
     : normalizedView;
   const autoView = parsedView ? clampedView : normalizedBaseDomain;
 
-  const baseSamples = Math.max(2, sampleCount ?? DEFAULT_SAMPLE_COUNT);
-  const minSamples = !domainSpec ? Math.max(baseSamples, 240) : baseSamples;
+  const baseSamples = Math.max(2, Math.round(sampleCount ?? DEFAULT_SAMPLE_COUNT));
+  const resolvedMinSamples = Math.max(
+    2,
+    Math.round(
+      minSamples ??
+        (!domainSpec ? Math.max(baseSamples, 240) : baseSamples)
+    )
+  );
+  const resolvedMaxSamples = Math.max(
+    resolvedMinSamples,
+    Math.round(maxSamples ?? 2400)
+  );
   const viewSpan = normalizedView.max - normalizedView.min;
   const domainSpan = normalizedDomain.max - normalizedDomain.min;
   const densityFactor =
     Number.isFinite(viewSpan) && viewSpan > 0 ? Math.max(1, domainSpan / viewSpan) : 1;
-  let totalSamples = Math.max(minSamples, Math.round(baseSamples * densityFactor));
-  totalSamples = Math.min(2400, totalSamples);
+  let totalSamples = Math.max(resolvedMinSamples, Math.round(baseSamples * densityFactor));
+  totalSamples = Math.min(resolvedMaxSamples, totalSamples);
 
   const baseContext = new Map(variableContext);
   const baseStore = cloneVariableStore(baseContext);

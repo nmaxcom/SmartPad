@@ -17,6 +17,8 @@ import {
 } from "./renderNodes";
 import {
   CurrencyUnitValue,
+  CurrencyValue,
+  CurrencySymbol,
   DisplayOptions,
   ErrorValue,
   NumberValue,
@@ -28,6 +30,11 @@ import {
 import { SimpleExpressionParser } from "./expressionEvaluatorV2";
 import { attemptPerUnitConversion } from "./unitConversionUtils";
 import { extractConversionSuffix } from "../utils/conversionSuffix";
+import {
+  convertCurrencyUnitValue,
+  convertCurrencyValue,
+  normalizeCurrencyTargetSymbol,
+} from "../utils/currencyFx";
 
 type SolveExpression =
   | { type: "literal"; value: string; parsed?: SemanticValue }
@@ -1076,7 +1083,12 @@ export class SolveEvaluator implements NodeEvaluator {
       return this.createMathResultNode(node.expression, resultText, context.lineNumber);
     }
     if (conversion) {
-      resolved = this.applyUnitConversion(resolved, conversion.target, conversion.keyword);
+      resolved = this.applyUnitConversion(
+        resolved,
+        conversion.target,
+        conversion.keyword,
+        context
+      );
       if (SemanticValueTypes.isError(resolved)) {
         return this.createErrorNode((resolved as ErrorValue).getMessage(), node.expression, context.lineNumber);
       }
@@ -1194,7 +1206,12 @@ export class SolveEvaluator implements NodeEvaluator {
     return extractConversionSuffix(expression);
   }
 
-  private applyUnitConversion(value: SemanticValue, target: string, keyword: string): SemanticValue {
+  private applyUnitConversion(
+    value: SemanticValue,
+    target: string,
+    keyword: string,
+    context: EvaluationContext
+  ): SemanticValue {
     const parsed = this.parseConversionTarget(target);
     if (!parsed) {
       return ErrorValue.semanticError(`Expected unit after '${keyword}'`);
@@ -1220,16 +1237,33 @@ export class SolveEvaluator implements NodeEvaluator {
 
     if (value.getType() === "currencyUnit") {
       const currencyValue = value as CurrencyUnitValue;
-      if (parsed.symbol && parsed.symbol !== currencyValue.getSymbol()) {
-        return ErrorValue.semanticError("Cannot convert between different currencies");
+      if (!parsed.unit && !parsed.symbol) {
+        return ErrorValue.semanticError("Cannot convert non-unit value");
       }
-      try {
-        return currencyValue.convertTo(parsed.unit);
-      } catch (error) {
-        return ErrorValue.semanticError(
-          error instanceof Error ? error.message : String(error)
-        );
+      const targetUnit = parsed.unit || currencyValue.getUnit();
+      const targetSymbol = parsed.symbol
+        ? (parsed.symbol as CurrencySymbol)
+        : (currencyValue.getSymbol() as CurrencySymbol);
+      return convertCurrencyUnitValue(
+        currencyValue,
+        targetSymbol,
+        targetUnit,
+        targetUnit,
+        1,
+        context
+      );
+    }
+
+    if (value.getType() === "currency") {
+      const currencyValue = value as CurrencyValue;
+      if (!parsed.symbol) {
+        return ErrorValue.semanticError("Cannot convert non-unit value");
       }
+      return convertCurrencyValue(
+        currencyValue,
+        parsed.symbol as CurrencySymbol,
+        context
+      );
     }
 
     return ErrorValue.semanticError("Cannot convert non-unit value");
@@ -1246,8 +1280,17 @@ export class SolveEvaluator implements NodeEvaluator {
     let symbol: string | undefined;
     const symbolMatch = raw.match(/^([$€£¥₹₿])\s*(.*)$/);
     if (symbolMatch) {
-      symbol = symbolMatch[1];
+      symbol = normalizeCurrencyTargetSymbol(symbolMatch[1]) ?? undefined;
       raw = symbolMatch[2].trim();
+    } else {
+      const codeMatch = raw.match(/^([A-Za-z]{3})\b(.*)$/);
+      if (codeMatch) {
+        const normalized = normalizeCurrencyTargetSymbol(codeMatch[1]);
+        if (normalized) {
+          symbol = normalized;
+          raw = codeMatch[2].trim();
+        }
+      }
     }
 
     raw = raw.replace(/^per\b/i, "").trim();
@@ -1255,6 +1298,9 @@ export class SolveEvaluator implements NodeEvaluator {
 
     const unit = raw.replace(/\s+/g, "");
     if (!unit) {
+      if (symbol) {
+        return { unit: "", symbol };
+      }
       return null;
     }
 

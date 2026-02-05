@@ -21,6 +21,14 @@ export const DEFAULT_SETTINGS: SettingsState = {
   showErrorBorders: true,
   showErrorBackground: true,
   showPlotDetails: false,
+  plotSampleCount: 150,
+  plotScrubSampleCount: 40,
+  plotMinSamples: 240,
+  plotMaxSamples: 2400,
+  plotDomainExpansion: 16,
+  plotYViewPadding: 1.15,
+  plotYDomainPadding: 8,
+  plotPanYDomainPadding: 6,
 };
 
 // localStorage key for settings persistence

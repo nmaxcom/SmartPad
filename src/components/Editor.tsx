@@ -211,6 +211,14 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
             dateDisplayFormat: settings.dateDisplayFormat,
             dateLocale: getDateLocaleEffective(),
             functionCallDepth: 0,
+            plotSampleCount: settings.plotSampleCount,
+            plotScrubSampleCount: settings.plotScrubSampleCount,
+            plotMinSamples: settings.plotMinSamples,
+            plotMaxSamples: settings.plotMaxSamples,
+            plotDomainExpansion: settings.plotDomainExpansion,
+            plotYViewPadding: settings.plotYViewPadding,
+            plotYDomainPadding: settings.plotYDomainPadding,
+            plotPanYDomainPadding: settings.plotPanYDomainPadding,
           };
 
           // Evaluate the node ONLY for state updates (variables)

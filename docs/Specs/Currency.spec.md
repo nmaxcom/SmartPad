@@ -87,7 +87,7 @@ Frankfurter uses ECB rates, but we still treat ECB as a separate fallback for re
 
 If the user declares a rate in the document, use it instead of live FX for that pair.
 
-Manual rates are declared with normal assignments and unit math. Since currency codes are valid units, a manual rate can be written as:
+Manual rates are declared with normal assignments. Since currency codes are valid currency literals, a manual rate can be written as:
 
 ```text
 EUR = 1.08 USD
@@ -217,7 +217,6 @@ subscription in USD/month => $11.05/month
 ## 10) Implementation notes (fit with current code)
 
 - Currency remains a first-class type (`CurrencyValue`, `CurrencyUnitValue`).
-- ISO codes are treated as built-in unit tokens that map to currency symbols for display.
+- ISO codes are treated as built-in currency tokens that render as suffixes by default.
 - `to` / `in` conversion should detect currency targets and route through FX conversion logic.
-- Manual rate declarations can be resolved using the existing unit-alias mechanism (currency codes as units).
-- If a manual alias matches a built-in currency code, the alias wins (consistent with `Unit.spec.md`).
+- Manual rate declarations are detected when a currency code variable is assigned a value in a different currency.

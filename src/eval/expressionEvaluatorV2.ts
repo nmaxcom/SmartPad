@@ -38,6 +38,11 @@ import {
   DurationValue,
 } from "../types";
 import { DateTime } from "luxon";
+import {
+  convertCurrencyUnitValue,
+  convertCurrencyValue,
+  normalizeCurrencyTargetSymbol,
+} from "../utils/currencyFx";
 import { getListMaxLength } from "../types/listConfig";
 import { parseAndEvaluateExpression } from "../parsing/expressionParser";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
@@ -648,16 +653,16 @@ export class SimpleExpressionParser {
       switch (funcName) {
         case "sum":
         case "total":
-          return sumSemanticValues(resolvedArgs);
+          return sumSemanticValues(resolvedArgs, context);
         case "avg":
         case "mean":
-          return averageSemanticValues(resolvedArgs);
+          return averageSemanticValues(resolvedArgs, context);
         case "median":
           return medianSemanticValues(resolvedArgs);
         case "count":
           return NumberValue.from(resolvedArgs.length);
         case "stddev":
-          return standardDeviation(resolvedArgs);
+          return standardDeviation(resolvedArgs, context);
         case "min":
           return extremumSemanticValue(resolvedArgs, (next, current) => next < current);
         case "max":
@@ -1039,7 +1044,35 @@ function collectListFunctionValues(
   return resolveFunctionArguments(values, context);
 }
 
-const sumSemanticValues = (values: SemanticValue[]): SemanticValue => {
+const tryConvertForSum = (
+  accumulator: SemanticValue,
+  next: SemanticValue,
+  context: EvaluationContext
+): SemanticValue | null => {
+  if (accumulator.getType() === "currency" && next.getType() === "currency") {
+    const target = (accumulator as CurrencyValue).getSymbol() as CurrencySymbol;
+    return convertCurrencyValue(next as CurrencyValue, target, context);
+  }
+  if (accumulator.getType() === "currencyUnit" && next.getType() === "currencyUnit") {
+    const left = accumulator as CurrencyUnitValue;
+    const right = next as CurrencyUnitValue;
+    if (left.getUnit() !== right.getUnit() || left.isPerUnit() !== right.isPerUnit()) {
+      return ErrorValue.semanticError("Cannot sum different currency-unit dimensions");
+    }
+    const target = left.getSymbol() as CurrencySymbol;
+    return convertCurrencyUnitValue(
+      right,
+      target,
+      left.getUnit(),
+      left.getUnit(),
+      1,
+      context
+    );
+  }
+  return null;
+};
+
+const sumSemanticValues = (values: SemanticValue[], context: EvaluationContext): SemanticValue => {
   const numericItems = filterNumericItems(values);
   if (numericItems.length === 0) {
     return NumberValue.from(0);
@@ -1048,6 +1081,15 @@ const sumSemanticValues = (values: SemanticValue[]): SemanticValue => {
   for (const next of numericItems.slice(1)) {
     const updated = SemanticArithmetic.add(accumulator, next);
     if (SemanticValueTypes.isError(updated)) {
+      const converted = tryConvertForSum(accumulator, next, context);
+      if (converted) {
+        const retry = SemanticArithmetic.add(accumulator, converted);
+        if (SemanticValueTypes.isError(retry)) {
+          return retry;
+        }
+        accumulator = retry;
+        continue;
+      }
       return updated;
     }
     accumulator = updated;
@@ -1057,12 +1099,12 @@ const sumSemanticValues = (values: SemanticValue[]): SemanticValue => {
 
 const createZeroNumberValue = (): NumberValue => NumberValue.from(0);
 
-const averageSemanticValues = (values: SemanticValue[]): SemanticValue => {
+const averageSemanticValues = (values: SemanticValue[], context: EvaluationContext): SemanticValue => {
   const numericItems = filterNumericItems(values);
   if (numericItems.length === 0) {
     return createZeroNumberValue();
   }
-  const total = sumSemanticValues(numericItems);
+  const total = sumSemanticValues(numericItems, context);
   if (SemanticValueTypes.isError(total)) {
     return total;
   }
@@ -1089,12 +1131,12 @@ const medianSemanticValues = (values: SemanticValue[]): SemanticValue => {
   return SemanticArithmetic.divide(pairSum, NumberValue.from(2));
 };
 
-const standardDeviation = (values: SemanticValue[]): SemanticValue => {
+const standardDeviation = (values: SemanticValue[], context: EvaluationContext): SemanticValue => {
   const numericItems = filterNumericItems(values);
   if (numericItems.length === 0) {
     return createZeroNumberValue();
   }
-  const meanValue = averageSemanticValues(numericItems);
+  const meanValue = averageSemanticValues(numericItems, context);
   if (SemanticValueTypes.isError(meanValue)) {
     return meanValue;
   }
@@ -1110,7 +1152,7 @@ const standardDeviation = (values: SemanticValue[]): SemanticValue => {
     }
     squaredDiffs.push(squared);
   }
-  const sumOfSquares = sumSemanticValues(squaredDiffs);
+  const sumOfSquares = sumSemanticValues(squaredDiffs, context);
   if (SemanticValueTypes.isError(sumOfSquares)) {
     return sumOfSquares;
   }
@@ -1838,7 +1880,8 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
           const converted = this.convertSingleValue(
             item,
             conversion.target,
-            conversion.keyword
+            conversion.keyword,
+            context
           );
           if (SemanticValueTypes.isError(converted)) {
             conversionError = converted as ErrorValue;
@@ -1864,7 +1907,8 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
         const converted = this.applyUnitConversion(
           listValue,
           conversion.target,
-          conversion.keyword
+          conversion.keyword,
+          context
         );
         if (SemanticValueTypes.isError(converted)) {
           return this.createErrorNode(
@@ -1955,7 +1999,7 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       }
 
       if (conversion) {
-        result = this.applyUnitConversion(result, conversion.target, conversion.keyword);
+        result = this.applyUnitConversion(result, conversion.target, conversion.keyword, context);
       }
       
       if (SemanticValueTypes.isError(result)) {
@@ -2052,12 +2096,13 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
   private applyUnitConversion(
     value: SemanticValue,
     target: string,
-    keyword: string
+    keyword: string,
+    context: EvaluationContext
   ): SemanticValue {
     if (SemanticValueTypes.isList(value)) {
       const converted: SemanticValue[] = [];
       for (const item of (value as ListValue).getItems()) {
-        const result = this.convertSingleValue(item, target, keyword);
+        const result = this.convertSingleValue(item, target, keyword, context);
         if (SemanticValueTypes.isError(result)) {
           return result;
         }
@@ -2065,13 +2110,14 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       }
       return buildListValue(converted);
     }
-    return this.convertSingleValue(value, target, keyword);
+    return this.convertSingleValue(value, target, keyword, context);
   }
 
   private convertSingleValue(
     value: SemanticValue,
     target: string,
-    keyword: string
+    keyword: string,
+    context: EvaluationContext
   ): SemanticValue {
     const parsed = this.parseConversionTarget(target);
     if (!parsed) {
@@ -2101,30 +2147,23 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
     }
 
     if (value.getType() === "currencyUnit") {
-      if (!parsed.unit) {
+      const currencyValue = value as CurrencyUnitValue;
+      if (!parsed.unit && !parsed.symbol) {
         return ErrorValue.semanticError("Cannot convert non-unit value");
       }
-      const currencyValue = value as CurrencyUnitValue;
-      if (parsed.symbol && parsed.symbol !== currencyValue.getSymbol()) {
-        return ErrorValue.semanticError("Cannot convert between different currencies");
-      }
-      try {
-        const converted = currencyValue.convertTo(parsed.unit);
-        if (parsed.scale !== 1) {
-          const displayAmount = converted.getNumericValue() / parsed.scale;
-          return new CurrencyUnitValue(
-            converted.getSymbol() as CurrencySymbol,
-            displayAmount,
-            parsed.displayUnit,
-            converted.isPerUnit()
-          );
-        }
-        return converted;
-      } catch (error) {
-        return ErrorValue.semanticError(
-          error instanceof Error ? error.message : String(error)
-        );
-      }
+      const targetUnit = parsed.unit || currencyValue.getUnit();
+      const displayUnit = parsed.displayUnit || targetUnit;
+      const targetSymbol = parsed.symbol
+        ? (parsed.symbol as CurrencySymbol)
+        : (currencyValue.getSymbol() as CurrencySymbol);
+      return convertCurrencyUnitValue(
+        currencyValue,
+        targetSymbol,
+        targetUnit,
+        displayUnit,
+        parsed.scale,
+        context
+      );
     }
 
     if (value.getType() === "duration") {
@@ -2149,10 +2188,14 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
 
     if (value.getType() === "currency") {
       const currencyValue = value as CurrencyValue;
-      if (!parsed.symbol || parsed.symbol !== currencyValue.getSymbol()) {
-        return ErrorValue.semanticError("Cannot convert between different currencies");
+      if (!parsed.symbol) {
+        return ErrorValue.semanticError("Cannot convert non-unit value");
       }
-      return currencyValue;
+      return convertCurrencyValue(
+        currencyValue,
+        parsed.symbol as CurrencySymbol,
+        context
+      );
     }
 
     if (value.getType() === "number") {
@@ -2252,8 +2295,17 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
     let symbol: string | undefined;
     const symbolMatch = raw.match(/^([$€£¥₹₿])\s*(.*)$/);
     if (symbolMatch) {
-      symbol = symbolMatch[1];
+      symbol = normalizeCurrencyTargetSymbol(symbolMatch[1]) ?? undefined;
       raw = symbolMatch[2].trim();
+    } else {
+      const codeMatch = raw.match(/^([A-Za-z]{3})\b(.*)$/);
+      if (codeMatch) {
+        const normalized = normalizeCurrencyTargetSymbol(codeMatch[1]);
+        if (normalized) {
+          symbol = normalized;
+          raw = codeMatch[2].trim();
+        }
+      }
     }
 
     raw = raw.replace(/^per\b/i, "").trim();

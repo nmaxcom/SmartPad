@@ -252,7 +252,18 @@ const parseSingleValue = (input: string): SemanticValue | null => {
   if (
     trimmed.match(new RegExp(`^[+-]?\\s*[\$€£¥₹₿]\\s*${groupedNumberPattern}$`)) ||
     trimmed.match(new RegExp(`^[+-]?\\s*${groupedNumberPattern}\\s*[\$€£¥₹₿]$`)) ||
-    trimmed.match(new RegExp(`^[+-]?\\s*${groupedNumberPattern}\\s+(CHF|CAD|AUD)$`))
+    trimmed.match(
+      new RegExp(
+        `^[+-]?\\s*${groupedNumberPattern}\\s+(USD|EUR|GBP|JPY|INR|BTC|CHF|CAD|AUD)$`,
+        "i"
+      )
+    ) ||
+    trimmed.match(
+      new RegExp(
+        `^[+-]?\\s*(USD|EUR|GBP|JPY|INR|BTC|CHF|CAD|AUD)\\s*${groupedNumberPattern}$`,
+        "i"
+      )
+    )
   ) {
     try {
       return CurrencyValue.fromString(trimmed);

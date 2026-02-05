@@ -38,6 +38,14 @@ export interface EvaluationContext {
   dateDisplayFormat?: 'iso' | 'locale';
   dateLocale?: string;
   functionCallDepth?: number;
+  plotSampleCount?: number;
+  plotScrubSampleCount?: number;
+  plotMinSamples?: number;
+  plotMaxSamples?: number;
+  plotDomainExpansion?: number;
+  plotYViewPadding?: number;
+  plotYDomainPadding?: number;
+  plotPanYDomainPadding?: number;
 }
 
 /**

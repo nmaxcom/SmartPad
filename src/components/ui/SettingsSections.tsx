@@ -1,9 +1,16 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { useSettingsContext } from "../../state/SettingsContext";
+import { DEFAULT_SETTINGS } from "../../state/settingsStore";
 import { getDateLocaleDetected, getDateLocaleEffective } from "../../types/DateValue";
+import { useFxStatus } from "../../hooks/useFxStatus";
 
-export function SettingsSections() {
+interface SettingsSectionsProps {
+  idPrefix?: string;
+}
+
+export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProps) {
   const { settings, updateSetting } = useSettingsContext();
+  const fxStatus = useFxStatus();
   const detectedLocale = getDateLocaleDetected();
   const effectiveLocale = getDateLocaleEffective();
   const isCustomLocale = settings.dateLocaleMode === "custom";
@@ -50,14 +57,128 @@ export function SettingsSections() {
     [updateSetting, settings.scientificLowerExponent]
   );
 
+  const [plotInputOverrides, setPlotInputOverrides] = useState<Record<string, string>>({});
+
+  const setPlotInput = useCallback((key: string, value: string) => {
+    setPlotInputOverrides((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
+  const clearPlotInput = useCallback((key: string) => {
+    setPlotInputOverrides((prev) => {
+      if (!(key in prev)) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }, []);
+
+  const getPlotInputValue = (key: string, fallback: number) =>
+    plotInputOverrides[key] ?? String(fallback);
+
+  const handlePlotInputChange = useCallback(
+    (key: string, raw: string, applyValue: (value: number) => void) => {
+      setPlotInput(key, raw);
+      if (!raw.trim()) return;
+      const parsed = Number(raw);
+      if (!Number.isFinite(parsed)) return;
+      applyValue(parsed);
+    },
+    [setPlotInput]
+  );
+
+  const handlePlotInputBlur = useCallback(
+    (key: string) => {
+      const raw = plotInputOverrides[key];
+      if (raw === undefined) return;
+      if (!raw.trim()) {
+        clearPlotInput(key);
+        return;
+      }
+      const parsed = Number(raw);
+      if (!Number.isFinite(parsed)) {
+        clearPlotInput(key);
+        return;
+      }
+      clearPlotInput(key);
+    },
+    [plotInputOverrides, clearPlotInput]
+  );
+
+  const handlePlotSampleCountChange = useCallback(
+    (value: number) => {
+      const clampedValue = Math.max(10, Math.min(2000, Math.round(value)));
+      updateSetting("plotSampleCount", clampedValue);
+    },
+    [updateSetting]
+  );
+
+  const handlePlotScrubSampleCountChange = useCallback(
+    (value: number) => {
+      const clampedValue = Math.max(10, Math.min(1000, Math.round(value)));
+      updateSetting("plotScrubSampleCount", clampedValue);
+    },
+    [updateSetting]
+  );
+
+  const handlePlotMinSamplesChange = useCallback(
+    (value: number) => {
+      const clampedValue = Math.max(10, Math.min(4000, Math.round(value)));
+      updateSetting("plotMinSamples", clampedValue);
+      if (clampedValue > settings.plotMaxSamples) {
+        updateSetting("plotMaxSamples", clampedValue);
+      }
+    },
+    [updateSetting, settings.plotMaxSamples]
+  );
+
+  const handlePlotMaxSamplesChange = useCallback(
+    (value: number) => {
+      const clampedValue = Math.max(10, Math.min(5000, Math.round(value)));
+      updateSetting("plotMaxSamples", Math.max(clampedValue, settings.plotMinSamples));
+    },
+    [updateSetting, settings.plotMinSamples]
+  );
+
+  const handlePlotDomainExpansionChange = useCallback(
+    (value: number) => {
+      const clampedValue = Math.max(1, Math.min(100, value));
+      updateSetting("plotDomainExpansion", clampedValue);
+    },
+    [updateSetting]
+  );
+
+  const handlePlotYViewPaddingChange = useCallback(
+    (value: number) => {
+      const clampedValue = Math.max(1, Math.min(50, value));
+      updateSetting("plotYViewPadding", clampedValue);
+    },
+    [updateSetting]
+  );
+
+  const handlePlotYDomainPaddingChange = useCallback(
+    (value: number) => {
+      const clampedValue = Math.max(1, Math.min(200, value));
+      updateSetting("plotYDomainPadding", clampedValue);
+    },
+    [updateSetting]
+  );
+
+  const handlePlotPanYDomainPaddingChange = useCallback(
+    (value: number) => {
+      const clampedValue = Math.max(1, Math.min(200, value));
+      updateSetting("plotPanYDomainPadding", clampedValue);
+    },
+    [updateSetting]
+  );
+
   return (
     <>
       <div className="settings-section">
         <h3 className="settings-section-title">Display Options</h3>
 
-        <div className="settings-item">
+        <div className="settings-item settings-item-stack">
           <div className="settings-item-info">
-            <label htmlFor="decimal-places" className="settings-label">
+            <label htmlFor={`${idPrefix}-decimal-places`} className="settings-label">
               Decimal Places
             </label>
             <p className="settings-description">
@@ -67,7 +188,7 @@ export function SettingsSections() {
           </div>
           <div className="settings-control">
             <input
-              id="decimal-places"
+              id={`${idPrefix}-decimal-places`}
               type="number"
               min="0"
               max="10"
@@ -78,9 +199,9 @@ export function SettingsSections() {
           </div>
         </div>
 
-        <div className="settings-item">
+        <div className="settings-item settings-item-stack">
           <div className="settings-item-info">
-            <label htmlFor="group-thousands" className="settings-label">
+            <label htmlFor={`${idPrefix}-group-thousands`} className="settings-label">
               Group thousands with commas
             </label>
             <p className="settings-description">
@@ -90,7 +211,7 @@ export function SettingsSections() {
           <div className="settings-control">
             <label className="toggle-switch">
               <input
-                id="group-thousands"
+                id={`${idPrefix}-group-thousands`}
                 type="checkbox"
                 checked={settings.groupThousands}
                 onChange={(e) => handleGroupThousandsToggle(e.target.checked)}
@@ -102,7 +223,7 @@ export function SettingsSections() {
 
         <div className="settings-item">
           <div className="settings-item-info">
-            <label htmlFor="list-max-length" className="settings-label">
+            <label htmlFor={`${idPrefix}-list-max-length`} className="settings-label">
               Max items per list
             </label>
             <p className="settings-description">
@@ -111,7 +232,7 @@ export function SettingsSections() {
           </div>
           <div className="settings-control">
             <input
-              id="list-max-length"
+              id={`${idPrefix}-list-max-length`}
               type="number"
               min="5"
               max="1000"
@@ -124,7 +245,7 @@ export function SettingsSections() {
 
         <div className="settings-item">
           <div className="settings-item-info">
-            <label htmlFor="scientific-upper-exponent" className="settings-label">
+            <label htmlFor={`${idPrefix}-scientific-upper-exponent`} className="settings-label">
               Scientific Upper Exponent (10^N)
             </label>
             <p className="settings-description">
@@ -133,7 +254,7 @@ export function SettingsSections() {
           </div>
           <div className="settings-control">
             <input
-              id="scientific-upper-exponent"
+              id={`${idPrefix}-scientific-upper-exponent`}
               type="number"
               step="1"
               value={settings.scientificUpperExponent}
@@ -145,7 +266,7 @@ export function SettingsSections() {
 
         <div className="settings-item">
           <div className="settings-item-info">
-            <label htmlFor="scientific-lower-exponent" className="settings-label">
+            <label htmlFor={`${idPrefix}-scientific-lower-exponent`} className="settings-label">
               Scientific Lower Exponent (10^N)
             </label>
             <p className="settings-description">
@@ -154,7 +275,7 @@ export function SettingsSections() {
           </div>
           <div className="settings-control">
             <input
-              id="scientific-lower-exponent"
+              id={`${idPrefix}-scientific-lower-exponent`}
               type="number"
               step="1"
               value={settings.scientificLowerExponent}
@@ -166,7 +287,7 @@ export function SettingsSections() {
 
         <div className="settings-item">
           <div className="settings-item-info">
-            <label htmlFor="scientific-trim-zeros" className="settings-label">
+            <label htmlFor={`${idPrefix}-scientific-trim-zeros`} className="settings-label">
               Trim Scientific Trailing Zeros
             </label>
             <p className="settings-description">
@@ -176,7 +297,7 @@ export function SettingsSections() {
           <div className="settings-control">
             <label className="toggle-switch">
               <input
-                id="scientific-trim-zeros"
+                id={`${idPrefix}-scientific-trim-zeros`}
                 type="checkbox"
                 checked={settings.scientificTrimTrailingZeros}
                 onChange={(e) => updateSetting("scientificTrimTrailingZeros", e.target.checked)}
@@ -192,7 +313,7 @@ export function SettingsSections() {
 
         <div className="settings-item">
           <div className="settings-item-info">
-            <label htmlFor="date-locale-mode" className="settings-label">
+            <label htmlFor={`${idPrefix}-date-locale-mode`} className="settings-label">
               Date Locale
             </label>
             <p className="settings-description">
@@ -201,7 +322,7 @@ export function SettingsSections() {
           </div>
           <div className="settings-control">
             <select
-              id="date-locale-mode"
+              id={`${idPrefix}-date-locale-mode`}
               value={settings.dateLocaleMode}
               onChange={(e) =>
                 updateSetting(
@@ -219,7 +340,7 @@ export function SettingsSections() {
 
         <div className="settings-item">
           <div className="settings-item-info">
-            <label htmlFor="date-display-format" className="settings-label">
+            <label htmlFor={`${idPrefix}-date-display-format`} className="settings-label">
               Date Display Format
             </label>
             <p className="settings-description">
@@ -228,7 +349,7 @@ export function SettingsSections() {
           </div>
           <div className="settings-control">
             <select
-              id="date-display-format"
+              id={`${idPrefix}-date-display-format`}
               value={settings.dateDisplayFormat}
               onChange={(e) =>
                 updateSetting(
@@ -246,7 +367,7 @@ export function SettingsSections() {
 
         <div className="settings-item">
           <div className="settings-item-info">
-            <label htmlFor="date-locale-override" className="settings-label">
+            <label htmlFor={`${idPrefix}-date-locale-override`} className="settings-label">
               Locale Override
             </label>
             <p className="settings-description">
@@ -256,7 +377,7 @@ export function SettingsSections() {
           </div>
           <div className="settings-control">
             <input
-              id="date-locale-override"
+              id={`${idPrefix}-date-locale-override`}
               type="text"
               value={settings.dateLocaleOverride}
               onChange={(e) => updateSetting("dateLocaleOverride", e.target.value)}
@@ -269,11 +390,58 @@ export function SettingsSections() {
       </div>
 
       <div className="settings-section">
+        <h3 className="settings-section-title">Currency</h3>
+
+        <div className="settings-item">
+          <div className="settings-item-info">
+            <label className="settings-label">Live FX Status</label>
+            <p className="settings-description">
+              {fxStatus.provider === "offline" &&
+                (fxStatus.source === "cache"
+                  ? "Offline. Using cached FX rates."
+                  : "Offline. FX rates unavailable.")}
+              {fxStatus.provider !== "offline" &&
+                "Live FX providers are synced. Green means active, dim means standby."}
+            </p>
+          </div>
+          <div className="settings-control">
+            {(
+              [
+                { id: "frankfurter", label: "Frankfurter", note: "Primary fiat rates" },
+                { id: "ecb", label: "ECB", note: "Fallback fiat rates" },
+                { id: "fawazahmed0", label: "Fawazahmed0", note: "Crypto + fallback rates" },
+              ] as const
+            ).map((provider) => {
+              const state = fxStatus.providers?.[provider.id];
+              const isActive =
+                fxStatus.provider === provider.id || fxStatus.cryptoProvider === provider.id;
+              return (
+                <div key={provider.id} className="fx-status-item">
+                  <div
+                    className={`fx-status-indicator fx-status-${provider.id} ${isActive ? "is-active" : "is-inactive"}`}
+                  >
+                    <span className="fx-status-dot"></span>
+                    <span className="fx-status-text">{provider.label}</span>
+                  </div>
+                  <div className="fx-status-meta">
+                    {provider.note}
+                    {state?.updatedAt && (
+                      <> • Updated {new Date(state.updatedAt).toLocaleString()}</>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="settings-section">
         <h3 className="settings-section-title">Results Feedback</h3>
 
         <div className="settings-item">
           <div className="settings-item-info">
-            <label htmlFor="show-result-pulse" className="settings-label">
+            <label htmlFor={`${idPrefix}-show-result-pulse`} className="settings-label">
               Flash on Result Change
             </label>
             <p className="settings-description">
@@ -283,7 +451,7 @@ export function SettingsSections() {
           <div className="settings-control">
             <label className="toggle-switch">
               <input
-                id="show-result-pulse"
+                id={`${idPrefix}-show-result-pulse`}
                 type="checkbox"
                 checked={settings.showResultPulse}
                 onChange={(e) => updateSetting("showResultPulse", e.target.checked)}
@@ -295,7 +463,7 @@ export function SettingsSections() {
 
         <div className="settings-item">
           <div className="settings-item-info">
-            <label htmlFor="show-result-delta" className="settings-label">
+            <label htmlFor={`${idPrefix}-show-result-delta`} className="settings-label">
               Delta Badge
             </label>
             <p className="settings-description">
@@ -305,7 +473,7 @@ export function SettingsSections() {
           <div className="settings-control">
             <label className="toggle-switch">
               <input
-                id="show-result-delta"
+                id={`${idPrefix}-show-result-delta`}
                 type="checkbox"
                 checked={settings.showResultDelta}
                 onChange={(e) => updateSetting("showResultDelta", e.target.checked)}
@@ -317,7 +485,7 @@ export function SettingsSections() {
 
         <div className="settings-item">
           <div className="settings-item-info">
-            <label htmlFor="show-result-borders" className="settings-label">
+            <label htmlFor={`${idPrefix}-show-result-borders`} className="settings-label">
               Result Borders
             </label>
             <p className="settings-description">
@@ -327,7 +495,7 @@ export function SettingsSections() {
           <div className="settings-control">
             <label className="toggle-switch">
               <input
-                id="show-result-borders"
+                id={`${idPrefix}-show-result-borders`}
                 type="checkbox"
                 checked={settings.showResultBorders}
                 onChange={(e) => updateSetting("showResultBorders", e.target.checked)}
@@ -339,7 +507,7 @@ export function SettingsSections() {
 
         <div className="settings-item">
           <div className="settings-item-info">
-            <label htmlFor="show-result-background" className="settings-label">
+            <label htmlFor={`${idPrefix}-show-result-background`} className="settings-label">
               Result Backgrounds
             </label>
             <p className="settings-description">
@@ -349,7 +517,7 @@ export function SettingsSections() {
           <div className="settings-control">
             <label className="toggle-switch">
               <input
-                id="show-result-background"
+                id={`${idPrefix}-show-result-background`}
                 type="checkbox"
                 checked={settings.showResultBackground}
                 onChange={(e) => updateSetting("showResultBackground", e.target.checked)}
@@ -361,7 +529,7 @@ export function SettingsSections() {
 
         <div className="settings-item">
           <div className="settings-item-info">
-            <label htmlFor="show-error-borders" className="settings-label">
+            <label htmlFor={`${idPrefix}-show-error-borders`} className="settings-label">
               Error Borders
             </label>
             <p className="settings-description">
@@ -371,7 +539,7 @@ export function SettingsSections() {
           <div className="settings-control">
             <label className="toggle-switch">
               <input
-                id="show-error-borders"
+                id={`${idPrefix}-show-error-borders`}
                 type="checkbox"
                 checked={settings.showErrorBorders}
                 onChange={(e) => updateSetting("showErrorBorders", e.target.checked)}
@@ -383,7 +551,7 @@ export function SettingsSections() {
 
         <div className="settings-item">
           <div className="settings-item-info">
-            <label htmlFor="show-error-background" className="settings-label">
+            <label htmlFor={`${idPrefix}-show-error-background`} className="settings-label">
               Error Backgrounds
             </label>
             <p className="settings-description">
@@ -393,7 +561,7 @@ export function SettingsSections() {
           <div className="settings-control">
             <label className="toggle-switch">
               <input
-                id="show-error-background"
+                id={`${idPrefix}-show-error-background`}
                 type="checkbox"
                 checked={settings.showErrorBackground}
                 onChange={(e) => updateSetting("showErrorBackground", e.target.checked)}
@@ -409,7 +577,7 @@ export function SettingsSections() {
 
         <div className="settings-item">
           <div className="settings-item-info">
-            <label htmlFor="show-plot-details" className="settings-label">
+            <label htmlFor={`${idPrefix}-show-plot-details`} className="settings-label">
               Show Plot Details
             </label>
             <p className="settings-description">
@@ -419,13 +587,241 @@ export function SettingsSections() {
           <div className="settings-control">
             <label className="toggle-switch">
               <input
-                id="show-plot-details"
+                id={`${idPrefix}-show-plot-details`}
                 type="checkbox"
                 checked={settings.showPlotDetails}
                 onChange={(e) => updateSetting("showPlotDetails", e.target.checked)}
               />
               <span className="toggle-slider"></span>
             </label>
+          </div>
+        </div>
+
+        <div className="settings-item">
+          <div className="settings-item-info">
+            <label htmlFor={`${idPrefix}-plot-sample-count`} className="settings-label">
+              Base sample count
+            </label>
+            <p className="settings-description">
+              Number of samples per series for most plots. Higher = smoother curves, slower updates.
+              Default: {DEFAULT_SETTINGS.plotSampleCount}.
+            </p>
+          </div>
+          <div className="settings-control">
+            <input
+              id={`${idPrefix}-plot-sample-count`}
+              type="number"
+              min="10"
+              max="2000"
+              value={getPlotInputValue("plotSampleCount", settings.plotSampleCount)}
+              onChange={(e) =>
+                handlePlotInputChange("plotSampleCount", e.target.value, (value) =>
+                  handlePlotSampleCountChange(Math.round(value))
+                )
+              }
+              onBlur={() => handlePlotInputBlur("plotSampleCount")}
+              className="settings-number-input"
+            />
+          </div>
+        </div>
+
+        <div className="settings-item">
+          <div className="settings-item-info">
+            <label htmlFor={`${idPrefix}-plot-scrub-sample-count`} className="settings-label">
+              Scrub sample count
+            </label>
+            <p className="settings-description">
+              Samples used while dragging numbers. Lower = faster scrubbing, higher = smoother.
+              Default: {DEFAULT_SETTINGS.plotScrubSampleCount}.
+            </p>
+          </div>
+          <div className="settings-control">
+            <input
+              id={`${idPrefix}-plot-scrub-sample-count`}
+              type="number"
+              min="10"
+              max="1000"
+              value={getPlotInputValue("plotScrubSampleCount", settings.plotScrubSampleCount)}
+              onChange={(e) =>
+                handlePlotInputChange("plotScrubSampleCount", e.target.value, (value) =>
+                  handlePlotScrubSampleCountChange(Math.round(value))
+                )
+              }
+              onBlur={() => handlePlotInputBlur("plotScrubSampleCount")}
+              className="settings-number-input"
+            />
+          </div>
+        </div>
+
+        <div className="settings-item">
+          <div className="settings-item-info">
+            <label htmlFor={`${idPrefix}-plot-min-samples`} className="settings-label">
+              Minimum samples (auto domain)
+            </label>
+            <p className="settings-description">
+              Floor for sampling when the domain is auto-generated. Prevents jagged lines on wide ranges.
+              Default: {DEFAULT_SETTINGS.plotMinSamples}.
+            </p>
+          </div>
+          <div className="settings-control">
+            <input
+              id={`${idPrefix}-plot-min-samples`}
+              type="number"
+              min="10"
+              max="4000"
+              value={getPlotInputValue("plotMinSamples", settings.plotMinSamples)}
+              onChange={(e) =>
+                handlePlotInputChange("plotMinSamples", e.target.value, (value) =>
+                  handlePlotMinSamplesChange(Math.round(value))
+                )
+              }
+              onBlur={() => handlePlotInputBlur("plotMinSamples")}
+              className="settings-number-input"
+            />
+          </div>
+        </div>
+
+        <div className="settings-item">
+          <div className="settings-item-info">
+            <label htmlFor={`${idPrefix}-plot-max-samples`} className="settings-label">
+              Maximum samples (cap)
+            </label>
+            <p className="settings-description">
+              Upper bound on samples after density scaling. Keeps huge plots responsive.
+              Default: {DEFAULT_SETTINGS.plotMaxSamples}.
+            </p>
+          </div>
+          <div className="settings-control">
+            <input
+              id={`${idPrefix}-plot-max-samples`}
+              type="number"
+              min="10"
+              max="5000"
+              value={getPlotInputValue("plotMaxSamples", settings.plotMaxSamples)}
+              onChange={(e) =>
+                handlePlotInputChange("plotMaxSamples", e.target.value, (value) =>
+                  handlePlotMaxSamplesChange(Math.round(value))
+                )
+              }
+              onBlur={() => handlePlotInputBlur("plotMaxSamples")}
+              className="settings-number-input"
+            />
+          </div>
+        </div>
+
+        <div className="settings-item">
+          <div className="settings-item-info">
+            <label htmlFor={`${idPrefix}-plot-domain-expansion`} className="settings-label">
+              Auto X domain expansion
+            </label>
+            <p className="settings-description">
+              Multiplier for the auto X range around the current value. Larger = more panning room.
+              Default: {DEFAULT_SETTINGS.plotDomainExpansion}.
+            </p>
+          </div>
+          <div className="settings-control">
+            <input
+              id={`${idPrefix}-plot-domain-expansion`}
+              type="number"
+              step="0.5"
+              min="1"
+              max="100"
+              value={getPlotInputValue("plotDomainExpansion", settings.plotDomainExpansion)}
+              onChange={(e) =>
+                handlePlotInputChange("plotDomainExpansion", e.target.value, (value) =>
+                  handlePlotDomainExpansionChange(value)
+                )
+              }
+              onBlur={() => handlePlotInputBlur("plotDomainExpansion")}
+              className="settings-number-input"
+            />
+          </div>
+        </div>
+
+        <div className="settings-item">
+          <div className="settings-item-info">
+            <label htmlFor={`${idPrefix}-plot-y-view-padding`} className="settings-label">
+              Auto Y view padding
+            </label>
+            <p className="settings-description">
+              Expands the Y view around the data. 1 = tight fit, higher adds breathing room.
+              Default: {DEFAULT_SETTINGS.plotYViewPadding}.
+            </p>
+          </div>
+          <div className="settings-control">
+            <input
+              id={`${idPrefix}-plot-y-view-padding`}
+              type="number"
+              step="0.05"
+              min="1"
+              max="50"
+              value={getPlotInputValue("plotYViewPadding", settings.plotYViewPadding)}
+              onChange={(e) =>
+                handlePlotInputChange("plotYViewPadding", e.target.value, (value) =>
+                  handlePlotYViewPaddingChange(value)
+                )
+              }
+              onBlur={() => handlePlotInputBlur("plotYViewPadding")}
+              className="settings-number-input"
+            />
+          </div>
+        </div>
+
+        <div className="settings-item">
+          <div className="settings-item-info">
+            <label htmlFor={`${idPrefix}-plot-y-domain-padding`} className="settings-label">
+              Auto Y domain padding
+            </label>
+            <p className="settings-description">
+              Expands the Y domain beyond the view. Larger values allow more vertical panning.
+              Default: {DEFAULT_SETTINGS.plotYDomainPadding}.
+            </p>
+          </div>
+          <div className="settings-control">
+            <input
+              id={`${idPrefix}-plot-y-domain-padding`}
+              type="number"
+              step="0.5"
+              min="1"
+              max="200"
+              value={getPlotInputValue("plotYDomainPadding", settings.plotYDomainPadding)}
+              onChange={(e) =>
+                handlePlotInputChange("plotYDomainPadding", e.target.value, (value) =>
+                  handlePlotYDomainPaddingChange(value)
+                )
+              }
+              onBlur={() => handlePlotInputBlur("plotYDomainPadding")}
+              className="settings-number-input"
+            />
+          </div>
+        </div>
+
+        <div className="settings-item">
+          <div className="settings-item-info">
+            <label htmlFor={`${idPrefix}-plot-pan-y-domain-padding`} className="settings-label">
+              Pan/zoom Y domain padding
+            </label>
+            <p className="settings-description">
+              Extra headroom added to the Y domain after panning or zooming with auto domain on.
+              Default: {DEFAULT_SETTINGS.plotPanYDomainPadding}.
+            </p>
+          </div>
+          <div className="settings-control">
+            <input
+              id={`${idPrefix}-plot-pan-y-domain-padding`}
+              type="number"
+              step="0.5"
+              min="1"
+              max="200"
+              value={getPlotInputValue("plotPanYDomainPadding", settings.plotPanYDomainPadding)}
+              onChange={(e) =>
+                handlePlotInputChange("plotPanYDomainPadding", e.target.value, (value) =>
+                  handlePlotPanYDomainPaddingChange(value)
+                )
+              }
+              onBlur={() => handlePlotInputBlur("plotPanYDomainPadding")}
+              className="settings-number-input"
+            />
           </div>
         </div>
       </div>
@@ -435,7 +831,7 @@ export function SettingsSections() {
 
         <div className="settings-item">
           <div className="settings-item-info">
-            <label htmlFor="show-variable-panel" className="settings-label">
+            <label htmlFor={`${idPrefix}-show-variable-panel`} className="settings-label">
               Show Variable Panel
             </label>
             <p className="settings-description">
@@ -445,7 +841,7 @@ export function SettingsSections() {
           <div className="settings-control">
             <label className="toggle-switch">
               <input
-                id="show-variable-panel"
+                id={`${idPrefix}-show-variable-panel`}
                 type="checkbox"
                 checked={settings.showVariablePanel}
                 onChange={(e) => updateSetting("showVariablePanel", e.target.checked)}
@@ -457,7 +853,7 @@ export function SettingsSections() {
 
         <div className="settings-item">
           <div className="settings-item-info">
-            <label htmlFor="show-template-panel" className="settings-label">
+            <label htmlFor={`${idPrefix}-show-template-panel`} className="settings-label">
               Show Template Panel
             </label>
             <p className="settings-description">
@@ -467,7 +863,7 @@ export function SettingsSections() {
           <div className="settings-control">
             <label className="toggle-switch">
               <input
-                id="show-template-panel"
+                id={`${idPrefix}-show-template-panel`}
                 type="checkbox"
                 checked={settings.showTemplatePanel}
                 onChange={(e) => updateSetting("showTemplatePanel", e.target.checked)}
@@ -479,7 +875,7 @@ export function SettingsSections() {
 
         <div className="settings-item">
           <div className="settings-item-info">
-            <label htmlFor="show-settings-panel" className="settings-label">
+            <label htmlFor={`${idPrefix}-show-settings-panel`} className="settings-label">
               Show Settings Panel
             </label>
             <p className="settings-description">
@@ -489,7 +885,7 @@ export function SettingsSections() {
           <div className="settings-control">
             <label className="toggle-switch">
               <input
-                id="show-settings-panel"
+                id={`${idPrefix}-show-settings-panel`}
                 type="checkbox"
                 checked={settings.showSettingsPanel}
                 onChange={(e) => updateSetting("showSettingsPanel", e.target.checked)}

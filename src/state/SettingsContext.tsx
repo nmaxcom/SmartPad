@@ -1,4 +1,12 @@
-import React, { createContext, useReducer, useCallback, useMemo, ReactNode, useEffect } from "react";
+import React, {
+  createContext,
+  useReducer,
+  useCallback,
+  useMemo,
+  ReactNode,
+  useEffect,
+  useRef,
+} from "react";
 import { SettingsContextType, SettingsState, SettingsAction } from "./types";
 import { createSettingsState, settingsReducer } from "./settingsStore";
 import { setDateLocaleOverride } from "../types/DateValue";
@@ -17,6 +25,7 @@ interface SettingsProviderProps {
  */
 export function SettingsProvider({ children }: SettingsProviderProps) {
   const [state, dispatch] = useReducer(settingsReducer, createSettingsState());
+  const prevSettingsRef = useRef<SettingsState>(state);
 
   useEffect(() => {
     if (state.dateLocaleMode === "custom" && state.dateLocaleOverride.trim()) {
@@ -29,6 +38,25 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
   useEffect(() => {
     setListMaxLength(state.listMaxLength);
   }, [state.listMaxLength]);
+
+  useEffect(() => {
+    const prev = prevSettingsRef.current;
+    const plotKeys: Array<keyof SettingsState> = [
+      "plotSampleCount",
+      "plotScrubSampleCount",
+      "plotMinSamples",
+      "plotMaxSamples",
+      "plotDomainExpansion",
+      "plotYViewPadding",
+      "plotYDomainPadding",
+      "plotPanYDomainPadding",
+    ];
+    const changed = plotKeys.filter((key) => prev[key] !== state[key]);
+    if (changed.length && typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("plotSettingsChanged", { detail: { keys: changed } }));
+    }
+    prevSettingsRef.current = state;
+  }, [state]);
 
   // Memoized action creators for performance
   const updateSetting = useCallback(

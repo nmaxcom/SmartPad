@@ -12,6 +12,8 @@ import { SettingsPanel } from "./components/ui/SettingsPanel";
 import SheetSync from "./components/SheetSync";
 import { tracer, setLogLevel, LogLevel } from "./eval/tracing";
 import { DEFAULT_SHEET_TITLE, deriveTitleFromContent } from "./utils/sheetTitle";
+import { initFxRates } from "./services/fxRates";
+import { useFxStatus } from "./hooks/useFxStatus";
 
 const SHEET_DRAG_TYPE = "application/x-smartpad-sheet";
 
@@ -60,9 +62,14 @@ window.smartpadTracer = {
 function AppContent() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { settings } = useSettingsContext();
+  const fxStatus = useFxStatus();
 
   const handleOpenSettings = () => setIsSettingsOpen(true);
   const handleCloseSettings = () => setIsSettingsOpen(false);
+
+  useEffect(() => {
+    initFxRates();
+  }, []);
 
   // Show sidebar only if at least one panel is enabled
   const showSidebar =
@@ -86,6 +93,14 @@ function AppContent() {
           <EditorProvider>
             <SheetSync />
             <AppHeader onSettingsClick={handleOpenSettings} />
+            {fxStatus.provider === "offline" && fxStatus.source === "cache" && (
+              <div className="fx-status-banner" role="status">
+                FX offline - using cached rates from{" "}
+                {fxStatus.updatedAt
+                  ? new Date(fxStatus.updatedAt).toLocaleString()
+                  : "unknown date"}
+              </div>
+            )}
             <main className={layoutClassName}>
               <SheetSidebar />
               <section className="editor-pane">

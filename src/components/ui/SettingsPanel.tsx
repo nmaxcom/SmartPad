@@ -18,7 +18,7 @@ export function SettingsPanel() {
         <h2 className="settings-title">Settings</h2>
       </div>
       <div className="settings-content settings-panel-content">
-        <SettingsSections />
+        <SettingsSections idPrefix="settings-panel" />
       </div>
       <div className="settings-footer settings-panel-footer">
         <button className="settings-btn settings-btn-secondary" onClick={handleReset}>

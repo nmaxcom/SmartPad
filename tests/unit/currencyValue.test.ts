@@ -31,6 +31,16 @@ describe("CurrencyValue", () => {
     expect(eur.getNumericValue()).toBe(250.5);
   });
 
+  test("parses ISO currency codes", () => {
+    const eurSuffix = CurrencyValue.fromString("20 EUR");
+    expect(eurSuffix.getNumericValue()).toBe(20);
+    expect(eurSuffix.toString()).toBe("20 EUR");
+
+    const usdPrefix = CurrencyValue.fromString("USD 15.5");
+    expect(usdPrefix.getNumericValue()).toBe(15.5);
+    expect(usdPrefix.toString()).toBe("15.5 USD");
+  });
+
   test("parses negative currency amounts", () => {
     const usd = CurrencyValue.fromString("-$1,250.50");
     expect(usd.getNumericValue()).toBe(-1250.5);
@@ -62,6 +72,10 @@ describe("CurrencyValue", () => {
     const parsedSuffix = SemanticParsers.parse("100$");
     expect(parsedSuffix).not.toBeNull();
     expect(parsedSuffix?.getType()).toBe("currency");
+
+    const parsedCode = SemanticParsers.parse("EUR 120");
+    expect(parsedCode).not.toBeNull();
+    expect(parsedCode?.getType()).toBe("currency");
   });
 
   test("SemanticParsers detects currency rates with units", () => {

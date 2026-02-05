@@ -202,7 +202,19 @@ export class PlotViewEvaluator implements NodeEvaluator {
 
     const isScrubbing =
       typeof document !== "undefined" && document.body?.classList.contains("number-scrubbing");
-    const sampleCount = isScrubbing ? 24 : 60;
+    const baseSampleCount =
+      typeof context.plotSampleCount === "number" ? Math.round(context.plotSampleCount) : 150;
+    const scrubSampleCount =
+      typeof context.plotScrubSampleCount === "number"
+        ? Math.round(context.plotScrubSampleCount)
+        : 40;
+    const sampleCount = isScrubbing ? scrubSampleCount : baseSampleCount;
+    const minSamples =
+      typeof context.plotMinSamples === "number" ? Math.round(context.plotMinSamples) : undefined;
+    const maxSamples =
+      typeof context.plotMaxSamples === "number" ? Math.round(context.plotMaxSamples) : undefined;
+    const domainExpansionFactor =
+      typeof context.plotDomainExpansion === "number" ? context.plotDomainExpansion : undefined;
 
     const plotResults = safeSeriesNodes.map((seriesNode) =>
       computePlotData({
@@ -215,6 +227,9 @@ export class PlotViewEvaluator implements NodeEvaluator {
         domainSpec: node.params.domain,
         viewSpec: node.params.view,
         sampleCount,
+        minSamples,
+        maxSamples,
+        domainExpansionFactor,
       })
     );
 

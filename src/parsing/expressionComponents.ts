@@ -5,7 +5,7 @@
  */
 
 import { ExpressionComponent, ListAccessDetails } from './ast';
-import { SemanticParsers, parseListLiteral } from '../types';
+import { CurrencyValue, SemanticParsers, parseListLiteral } from '../types';
 
 /**
  * Token types for the lexer
@@ -519,6 +519,22 @@ export function parseExpressionComponents(expression: string): ExpressionCompone
 
       case 'identifier': {
         const nextToken = tokens[pos + 1];
+        if (nextToken?.type === 'number') {
+          const currencySymbol = CurrencyValue.normalizeSymbol(token.value);
+          if (currencySymbol) {
+            const combined = `${token.value} ${nextToken.value}`;
+            const parsed = SemanticParsers.parse(combined);
+            if (parsed) {
+              components.push({
+                type: 'literal',
+                value: combined,
+                parsedValue: parsed,
+              });
+              pos += 2;
+              break;
+            }
+          }
+        }
         if (nextToken?.type === 'parentheses' && nextToken.value === '(') {
           const funcName = token.value;
           pos += 2;

@@ -571,6 +571,77 @@ required ticket = required revenue / attendees =>
 required ticket to USD =>`,
   },
   {
+    id: "currency-fx",
+    emoji: "💱",
+    name: "Currency FX",
+    content: `# Currency FX (live rates + manual overrides)
+
+# Live conversions (uses Frankfurter, ECB fallback)
+price usd = $120
+price usd in EUR =>
+
+fee eur = EUR 45
+fee eur in USD =>
+
+# Suffix symbol still works
+snack = 8€
+snack in USD =>
+
+# Crypto conversions (live via fallback)
+btc stack = 0.015 BTC
+btc stack in USD =>
+
+eth stack = 2.3 ETH
+eth stack in EUR =>
+
+stablecoins = 250 USDT, 120 USDC
+stablecoins in USD =>
+
+# Currency with units (rates)
+hourly = $85/hour
+hourly in EUR/hour =>
+
+subscription = CAD 15/month
+subscription in USD/month =>
+
+# Manual override (line-level)
+EUR = 1.10 USD
+manual meal = EUR 18
+manual meal in USD =>
+
+# Manual override wins (later line wins)
+EUR = 1.20 USD
+manual meal in USD =>
+
+# Lists + FX conversions
+travel costs = $120, EUR 45, GBP 30
+travel costs in USD =>
+sum(travel costs in USD) =>
+
+# Functions with FX
+tip(amount, rate=15%) = amount * rate
+with_tip(amount, rate=15%) = amount + tip(amount, rate)
+bill eur = EUR 62
+with_tip(bill eur) =>
+with_tip(bill eur) in USD =>
+
+# Mixed rates + lists
+monthly fee = EUR 12/month
+months = 1, 2, 6
+fees = monthly fee * months =>
+fees in USD/month =>
+total(fees) in USD =>
+
+# Plotting with FX
+months = 0..12
+usd price = $9.99
+eur price = usd price in EUR
+total usd = usd price * months
+total eur = eur price * months
+@view plot x=months y=total usd, total eur
+`,
+  },
+  {
     id: "commute-planner",
     emoji: "🚲",
     name: "Commute Planner",

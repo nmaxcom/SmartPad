@@ -8,7 +8,6 @@ import {
   isCombinedAssignmentNode,
   ExpressionNode,
   CombinedAssignmentNode,
-  isVariableAssignmentNode,
 } from "../parsing/ast";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
 import { Variable } from "../state/types";
@@ -105,6 +104,7 @@ interface PlotViewModel {
   yViewAuto?: boolean;
   yDomainAuto?: boolean;
   formatSettings?: PlotFormatSettings;
+  yPanDomainPadding?: number;
   data?: PlotPoint[];
   currentX?: number;
   currentY?: number | null;
@@ -508,6 +508,20 @@ const getPlotUnitFormat = (value: any): PlotUnitFormat | null => {
   return null;
 };
 
+const resolvePlotSettingNumber = (
+  value: any,
+  fallback: number,
+  min = 0.01,
+  max?: number
+): number => {
+  const numeric = Number.isFinite(value) ? Number(value) : fallback;
+  const clampedMin = Math.max(min, numeric);
+  if (typeof max === "number") {
+    return Math.min(max, clampedMin);
+  }
+  return clampedMin;
+};
+
 const computeModelFromExpression = (
   targetLine: number,
   xVariable: string,
@@ -539,7 +553,18 @@ const computeModelFromExpression = (
 
   const isScrubbing =
     typeof document !== "undefined" && document.body?.classList.contains("number-scrubbing");
-  const sampleCount = isScrubbing ? 40 : 60;
+  const baseSampleCount = resolvePlotSettingNumber(settings?.plotSampleCount, 150, 10);
+  const scrubSampleCount = resolvePlotSettingNumber(settings?.plotScrubSampleCount, 40, 10);
+  const sampleCount = isScrubbing ? scrubSampleCount : baseSampleCount;
+  const minSamples =
+    typeof settings?.plotMinSamples === "number" ? Math.round(settings.plotMinSamples) : undefined;
+  const maxSamples =
+    typeof settings?.plotMaxSamples === "number" ? Math.round(settings.plotMaxSamples) : undefined;
+  const domainExpansionFactor =
+    typeof settings?.plotDomainExpansion === "number" ? settings.plotDomainExpansion : undefined;
+  const yViewPadding = resolvePlotSettingNumber(settings?.plotYViewPadding, 1.15, 1);
+  const yDomainPadding = resolvePlotSettingNumber(settings?.plotYDomainPadding, 8, 1);
+  const yPanDomainPadding = resolvePlotSettingNumber(settings?.plotPanYDomainPadding, 6, 1);
 
   const seriesResults = (seriesNodes as ExpressionNode[]).map((node) =>
     computePlotData({
@@ -555,6 +580,9 @@ const computeModelFromExpression = (
       settings,
       domainSpec: domainOverride ? `${domainOverride.min}..${domainOverride.max}` : undefined,
       sampleCount,
+      minSamples,
+      maxSamples,
+      domainExpansionFactor,
     })
   );
   const firstResult = seriesResults[0];
@@ -571,9 +599,10 @@ const computeModelFromExpression = (
   }));
   const baseYDomain =
     deriveYDomainFromSeries(seriesData, viewCandidate) || deriveYDomainFromSeries(seriesData);
-  const baseYView = expandPlotRange(baseYDomain, 1.15) || baseYDomain;
+  const baseYView = expandPlotRange(baseYDomain, yViewPadding) || baseYDomain;
   const autoYView = yViewOverride?.raw ? yViewOverride : baseYView || baseYDomain;
-  const autoYDomain = yDomainOverride?.raw ? yDomainOverride : expandPlotRange(autoYView, 8) || autoYView;
+  const autoYDomain =
+    yDomainOverride?.raw ? yDomainOverride : expandPlotRange(autoYView, yDomainPadding) || autoYView;
   let computedYDomain = yDomainOverride || autoYDomain;
   if (yViewOverride) {
     if (computedYDomain) {
@@ -638,6 +667,7 @@ const computeModelFromExpression = (
     yViewAuto,
     yDomainAuto,
     formatSettings: settings,
+    yPanDomainPadding,
     data: series[0]?.data,
     currentX: firstResult.currentX,
     currentY: series[0]?.currentY ?? firstResult.currentY,
@@ -1058,6 +1088,7 @@ const createPlotWidget = (
     model.yView || model.autoYView || model.yDomain;
   let yViewAuto = model.yViewAuto ?? true;
   let yDomainAuto = model.yDomainAuto ?? true;
+  const yPanDomainPadding = model.yPanDomainPadding ?? 6;
   if (model.autoYView && currentYView && rangesMatch(currentYView, model.autoYView)) {
     yViewAuto = false;
   }
@@ -1551,7 +1582,11 @@ const createPlotWidget = (
         event.stopPropagation();
         onDetach(model);
       };
-      pinOverlay.addEventListener("mousedown", handleDetach);
+      const suppressPointer = (event: Event) => {
+        event.stopPropagation();
+      };
+      pinOverlay.addEventListener("pointerdown", suppressPointer);
+      pinOverlay.addEventListener("mousedown", suppressPointer);
       pinOverlay.addEventListener("click", handleDetach);
       chart.appendChild(pinOverlay);
     }
@@ -1571,8 +1606,7 @@ const createPlotWidget = (
     let hoverDot: SVGCircleElement | null = null;
     let lineElements = new Map<number, SVGPathElement>();
     let activeSeriesIndex: number | null = null;
-    let draggingSeriesIndex: number | null = null;
-    let dragMode: "line" | "pan" | "zoom-x" | "zoom-y" | null = null;
+    let dragMode: "pan" | "zoom-x" | "zoom-y" | null = null;
     let dragStartPos: { x: number; y: number } | null = null;
     let dragStartXView: PlotRange | null = null;
     let dragStartYView: PlotRange | null = null;
@@ -1817,72 +1851,11 @@ const createPlotWidget = (
       return matches;
     };
 
-    const updateVariableValue = (nextValue: number) => {
-      if (!Number.isFinite(nextValue)) return false;
-      if (!editorView || !model.x) return false;
-      const lineIndex = buildLineIndex(editorView.state.doc);
-      let targetLine: number | null = null;
-      for (let i = 1; i < lineIndex.length; i++) {
-        const info = lineIndex[i];
-        if (!info) continue;
-        const parsed = parseLine(info.text, i);
-        if (isVariableAssignmentNode(parsed) && parsed.variableName === model.x) {
-          targetLine = i;
-        }
-        if (isCombinedAssignmentNode(parsed) && parsed.variableName === model.x) {
-          targetLine = i;
-        }
-      }
-      if (!targetLine) return false;
-      const info = lineIndex[targetLine];
-      if (!info) return false;
-      const lineText = info.text;
-      const eqIndex = lineText.indexOf("=");
-      if (eqIndex === -1) return false;
-      const valueText = lineText.slice(eqIndex + 1);
-      const match = valueText.match(/[+-]?\d[\d,]*(?:\.\d+)?(?:[eE][+-]?\d+)?/);
-      if (!match || match.index === undefined) return false;
-      const numberText = match[0];
-      const dotIndex = numberText.indexOf(".");
-      const exponentIndex = numberText.search(/[eE]/);
-      const decimalPart =
-        dotIndex >= 0
-          ? numberText.slice(dotIndex + 1, exponentIndex >= 0 ? exponentIndex : undefined)
-          : "";
-      const decimalPlaces = decimalPart.length;
-      const formatted =
-        decimalPlaces === 0 ? Math.round(nextValue).toString() : nextValue.toFixed(decimalPlaces);
-      const from = info.start + eqIndex + 1 + match.index;
-      const to = from + numberText.length;
-      const tr = editorView.state.tr.replaceWith(
-        from,
-        to,
-        editorView.state.schema.text(formatted)
-      );
-      editorView.dispatch(tr);
-      return true;
-    };
-
     const handlePointerMove = (event: MouseEvent | PointerEvent) => {
       if (!plotLayout) return;
       const position = getPointerPosition(event);
       if (!position) return;
       const nearbyIntersections = findNearbyIntersections(position, 12);
-      if (dragMode === "line" && draggingSeriesIndex !== null) {
-        const nearest = findNearestPoint(position, draggingSeriesIndex, null);
-        if (nearest) {
-          showHover(
-            nearest.seriesIndex,
-            nearest.screenX,
-            nearest.screenY,
-            nearest.dataX,
-            nearest.dataY,
-            nearbyIntersections
-          );
-          updateVariableValue(nearest.dataX);
-        }
-        return;
-      }
 
       if (dragMode === "pan" && dragStartPos && dragStartXView) {
         const plotWidth =
@@ -2029,7 +2002,7 @@ const createPlotWidget = (
       if (zoomY && currentYView) {
         patch.yView = currentYView;
         if (yDomainAuto) {
-          const expanded = expandPlotRange(currentYView, 6);
+          const expanded = expandPlotRange(currentYView, yPanDomainPadding);
           if (expanded) {
             patch.yDomain = expanded;
           }
@@ -2085,6 +2058,7 @@ const createPlotWidget = (
       const position = getPointerPosition(event);
       if (!position) return;
       const target = event.target as Element | null;
+      if (target?.closest?.(".plot-view-pin-overlay")) return;
       if (plotLayout) {
         const withinPlotX =
           position.x >= plotLayout.padding.left &&
@@ -2134,16 +2108,10 @@ const createPlotWidget = (
               nearest.dataY,
               nearbyIntersections
             );
-            const updated = updateVariableValue(nearest.dataX);
-            if (updated) {
-              draggingSeriesIndex = nearest.seriesIndex;
-              dragMode = "line";
-            } else {
-              dragMode = "pan";
-              dragStartPos = position;
-              dragStartXView = currentXView || model.domain || null;
-              dragStartYView = currentYView || model.yDomain || null;
-            }
+            dragMode = "pan";
+            dragStartPos = position;
+            dragStartXView = currentXView || model.domain || null;
+            dragStartYView = currentYView || model.yDomain || null;
           } else {
             event.preventDefault();
             dragMode = "pan";
@@ -2175,7 +2143,7 @@ const createPlotWidget = (
               yView: currentYView,
             };
             if (yDomainAuto) {
-              const expanded = expandPlotRange(currentYView, 6);
+              const expanded = expandPlotRange(currentYView, yPanDomainPadding);
               if (expanded) {
                 patch.yDomain = expanded;
               }
@@ -2185,7 +2153,6 @@ const createPlotWidget = (
           }
         }
         dragMode = null;
-        draggingSeriesIndex = null;
         dragStartPos = null;
         dragStartXView = null;
         dragStartYView = null;
@@ -2287,6 +2254,14 @@ const buildSettingsSnapshot = (settings: any) => ({
   groupThousands: settings.groupThousands,
   dateDisplayFormat: settings.dateDisplayFormat,
   dateLocale: getDateLocaleEffective(),
+  plotSampleCount: settings.plotSampleCount,
+  plotScrubSampleCount: settings.plotScrubSampleCount,
+  plotMinSamples: settings.plotMinSamples,
+  plotMaxSamples: settings.plotMaxSamples,
+  plotDomainExpansion: settings.plotDomainExpansion,
+  plotYViewPadding: settings.plotYViewPadding,
+  plotYDomainPadding: settings.plotYDomainPadding,
+  plotPanYDomainPadding: settings.plotPanYDomainPadding,
 });
 
 export const PlotViewExtension = Extension.create({
@@ -2630,6 +2605,12 @@ export const PlotViewExtension = Extension.create({
                       registry: defaultRegistry,
                       settings,
                       sampleCount: 10,
+                      minSamples: 10,
+                      maxSamples: 10,
+                      domainExpansionFactor:
+                        typeof settings?.plotDomainExpansion === "number"
+                          ? settings.plotDomainExpansion
+                          : undefined,
                     });
                     if (preview.domain) {
                       const span = preview.domain.max - preview.domain.min;
@@ -2714,7 +2695,18 @@ export const PlotViewExtension = Extension.create({
             editorView.dispatch(tr);
           };
 
+          const settingsListener = () => {
+            const pluginState = plotViewPluginKey.getState(editorView.state) as PlotViewState;
+            if (!pluginState) return;
+            const tr = editorView.state.tr.setMeta(plotViewPluginKey, {
+              ...pluginState,
+            });
+            tr.setMeta("addToHistory", false);
+            editorView.dispatch(tr);
+          };
+
           window.addEventListener("evaluationDone", listener);
+          window.addEventListener("plotSettingsChanged", settingsListener);
 
           updateSelectingClass(plotViewPluginKey.getState(editorView.state) as PlotViewState);
 
@@ -2726,6 +2718,7 @@ export const PlotViewExtension = Extension.create({
             destroy() {
               currentView = null;
               window.removeEventListener("evaluationDone", listener);
+              window.removeEventListener("plotSettingsChanged", settingsListener);
               editorView.dom.classList.remove("plotting-selecting");
             },
           };

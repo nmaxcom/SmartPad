@@ -11,6 +11,7 @@ import { VariableEvaluatorV2 } from "../../src/eval/variableEvaluatorV2";
 import { defaultRegistry, setupDefaultEvaluators } from "../../src/eval";
 import { ReactiveVariableStore } from "../../src/state/variableStore";
 import { CurrencyValue, NumberValue } from "../../src/types";
+import { setFxRatesSnapshot } from "../../src/services/fxRates";
 import { Variable } from "../../src/state/types";
 
 describe("Currency Expression Evaluation", () => {
@@ -450,5 +451,110 @@ describe("Currency Expression Evaluation", () => {
     if (result?.type === "mathResult") {
       expect(result.result).toBe("16 m");
     }
+  });
+
+  test("mixed currency lists sum using FX rates", () => {
+    setupDefaultEvaluators();
+    setFxRatesSnapshot({
+      base: "EUR",
+      rates: { USD: 1.2, GBP: 0.8 },
+      provider: "frankfurter",
+      fetchedAt: Date.now(),
+    });
+
+    const reactiveStore = new ReactiveVariableStore();
+    const lines = [
+      "travel costs = $120, EUR 45, GBP 30",
+      "sum(travel costs) =>",
+    ];
+
+    let sumResult = "";
+    lines.forEach((line, index) => {
+      const node = parseLine(line, index + 1);
+      const variableContext = new Map<string, Variable>();
+      reactiveStore.getAllVariables().forEach((variable) => {
+        variableContext.set(variable.name, variable);
+      });
+      const result = defaultRegistry.evaluate(node, {
+        variableStore: reactiveStore,
+        variableContext,
+        lineNumber: index + 1,
+        decimalPlaces: 2,
+      });
+      if (result && "result" in result) {
+        sumResult = String((result as any).result);
+      }
+    });
+
+    expect(sumResult).toBe("$219");
+  });
+
+  test("currency units convert after total() aggregation", () => {
+    setupDefaultEvaluators();
+    setFxRatesSnapshot({
+      base: "EUR",
+      rates: { USD: 1.2, GBP: 0.8 },
+      provider: "frankfurter",
+      fetchedAt: Date.now(),
+    });
+
+    const reactiveStore = new ReactiveVariableStore();
+    const lines = [
+      "monthly fee = EUR 12/month",
+      "months = 1, 2, 6",
+      "fees = monthly fee * months =>",
+      "total(fees) in USD =>",
+    ];
+
+    let totalResult = "";
+    lines.forEach((line, index) => {
+      const node = parseLine(line, index + 1);
+      const variableContext = new Map<string, Variable>();
+      reactiveStore.getAllVariables().forEach((variable) => {
+        variableContext.set(variable.name, variable);
+      });
+      const result = defaultRegistry.evaluate(node, {
+        variableStore: reactiveStore,
+        variableContext,
+        lineNumber: index + 1,
+        decimalPlaces: 2,
+      });
+      if (result && "result" in result) {
+        totalResult = String((result as any).result);
+      }
+    });
+
+    expect(totalResult).toBe("129.6 USD/month");
+  });
+
+  test("currency conversion works in variable assignments", () => {
+    setupDefaultEvaluators();
+    setFxRatesSnapshot({
+      base: "EUR",
+      rates: { USD: 1.2 },
+      provider: "frankfurter",
+      fetchedAt: Date.now(),
+    });
+
+    const reactiveStore = new ReactiveVariableStore();
+    const lines = ["usd price = $9.99", "eur price = usd price in EUR"];
+
+    lines.forEach((line, index) => {
+      const node = parseLine(line, index + 1);
+      const variableContext = new Map<string, Variable>();
+      reactiveStore.getAllVariables().forEach((variable) => {
+        variableContext.set(variable.name, variable);
+      });
+      defaultRegistry.evaluate(node, {
+        variableStore: reactiveStore,
+        variableContext,
+        lineNumber: index + 1,
+        decimalPlaces: 2,
+      });
+    });
+
+    const eurVariable = reactiveStore.getVariable("eur price");
+    expect(eurVariable).toBeDefined();
+    expect(String(eurVariable?.value)).toBe("8.33 EUR");
   });
 });

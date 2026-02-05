@@ -49,6 +49,11 @@ import {
 } from "../utils/rangeExpression";
 import { attemptPerUnitConversion } from "./unitConversionUtils";
 import { extractConversionSuffix } from "../utils/conversionSuffix";
+import {
+  convertCurrencyUnitValue,
+  convertCurrencyValue,
+  normalizeCurrencyTargetSymbol,
+} from "../utils/currencyFx";
 
 const durationUnitByVariableName: Record<string, DurationUnit> = {
   "business day": "businessDay",
@@ -134,7 +139,8 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
             const converted = this.applyUnitConversion(
               item,
               conversion.target,
-              conversion.keyword
+              conversion.keyword,
+              context
             );
             if (SemanticValueTypes.isError(converted)) {
               conversionError = converted as ErrorValue;
@@ -222,7 +228,12 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
       }
 
       if (conversion) {
-        semanticValue = this.applyUnitConversion(semanticValue, conversion.target, conversion.keyword);
+        semanticValue = this.applyUnitConversion(
+          semanticValue,
+          conversion.target,
+          conversion.keyword,
+          context
+        );
       }
 
       if (SemanticValueTypes.isError(semanticValue)) {
@@ -377,7 +388,12 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
     return extractConversionSuffix(expression);
   }
 
-  private applyUnitConversion(value: SemanticValue, target: string, keyword: string): SemanticValue {
+  private applyUnitConversion(
+    value: SemanticValue,
+    target: string,
+    keyword: string,
+    context: EvaluationContext
+  ): SemanticValue {
     const parsed = this.parseConversionTarget(target);
     if (!parsed) {
       return ErrorValue.semanticError(`Expected unit after '${keyword}'`);
@@ -387,7 +403,7 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
       const listValue = value as ListValue;
       const convertedItems: SemanticValue[] = [];
       for (const item of listValue.getItems()) {
-        const converted = this.applyUnitConversion(item, target, keyword);
+        const converted = this.applyUnitConversion(item, target, keyword, context);
         if (SemanticValueTypes.isError(converted)) {
           return converted;
         }
@@ -418,28 +434,35 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
     }
 
     if (value.getType() === "currencyUnit") {
-      if (!parsed.unit) {
+      const currencyValue = value as CurrencyUnitValue;
+      if (!parsed.unit && !parsed.symbol) {
         return ErrorValue.semanticError("Cannot convert non-unit value");
       }
-      const currencyValue = value as CurrencyUnitValue;
-      if (parsed.symbol && parsed.symbol !== currencyValue.getSymbol()) {
-        return ErrorValue.semanticError("Cannot convert between different currencies");
-      }
-      try {
-        return currencyValue.convertTo(parsed.unit);
-      } catch (error) {
-        return ErrorValue.semanticError(
-          error instanceof Error ? error.message : String(error)
-        );
-      }
+      const targetUnit = parsed.unit || currencyValue.getUnit();
+      const displayUnit = targetUnit;
+      const targetSymbol = parsed.symbol
+        ? (parsed.symbol as CurrencySymbol)
+        : (currencyValue.getSymbol() as CurrencySymbol);
+      return convertCurrencyUnitValue(
+        currencyValue,
+        targetSymbol,
+        targetUnit,
+        displayUnit,
+        1,
+        context
+      );
     }
 
     if (value.getType() === "currency") {
       const currencyValue = value as CurrencyValue;
-      if (!parsed.symbol || parsed.symbol !== currencyValue.getSymbol()) {
-        return ErrorValue.semanticError("Cannot convert between different currencies");
+      if (!parsed.symbol) {
+        return ErrorValue.semanticError("Cannot convert non-unit value");
       }
-      return currencyValue;
+      return convertCurrencyValue(
+        currencyValue,
+        parsed.symbol as CurrencySymbol,
+        context
+      );
     }
 
     if (value.getType() === "number") {
@@ -474,8 +497,17 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
     let symbol: string | undefined;
     const symbolMatch = raw.match(/^([$€£¥₹₿])\s*(.*)$/);
     if (symbolMatch) {
-      symbol = symbolMatch[1];
+      symbol = normalizeCurrencyTargetSymbol(symbolMatch[1]) ?? undefined;
       raw = symbolMatch[2].trim();
+    } else {
+      const codeMatch = raw.match(/^([A-Za-z]{3})\b(.*)$/);
+      if (codeMatch) {
+        const normalized = normalizeCurrencyTargetSymbol(codeMatch[1]);
+        if (normalized) {
+          symbol = normalized;
+          raw = codeMatch[2].trim();
+        }
+      }
     }
 
     raw = raw.replace(/^per\b/i, "").trim();

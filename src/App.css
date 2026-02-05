@@ -11,6 +11,15 @@
   overflow: hidden;
 }
 
+.fx-status-banner {
+  background: rgba(255, 184, 108, 0.12);
+  color: #f6d6b3;
+  border-bottom: 1px solid rgba(255, 184, 108, 0.3);
+  padding: 8px 20px;
+  font-size: 0.85rem;
+  letter-spacing: 0.01em;
+}
+
 .app-layout {
   flex: 1;
   display: grid;

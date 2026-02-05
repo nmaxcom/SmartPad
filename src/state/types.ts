@@ -85,6 +85,14 @@ export interface SettingsState {
   showErrorBorders: boolean;
   showErrorBackground: boolean;
   showPlotDetails: boolean;
+  plotSampleCount: number;
+  plotScrubSampleCount: number;
+  plotMinSamples: number;
+  plotMaxSamples: number;
+  plotDomainExpansion: number;
+  plotYViewPadding: number;
+  plotYDomainPadding: number;
+  plotPanYDomainPadding: number;
   // Future: theme, fontSize, autoSave, etc.
 }
 

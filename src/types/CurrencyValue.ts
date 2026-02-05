@@ -11,7 +11,36 @@ import { PercentageValue } from './PercentageValue';
 import { UnitValue } from './UnitValue';
 import { CurrencyUnitValue } from './CurrencyUnitValue';
 
-export type CurrencySymbol = '$' | '€' | '£' | '¥' | '₹' | '₿' | 'CHF' | 'CAD' | 'AUD';
+export type CurrencySymbol =
+  | '$'
+  | '€'
+  | '£'
+  | '¥'
+  | '₹'
+  | '₿'
+  | 'CHF'
+  | 'CAD'
+  | 'AUD'
+  | 'USD'
+  | 'EUR'
+  | 'GBP'
+  | 'JPY'
+  | 'INR'
+  | 'BTC'
+  | 'ETH'
+  | 'USDT'
+  | 'USDC'
+  | 'BNB'
+  | 'XRP'
+  | 'SOL'
+  | 'ADA'
+  | 'DOGE'
+  | 'LTC'
+  | 'DOT'
+  | 'AVAX'
+  | 'MATIC'
+  | 'TRX'
+  | 'LINK';
 
 /**
  * Currency metadata for proper formatting and validation
@@ -33,6 +62,26 @@ const CURRENCY_INFO: Record<CurrencySymbol, CurrencyInfo> = {
   'CHF': { symbol: 'CHF', name: 'CHF', decimalPlaces: 2, symbolPosition: 'after' },
   'CAD': { symbol: 'CAD', name: 'CAD', decimalPlaces: 2, symbolPosition: 'after' },
   'AUD': { symbol: 'AUD', name: 'AUD', decimalPlaces: 2, symbolPosition: 'after' },
+  'USD': { symbol: 'USD', name: 'USD', decimalPlaces: 2, symbolPosition: 'after' },
+  'EUR': { symbol: 'EUR', name: 'EUR', decimalPlaces: 2, symbolPosition: 'after' },
+  'GBP': { symbol: 'GBP', name: 'GBP', decimalPlaces: 2, symbolPosition: 'after' },
+  'JPY': { symbol: 'JPY', name: 'JPY', decimalPlaces: 0, symbolPosition: 'after' },
+  'INR': { symbol: 'INR', name: 'INR', decimalPlaces: 2, symbolPosition: 'after' },
+  'BTC': { symbol: 'BTC', name: 'BTC', decimalPlaces: 8, symbolPosition: 'after' },
+  'ETH': { symbol: 'ETH', name: 'ETH', decimalPlaces: 8, symbolPosition: 'after' },
+  'USDT': { symbol: 'USDT', name: 'USDT', decimalPlaces: 8, symbolPosition: 'after' },
+  'USDC': { symbol: 'USDC', name: 'USDC', decimalPlaces: 8, symbolPosition: 'after' },
+  'BNB': { symbol: 'BNB', name: 'BNB', decimalPlaces: 8, symbolPosition: 'after' },
+  'XRP': { symbol: 'XRP', name: 'XRP', decimalPlaces: 8, symbolPosition: 'after' },
+  'SOL': { symbol: 'SOL', name: 'SOL', decimalPlaces: 8, symbolPosition: 'after' },
+  'ADA': { symbol: 'ADA', name: 'ADA', decimalPlaces: 8, symbolPosition: 'after' },
+  'DOGE': { symbol: 'DOGE', name: 'DOGE', decimalPlaces: 8, symbolPosition: 'after' },
+  'LTC': { symbol: 'LTC', name: 'LTC', decimalPlaces: 8, symbolPosition: 'after' },
+  'DOT': { symbol: 'DOT', name: 'DOT', decimalPlaces: 8, symbolPosition: 'after' },
+  'AVAX': { symbol: 'AVAX', name: 'AVAX', decimalPlaces: 8, symbolPosition: 'after' },
+  'MATIC': { symbol: 'MATIC', name: 'MATIC', decimalPlaces: 8, symbolPosition: 'after' },
+  'TRX': { symbol: 'TRX', name: 'TRX', decimalPlaces: 8, symbolPosition: 'after' },
+  'LINK': { symbol: 'LINK', name: 'LINK', decimalPlaces: 8, symbolPosition: 'after' },
 };
 
 /**
@@ -290,11 +339,19 @@ export class CurrencyValue extends SemanticValue {
       return new CurrencyValue(symbol, amount);
     }
     
-    // Try symbol-last format: "100 CHF", "50.25 CAD"
-    match = str.match(/^(-?\d{1,3}(?:,\d{3})*(?:\.\d+)?|-?\d+(?:\.\d+)?)\s+(CHF|CAD|AUD)$/);
+    // Try code-last format: "100 CHF", "50.25 CAD", "20 EUR"
+    match = str.match(/^(-?\d{1,3}(?:,\d{3})*(?:\.\d+)?|-?\d+(?:\.\d+)?)\s+(USD|EUR|GBP|JPY|INR|BTC|CHF|CAD|AUD)$/i);
     if (match) {
       const amount = parseFloat(match[1].replace(/,/g, ""));
-      const symbol = match[2] as CurrencySymbol;
+      const symbol = match[2].toUpperCase() as CurrencySymbol;
+      return new CurrencyValue(symbol, amount);
+    }
+
+    // Try code-first format: "USD 100", "EUR 50.25"
+    match = str.match(/^(USD|EUR|GBP|JPY|INR|BTC|CHF|CAD|AUD)\s*(-?\d{1,3}(?:,\d{3})*(?:\.\d+)?|-?\d+(?:\.\d+)?)$/i);
+    if (match) {
+      const symbol = match[1].toUpperCase() as CurrencySymbol;
+      const amount = parseFloat(match[2].replace(/,/g, ""));
       return new CurrencyValue(symbol, amount);
     }
     
@@ -313,6 +370,34 @@ export class CurrencyValue extends SemanticValue {
    */
   static isSupportedSymbol(symbol: string): symbol is CurrencySymbol {
     return symbol in CURRENCY_INFO;
+  }
+
+  /**
+   * Normalize a symbol or code string to a supported CurrencySymbol
+   */
+  static normalizeSymbol(value: string): CurrencySymbol | null {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    if (CurrencyValue.isSupportedSymbol(trimmed)) return trimmed as CurrencySymbol;
+    const upper = trimmed.toUpperCase();
+    if (CurrencyValue.isSupportedSymbol(upper)) return upper as CurrencySymbol;
+    return null;
+  }
+
+  /**
+   * Get ISO currency code for a symbol or code
+   */
+  static getCurrencyCode(symbol: CurrencySymbol): string {
+    return CURRENCY_INFO[symbol].name;
+  }
+
+  /**
+   * Get supported ISO currency codes
+   */
+  static getSupportedCodes(): string[] {
+    const codes = new Set<string>();
+    Object.values(CURRENCY_INFO).forEach((info) => codes.add(info.name));
+    return Array.from(codes);
   }
 
   /**

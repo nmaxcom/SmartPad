@@ -29,6 +29,7 @@ import {
   UnitValue,
   CurrencyValue,
   CurrencySymbol,
+  CurrencyUnitValue,
   DurationValue,
   SemanticParsers,
 } from "../types";
@@ -40,6 +41,11 @@ import { expressionContainsUnitsNet } from "../units/unitsnetEvaluator";
 import { inferListDelimiter } from "../utils/listExpression";
 import { rewriteLocaleDateLiterals } from "../utils/localeDateNormalization";
 import { attemptPerUnitConversion } from "./unitConversionUtils";
+import {
+  convertCurrencyUnitValue,
+  convertCurrencyValue,
+  normalizeCurrencyTargetSymbol,
+} from "../utils/currencyFx";
 import { extractConversionSuffix } from "../utils/conversionSuffix";
 import {
   containsRangeOperatorOutsideString,
@@ -196,7 +202,8 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
                 const converted = this.applyUnitConversion(
                   item,
                   conversion.target,
-                  conversion.keyword
+                  conversion.keyword,
+                  context
                 );
                 if (SemanticValueTypes.isError(converted)) {
                   conversionError = converted as ErrorValue;
@@ -309,11 +316,22 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
         }
       }
 
+      if (conversion && SemanticValueTypes.isSymbolic(semanticValue) && expressionRawValue) {
+        const evaluated = this.evaluateExpressionComponentsFromRaw(
+          expressionRawValue,
+          context
+        );
+        if (evaluated) {
+          semanticValue = evaluated;
+        }
+      }
+
       if (conversion) {
         const converted = this.applyUnitConversion(
           semanticValue,
           conversion.target,
-          conversion.keyword
+          conversion.keyword,
+          context
         );
         if (SemanticValueTypes.isError(converted)) {
           return this.createErrorNode(
@@ -593,8 +611,17 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
     let symbol: string | undefined;
     const symbolMatch = raw.match(/^([$€£¥₹₿])\s*(.*)$/);
     if (symbolMatch) {
-      symbol = symbolMatch[1];
+      symbol = normalizeCurrencyTargetSymbol(symbolMatch[1]) ?? undefined;
       raw = symbolMatch[2].trim();
+    } else {
+      const codeMatch = raw.match(/^([A-Za-z]{3})\b(.*)$/);
+      if (codeMatch) {
+        const normalized = normalizeCurrencyTargetSymbol(codeMatch[1]);
+        if (normalized) {
+          symbol = normalized;
+          raw = codeMatch[2].trim();
+        }
+      }
     }
 
     raw = raw.replace(/^per\b/i, "").trim();
@@ -614,7 +641,8 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
   private applyUnitConversion(
     value: SemanticValue,
     target: string,
-    keyword: string
+    keyword: string,
+    context: EvaluationContext
   ): SemanticValue {
     const parsed = this.parseConversionTarget(target);
     if (!parsed) {
@@ -625,7 +653,7 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
       const listValue = value as import("../types").ListValue;
       const convertedItems: SemanticValue[] = [];
       for (const item of listValue.getItems()) {
-        const converted = this.applyUnitConversion(item, target, keyword);
+        const converted = this.applyUnitConversion(item, target, keyword, context);
         if (SemanticValueTypes.isError(converted)) {
           return converted;
         }
@@ -656,28 +684,35 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
     }
 
     if (value.getType() === "currencyUnit") {
-      if (!parsed.unit) {
+      const currencyValue = value as CurrencyUnitValue;
+      if (!parsed.unit && !parsed.symbol) {
         return ErrorValue.semanticError("Cannot convert non-unit value");
       }
-      const currencyValue = value as import("../types").CurrencyUnitValue;
-      if (parsed.symbol && parsed.symbol !== currencyValue.getSymbol()) {
-        return ErrorValue.semanticError("Cannot convert between different currencies");
-      }
-      try {
-        return currencyValue.convertTo(parsed.unit);
-      } catch (error) {
-        return ErrorValue.semanticError(
-          error instanceof Error ? error.message : String(error)
-        );
-      }
+      const targetUnit = parsed.unit || currencyValue.getUnit();
+      const displayUnit = targetUnit;
+      const targetSymbol = parsed.symbol
+        ? (parsed.symbol as CurrencySymbol)
+        : (currencyValue.getSymbol() as CurrencySymbol);
+      return convertCurrencyUnitValue(
+        currencyValue,
+        targetSymbol,
+        targetUnit,
+        displayUnit,
+        1,
+        context
+      );
     }
 
     if (value.getType() === "currency") {
       const currencyValue = value as CurrencyValue;
-      if (!parsed.symbol || parsed.symbol !== currencyValue.getSymbol()) {
-        return ErrorValue.semanticError("Cannot convert between different currencies");
+      if (!parsed.symbol) {
+        return ErrorValue.semanticError("Cannot convert non-unit value");
       }
-      return currencyValue;
+      return convertCurrencyValue(
+        currencyValue,
+        parsed.symbol as CurrencySymbol,
+        context
+      );
     }
 
     if (value.getType() === "number") {
