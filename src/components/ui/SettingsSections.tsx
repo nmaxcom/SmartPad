@@ -173,7 +173,7 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
 
   return (
     <>
-      <div className="settings-section">
+      <div className="settings-section settings-section--currency">
         <h3 className="settings-section-title">Display Options</h3>
 
         <div className="settings-item settings-item-stack">
@@ -221,7 +221,7 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
           </div>
         </div>
 
-        <div className="settings-item">
+        <div className="settings-item settings-item-stack">
           <div className="settings-item-info">
             <label htmlFor={`${idPrefix}-list-max-length`} className="settings-label">
               Max items per list
