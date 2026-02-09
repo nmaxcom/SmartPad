@@ -1,4 +1,5 @@
 import { SettingsState, SettingsAction } from "./types";
+import { normalizeSyntaxThemeId, normalizeUIThemeId } from "../styles/themeCatalog";
 
 // Default settings configuration
 export const DEFAULT_SETTINGS: SettingsState = {
@@ -8,6 +9,8 @@ export const DEFAULT_SETTINGS: SettingsState = {
   scientificTrimTrailingZeros: true,
   groupThousands: false,
   listMaxLength: 100,
+  uiTheme: "spatial-dark",
+  syntaxTheme: "spatial-syntax",
   dateLocaleMode: "system",
   dateLocaleOverride: "",
   dateDisplayFormat: "iso",
@@ -59,6 +62,8 @@ export function createSettingsState(): SettingsState {
       ) {
         merged.scientificLowerExponent = Math.round(Math.log10(parsed.scientificLowerThreshold));
       }
+      merged.uiTheme = normalizeUIThemeId(merged.uiTheme, DEFAULT_SETTINGS.uiTheme);
+      merged.syntaxTheme = normalizeSyntaxThemeId(merged.syntaxTheme, DEFAULT_SETTINGS.syntaxTheme);
       delete merged.scientificUpperThreshold;
       delete merged.scientificLowerThreshold;
       return merged;

@@ -182,6 +182,68 @@
   justify-self: end;
 }
 
+.theme-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.theme-preview-card {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: 10px;
+  padding: 0.6rem 0.65rem;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.theme-preview-card:hover {
+  border-color: var(--color-accent);
+  transform: translateY(-1px);
+}
+
+.theme-preview-card.is-active {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent-soft);
+}
+
+.theme-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.45rem;
+}
+
+.theme-preview-name {
+  color: var(--color-text-primary);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.theme-preview-tone {
+  color: var(--color-text-secondary);
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.theme-preview-swatches {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.35rem;
+}
+
+.theme-preview-swatch {
+  width: 100%;
+  height: 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
 .fx-status-indicator {
   display: flex;
   align-items: center;
@@ -189,8 +251,8 @@
   padding: 0.35rem 0.6rem;
   border-radius: 999px;
   font-size: 0.8rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--ui-pill-bg);
+  border: 1px solid var(--ui-pill-border);
   width: fit-content;
   max-width: 100%;
 }
@@ -206,7 +268,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #7f8ea3;
+  background: var(--ui-status-neutral);
 }
 
 .fx-status-text {
@@ -214,7 +276,7 @@
 }
 
 .fx-status-indicator.is-active .fx-status-dot {
-  background: #60d394;
+  background: var(--ui-status-active);
 }
 
 .fx-status-indicator.is-inactive {
@@ -222,7 +284,7 @@
 }
 
 .fx-status-indicator.is-inactive .fx-status-dot {
-  background: #8a94a6;
+  background: var(--ui-status-inactive);
 }
 
 .fx-status-meta {
@@ -378,8 +440,8 @@
 }
 
 .settings-btn-primary:hover {
-  background: #6b4ce6;
-  box-shadow: 0 4px 12px rgba(124, 93, 250, 0.3);
+  background: var(--ui-button-primary-hover-bg);
+  box-shadow: var(--ui-button-primary-shadow);
 }
 
 /* Animations */

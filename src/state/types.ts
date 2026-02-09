@@ -64,6 +64,21 @@ export type VariableAction =
   | { type: "REPLACE_ALL"; payload: { newVariables: Map<string, Variable> } }
   | { type: "CLEAR_VARIABLES" };
 
+export type UIThemeId =
+  | "spatial-dark"
+  | "graphite-dark"
+  | "obsidian-ember-dark"
+  | "paper-light"
+  | "sunrise-light"
+  | "mint-breeze-light";
+export type SyntaxThemeId =
+  | "spatial-syntax"
+  | "neon-syntax"
+  | "ember-syntax"
+  | "ink-syntax"
+  | "sunset-syntax"
+  | "mint-syntax";
+
 // Settings Types
 export interface SettingsState {
   decimalPlaces: number;
@@ -72,6 +87,8 @@ export interface SettingsState {
   scientificTrimTrailingZeros: boolean;
   groupThousands: boolean;
   listMaxLength: number;
+  uiTheme: UIThemeId;
+  syntaxTheme: SyntaxThemeId;
   dateLocaleMode: "system" | "custom";
   dateLocaleOverride: string;
   dateDisplayFormat: "iso" | "locale";
@@ -93,7 +110,7 @@ export interface SettingsState {
   plotYViewPadding: number;
   plotYDomainPadding: number;
   plotPanYDomainPadding: number;
-  // Future: theme, fontSize, autoSave, etc.
+  // Future: fontSize, autoSave, etc.
 }
 
 export interface SettingsOperations {

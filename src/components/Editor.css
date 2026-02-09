@@ -84,25 +84,25 @@
   Using teal for variables, yellow for operators, pink for errors
 */
 .token-variable {
-  color: var(--color-teal);
+  color: var(--syntax-variable);
   font-weight: 500;
 }
 
 .token-comment,
 .semantic-comment {
-  color: var(--color-text-primary);
+  color: var(--syntax-comment);
   font-style: normal;
   opacity: 1;
 }
 
 .token-result {
-  color: var(--color-accent);
+  color: var(--syntax-result);
   font-weight: 600;
 }
 
 .token-error {
-  color: var(--color-pink);
-  background-color: var(--color-pink-soft);
+  color: var(--syntax-error);
+  background-color: var(--syntax-error-bg);
   padding: 0 var(--spacing-1);
   border-radius: var(--border-radius-md);
   font-weight: 500;
@@ -111,7 +111,7 @@
 
 /* Semantic variable styling */
 .semantic-variable {
-  color: var(--color-teal);
+  color: var(--syntax-variable);
   font-weight: 500;
 }
 
@@ -129,16 +129,16 @@
 }
 
 .semantic-operator {
-  color: var(--color-yellow);
+  color: var(--syntax-operator);
 }
 
 .semantic-number {
-  color: var(--color-text-primary);
+  color: var(--syntax-number);
 }
 
 /* Scrubbable numbers - interactive literal numbers that can be dragged to modify */
 .semantic-scrubbableNumber {
-  color: var(--color-text-primary);
+  color: var(--syntax-number);
   padding: 1px 3px;
   border-radius: 3px;
   transition: background-color 0.2s ease-in-out;
@@ -151,7 +151,7 @@
 }
 
 .semantic-date-separator {
-  color: var(--color-text-primary);
+  color: var(--syntax-number);
 }
 
 .semantic-scrubbableNumber:hover {
@@ -174,33 +174,33 @@ body.number-scrubbing * {
 }
 
 .semantic-function {
-  color: var(--color-pink);
+  color: var(--syntax-function);
   font-weight: 500;
 }
 
 .semantic-unit {
-  color: #ff6adf;
+  color: var(--syntax-unit);
   font-weight: 500;
 }
 
 .semantic-currency {
-  color: var(--color-teal);
+  color: var(--syntax-currency);
   font-weight: 600;
 }
 
 .semantic-constant {
-  color: var(--color-pink);
+  color: var(--syntax-constant);
   font-weight: 600;
 }
 
 .semantic-keyword {
-  color: var(--color-yellow);
+  color: var(--syntax-keyword);
   font-weight: 500;
 }
 
 .semantic-result {
-  color: var(--color-accent);
-  background-color: var(--color-accent-soft);
+  color: var(--syntax-result);
+  background-color: var(--syntax-result-bg);
   padding: 2px 8px;
   border-radius: 6px;
 }
@@ -208,19 +208,19 @@ body.number-scrubbing * {
 /* Display result text using data-result attribute (legacy) */
 .semantic-result::after {
   content: attr(data-result);
-  color: var(--color-accent);
+  color: var(--syntax-result);
   font-weight: 600;
 }
 
 /* New widget-based result display - appears after the trigger operator */
 .semantic-result-display,
 .semantic-assignment-display {
-  color: var(--color-accent);
-  background-color: var(--color-accent-soft);
+  color: var(--syntax-result);
+  background-color: var(--syntax-result-bg);
   padding: 1px 5px;
   border-radius: 6px;
   font-weight: 600;
-  border: 1px solid rgba(124, 93, 250, 0.25);
+  border: 1px solid var(--syntax-result-border);
   display: inline-flex;
   align-items: center;
   line-height: 1;
@@ -229,14 +229,14 @@ body.number-scrubbing * {
 /* Result text is inserted as real text nodes in the widget for selection/copy */
 
 .semantic-error-result {
-  color: var(--color-pink);
-  background-color: var(--color-pink-soft);
+  color: var(--syntax-error);
+  background-color: var(--syntax-error-bg);
   padding: 1px 5px;
   border-radius: 6px;
   font-weight: 600;
   user-select: text !important;
   display: inline-block;
-  border: 1px solid rgba(255, 107, 157, 0.25);
+  border: 1px solid var(--syntax-error-border);
 }
 
 /* Error text is inserted as real text nodes in the widget for selection/copy */
@@ -276,34 +276,34 @@ body.number-scrubbing * {
   font-size: 12px;
   padding: 1px 2px;
   border-radius: 2px;
-  color: var(--color-pink);
+  color: var(--syntax-error);
   opacity: 0.7;
   transition: opacity 0.2s ease;
 }
 
 .error-copy-button:hover {
   opacity: 1;
-  background-color: rgba(255, 107, 157, 0.1);
+  background-color: var(--syntax-error-bg);
 }
 
 .semantic-error {
-  color: var(--color-pink);
-  background-color: var(--color-pink-soft);
+  color: var(--syntax-error);
+  background-color: var(--syntax-error-bg);
   padding: 2px 8px;
   border-radius: 6px;
   user-select: text;
-  border: 1px solid rgba(255, 107, 157, 0.25);
+  border: 1px solid var(--syntax-error-border);
 }
 
 /* Display error text using data-result attribute */
 .semantic-error::after {
   content: attr(data-result);
-  color: var(--color-pink);
+  color: var(--syntax-error);
   font-weight: 600;
 }
 
 .semantic-trigger {
-  color: var(--color-yellow);
+  color: var(--syntax-trigger);
   font-weight: 600;
 }
 
@@ -345,8 +345,8 @@ body.number-scrubbing * {
   margin-left: 6px;
   font-size: 0.75em;
   font-weight: 600;
-  color: var(--color-text-secondary);
-  background: rgba(255, 255, 255, 0.06);
+  color: var(--syntax-result-delta-text);
+  background: var(--syntax-result-delta-bg);
   border-radius: 999px;
   padding: 1px 6px;
   user-select: none;
@@ -359,15 +359,15 @@ body.number-scrubbing * {
 
 @keyframes resultFlash {
   0% {
-    color: #e5dcff;
+    color: var(--syntax-result-flash-start);
     text-shadow: 0 0 10px rgba(160, 130, 255, 0.75);
   }
   50% {
-    color: #c9b6ff;
+    color: var(--syntax-result-flash-mid);
     text-shadow: 0 0 6px rgba(160, 130, 255, 0.45);
   }
   100% {
-    color: var(--color-accent);
+    color: var(--syntax-result);
     text-shadow: none;
   }
 }
@@ -850,5 +850,5 @@ body.number-scrubbing * {
 }
 
 .plot-view-disconnected {
-  border-color: rgba(255, 107, 157, 0.35);
+  border-color: var(--syntax-error-border);
 }

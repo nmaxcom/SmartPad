@@ -71,6 +71,11 @@ function AppContent() {
     initFxRates();
   }, []);
 
+  useEffect(() => {
+    document.documentElement.dataset.uiTheme = settings.uiTheme;
+    document.documentElement.dataset.syntaxTheme = settings.syntaxTheme;
+  }, [settings.uiTheme, settings.syntaxTheme]);
+
   // Show sidebar only if at least one panel is enabled
   const showSidebar =
     settings.showVariablePanel || settings.showTemplatePanel || settings.showSettingsPanel;

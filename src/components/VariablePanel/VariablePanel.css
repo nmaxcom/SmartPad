@@ -34,12 +34,12 @@
   font-size: var(--font-size-sm);
   padding: var(--spacing-2) var(--spacing-3);
   border-radius: var(--border-radius-md);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--ui-surface-subtle);
   transition: background-color 0.15s ease;
 }
 
 .variable-item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--ui-surface-subtle-hover);
 }
 
 .variable-info {
@@ -109,7 +109,7 @@
 
 .variable-type-unit {
   background-color: transparent;
-  color: #ff6adf;
+  color: var(--syntax-unit);
 }
 
 .variable-type-error {

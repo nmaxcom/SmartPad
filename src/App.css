@@ -12,9 +12,9 @@
 }
 
 .fx-status-banner {
-  background: rgba(255, 184, 108, 0.12);
-  color: #f6d6b3;
-  border-bottom: 1px solid rgba(255, 184, 108, 0.3);
+  background: var(--ui-warning-banner-bg);
+  color: var(--ui-warning-banner-text);
+  border-bottom: 1px solid var(--ui-warning-banner-border);
   padding: 8px 20px;
   font-size: 0.85rem;
   letter-spacing: 0.01em;
@@ -33,7 +33,7 @@
 }
 
 .left-sidebar {
-  background: #171724;
+  background: var(--ui-left-sidebar-bg);
   display: flex;
   flex-direction: column;
   padding: var(--spacing-6) 0;
@@ -91,19 +91,19 @@
 }
 
 .sheet-list.suppress-hover .sheet-item.active:hover {
-  background: #252542;
+  background: var(--ui-sheet-active-bg);
   color: var(--color-text-primary);
 }
 
 .sheet-item.active {
-  background: #252542;
+  background: var(--ui-sheet-active-bg);
   color: var(--color-text-primary);
   border-left-color: var(--color-accent);
   box-shadow: inset 8px 0 14px -12px var(--color-accent);
 }
 
 .sheet-item.drag-over {
-  background: rgba(124, 93, 250, 0.18);
+  background: var(--ui-sheet-drag-over-bg);
   border-left-color: var(--color-accent);
 }
 
@@ -190,7 +190,7 @@
 }
 
 .sidebar-button {
-  border-color: #2f2f4a;
+  border-color: var(--ui-sidebar-button-border);
   color: var(--color-text-primary);
 }
 
@@ -202,12 +202,12 @@
 .drop-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(20, 20, 35, 0.9);
+  background: var(--ui-drop-overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10;
-  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border: 1px dashed var(--ui-drop-overlay-border);
 }
 
 .drop-overlay-content {
@@ -215,11 +215,11 @@
   font-size: var(--font-size-sm);
   padding: 12px 16px;
   border-radius: 12px;
-  background: rgba(34, 34, 58, 0.85);
+  background: var(--ui-drop-overlay-card-bg);
 }
 
 .editor-pane {
-  background: #252542;
+  background: var(--ui-editor-pane-bg);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-6);
@@ -254,7 +254,7 @@
   transform: translateX(-50%);
   width: 780px;
   height: 740px;
-  background: radial-gradient(ellipse, rgba(124, 93, 250, 0.08), transparent 70%);
+  background: var(--ui-editor-glow);
   pointer-events: none;
 }
 

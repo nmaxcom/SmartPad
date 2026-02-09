@@ -1,6 +1,12 @@
 import React, { useCallback, useState } from "react";
 import { useSettingsContext } from "../../state/SettingsContext";
 import { DEFAULT_SETTINGS } from "../../state/settingsStore";
+import {
+  normalizeSyntaxThemeId,
+  normalizeUIThemeId,
+  SYNTAX_THEME_OPTIONS,
+  UI_THEME_OPTIONS,
+} from "../../styles/themeCatalog";
 import { getDateLocaleDetected, getDateLocaleEffective } from "../../types/DateValue";
 import { useFxStatus } from "../../hooks/useFxStatus";
 
@@ -33,6 +39,20 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
     (value: number) => {
       const clampedValue = Math.max(5, Math.min(1000, Math.round(value)));
       updateSetting("listMaxLength", clampedValue);
+    },
+    [updateSetting]
+  );
+
+  const handleUiThemeChange = useCallback(
+    (value: string) => {
+      updateSetting("uiTheme", normalizeUIThemeId(value, DEFAULT_SETTINGS.uiTheme));
+    },
+    [updateSetting]
+  );
+
+  const handleSyntaxThemeChange = useCallback(
+    (value: string) => {
+      updateSetting("syntaxTheme", normalizeSyntaxThemeId(value, DEFAULT_SETTINGS.syntaxTheme));
     },
     [updateSetting]
   );
@@ -173,6 +193,82 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
 
   return (
     <>
+      <div className="settings-section">
+        <h3 className="settings-section-title">Appearance</h3>
+
+        <div className="settings-item settings-item-stack">
+          <div className="settings-item-info">
+            <p className="settings-label">Interface Theme</p>
+            <p className="settings-description">
+              Controls panels, surfaces, borders, and overall light/dark look.
+            </p>
+          </div>
+          <div className="settings-control">
+            <div className="theme-preview-grid" role="radiogroup" aria-label="Interface Theme">
+              {UI_THEME_OPTIONS.map((theme) => (
+                <button
+                  key={theme.id}
+                  type="button"
+                  className={`theme-preview-card ${settings.uiTheme === theme.id ? "is-active" : ""}`}
+                  onClick={() => handleUiThemeChange(theme.id)}
+                  aria-pressed={settings.uiTheme === theme.id}
+                >
+                  <div className="theme-preview-header">
+                    <span className="theme-preview-name">{theme.label}</span>
+                    <span className="theme-preview-tone">{theme.tone}</span>
+                  </div>
+                  <div className="theme-preview-swatches" aria-hidden="true">
+                    {theme.preview.map((color, idx) => (
+                      <span
+                        key={`${theme.id}-preview-${idx}`}
+                        className="theme-preview-swatch"
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="settings-item settings-item-stack">
+          <div className="settings-item-info">
+            <p className="settings-label">Syntax Theme</p>
+            <p className="settings-description">
+              Controls token colors in the editor independently of interface theme.
+            </p>
+          </div>
+          <div className="settings-control">
+            <div className="theme-preview-grid" role="radiogroup" aria-label="Syntax Theme">
+              {SYNTAX_THEME_OPTIONS.map((theme) => (
+                <button
+                  key={theme.id}
+                  type="button"
+                  className={`theme-preview-card ${settings.syntaxTheme === theme.id ? "is-active" : ""}`}
+                  onClick={() => handleSyntaxThemeChange(theme.id)}
+                  aria-pressed={settings.syntaxTheme === theme.id}
+                >
+                  <div className="theme-preview-header">
+                    <span className="theme-preview-name">{theme.label}</span>
+                    <span className="theme-preview-tone">{theme.tone}</span>
+                  </div>
+                  <div className="theme-preview-swatches" aria-hidden="true">
+                    {theme.preview.map((color, idx) => (
+                      <span
+                        key={`${theme.id}-preview-${idx}`}
+                        className="theme-preview-swatch"
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="settings-section settings-section--currency">
         <h3 className="settings-section-title">Display Options</h3>
 
