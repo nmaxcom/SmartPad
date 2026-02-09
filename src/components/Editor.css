@@ -226,6 +226,15 @@ body.number-scrubbing * {
   line-height: 1;
 }
 
+.semantic-live-result-display {
+  color: var(--syntax-live-result);
+  margin-left: 1ch;
+}
+
+.semantic-result-container.semantic-live-result-container {
+  margin-left: 0;
+}
+
 /* Result text is inserted as real text nodes in the widget for selection/copy */
 
 .semantic-error-result {
@@ -315,6 +324,7 @@ body.number-scrubbing * {
 .semantic-function,
 .semantic-result,
 .semantic-result-display,
+.semantic-live-result-display,
 .semantic-assignment-display,
 .semantic-error,
 .semantic-error-result,
@@ -325,6 +335,7 @@ body.number-scrubbing * {
 .semantic-wrapper,
 .semantic-result-container,
 .semantic-result-display,
+.semantic-live-result-display,
 .semantic-assignment-display,
 .semantic-error-result {
   user-select: text;
@@ -381,11 +392,13 @@ body.number-scrubbing * {
 }
 
 .results-borders-off .semantic-result-display,
+.results-borders-off .semantic-live-result-display,
 .results-borders-off .semantic-assignment-display {
   border-color: transparent;
 }
 
 .results-bg-off .semantic-result-display,
+.results-bg-off .semantic-live-result-display,
 .results-bg-off .semantic-assignment-display,
 .results-bg-off .semantic-result {
   background-color: transparent;
@@ -408,7 +421,8 @@ body.number-scrubbing * {
   cursor: pointer;
 }
 
-.plotting-selecting .semantic-result-display {
+.plotting-selecting .semantic-result-display,
+.plotting-selecting .semantic-live-result-display {
   box-shadow: 0 0 0 1px var(--color-accent);
 }
 

@@ -828,6 +828,37 @@ weird = 3 m, 2 h =>
 09:00..10:00 step 40 min =>09:00, 09:40
     `,
   },
+  {
+    id: "live-result-playground",
+    emoji: "⚡",
+    name: "Live Result",
+    content: `# Live Result Playground
+# This sheet helps verify when live result should show up (without =>)
+
+# Should show live result as you type (no =>):
+3
+3*4
+4lb to kg
+9L/min * 18 min
+sqrt(16)+2
+PI*2
+known = 5
+known*3
+
+# Should NOT show live result:
+just notes here
+this is plain text and should stay plain text
+3*
+unknownVar + 1
+4lb to
+solve x + 2 = 5
+
+# Explicit trigger still works and remains authoritative:
+unknownVar + 1 =>
+3*4 =>
+4lb to kg =>
+`,
+  },
 ];
 
 function TemplatePanel() {

@@ -86,6 +86,7 @@ export interface SettingsState {
   scientificLowerExponent: number;
   scientificTrimTrailingZeros: boolean;
   groupThousands: boolean;
+  liveResultEnabled: boolean;
   listMaxLength: number;
   uiTheme: UIThemeId;
   syntaxTheme: SyntaxThemeId;

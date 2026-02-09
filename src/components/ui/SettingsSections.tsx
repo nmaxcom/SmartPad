@@ -319,6 +319,29 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
 
         <div className="settings-item settings-item-stack">
           <div className="settings-item-info">
+            <label htmlFor={`${idPrefix}-live-result-enabled`} className="settings-label">
+              Live Result
+            </label>
+            <p className="settings-description">
+              Show expression results while typing on lines without =&gt;. Live previews suppress
+              errors until expressions are complete.
+            </p>
+          </div>
+          <div className="settings-control">
+            <label className="toggle-switch">
+              <input
+                id={`${idPrefix}-live-result-enabled`}
+                type="checkbox"
+                checked={settings.liveResultEnabled}
+                onChange={(e) => updateSetting("liveResultEnabled", e.target.checked)}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div className="settings-item settings-item-stack">
+          <div className="settings-item-info">
             <label htmlFor={`${idPrefix}-list-max-length`} className="settings-label">
               Max items per list
             </label>

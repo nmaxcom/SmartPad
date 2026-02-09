@@ -224,6 +224,26 @@ energy = heat_capacity * mass_water * temp_change =>
         expect(result.result).toBe("50 m^2");
       }
     });
+
+    test("should preserve preferred literal units without explicit conversion target", () => {
+      const astNode = parseLine("9L/min * 18 min =>", 1);
+      const result = unitsNetEvaluator.evaluate(astNode, createContext());
+
+      expect(result?.type).toBe("mathResult");
+      if (result?.type === "mathResult") {
+        expect(result.result).toBe("162 L");
+      }
+    });
+
+    test("should still simplify coherent derived units for display", () => {
+      const astNode = parseLine("1 kg*m/s^2 =>", 1);
+      const result = unitsNetEvaluator.evaluate(astNode, createContext());
+
+      expect(result?.type).toBe("mathResult");
+      if (result?.type === "mathResult") {
+        expect(result.result).toBe("1 N");
+      }
+    });
   });
 
   describe("Expression Evaluation Integration", () => {

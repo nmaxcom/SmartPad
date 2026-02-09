@@ -185,6 +185,15 @@ describe("UnitsNet.js Evaluator", () => {
       expect(["m^2/s", "m", ""]).toContain(quantity.getUnit());
     });
 
+    test("should preserve provided unit family when cancelling compound units", () => {
+      const result = evaluateUnitsNetExpression("9L/min * 18 min");
+
+      expect(result.error).toBeUndefined();
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBeCloseTo(162, 10);
+      expect(quantity.getUnit()).toBe("L");
+    });
+
     test("should handle temperature conversions", () => {
       const result = evaluateUnitsNetExpression("25 C + 10 K");
 

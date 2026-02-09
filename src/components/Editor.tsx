@@ -35,6 +35,7 @@ import { getDateLocaleEffective } from "../types/DateValue";
 import { parseLine } from "../parsing/astParser";
 import { recordEquationFromNode } from "../solve/equationStore";
 import type { ASTNode } from "../parsing/ast";
+import { isExpressionNode } from "../parsing/ast";
 import {
   defaultRegistry,
   RenderNode,
@@ -45,6 +46,14 @@ import {
   isCombinedRenderNode,
 } from "../eval";
 import type { EvaluationContext } from "../eval";
+import {
+  getLiveResultMetrics,
+  hasUnresolvedLiveIdentifiers,
+  isLikelyLiveExpression,
+  recordLiveResultEvaluation,
+  recordLiveResultRendered,
+  recordLiveResultSuppressed,
+} from "../eval/liveResultPreview";
 
 const createEnterKeyExtension = () =>
   Extension.create({
@@ -196,9 +205,11 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
             return variableContext;
           };
 
+          const currentVariableContext = createCurrentVariableContext();
+
           const evaluationContext: EvaluationContext = {
             variableStore: reactiveStore,
-            variableContext: createCurrentVariableContext(),
+            variableContext: currentVariableContext,
             functionStore,
             equationStore,
             astNodes,
@@ -221,11 +232,88 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
             plotPanYDomainPadding: settings.plotPanYDomainPadding,
           };
 
+          const isImplicitExpressionLine =
+            node.type === "expression" && !String(node.raw || "").includes("=>");
+
           // Evaluate the node ONLY for state updates (variables)
           // Results and errors will be shown via decorations, not text replacement
+          const evalStart = performance.now();
           const renderNode = defaultRegistry.evaluate(node, evaluationContext);
+          const evalDurationMs = performance.now() - evalStart;
+
+          if (isImplicitExpressionLine) {
+            if (!settings.liveResultEnabled) {
+              // Keep existing no-=> expression lines visually quiet when Live Result is off.
+              recordEquationFromNode(node, equationStore);
+              continue;
+            }
+
+            if (hasUnresolvedLiveIdentifiers(node.components, currentVariableContext)) {
+              recordLiveResultSuppressed("unresolved");
+              recordEquationFromNode(node, equationStore);
+              continue;
+            }
+
+            recordLiveResultEvaluation(evalDurationMs);
+            if (
+              renderNode &&
+              (renderNode.type === "mathResult" || renderNode.type === "combined")
+            ) {
+              collectedRenderNodes.push({
+                ...renderNode,
+                line: index + 1,
+                originalRaw: lines[index] ?? node.raw ?? "",
+                livePreview: true,
+              } as RenderNode);
+              recordLiveResultRendered();
+            } else {
+              recordLiveResultSuppressed("error");
+            }
+
+            recordEquationFromNode(node, equationStore);
+            continue;
+          }
+
           if (renderNode) {
             collectedRenderNodes.push(renderNode);
+          }
+
+          if (settings.liveResultEnabled && node.type === "plainText") {
+            const rawLine = lines[index] ?? node.raw ?? "";
+            if (!isLikelyLiveExpression(rawLine, currentVariableContext, functionStore)) {
+              recordLiveResultSuppressed("plaintext");
+            } else {
+              const candidateNode = parseLine(`${rawLine} =>`, index + 1);
+              if (!isExpressionNode(candidateNode)) {
+                recordLiveResultSuppressed("incomplete");
+              } else if (
+                hasUnresolvedLiveIdentifiers(candidateNode.components, currentVariableContext)
+              ) {
+                recordLiveResultSuppressed("unresolved");
+              } else {
+                const liveStart = performance.now();
+                const liveRenderNode = defaultRegistry.evaluate(
+                  candidateNode,
+                  evaluationContext
+                );
+                recordLiveResultEvaluation(performance.now() - liveStart);
+                if (
+                  liveRenderNode &&
+                  (liveRenderNode.type === "mathResult" ||
+                    liveRenderNode.type === "combined")
+                ) {
+                  collectedRenderNodes.push({
+                    ...liveRenderNode,
+                    line: index + 1,
+                    originalRaw: rawLine,
+                    livePreview: true,
+                  } as RenderNode);
+                  recordLiveResultRendered();
+                } else {
+                  recordLiveResultSuppressed("error");
+                }
+              }
+            }
           }
 
           recordEquationFromNode(node, equationStore);
@@ -281,6 +369,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         try {
           // Increment evaluation sequence counter for deterministic test waiting
           (window as any).__evaluationSeq = ((window as any).__evaluationSeq || 0) + 1;
+          (window as any).__liveResultMetrics = getLiveResultMetrics();
           
           window.dispatchEvent(
             new CustomEvent("evaluationDone", { 
@@ -334,6 +423,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       settings.scientificLowerExponent,
       settings.scientificTrimTrailingZeros,
       settings.groupThousands,
+      settings.liveResultEnabled,
     ]
   );
 
@@ -484,6 +574,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
     settings.scientificUpperExponent,
     settings.scientificLowerExponent,
     settings.scientificTrimTrailingZeros,
+    settings.liveResultEnabled,
     settings.dateLocaleMode,
     settings.dateLocaleOverride,
     settings.dateDisplayFormat,

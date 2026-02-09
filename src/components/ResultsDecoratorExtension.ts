@@ -106,10 +106,12 @@ export const ResultsDecoratorExtension = Extension.create({
           ): DecorationSet => {
             const decorations: Decoration[] = [];
 
-            // Build a map from line number to render node for quick lookup
-            const renderMap = new Map<number, RenderNode>();
+            // Build a map from line number to render nodes for quick lookup
+            const renderMap = new Map<number, RenderNode[]>();
             renderNodes.forEach((rn) => {
-              renderMap.set(rn.line, rn);
+              const list = renderMap.get(rn.line) || [];
+              list.push(rn);
+              renderMap.set(rn.line, list);
             });
 
             // Derive positions by scanning paragraphs for assignment errors (no =>)
@@ -132,10 +134,51 @@ export const ResultsDecoratorExtension = Extension.create({
                 if (!info) continue;
                 if (info.text.includes("=>")) continue;
 
+                const lineNodes = renderMap.get(i) || [];
+                const liveNode = lineNodes.find(
+                  (node: any) =>
+                    !!node.livePreview &&
+                    (node.type === "mathResult" || node.type === "combined")
+                ) as any;
+                if (liveNode) {
+                  const liveText =
+                    typeof liveNode.result === "number" || typeof liveNode.result === "string"
+                      ? String(liveNode.result)
+                      : String(liveNode.displayText || "")
+                          .replace(/^.*=>\s*/, "")
+                          .trim();
+                  if (liveText) {
+                    const anchor = info.start + info.text.length;
+                    const widget = Decoration.widget(
+                      anchor,
+                      () => {
+                        const wrapper = document.createElement("span");
+                        wrapper.className = "semantic-wrapper";
+                        const container = document.createElement("span");
+                        container.className =
+                          "semantic-result-container semantic-live-result-container";
+                        const span = document.createElement("span");
+                        span.className =
+                          "semantic-result-display semantic-live-result-display";
+                        span.setAttribute("data-result", liveText);
+                        span.setAttribute("title", liveText);
+                        span.setAttribute("aria-label", liveText);
+                        span.textContent = liveText;
+                        container.appendChild(span);
+                        wrapper.appendChild(container);
+                        return wrapper;
+                      },
+                      { side: 1 }
+                    );
+                    decorations.push(widget);
+                    continue;
+                  }
+                }
+
                 const assignment = parseVariableAssignment(info.text);
                 if (!assignment.isValid || !assignment.rawValue) continue;
 
-                const renderNode = renderMap.get(i);
+                const renderNode = lineNodes.find((node) => node.type === "error");
                 const isError = renderNode?.type === "error";
                 if (!isError) continue;
 

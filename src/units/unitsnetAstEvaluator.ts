@@ -60,11 +60,9 @@ import { parseUnitTargetWithScale } from "./unitConversionTarget";
 import { extractConversionSuffix } from "../utils/conversionSuffix";
 
 function rewriteSimpleTimeLiterals(expression: string): string {
-  return expression.replace(/(\d+(?:\.\d+)?)\s*(h|min|day)\b/g, (_m, num, unit) => {
-    const v = parseFloat(num);
-    const seconds = unit === "h" ? v * 3600 : unit === "min" ? v * 60 : v * 86400;
-    return `${seconds} s`;
-  });
+  // Preserve user-provided time units so compound-unit cancellation and display
+  // stay intuitive (e.g., L/min * min => L).
+  return expression;
 }
 
 function parsePercentFromVariable(variable: Variable | undefined): number | null {
@@ -821,22 +819,9 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     return quantity.toString(precision, { ...displayOptions, preferBaseUnit });
   }
 
-  private shouldPreferBaseUnit(expression: string, quantity: SmartPadQuantity): boolean {
-    if (quantity.unitsnetValue) {
-      return false;
-    }
-    if (/\b(to|in)\b/.test(expression)) {
-      return false;
-    }
-    const unit = quantity.unit;
-    const def = defaultUnitRegistry.get(unit);
-    if (def?.category === "count") {
-      return false;
-    }
-    if (unit === "C" || unit === "F" || unit === "K") {
-      return false;
-    }
-    return true;
+  private shouldPreferBaseUnit(_expression: string, _quantity: SmartPadQuantity): boolean {
+    // Keep the computed unit representation by default.
+    return false;
   }
 
   private hasExplicitConversion(expression: string): boolean {

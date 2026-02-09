@@ -9,6 +9,7 @@ export interface BaseRenderNode {
   readonly type: string;
   readonly line: number;
   readonly originalRaw: string;
+  readonly livePreview?: boolean;
   // Optional positional anchors for deterministic decoration placement
   // from/to: absolute ProseMirror positions of the trigger (e.g., '=>')
   readonly from?: number;

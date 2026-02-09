@@ -753,16 +753,7 @@ export function evaluateUnitsNetExpression(
       variables
     );
 
-    // Rewrite simple time literals like '1 h' into seconds to avoid tokenizer edge cases
-    const rewriteSimpleTimeQuantities = (expr: string): string => {
-      return expr.replace(/(\d+(?:\.\d+)?)\s*(h|min|day)\b/g, (_m, num, unit) => {
-        const v = parseFloat(num);
-        const seconds = unit === "h" ? v * 3600 : unit === "min" ? v * 60 : v * 86400;
-        return `${seconds} s`;
-      });
-    };
-
-    const aliasedExprRewritten = rewriteSimpleTimeQuantities(aliasedExpr);
+    const aliasedExprRewritten = aliasedExpr;
 
     const tokens = tokenizeWithUnitsNet(aliasedExprRewritten);
     for (let i = 0; i < tokens.length; i += 1) {
@@ -786,12 +777,6 @@ export function evaluateUnitsNetExpression(
             : "Cannot subtract dimensionless number from physical quantity"
         );
       }
-    }
-    if (aliasedExpr.includes("1 h")) {
-      console.log(
-        "TOKENS FOR '1 h':",
-        tokens.map((t) => `${t.type}:${t.value}`)
-      );
     }
     const parser = new UnitsNetParser(tokens, aliasedVars);
     const result = parser.parse();

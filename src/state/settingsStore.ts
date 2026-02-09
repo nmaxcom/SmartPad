@@ -8,6 +8,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
   scientificLowerExponent: -4,
   scientificTrimTrailingZeros: true,
   groupThousands: false,
+  liveResultEnabled: true,
   listMaxLength: 100,
   uiTheme: "spatial-dark",
   syntaxTheme: "spatial-syntax",
