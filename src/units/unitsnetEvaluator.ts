@@ -284,7 +284,7 @@ export function tokenizeWithUnitsNet(expression: string): UnitsNetToken[] {
       let constantStr = "";
       const constantStart = position;
 
-      while (position < expression.length && /[A-Z_]/.test(expression[position])) {
+      while (position < expression.length && /[A-Z0-9_]/.test(expression[position])) {
         constantStr += expression[position];
         position++;
       }
@@ -310,7 +310,7 @@ export function tokenizeWithUnitsNet(expression: string): UnitsNetToken[] {
       let funcStr = "";
       const funcStart = position;
 
-      while (position < expression.length && /[a-z_]/.test(expression[position])) {
+      while (position < expression.length && /[a-z0-9_]/.test(expression[position])) {
         funcStr += expression[position];
         position++;
       }

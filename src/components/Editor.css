@@ -286,8 +286,8 @@ body.number-scrubbing * {
   font-weight: 600;
   border: 1px solid var(--syntax-result-border);
   display: inline-flex;
-  align-items: center;
-  line-height: 1;
+  align-items: baseline;
+  line-height: 1.15;
   cursor: pointer;
 }
 
@@ -308,8 +308,8 @@ body.number-scrubbing * {
   padding: 1px 6px;
   margin: 0 0.18ch;
   display: inline-flex;
-  align-items: center;
-  line-height: 1;
+  align-items: baseline;
+  line-height: 1.15;
   font-weight: 600;
   cursor: pointer;
   user-select: all;
@@ -453,14 +453,14 @@ body.number-scrubbing * {
 .semantic-wrapper {
   cursor: text;
   display: inline-flex;
-  align-items: center;
-  vertical-align: middle;
+  align-items: baseline;
+  vertical-align: baseline;
 }
 
 .semantic-result-container {
   margin-left: 0;
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
 }
 
 .semantic-result-delta {

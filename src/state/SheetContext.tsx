@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { deriveTitleFromContent, applyTitleToContent, DEFAULT_SHEET_TITLE } from "../utils/sheetTitle";
 import { SheetRecord, deleteSheet, generateSheetId, getAllSheets, getSheet, putSheet } from "../storage/sheetsDb";
+import { QUICK_TOUR_TEMPLATE } from "../templates/quickTourTemplate";
 
 interface SheetContextValue {
   sheets: SheetRecord[];
@@ -47,6 +48,9 @@ function sortSheets(a: SheetRecord, b: SheetRecord): number {
   }
   return b.last_modified - a.last_modified;
 }
+
+const isEffectivelyEmptySheet = (sheet: SheetRecord): boolean =>
+  !sheet.is_trashed && (!sheet.content || sheet.content.trim().length === 0);
 
 export function SheetProvider({ children }: { children: React.ReactNode }) {
   const [sheets, setSheets] = useState<SheetRecord[]>([]);
@@ -257,10 +261,11 @@ export function SheetProvider({ children }: { children: React.ReactNode }) {
       if (records.length === 0) {
         const id = generateSheetId();
         const now = Date.now();
+        const content = applyTitleToContent(QUICK_TOUR_TEMPLATE, "Quick Tour");
         const record: SheetRecord = {
           id,
-          title: DEFAULT_SHEET_TITLE,
-          content: "",
+          title: "Quick Tour",
+          content,
           last_modified: now,
           is_trashed: false,
           order: 0,
@@ -280,7 +285,25 @@ export function SheetProvider({ children }: { children: React.ReactNode }) {
         await Promise.all(withOrder.map((sheet) => putSheet(sheet)));
       }
       const sorted = [...withOrder].sort(sortSheets);
-      setSheets(sorted);
+      const activeNonTrashed = sorted.filter((sheet) => !sheet.is_trashed);
+      if (activeNonTrashed.length === 1 && isEffectivelyEmptySheet(activeNonTrashed[0])) {
+        const emptySheet = activeNonTrashed[0];
+        const quickTourTitle = ensureUniqueTitle("Quick Tour", emptySheet.id);
+        const quickTourContent = applyTitleToContent(QUICK_TOUR_TEMPLATE, quickTourTitle);
+        const upgradedSheet: SheetRecord = {
+          ...emptySheet,
+          title: quickTourTitle,
+          content: quickTourContent,
+          last_modified: Date.now(),
+        };
+        await saveSheetRecord(upgradedSheet, true);
+        const refreshed = withOrder.map((sheet) =>
+          sheet.id === upgradedSheet.id ? upgradedSheet : sheet
+        );
+        setSheets(refreshed.sort(sortSheets));
+      } else {
+        setSheets(sorted);
+      }
       const storedActiveId = loadActiveSheetId();
       const storedActive =
         storedActiveId && sorted.find((sheet) => sheet.id === storedActiveId && !sheet.is_trashed);

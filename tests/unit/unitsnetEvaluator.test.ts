@@ -86,6 +86,13 @@ describe("UnitsNet.js Evaluator", () => {
       expect(tokens[5].type).toBe(UnitsNetTokenType.OPERATOR);
       expect(tokens[6].type).toBe(UnitsNetTokenType.QUANTITY);
     });
+
+    test("should tokenize variable identifiers that include trailing digits", () => {
+      const tokens = tokenizeWithUnitsNet("flow2 to L/h");
+      expect(tokens[0].type).toBe(UnitsNetTokenType.IDENTIFIER);
+      expect(tokens[0].value).toBe("flow2");
+      expect(tokens[1].type).toBe(UnitsNetTokenType.TO);
+    });
   });
 
   describe("Expression Evaluation", () => {
@@ -266,6 +273,18 @@ describe("UnitsNet.js Evaluator", () => {
       const quantity = result.value as UnitValue;
       expect(quantity.getNumericValue()).toBe(2);
       expect(quantity.getUnit()).toBe("m/s");
+    });
+
+    test("should convert digit-suffixed variable references with trailing to/in conversion", () => {
+      const variables = {
+        flow2: new UnitValue(SmartPadQuantity.fromValueAndUnit(1000, "mL/min")),
+      };
+
+      const result = evaluateUnitsNetExpression("flow2 to L/h", variables);
+      expect(result.error).toBeUndefined();
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBeCloseTo(60, 10);
+      expect(quantity.getUnit()).toBe("L/h");
     });
 
     test("should handle undefined variables", () => {

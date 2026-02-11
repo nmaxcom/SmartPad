@@ -20,9 +20,6 @@ export const ResultInlineNode = Node.create({
       flash: {
         default: false,
       },
-      delta: {
-        default: "",
-      },
       sourceLineId: {
         default: "",
         parseHTML: (element) => element.getAttribute("data-source-line-id") || "",
@@ -46,7 +43,6 @@ export const ResultInlineNode = Node.create({
     const value = node.textContent || node.attrs.value || "";
     const isError = !!node.attrs.isError;
     const flash = !!node.attrs.flash;
-    const delta = node.attrs.delta || "";
     const sourceLineId = String(node.attrs.sourceLineId || "");
     const sourceLine = Number(node.attrs.sourceLine || 0);
     const sourceLabel = String(node.attrs.sourceLabel || "");
@@ -72,19 +68,6 @@ export const ResultInlineNode = Node.create({
       0,
     ];
 
-    const deltaNode =
-      !isError && delta
-        ? [
-            "span",
-            {
-              class: "semantic-result-delta",
-              "data-delta": delta,
-              "aria-hidden": "true",
-            },
-            delta,
-          ]
-        : null;
-
     return [
       "span",
       {
@@ -95,7 +78,6 @@ export const ResultInlineNode = Node.create({
         "span",
         { class: "semantic-result-container" },
         contentNode,
-        ...(deltaNode ? [deltaNode] : []),
       ],
     ];
   },

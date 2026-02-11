@@ -658,28 +658,6 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
 
         <div className="settings-item">
           <div className="settings-item-info">
-            <label htmlFor={`${idPrefix}-show-result-delta`} className="settings-label">
-              Delta Badge
-            </label>
-            <p className="settings-description">
-              Show the change amount beside updated results
-            </p>
-          </div>
-          <div className="settings-control">
-            <label className="toggle-switch">
-              <input
-                id={`${idPrefix}-show-result-delta`}
-                type="checkbox"
-                checked={settings.showResultDelta}
-                onChange={(e) => updateSetting("showResultDelta", e.target.checked)}
-              />
-              <span className="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
-
-        <div className="settings-item">
-          <div className="settings-item-info">
             <label htmlFor={`${idPrefix}-show-result-borders`} className="settings-label">
               Result Borders
             </label>

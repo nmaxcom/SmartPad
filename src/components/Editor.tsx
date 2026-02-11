@@ -528,6 +528,15 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
 
           if (node.type === "plainText") {
             const rawLine = lines[index] ?? node.raw ?? "";
+            const isReferenceOnlyLine =
+              lineReferences.length > 0 &&
+              rawLine.replace(/__sp_ref_[a-z0-9]+__/gi, "").trim().length === 0;
+            if (isReferenceOnlyLine) {
+              if (settings.liveResultEnabled) {
+                recordLiveResultSuppressed("plaintext");
+              }
+              continue;
+            }
             const looksLikeLiveExpression = isLikelyLiveExpression(
               rawLine,
               currentVariableContext,
