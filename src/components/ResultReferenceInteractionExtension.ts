@@ -291,7 +291,6 @@ export const ResultReferenceInteractionExtension = Extension.create({
     };
 
     let lastReferencePayload: ReferencePayload | null = null;
-    let internalReferenceClipboard: ReferencePayload | null = null;
     let postInsertCursor: number | null = null;
     let consumeResultClick: boolean = false;
     let highlightedSource: HoveredSourceRef | null = null;
@@ -438,26 +437,6 @@ export const ResultReferenceInteractionExtension = Extension.create({
             const isMod = event.metaKey || event.ctrlKey;
             if (!isMod || event.altKey) {
               return false;
-            }
-            const key = (event.key || "").toLowerCase();
-            if (key === "c") {
-              const payload = findSelectedReferencePayload(view.state) || lastReferencePayload;
-              if (payload) {
-                internalReferenceClipboard = payload;
-              }
-              return false;
-            }
-            if (key === "v" && internalReferenceClipboard) {
-              const insertedCursor = insertReferenceAt(
-                view,
-                internalReferenceClipboard,
-                view.state.selection.from,
-                "reference"
-              );
-              if (typeof insertedCursor === "number") {
-                event.preventDefault();
-                return true;
-              }
             }
             return false;
           },
@@ -638,9 +617,8 @@ export const ResultReferenceInteractionExtension = Extension.create({
             },
             copy: (view, event) => {
               if (!event.clipboardData) return false;
-              const payload = findSelectedReferencePayload(view.state) || lastReferencePayload;
+              const payload = findSelectedReferencePayload(view.state);
               if (!payload) return false;
-              internalReferenceClipboard = payload;
               event.clipboardData.setData(CLIPBOARD_MIME, JSON.stringify(payload));
               event.clipboardData.setData(
                 "text/plain",

@@ -27,11 +27,6 @@ sheets/tabs, remember docs
 plots
 FX
 # bugs/ideas
-add glow to graphs
-
-flow2 = 1000 mL/min
-flow2 to L/h => ⚠️ Unexpected token: 2 to
-
 - figure out / unify all the as, in, to, etc keywords
 
 - Parser confused by 3 digit groupings (frontend also renders them together in groups of 3):

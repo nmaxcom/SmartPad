@@ -112,8 +112,8 @@ costs = $12, $15, $9
 sum(costs) => $36
 avg(costs) => $12
 
-expenses = rent, utilities, 50
-sum(expenses) => 1450
+expenses = $1250, $185, $50
+sum(expenses) => $1485
 
 lengths = 3m, 25m, 48km
 lengths =>3 m, 25 m, 48 km

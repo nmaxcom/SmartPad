@@ -526,4 +526,75 @@ test.describe("Result References", () => {
     expect(readableText).not.toContain("__sp_ref_");
     expect(readableText).toContain("120");
   });
+
+  test("typing '=' before completing '=>' on a reference expression does not leak placeholder gibberish", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("25 C to K");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type(" ");
+    await waitForUIRenderComplete(page);
+
+    const sourceLive = page.locator(".ProseMirror p").first().locator(".semantic-live-result-display");
+    const targetLine = page.locator(".ProseMirror p").nth(1);
+    await targetLine.click({ position: { x: 14, y: 8 } });
+    await sourceLive.click();
+    await page.keyboard.type(" + ");
+    await sourceLive.click();
+    await waitForUIRenderComplete(page);
+
+    await expect(targetLine.locator(".semantic-live-result-display").last()).toHaveAttribute(
+      "data-result",
+      /596\.3.*K/
+    );
+
+    await page.keyboard.type("=");
+    await waitForUIRenderComplete(page);
+    await expect(targetLine).not.toContainText("__sp_ref_");
+    await expect(targetLine.locator(".semantic-live-result-display")).toHaveCount(0);
+
+    await page.keyboard.type(">");
+    await waitForUIRenderComplete(page);
+
+    await expect(targetLine).not.toContainText("__sp_ref_");
+    await expect(targetLine.locator(".semantic-error-result")).toHaveCount(0);
+    await expect(targetLine.locator(".semantic-result-display").last()).toHaveAttribute(
+      "data-result",
+      /596\.3.*K/
+    );
+  });
+
+  test("copy/paste with mixed lines and reference chips keeps whole selection content", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("100 + 20 =>");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type(" ");
+    await waitForUIRenderComplete(page);
+
+    const sourceChip = page.locator(".ProseMirror p").first().locator(".semantic-result-display");
+    const line2 = page.locator(".ProseMirror p").nth(1);
+    await line2.click({ position: { x: 16, y: 8 } });
+    await sourceChip.click();
+    await page.keyboard.type(" + 5 =>");
+    await waitForUIRenderComplete(page);
+
+    await page.keyboard.press("ControlOrMeta+a");
+    await page.keyboard.press("ControlOrMeta+c");
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("ControlOrMeta+v");
+    await waitForUIRenderComplete(page);
+
+    const paragraphTexts = await page.$$eval(".ProseMirror p", (paragraphs) =>
+      paragraphs.map((p) => (p.textContent || "").trim()).filter(Boolean)
+    );
+    expect(paragraphTexts.some((line) => line.includes("100 + 20 =>"))).toBeTruthy();
+    expect(paragraphTexts.some((line) => line.includes("+ 5 =>"))).toBeTruthy();
+    await expect(page.locator(".semantic-reference-chip")).toHaveCount(2);
+  });
 });

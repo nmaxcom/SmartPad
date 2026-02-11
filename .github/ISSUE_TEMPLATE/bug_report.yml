@@ -8,7 +8,7 @@ body:
     attributes:
       value: |
         Thanks for reporting this issue.
-        If possible, include a screenshot and short recording.
+        If possible, include a screenshot or short recording.
   - type: textarea
     id: summary
     attributes:

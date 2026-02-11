@@ -20,6 +20,7 @@ interface NumberScrubState {
   decimalPlaces: number;
   dragElement: HTMLElement | null;
   hasMoved: boolean;
+  deltaChip: HTMLDivElement | null;
 }
 
 export const NumberScrubberExtension = Extension.create({
@@ -67,6 +68,7 @@ export const NumberScrubberExtension = Extension.create({
                   decimalPlaces,
                   dragElement: target,
                   hasMoved: false,
+                  deltaChip: createDeltaChip(),
                 };
 
                 // Store state on the plugin
@@ -88,6 +90,9 @@ export const NumberScrubberExtension = Extension.create({
                     scrubState.hasMoved = true;
                     scrubState.isDragging = true;
                     target.classList.add("dragging");
+                    if (scrubState.deltaChip) {
+                      scrubState.deltaChip.classList.add("is-visible");
+                    }
                     event.preventDefault(); // Prevent text selection once we start dragging
                   }
 
@@ -106,6 +111,7 @@ export const NumberScrubberExtension = Extension.create({
 
                     // Apply bounds (prevent division by zero, extreme values)
                     const boundedValue = applyBounds(newValue);
+                    const deltaFromStart = boundedValue - scrubState.startValue;
 
                     // Format value preserving original precision
                     const formattedValue = formatNumber(boundedValue, scrubState.decimalPlaces);
@@ -121,6 +127,15 @@ export const NumberScrubberExtension = Extension.create({
                     scrubState.elementEnd = scrubState.elementStart + formattedValue.length;
 
                     view.dispatch(tr);
+
+                    // Update floating delta chip near the cursor
+                    updateDeltaChip(
+                      scrubState.deltaChip,
+                      deltaFromStart,
+                      scrubState.decimalPlaces,
+                      e.clientX,
+                      e.clientY
+                    );
                   }
                 };
 
@@ -129,6 +144,7 @@ export const NumberScrubberExtension = Extension.create({
                   if (scrubState.dragElement) {
                     scrubState.dragElement.classList.remove("dragging");
                   }
+                  removeDeltaChip(scrubState.deltaChip);
                   document.body.classList.remove("number-scrubbing");
 
                   // If we didn't move (simple click), allow normal cursor placement
@@ -232,4 +248,55 @@ function formatNumber(value: number, decimalPlaces: number): string {
   }
 
   return value.toFixed(decimalPlaces);
+}
+
+function createDeltaChip(): HTMLDivElement | null {
+  if (typeof document === "undefined") return null;
+  const chip = document.createElement("div");
+  chip.className = "number-scrub-delta-chip";
+  chip.textContent = "+0";
+  document.body.appendChild(chip);
+  return chip;
+}
+
+function removeDeltaChip(chip: HTMLDivElement | null): void {
+  if (!chip) return;
+  chip.remove();
+}
+
+function updateDeltaChip(
+  chip: HTMLDivElement | null,
+  deltaValue: number,
+  decimalPlaces: number,
+  clientX: number,
+  clientY: number
+): void {
+  if (!chip) return;
+
+  const formattedDelta = formatDelta(deltaValue, decimalPlaces);
+  chip.textContent = formattedDelta;
+  chip.style.left = `${clientX}px`;
+  chip.style.top = `${clientY - 28}px`;
+  chip.classList.toggle("is-positive", deltaValue >= 0);
+  chip.classList.toggle("is-negative", deltaValue < 0);
+}
+
+function formatDelta(deltaValue: number, decimalPlaces: number): string {
+  const absDelta = Math.abs(deltaValue);
+  let core = "";
+
+  if (decimalPlaces > 0) {
+    core = absDelta.toFixed(decimalPlaces);
+  } else if (absDelta < 10) {
+    core = absDelta.toFixed(1);
+  } else {
+    core = Math.round(absDelta).toString();
+  }
+
+  // Remove unnecessary trailing zeros from decimal output.
+  if (core.includes(".")) {
+    core = core.replace(/\.?0+$/, "");
+  }
+
+  return `${deltaValue >= 0 ? "+" : "-"}${core}`;
 }

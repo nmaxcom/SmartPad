@@ -48,6 +48,7 @@ import {
   recordLiveResultEvaluation,
   recordLiveResultRendered,
   recordLiveResultSuppressed,
+  shouldShowLiveForAssignmentValue,
 } from "../eval/liveResultPreview";
 
 const createEnterKeyExtension = () =>
@@ -454,6 +455,19 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
               continue;
             }
 
+            const trimmedRawExpression = String(node.raw || "").trim();
+            if (/[=<>!]\s*$/.test(trimmedRawExpression)) {
+              recordLiveResultSuppressed("incomplete");
+              setLineResultState(index + 1, lineId, {
+                value: null,
+                display: "",
+                hasError: true,
+                errorMessage: "evaluation incomplete",
+              });
+              recordEquationFromNode(node, equationStore);
+              continue;
+            }
+
             if (hasUnresolvedLiveIdentifiers(node.components, currentVariableContext)) {
               recordLiveResultSuppressed("unresolved");
               recordEquationFromNode(node, equationStore);
@@ -528,6 +542,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
 
           if (node.type === "plainText") {
             const rawLine = lines[index] ?? node.raw ?? "";
+            const trimmedRawLine = rawLine.trim();
             const isReferenceOnlyLine =
               lineReferences.length > 0 &&
               rawLine.replace(/__sp_ref_[a-z0-9]+__/gi, "").trim().length === 0;
@@ -547,6 +562,18 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
                 recordLiveResultSuppressed("plaintext");
               }
             } else {
+              if (/[=<>!]\s*$/.test(trimmedRawLine)) {
+                if (settings.liveResultEnabled) {
+                  recordLiveResultSuppressed("incomplete");
+                }
+                setLineResultState(index + 1, lineId, {
+                  value: null,
+                  display: "",
+                  hasError: true,
+                  errorMessage: "evaluation incomplete",
+                });
+                continue;
+              }
               const candidateNode = parseLine(`${rawLine} =>`, index + 1);
               if (!isExpressionNode(candidateNode)) {
                 if (settings.liveResultEnabled) {
@@ -610,6 +637,35 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
                   });
                 }
               }
+            }
+          }
+
+          if (node.type === "variableAssignment" && settings.liveResultEnabled) {
+            const rawValue = String((node as any).rawValue || "").trim();
+            const variableName = String((node as any).variableName || "");
+            if (
+              rawValue &&
+              shouldShowLiveForAssignmentValue(rawValue, currentVariableContext, functionStore)
+            ) {
+              const variable = variableName ? reactiveStore.getVariable(variableName) : null;
+              const variableValue = variable?.value || null;
+              const variableDisplay = String(variable?.rawValue || "").trim();
+              if (variableValue && !SemanticValueTypes.isError(variableValue as any) && variableDisplay) {
+                collectedRenderNodes.push({
+                  type: "mathResult",
+                  line: index + 1,
+                  expression: rawValue,
+                  result: variableDisplay,
+                  displayText: `${rawValue} => ${variableDisplay}`,
+                  originalRaw: lines[index] ?? node.raw ?? "",
+                  livePreview: true,
+                } as RenderNode);
+                recordLiveResultRendered();
+              } else {
+                recordLiveResultSuppressed("error");
+              }
+            } else {
+              recordLiveResultSuppressed("plaintext");
             }
           }
 

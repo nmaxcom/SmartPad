@@ -237,6 +237,39 @@ body.number-scrubbing * {
   user-select: none !important;
 }
 
+.number-scrub-delta-chip {
+  position: fixed;
+  z-index: 1200;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  opacity: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 80%, black 20%);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: var(--shadow-sm);
+  transition: opacity 90ms ease;
+}
+
+.number-scrub-delta-chip.is-visible {
+  opacity: 1;
+}
+
+.number-scrub-delta-chip.is-positive {
+  border-color: color-mix(in srgb, var(--color-teal) 55%, var(--color-border) 45%);
+  color: var(--color-teal);
+}
+
+.number-scrub-delta-chip.is-negative {
+  border-color: color-mix(in srgb, var(--color-pink) 55%, var(--color-border) 45%);
+  color: var(--color-pink);
+}
+
 .semantic-function {
   color: var(--syntax-function);
   font-weight: 500;
@@ -286,8 +319,9 @@ body.number-scrubbing * {
   font-weight: 600;
   border: 1px solid var(--syntax-result-border);
   display: inline-flex;
-  align-items: baseline;
-  line-height: 1.15;
+  align-items: center;
+  line-height: 1;
+  vertical-align: middle;
   cursor: pointer;
 }
 
@@ -308,8 +342,9 @@ body.number-scrubbing * {
   padding: 1px 6px;
   margin: 0 0.18ch;
   display: inline-flex;
-  align-items: baseline;
-  line-height: 1.15;
+  align-items: center;
+  line-height: 1;
+  vertical-align: middle;
   font-weight: 600;
   cursor: pointer;
   user-select: all;
@@ -453,14 +488,14 @@ body.number-scrubbing * {
 .semantic-wrapper {
   cursor: text;
   display: inline-flex;
-  align-items: baseline;
-  vertical-align: baseline;
+  align-items: center;
+  vertical-align: middle;
 }
 
 .semantic-result-container {
   margin-left: 0;
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
 }
 
 .semantic-result-delta {

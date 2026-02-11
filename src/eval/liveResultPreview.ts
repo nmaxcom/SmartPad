@@ -72,6 +72,33 @@ export const isLikelyLiveExpression = (
   return hasKnownFunctionCall;
 };
 
+export const shouldShowLiveForAssignmentValue = (
+  rawValue: string,
+  variableContext: Map<string, Variable>,
+  functionStore: Map<string, FunctionDefinitionNode>
+): boolean => {
+  const trimmed = rawValue.trim();
+  if (!trimmed) return false;
+
+  const hasMathOperators = /[+\-*/^()]/.test(trimmed);
+  if (hasMathOperators) return true;
+
+  const hasLanguageOperators = /\b(of|off|on|to|in|as|per)\b/i.test(trimmed);
+  if (hasLanguageOperators) return true;
+
+  const hasKnownVariable = Array.from(variableContext.keys()).some((name) =>
+    hasIdentifierBoundaryMatch(trimmed, name)
+  );
+  if (hasKnownVariable) return true;
+
+  const hasKnownFunctionCall = Array.from(functionStore.keys()).some((name) =>
+    new RegExp(`\\b${escapeRegExp(name)}\\s*\\(`).test(trimmed)
+  );
+  if (hasKnownFunctionCall) return true;
+
+  return false;
+};
+
 const collectVariableNames = (components: ExpressionComponent[]): Set<string> => {
   const names = new Set<string>();
   const visit = (items: ExpressionComponent[]) => {
