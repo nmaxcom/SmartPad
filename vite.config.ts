@@ -8,9 +8,6 @@ export default defineConfig({
     strictPort: true,
   },
   build: {
-    sourcemap: true,
-  },
-  esbuild: {
-    sourcemap: true,
+    sourcemap: false,
   },
 });
