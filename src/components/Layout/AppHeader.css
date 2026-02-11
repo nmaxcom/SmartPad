@@ -90,6 +90,30 @@
   transform: rotate(45deg);
 }
 
+.header-report-bug-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--ui-header-divider);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  line-height: 1;
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.header-report-bug-btn:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-accent);
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.header-report-bug-btn i {
+  font-size: 0.95rem;
+}
+
 @media (max-width: 720px) {
   .app-header.header-container {
     display: flex;
@@ -105,5 +129,9 @@
 
   .toggles-group {
     padding-right: 16px;
+  }
+
+  .header-report-bug-btn span {
+    display: none;
   }
 }

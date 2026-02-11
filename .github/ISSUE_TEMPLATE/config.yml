@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Feature request
+    url: https://github.com/nmaxcom/SmartPad/issues/new?template=feature_request.md
+    about: Request a new capability or product improvement.

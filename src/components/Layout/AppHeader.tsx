@@ -6,6 +6,8 @@ interface AppHeaderProps {
   onSettingsClick?: () => void;
 }
 
+const BUG_REPORT_URL = "https://github.com/nmaxcom/SmartPad/issues/new?template=bug_report.yml";
+
 type PanelToggleKey = "showVariablePanel" | "showTemplatePanel" | "showSettingsPanel";
 
 const panelToggles: Array<{ key: PanelToggleKey; icon: string; label: string }> = [
@@ -68,6 +70,18 @@ function AppHeader({ onSettingsClick }: AppHeaderProps) {
             <i className="fas fa-cog" aria-hidden="true" />
           </button>
         )}
+
+        <a
+          className="header-report-bug-btn"
+          href={BUG_REPORT_URL}
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Report a bug"
+          title="Report a bug"
+        >
+          <i className="fas fa-bug" aria-hidden="true" />
+          <span>Report bug</span>
+        </a>
       </div>
     </header>
   );

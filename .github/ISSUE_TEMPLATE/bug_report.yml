@@ -1,0 +1,72 @@
+name: Bug report
+description: Report a problem in SmartPad
+title: "[BUG] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this issue.
+        If possible, include a screenshot and short recording.
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Short description of the bug.
+      placeholder: SmartPad showed an incorrect result after I edited line 3.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the exact steps so we can reproduce reliably.
+      placeholder: |
+        1. Open SmartPad
+        2. Type ...
+        3. Click ...
+        4. See error ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+      description: What should have happened?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+      description: What happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: media
+    attributes:
+      label: Screenshot or video
+      description: Drag and drop an image or video file into this field.
+      placeholder: Paste screenshot/video here.
+  - type: input
+    id: app_url
+    attributes:
+      label: App URL
+      description: URL where this happened.
+      placeholder: https://nmaxcom.github.io/SmartPad/
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      placeholder: Chrome 122, Safari 18.1, Firefox 124...
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: macOS 15.2, Windows 11, iOS 18...
+  - type: textarea
+    id: extra
+    attributes:
+      label: Extra context
+      description: Optional details like console errors or a temporary workaround.
