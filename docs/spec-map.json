@@ -1,0 +1,29 @@
+{
+  "groups": [
+    {
+      "name": "Expression Engine",
+      "specPrefixes": ["src/eval/", "src/parsing/", "docs/Specs/LiveResult.spec.md"],
+      "docPrefixes": ["docs/TestSyntaxGuide.md", "docs/MATH_CAPABILITIES.md", "docs/notes.md"]
+    },
+    {
+      "name": "Units And Conversions",
+      "specPrefixes": ["src/units/", "docs/Specs/duration.spec.md", "docs/Unit.spec.md"],
+      "docPrefixes": ["docs/Unit.spec.md", "docs/MATH_CAPABILITIES.md", "docs/UnitDecisionForks.md"]
+    },
+    {
+      "name": "Currency And FX",
+      "specPrefixes": ["src/services/fxRates.ts", "src/utils/currencyFx.ts", "docs/Specs/Currency.spec.md"],
+      "docPrefixes": ["docs/MATH_CAPABILITIES.md", "docs/notes.md"]
+    },
+    {
+      "name": "Lists And Ranges",
+      "specPrefixes": ["src/utils/listExpression.ts", "src/utils/rangeExpression.ts", "docs/Specs/Lists.spec.md", "docs/Specs/Ranges.spec.md"],
+      "docPrefixes": ["docs/TestSyntaxGuide.md", "docs/MATH_CAPABILITIES.md"]
+    },
+    {
+      "name": "UI Panels And Settings",
+      "specPrefixes": ["src/components/ui/", "src/components/Layout/", "src/state/settingsStore.ts", "docs/Specs/FileManagement.spec.md"],
+      "docPrefixes": ["docs/ABOUT.md", "docs/notes.md"]
+    }
+  ]
+}

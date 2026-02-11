@@ -54,3 +54,16 @@ Default response order:
 ## Scope Notes
 - This manual is project-local and applies to work in this repository.
 - If a future user request conflicts with this manual, follow the direct user request and log the override in the journal.
+
+## Docs Maintenance Mode
+When the user asks for docs maintenance, treat it as executable work, not discussion.
+
+Primary triggers:
+- "Run docs review now" -> run `npm run docs:review`
+- "Run docs drift check" -> run `npm run docs:drift`
+- "Refresh docs from spec" -> follow `docs/AI_DOCS_OPERATIONS.md` refresh workflow
+- "What docs are pending?" -> answer from `docs/EXECUTIVE_JOURNAL.md` Pending Index
+
+After every docs maintenance action:
+1. Report findings or changes.
+2. Update pending tasks in `docs/EXECUTIVE_JOURNAL.md`.

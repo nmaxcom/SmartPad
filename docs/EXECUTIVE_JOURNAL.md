@@ -7,8 +7,9 @@
 | P-2026-02-11-01 | Keep this journal updated each interaction | Assistant | Ongoing | in\_progress | Append one entry per meaningful turn |
 | P-2026-02-11-02 | Implement user-friendly bug reporting workflow | Assistant | 2026-02-12 | done | Delivered GitHub issue form and in-app report button |
 | P-2026-02-11-03 | Push latest commits and confirm Pages deploy URL | User | 2026-02-12 | done | Deployed and user confirmed app works |
-| P-2026-02-11-04 | Design docs site plan linked from app | Assistant | 2026-02-12 | in_progress | Deliver phased execution plan and architecture choices |
-| P-2026-02-11-05 | Define docs-spec sync workflow and enforcement | Assistant | 2026-02-12 | in_progress | Propose CI checks, ownership, and update rules |
+| P-2026-02-11-04 | Design docs site plan linked from app | Assistant | 2026-02-12 | done | Phased plan delivered to user |
+| P-2026-02-11-05 | Define docs-spec sync workflow and enforcement | Assistant | 2026-02-12 | done | AI-run docs ops guide and drift tooling created |
+| P-2026-02-11-06 | Implement actual docs site and app docs link | Assistant | 2026-02-13 | todo | Scaffold docs site and link from app header |
 
 ---
 
@@ -86,3 +87,63 @@
     *   `P-2026-02-11-04` and `P-2026-02-11-05` created and started.
 *   Risks/blockers:
     *   None. Planning task only.
+
+## Entry J-2026-02-11-04
+
+*   Timestamp: 2026-02-11 23:50:41 CET
+*   Summary:
+    *   User requested an AI-only maintenance model for docs with command-like triggers.
+    *   Assistant implemented guide + scripts so docs review/drift checks are executable on demand.
+*   Decisions:
+    *   Replace human owner/triage language with AI workflow triggers.
+    *   Use local scripts and spec map as the source of truth for drift checks.
+*   User directives:
+    *   Build a guide for AI behavior and an easy trigger mechanism for docs review/update tasks.
+*   Assistant commitments:
+    *   Keep using these workflows when user invokes trigger phrases.
+*   Artifacts:
+    *   `docs/AI_DOCS_OPERATIONS.md` (new)
+    *   `docs/spec-map.json` (new)
+    *   `scripts/docs-review.js` (new)
+    *   `scripts/docs-drift-check.js` (new)
+    *   `docs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` (updated with trigger rules)
+    *   `package.json` (added `docs:review` and `docs:drift` scripts)
+*   Pending updates:
+    *   `P-2026-02-11-04` marked `done`.
+    *   `P-2026-02-11-05` marked `done`.
+    *   `P-2026-02-11-06` added for docs site implementation.
+*   Risks/blockers:
+    *   Drift check currently compares mapped prefixes and changed files; map should be refined as codebase evolves.
+
+## Entry J-2026-02-11-05
+
+*   Timestamp: 2026-02-11 23:53:46 CET / 2026-02-11 22:53:46 UTC
+*   Summary:
+    *   Investigated and fixed live-reference interaction regressions reported by user (placeholder gibberish on `=` while building `=>`, copy/paste hijack, alignment drift).
+    *   Expanded live-result behavior to support non-trivial assignment RHS expressions without explicit `=>`.
+*   Decisions:
+    *   Keep copy interception scoped to explicit chip-node selection only; do not hijack normal multi-line copy.
+    *   Suppress live preview on incomplete trailing comparator states (`=`, `<`, `>`, `!`) to avoid internal token leakage during typing.
+    *   Evaluate percentage-phrase assignment previews (`off/on/of`) by bypassing unresolved pre-check for those phrase forms.
+*   User directives:
+    *   Apply assistant manual process.
+    *   Fix chip copy/paste and reference-trigger bugs end-to-end with tests.
+    *   Show live results more often, including percentage/assignment scenarios.
+    *   Keep specs updated.
+*   Assistant commitments:
+    *   Land fixes with targeted unit/e2e coverage.
+    *   Keep spec and implementation-gap docs aligned with current behavior.
+*   Artifacts:
+    *   `src/components/ResultReferenceInteractionExtension.ts`
+    *   `src/components/Editor.tsx`
+    *   `src/eval/liveResultPreview.ts`
+    *   `src/components/Editor.css`
+    *   `tests/e2e/result-reference.spec.ts`
+    *   `tests/e2e/user-issues-fixed.spec.ts`
+    *   `tests/unit/liveResultPreview.test.ts`
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
+    *   `docs/Specs/ResultChipsAndValueGraph.implementation-gaps.md`
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   Rich/plain-text reference remap across arbitrary external edits still needs a deeper interoperability pass (tracked in implementation gaps).
