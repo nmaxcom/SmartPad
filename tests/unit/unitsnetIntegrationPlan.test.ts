@@ -171,6 +171,44 @@ describe("UnitsNet Integration Plan - Comprehensive Feature Tests", () => {
   });
 
   describe("Derived Units and Conversions", () => {
+    test("pressure converted to psi keeps work invariant when reused in expressions", () => {
+      evaluateExpression("pressure psi = 101 kPa to psi");
+      evaluateExpression("pressure si = 101 kPa");
+      evaluateExpression("volume = 2 L");
+
+      const workPsi = evaluateExpression("work psi = pressure psi * volume =>");
+      const workSi = evaluateExpression("work si = pressure si * volume =>");
+
+      expect(workPsi?.type).toBe("combined");
+      expect(workSi?.type).toBe("combined");
+      if (workPsi?.type === "combined" && workSi?.type === "combined") {
+        expect((workPsi as any).result).toMatch(/\bJ\b/);
+        expect((workSi as any).result).toMatch(/\bJ\b/);
+        expect(parseFloat((workPsi as any).result)).toBeCloseTo(202, 2);
+        expect(parseFloat((workSi as any).result)).toBeCloseTo(202, 2);
+      }
+    });
+
+    test("other pressure units (bar, atm) also preserve pressure-volume energy", () => {
+      evaluateExpression("volume one = 1 L");
+
+      evaluateExpression("pressure bar = 1 bar to psi");
+      const workBar = evaluateExpression("work bar = pressure bar * volume one =>");
+      expect(workBar?.type).toBe("combined");
+      if (workBar?.type === "combined") {
+        expect((workBar as any).result).toMatch(/\bJ\b/);
+        expect(parseFloat((workBar as any).result)).toBeCloseTo(100, 2);
+      }
+
+      evaluateExpression("pressure atm = 1 atm to psi");
+      const workAtm = evaluateExpression("work atm = pressure atm * volume one =>");
+      expect(workAtm?.type).toBe("combined");
+      if (workAtm?.type === "combined") {
+        expect((workAtm as any).result).toMatch(/\bJ\b/);
+        expect(parseFloat((workAtm as any).result)).toBeCloseTo(101.325, 2);
+      }
+    });
+
     test("speed per time yields acceleration and converts", () => {
       evaluateExpression("accel time = 6 s");
       evaluateExpression("initial speed = 4 m/s");

@@ -11,6 +11,7 @@ import { Node as ProseMirrorNode } from "prosemirror-model";
 import { Variable } from "../state/types";
 import { UnitValue } from "../types";
 import { parseLine } from "../parsing/astParser";
+import { isLikelyLiveExpression } from "../eval/liveResultPreview";
 import type { ASTNode } from "../parsing/ast";
 import {
   isPlainTextNode,
@@ -21,6 +22,56 @@ import {
   isErrorNode,
   isFunctionDefinitionNode,
 } from "../parsing/ast";
+
+const LIVE_HIGHLIGHT_KEYWORD_REGEX = /\b(to|in|of|on|off|as|is|per)\b/i;
+const PURE_NUMBER_REGEX = /^[-+]?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?:[eE][+-]?\d+)?$/;
+
+const shouldHighlightPlainTextAsExpression = (
+  text: string,
+  variableContext: Map<string, Variable>
+): boolean => {
+  const trimmed = text.trim();
+  if (!trimmed) return false;
+  if (trimmed.startsWith("#") || trimmed.startsWith("//") || trimmed.startsWith("@")) {
+    return false;
+  }
+  if (trimmed.includes("=>") || trimmed.includes("=")) {
+    return false;
+  }
+
+  const hasStrongSignal =
+    /[+\-*/^%()]/.test(trimmed) ||
+    LIVE_HIGHLIGHT_KEYWORD_REGEX.test(trimmed) ||
+    /[$€£¥₹₿]/.test(trimmed) ||
+    /\b[a-zA-Z_][a-zA-Z0-9_]*\s*\(/.test(trimmed) ||
+    PURE_NUMBER_REGEX.test(trimmed);
+
+  if (!hasStrongSignal) {
+    return false;
+  }
+
+  return isLikelyLiveExpression(trimmed, variableContext, new Map());
+};
+
+const getTokenizableLineText = (node: ProseMirrorNode): string => {
+  let text = "";
+  node.descendants((child) => {
+    if (child.type?.name === "resultToken") {
+      return false;
+    }
+    if (child.type?.name === "referenceToken") {
+      // Reference atoms occupy a single position in ProseMirror; mirror that
+      // in token text to keep highlight offsets aligned with rendered content.
+      text += "§";
+      return false;
+    }
+    if (child.isText) {
+      text += child.text || "";
+    }
+    return undefined;
+  });
+  return text;
+};
 
 // Token types that can be identified in mathematical expressions
 export type TokenType =
@@ -151,98 +202,72 @@ export const SemanticHighlightExtension = Extension.create({
       };
     const evaluateNode = this.options.evaluateNode || (() => null);
 
+    const buildDecorations = (doc: ProseMirrorNode): DecorationSet => {
+      const decorations: Decoration[] = [];
+
+      doc.forEach((node: ProseMirrorNode, offset: number) => {
+        if (node.type.name !== "paragraph") {
+          return;
+        }
+
+        const text = getTokenizableLineText(node);
+        const lineNumber = Math.floor(offset / 100); // Approximate line number
+        const astNode = parseLine(text, lineNumber); // Parse text into AST
+        const variableContext = getVariableContext();
+        let tokens = extractTokensFromASTNode(astNode, variableContext);
+        if (
+          tokens.length === 0 &&
+          isPlainTextNode(astNode) &&
+          shouldHighlightPlainTextAsExpression(text, variableContext)
+        ) {
+          tokens = tokenizeExpression(text, 0, variableContext);
+        }
+        const resultRanges: Array<{ from: number; to: number }> = [];
+
+        node.descendants((child, pos) => {
+          if (child.type?.name === "resultToken") {
+            const from = offset + pos + 1;
+            const to = from + child.nodeSize - 1;
+            resultRanges.push({ from, to });
+            return false;
+          }
+          return true;
+        });
+
+        tokens.forEach((token) => {
+          const from = offset + token.start + 1; // +1 for paragraph node
+          const to = offset + token.end + 1;
+          const isInResult = resultRanges.some((range) => from < range.to && to > range.from);
+          if (isInResult) {
+            return;
+          }
+
+          const decoration = Decoration.inline(from, to, {
+            class: token.className
+              ? `semantic-${token.type} ${token.className}`
+              : `semantic-${token.type}`,
+          });
+          decorations.push(decoration);
+        });
+      });
+
+      return DecorationSet.create(doc, decorations);
+    };
+
     return [
       new Plugin({
         key: new PluginKey("semanticHighlight"),
 
         state: {
-          init() {
-            return DecorationSet.empty;
+          init(_, state) {
+            return buildDecorations(state.doc);
           },
 
           apply(tr, oldState) {
-            // Only update if document changed
             if (!tr.docChanged) {
               return oldState.map(tr.mapping, tr.doc);
             }
-
-            const decorations: Decoration[] = [];
-            const doc = tr.doc;
-
-            // Process each paragraph
-            doc.forEach((node: ProseMirrorNode, offset: number) => {
-              if (node.type.name === "paragraph") {
-                const text = node.textContent;
-                const lineNumber = Math.floor(offset / 100); // Approximate line number
-                const astNode = parseLine(text, lineNumber); // Parse text into AST
-                const tokens = extractTokensFromASTNode(astNode, getVariableContext());
-                const resultRanges: Array<{ from: number; to: number }> = [];
-
-                node.descendants((child, pos) => {
-                  if (child.type?.name === "resultToken") {
-                    const from = offset + pos + 1;
-                    const to = from + child.nodeSize - 1;
-                    resultRanges.push({ from, to });
-                    return false;
-                  }
-                  return true;
-                });
-
-                // Apply decorations for each token
-                tokens.forEach((token) => {
-                  const from = offset + token.start + 1; // +1 for paragraph node
-                  const to = offset + token.end + 1;
-                  const isInResult = resultRanges.some(
-                    (range) => from < range.to && to > range.from
-                  );
-                  if (isInResult) {
-                    return;
-                  }
-
-                  // Create inline decoration with appropriate class
-                  const decoration = Decoration.inline(from, to, {
-                    class: token.className
-                      ? `semantic-${token.type} ${token.className}`
-                      : `semantic-${token.type}`,
-                  });
-                  decorations.push(decoration);
-                });
-
-                // Remove result widget logic to make highlighter colour-only
-                // CRITICAL: Add result/error decorations for trigger expressions
-                // if (text.includes("=>")) {
-                //   const arrowIndex = text.indexOf("=>");
-                //   const afterArrow = text.substring(arrowIndex + 2).trim();
-                //
-                //   // If there's no result text after the arrow, compute and display it via decoration
-                //   if (!afterArrow) {
-                //     try {
-                //       // Simple local evaluation for decoration purposes only
-                //       const expressionText = text.substring(0, arrowIndex).trim();
-                //
-                //       const enhancedContext = buildEnhancedVariableContext(doc, offset, getVariableContext());
-                //
-                //       Results are now handled by ResultsDecoratorExtension via AST pipeline
-                //         expressionText,
-                //         enhancedContext
-                //       );
-                //
-                //       if (result) {
-                //         // Create a decoration that appears AFTER the trigger, not spanning it
-                //         const triggerEndPosition = offset + arrowIndex + 2 + 1; // +1 for paragraph node
-                //
-                //         // Use widget decoration to insert result after the trigger
-                //         // (Removed: handled by ResultsDecorator plugin in new architecture)
-                //       }
-                //     } catch (error) {
-                //       // Ignore errors in decoration phase
-                //     }
-                //   }
-                // }
-              }
-            });
-
-            return DecorationSet.create(doc, decorations);
+            return buildDecorations(tr.doc);
           },
         },
 

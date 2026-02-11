@@ -118,7 +118,13 @@ export class SmartPadQuantity {
   }
 
   static fromQuantity(quantity: Quantity): SmartPadQuantity {
-    return new SmartPadQuantity(quantity.value, quantity.unit.toString(), undefined, quantity);
+    const displayQuantity = quantity.toDisplayQuantity();
+    return new SmartPadQuantity(
+      displayQuantity.value,
+      displayQuantity.unit.toString(),
+      undefined,
+      displayQuantity
+    );
   }
 
   /**

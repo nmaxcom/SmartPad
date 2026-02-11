@@ -256,6 +256,29 @@ describe("Quantity", () => {
 
     expect(kineticEnergy.value).toBe(2000);
   });
+
+  test("should preserve magnitude when mapping composite pressure-volume to joules", () => {
+    const pressure = Quantity.fromUnit(1, "psi");
+    const volume = Quantity.fromUnit(1, "L");
+
+    const work = pressure.multiply(volume).toDisplayQuantity();
+    expect(work.unit.toString()).toBe("J");
+    expect(work.value).toBeCloseTo(6.894757, 6);
+  });
+
+  test("should keep equivalent work invariant across pressure unit conversions", () => {
+    const pressureSI = Quantity.fromUnit(101, "kPa");
+    const pressureImperial = pressureSI.convertTo("psi");
+    const volume = Quantity.fromUnit(2, "L");
+
+    const workSI = pressureSI.multiply(volume).toDisplayQuantity();
+    const workImperial = pressureImperial.multiply(volume).toDisplayQuantity();
+
+    expect(workSI.unit.toString()).toBe("J");
+    expect(workImperial.unit.toString()).toBe("J");
+    expect(workSI.value).toBeCloseTo(202, 6);
+    expect(workImperial.value).toBeCloseTo(202, 6);
+  });
 });
 
 describe("UnitParser", () => {

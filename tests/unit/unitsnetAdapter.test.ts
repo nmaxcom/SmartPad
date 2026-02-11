@@ -56,6 +56,16 @@ describe("UnitsNet.js Adapter", () => {
       expect(result.unit).toBe("m^2");
     });
 
+    test("should preserve energy magnitude for pressure-volume products after conversion", () => {
+      const pressure = SmartPadQuantity.fromValueAndUnit(101, "kPa").convertTo("psi");
+      const volume = SmartPadQuantity.fromValueAndUnit(2, "L");
+      const work = pressure.multiply(volume);
+
+      expect(work.unit).toBe("J");
+      expect(work.value).toBeCloseTo(202, 4);
+      expect(work.toString(4)).toMatch(/202(\.0+)?\s*J/);
+    });
+
     test("should divide quantities correctly", () => {
       const q1 = new SmartPadQuantity(100, "m");
       const q2 = new SmartPadQuantity(10, "s");

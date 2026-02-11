@@ -26,6 +26,16 @@ export interface UnitComponent {
   readonly power: number;
 }
 
+const DERIVED_UNIT_SPECS: Array<{ symbol: string; dimension: Dimension }> = [
+  { symbol: "Hz", dimension: createDimension(0, 0, -1) }, // Frequency: 1/s
+  { symbol: "N", dimension: createDimension(1, 1, -2) }, // Force: kg*m/s^2
+  { symbol: "Pa", dimension: createDimension(-1, 1, -2) }, // Pressure: kg/(m*s^2)
+  { symbol: "J", dimension: createDimension(2, 1, -2) }, // Energy: kg*m^2/s^2
+  { symbol: "W", dimension: createDimension(2, 1, -3) }, // Power: kg*m^2/s^3
+  { symbol: "V", dimension: createDimension(2, 1, -3, -1) }, // Voltage: kg*m^2/(A*s^3)
+  { symbol: "ohm", dimension: createDimension(2, 1, -3, -2) }, // Resistance: kg*m^2/(A^2*s^3)
+];
+
 /**
  * A composite unit that can represent complex units like "kg*m/s^2"
  */
@@ -182,9 +192,9 @@ export class CompositeUnit {
     }
 
     // Try to find a derived unit that matches this dimension
-    const derivedUnit = this.findDerivedUnit();
+    const derivedUnit = this.getDerivedUnitDefinition();
     if (derivedUnit) {
-      return derivedUnit;
+      return derivedUnit.symbol;
     }
 
     const positiveComponents: string[] = [];
@@ -223,23 +233,16 @@ export class CompositeUnit {
   /**
    * Try to find a derived SI unit that matches this composite unit's dimension
    */
-  private findDerivedUnit(): string | null {
+  getDerivedUnitDefinition(): UnitDefinition | null {
+    if (this.components.length <= 1) {
+      return null;
+    }
+
     const dimension = this.getDimension();
 
-    // Check common derived units
-    const derivedUnits = [
-      { symbol: "Hz", dimension: createDimension(0, 0, -1) }, // Frequency: 1/s
-      { symbol: "N", dimension: createDimension(1, 1, -2) }, // Force: kg*m/s^2
-      { symbol: "Pa", dimension: createDimension(-1, 1, -2) }, // Pressure: kg/(m*s^2)
-      { symbol: "J", dimension: createDimension(2, 1, -2) }, // Energy: kg*m^2/s^2
-      { symbol: "W", dimension: createDimension(2, 1, -3) }, // Power: kg*m^2/s^3
-      { symbol: "V", dimension: createDimension(2, 1, -3, -1) }, // Voltage: kg*m^2/(A*s^3)
-      { symbol: "ohm", dimension: createDimension(2, 1, -3, -2) }, // Resistance: kg*m^2/(A^2*s^3)
-    ];
-
-    for (const unit of derivedUnits) {
+    for (const unit of DERIVED_UNIT_SPECS) {
       if (dimensionsEqual(dimension, unit.dimension)) {
-        return unit.symbol;
+        return defaultUnitRegistry.get(unit.symbol) || null;
       }
     }
 
@@ -361,6 +364,26 @@ export class Quantity {
   }
 
   /**
+   * Convert composite units that map to a derived SI symbol while preserving value.
+   * Example: psi*L -> J applies the required scalar conversion.
+   */
+  toDisplayQuantity(): Quantity {
+    const derived = this.unit.getDerivedUnitDefinition();
+    if (!derived) {
+      return this;
+    }
+
+    const sourceFactor = this.unit.getBaseConversionFactor();
+    const targetFactor = derived.baseMultiplier;
+    if (!isFinite(sourceFactor) || !isFinite(targetFactor) || targetFactor === 0) {
+      return this;
+    }
+
+    const convertedValue = (this.value * sourceFactor) / targetFactor;
+    return new Quantity(convertedValue, CompositeUnit.fromUnit(derived));
+  }
+
+  /**
    * Convert to a different compatible unit
    */
   convertTo(targetUnitSymbol: string): Quantity {
@@ -406,11 +429,13 @@ export class Quantity {
    * Format the quantity for display
    */
   toString(precision = 6): string {
+    const displayQuantity = this.toDisplayQuantity();
+
     // Format the value
-    const formattedValue = parseFloat(this.value.toPrecision(precision));
+    const formattedValue = parseFloat(displayQuantity.value.toPrecision(precision));
 
     // Format the unit
-    let unitStr = this.unit.toString();
+    let unitStr = displayQuantity.unit.toString();
     unitStr = formatUnitLabel(unitStr, formattedValue);
 
     if (unitStr === "1") {

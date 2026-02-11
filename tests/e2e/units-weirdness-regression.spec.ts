@@ -112,4 +112,22 @@ test.describe("Units: replicate user-reported weirdness and guard against regres
       /15 m\^2/
     );
   });
+
+  test("pressure converted to psi keeps work invariant when reused", async ({ page }) => {
+    const editor = page.locator(".ProseMirror");
+
+    await editor.type("pressure psi = 101 kPa to psi");
+    await page.keyboard.press("Enter");
+    await editor.type("pressure si = 101 kPa");
+    await page.keyboard.press("Enter");
+    await editor.type("volume = 2 L");
+    await page.keyboard.press("Enter");
+    await editor.type("work psi = pressure psi * volume =>");
+    await page.keyboard.press("Enter");
+    await editor.type("work si = pressure si * volume =>");
+
+    const results = page.locator(".semantic-result-display");
+    await expect(results.nth(0)).toHaveAttribute("data-result", /202(?:\.0+)?\s*J/);
+    await expect(results.nth(1)).toHaveAttribute("data-result", /202(?:\.0+)?\s*J/);
+  });
 });
