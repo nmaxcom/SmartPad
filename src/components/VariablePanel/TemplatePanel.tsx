@@ -859,6 +859,20 @@ unknownVar + 1 =>
 4lb to kg =>
 `,
   },
+  {
+    id: "result-chip-graph",
+    emoji: "🧩",
+    name: "Value Graph",
+    content: `# Result Chip Graph Playground
+# 1) place cursor at the end of "tax = "
+# 2) click or drag [120] into this line
+subtotal = 120 =>
+tax =
+
+# 3) after insertion, continue typing:
+# * 0.15
+`,
+  },
 ];
 
 function TemplatePanel() {

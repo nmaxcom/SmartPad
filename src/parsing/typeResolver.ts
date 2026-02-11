@@ -287,7 +287,7 @@ export function validateExpressionTypes(
   if (options.allowUnknownVariables) {
     const hasUnknown = (items: ExpressionComponent[]): boolean =>
       items.some((component) => {
-        if (component.type === "variable") {
+        if (component.type === "variable" || component.type === "resultReference") {
           return !variables.has(component.value);
         }
         if (component.type === "parentheses" && component.children) {

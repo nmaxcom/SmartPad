@@ -213,6 +213,7 @@ const buildSolveExpression = (components: ExpressionComponent[]): SolveExpressio
         };
         break;
       case "variable":
+      case "resultReference":
         node = { type: "variable", name: normalizeVariableName(component.value) };
         break;
       case "parentheses":

@@ -6,6 +6,7 @@
 
 import { ExpressionComponent, ListAccessDetails } from './ast';
 import { CurrencyValue, SemanticParsers, parseListLiteral } from '../types';
+import { isReferencePlaceholder } from "../references/referenceIds";
 
 /**
  * Token types for the lexer
@@ -545,6 +546,15 @@ export function parseExpressionComponents(expression: string): ExpressionCompone
             value: funcName,
             args,
           });
+          break;
+        }
+
+        if (isReferencePlaceholder(token.value)) {
+          components.push({
+            type: "resultReference",
+            value: token.value,
+          });
+          pos++;
           break;
         }
 

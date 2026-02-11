@@ -342,6 +342,82 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
 
         <div className="settings-item settings-item-stack">
           <div className="settings-item-info">
+            <label htmlFor={`${idPrefix}-result-lane-enabled`} className="settings-label">
+              Result Lane
+            </label>
+            <p className="settings-description">
+              Align result chips into a consistent right-side lane on wide screens. SmartPad
+              automatically falls back to inline chips on narrow screens.
+            </p>
+          </div>
+          <div className="settings-control">
+            <label className="toggle-switch">
+              <input
+                id={`${idPrefix}-result-lane-enabled`}
+                type="checkbox"
+                checked={settings.resultLaneEnabled}
+                onChange={(e) => updateSetting("resultLaneEnabled", e.target.checked)}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div className="settings-item settings-item-stack">
+          <div className="settings-item-info">
+            <label htmlFor={`${idPrefix}-chip-insert-mode`} className="settings-label">
+              Result chip click behavior
+            </label>
+            <p className="settings-description">
+              Choose what gets inserted when you click a result: a live reference chip (keeps
+              tracking updates) or the current plain value snapshot.
+            </p>
+          </div>
+          <div className="settings-control">
+            <select
+              id={`${idPrefix}-chip-insert-mode`}
+              value={settings.chipInsertMode}
+              onChange={(e) =>
+                updateSetting("chipInsertMode", e.target.value === "value" ? "value" : "reference")
+              }
+              className="settings-select"
+            >
+              <option value="reference">Insert reference chip</option>
+              <option value="value">Insert plain value</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="settings-item settings-item-stack">
+          <div className="settings-item-info">
+            <label htmlFor={`${idPrefix}-reference-text-export-mode`} className="settings-label">
+              Reference text copy/export
+            </label>
+            <p className="settings-description">
+              Preserve keeps stable SmartPad reference tokens in plain text. Readable flattens
+              references to visible values.
+            </p>
+          </div>
+          <div className="settings-control">
+            <select
+              id={`${idPrefix}-reference-text-export-mode`}
+              value={settings.referenceTextExportMode}
+              onChange={(e) =>
+                updateSetting(
+                  "referenceTextExportMode",
+                  e.target.value === "readable" ? "readable" : "preserve"
+                )
+              }
+              className="settings-select"
+            >
+              <option value="preserve">Preserve references</option>
+              <option value="readable">Readable values</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="settings-item settings-item-stack">
+          <div className="settings-item-info">
             <label htmlFor={`${idPrefix}-list-max-length`} className="settings-label">
               Max items per list
             </label>

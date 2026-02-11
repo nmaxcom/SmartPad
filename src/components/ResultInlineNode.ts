@@ -7,7 +7,7 @@ export const ResultInlineNode = Node.create({
   group: "inline",
   content: "text*",
   selectable: false,
-  draggable: false,
+  draggable: true,
 
   addAttributes() {
     return {
@@ -23,6 +23,18 @@ export const ResultInlineNode = Node.create({
       delta: {
         default: "",
       },
+      sourceLineId: {
+        default: "",
+        parseHTML: (element) => element.getAttribute("data-source-line-id") || "",
+      },
+      sourceLine: {
+        default: 0,
+        parseHTML: (element) => Number(element.getAttribute("data-source-line") || 0),
+      },
+      sourceLabel: {
+        default: "",
+        parseHTML: (element) => element.getAttribute("data-source-label") || "",
+      },
     };
   },
 
@@ -35,6 +47,9 @@ export const ResultInlineNode = Node.create({
     const isError = !!node.attrs.isError;
     const flash = !!node.attrs.flash;
     const delta = node.attrs.delta || "";
+    const sourceLineId = String(node.attrs.sourceLineId || "");
+    const sourceLine = Number(node.attrs.sourceLine || 0);
+    const sourceLabel = String(node.attrs.sourceLabel || "");
     const resultClass = isError ? "semantic-error-result" : "semantic-result-display";
 
     const resultClasses = [resultClass];
@@ -47,8 +62,12 @@ export const ResultInlineNode = Node.create({
       {
         class: resultClasses.join(" "),
         "data-result": value,
+        "data-source-line-id": sourceLineId,
+        "data-source-line": sourceLine > 0 ? String(sourceLine) : "",
+        "data-source-label": sourceLabel,
         title: value,
         "aria-label": value,
+        draggable: "true",
       },
       0,
     ];

@@ -5,6 +5,9 @@ antinote, p, figr.app, aybo.app, calca.io, numi.app, Soulver 3, notepadcalculato
 # UI inspiration
 https://dribbble.com/shots/24984990-Deposit-Calculator-UI-Kit-Widgets
 
+# TODO
+- finalizar [spec implementation](./Specs/ResultChipsAndValueGraph.implementation-gaps.md)
+- 
 # nuevas ideas
 Instead of just solve, allow a user to right-click a result and say "Make this result 1000 by changing [variable]." The app then writes the solve syntax for them at the bottom of the document.
 mostrar ventanita/prediccion al empezar a escribir variable name

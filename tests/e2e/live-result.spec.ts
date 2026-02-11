@@ -43,6 +43,54 @@ test.describe("Live Result", () => {
     await expect(liveResults.nth(3)).toHaveAttribute("data-result", "15");
   });
 
+  test("live result visuals match triggered results and flash on update", async ({ page }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("3*4");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("3*4=>");
+    await waitForUIRenderComplete(page);
+    await page.waitForTimeout(950);
+
+    const styles = await page.evaluate(() => {
+      const live = document.querySelector(
+        ".ProseMirror p:first-child .semantic-live-result-display"
+      ) as HTMLElement | null;
+      const triggered = document.querySelector(
+        ".ProseMirror p:nth-child(2) .semantic-result-display"
+      ) as HTMLElement | null;
+      if (!live || !triggered) return null;
+      const liveStyle = window.getComputedStyle(live);
+      const triggeredStyle = window.getComputedStyle(triggered);
+      return {
+        liveColor: liveStyle.color,
+        triggeredColor: triggeredStyle.color,
+        liveBackground: liveStyle.backgroundColor,
+        triggeredBackground: triggeredStyle.backgroundColor,
+      };
+    });
+
+    expect(styles).not.toBeNull();
+    expect((styles as any).liveColor).toBe((styles as any).triggeredColor);
+    expect((styles as any).liveBackground).toBe((styles as any).triggeredBackground);
+
+    await page.evaluate(() => {
+      const editorInstance = (window as any).tiptapEditor;
+      const { state, view } = editorInstance;
+      const firstLineNode = state.doc.child(0);
+      const from = 1;
+      const to = from + firstLineNode.content.size;
+      const tr = state.tr.replaceWith(from, to, state.schema.text("3*5"));
+      view.dispatch(tr);
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    const liveChip = page.locator(".ProseMirror p").first().locator(".semantic-live-result-display");
+    await expect(liveChip).toHaveAttribute("data-result", "15");
+    await expect(liveChip).toHaveClass(/semantic-result-flash/);
+  });
+
   test("renders the template playground with complete live-result coverage", async ({
     page,
   }) => {
@@ -70,6 +118,44 @@ test.describe("Live Result", () => {
       Number.parseFloat(window.getComputedStyle(el).marginLeft || "0")
     );
     expect(marginLeftPx).toBeGreaterThan(0);
+  });
+
+  test("keeps live-result rows visually aligned without changing row height", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("3*4");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("just notes here");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("5*6");
+    await waitForUIRenderComplete(page);
+
+    const geometry = await page.evaluate(() => {
+      const lines = Array.from(document.querySelectorAll(".ProseMirror p"));
+      const first = lines[0] as HTMLElement | undefined;
+      const second = lines[1] as HTMLElement | undefined;
+      if (!first || !second) return null;
+      const firstChip = first.querySelector(".semantic-live-result-display") as HTMLElement | null;
+      if (!firstChip) return null;
+
+      const firstRect = first.getBoundingClientRect();
+      const secondRect = second.getBoundingClientRect();
+      const chipRect = firstChip.getBoundingClientRect();
+      const firstCenter = firstRect.top + firstRect.height / 2;
+      const chipCenter = chipRect.top + chipRect.height / 2;
+
+      return {
+        firstHeight: firstRect.height,
+        secondHeight: secondRect.height,
+        centerDelta: Math.abs(firstCenter - chipCenter),
+      };
+    });
+
+    expect(geometry).not.toBeNull();
+    expect(Math.abs((geometry as any).firstHeight - (geometry as any).secondHeight)).toBeLessThanOrEqual(2);
+    expect((geometry as any).centerDelta).toBeLessThanOrEqual(2.5);
   });
 
   test("suppresses live errors for incomplete and unresolved expressions", async ({ page }) => {

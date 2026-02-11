@@ -76,7 +76,7 @@ const collectVariableNames = (components: ExpressionComponent[]): Set<string> =>
   const names = new Set<string>();
   const visit = (items: ExpressionComponent[]) => {
     items.forEach((component) => {
-      if (component.type === "variable") {
+      if (component.type === "variable" || component.type === "resultReference") {
         names.add(component.value);
       }
       if (component.type === "listAccess" && component.access) {
@@ -169,4 +169,3 @@ export const getLiveResultMetrics = (): LiveResultMetrics => {
     live_result_eval_ms_avg: avg,
   };
 };
-

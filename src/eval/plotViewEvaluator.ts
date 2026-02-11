@@ -55,7 +55,7 @@ const buildExpressionNodeFromText = (expression: string, line: number): Expressi
 
 const findFirstVariable = (components: ExpressionNode["components"]): string | null => {
   for (const component of components) {
-    if (component.type === "variable") {
+    if (component.type === "variable" || component.type === "resultReference") {
       return component.value;
     }
     if (component.children) {

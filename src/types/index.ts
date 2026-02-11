@@ -306,9 +306,12 @@ const parseSingleValue = (input: string): SemanticValue | null => {
     if (dateValue) return dateValue;
   }
 
-  if (trimmed.match(/^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/)) {
+  const groupedSignedNumberPattern = new RegExp(
+    `^[+-]?(?:\\d{1,3}(?:,\\d{3})+|\\d+)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$`
+  );
+  if (groupedSignedNumberPattern.test(trimmed)) {
     try {
-      return NumberValue.from(trimmed);
+      return NumberValue.from(trimmed.replace(/,/g, ""));
     } catch {
       return null;
     }

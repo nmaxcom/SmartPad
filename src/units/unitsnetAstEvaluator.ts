@@ -59,6 +59,17 @@ import { applyThousandsSeparator } from "../utils/numberFormatting";
 import { parseUnitTargetWithScale } from "./unitConversionTarget";
 import { extractConversionSuffix } from "../utils/conversionSuffix";
 
+const containsResultReferenceComponent = (expression: string): boolean => {
+  const trimmed = expression.trim();
+  if (!trimmed) return false;
+  try {
+    const components = parseExpressionComponents(trimmed);
+    return components.some((component) => component.type === "resultReference");
+  } catch {
+    return /__sp_ref_[a-z0-9]+__/i.test(trimmed);
+  }
+};
+
 function rewriteSimpleTimeLiterals(expression: string): string {
   // Preserve user-provided time units so compound-unit cancellation and display
   // stay intuitive (e.g., L/min * min => L).
@@ -300,6 +311,9 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     // For variable assignments, check if the value contains units or variables
     if (isVariableAssignmentNode(node)) {
       const valueStr = (node.rawValue || node.parsedValue?.toString() || "").trim();
+      if (containsResultReferenceComponent(valueStr)) {
+        return false;
+      }
       const hasUnits = expressionContainsUnitsNet(valueStr);
       const hasConstants = this.containsMathematicalConstants(valueStr);
       const hasVariables = /\b[a-zA-Z_][a-zA-Z0-9_]*\b/.test(valueStr); // Check for variable names
@@ -308,6 +322,9 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
 
     // For expression and combined assignment nodes, check the expression
     const expression = isExpressionNode(node) ? node.expression : node.expression;
+    if (containsResultReferenceComponent(expression)) {
+      return false;
+    }
     if (/\bwhere\b/i.test(expression)) {
       return false;
     }

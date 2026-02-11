@@ -84,6 +84,37 @@ test.describe("Semantic Highlighting", () => {
     await expect(line2.locator(".semantic-currency", { hasText: "€" })).toBeVisible();
   });
 
+  test("highlights conversion expressions without => when they are valid live expressions", async ({
+    page,
+  }) => {
+    await page.keyboard.type("30 euros to USD");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("4lb to kg");
+    await waitForUIRenderComplete(page);
+
+    const firstLine = page.locator(".ProseMirror p").nth(0);
+    await expect(firstLine.locator(".semantic-scrubbableNumber", { hasText: "30" })).toBeVisible();
+    await expect(firstLine.locator(".semantic-unit", { hasText: "euros" })).toBeVisible();
+    await expect(firstLine.locator(".semantic-keyword", { hasText: "to" })).toBeVisible();
+    await expect(firstLine.locator(".semantic-unit", { hasText: "USD" })).toBeVisible();
+    await expect(firstLine.locator(".semantic-live-result-display")).toHaveCount(1);
+
+    const secondLine = page.locator(".ProseMirror p").nth(1);
+    await expect(secondLine.locator(".semantic-scrubbableNumber", { hasText: "4" })).toBeVisible();
+    await expect(secondLine.locator(".semantic-unit", { hasText: "lb" })).toBeVisible();
+    await expect(secondLine.locator(".semantic-keyword", { hasText: "to" })).toBeVisible();
+    await expect(secondLine.locator(".semantic-unit", { hasText: "kg" })).toBeVisible();
+    await expect(secondLine.locator(".semantic-live-result-display")).toHaveCount(1);
+  });
+
+  test("keeps plain text lines unhighlighted without =>", async ({ page }) => {
+    await page.keyboard.type("just notes here");
+    await waitForUIRenderComplete(page);
+
+    const line = page.locator(".ProseMirror p").first();
+    await expect(line.locator('[class*="semantic-"]')).toHaveCount(0);
+  });
+
   test("highlights underscore variables and numbers in expressions", async ({ page }) => {
     await page.keyboard.type("pa_s = 2");
     await page.keyboard.press("Enter");

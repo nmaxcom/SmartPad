@@ -2,6 +2,7 @@ import React from "react";
 import { useVariables } from "../../state";
 import { useSettingsContext } from "../../state/SettingsContext";
 import { getDateLocaleEffective } from "../../types/DateValue";
+import { sanitizeReferencePlaceholdersForDisplay } from "../../references/referenceIds";
 import "./VariablePanel.css";
 
 function VariablePanel() {
@@ -23,17 +24,21 @@ function VariablePanel() {
   // Helper function to format variable values using SemanticValue's toString()
   const formatVariableValue = (variable: any) => {
     if (variable.value?.toString) {
-      return variable.value.toString(displayOptions);
+      return sanitizeReferencePlaceholdersForDisplay(
+        variable.value.toString(displayOptions)
+      );
     }
-    return String(variable.value);
+    return sanitizeReferencePlaceholdersForDisplay(String(variable.value));
   };
 
   // Helper function to get the display value for computed values in the panel
   const getComputedDisplayValue = (variable: any) => {
     if (variable.value?.toString) {
-      return variable.value.toString(displayOptions);
+      return sanitizeReferencePlaceholdersForDisplay(
+        variable.value.toString(displayOptions)
+      );
     }
-    return String(variable.value);
+    return sanitizeReferencePlaceholdersForDisplay(String(variable.value));
   };
 
   return (
@@ -51,12 +56,14 @@ function VariablePanel() {
                     {variable.rawValue &&
                     variable.rawValue !== variable.value?.toString(displayOptions) ? (
                       <>
-                        <span className="variable-raw-value">{variable.rawValue}</span>
+                        <span className="variable-raw-value">
+                          {sanitizeReferencePlaceholdersForDisplay(variable.rawValue)}
+                        </span>
                         <span className="variable-equals">=</span>
                         <span className="variable-computed-value">
                           {(() => {
                             if (variable.value?.toString) {
-                              const value = variable.value.toString(displayOptions);
+                              const value = getComputedDisplayValue(variable);
                               const type = variable.value.getType();
                               return (
                                 <>

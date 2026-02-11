@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
 import JSZip from "jszip";
-import Editor, { EditorProvider } from "./components/Editor";
+import Editor, { EditorProvider, useEditorContext } from "./components/Editor";
 import { VariableProvider } from "./state";
 import { SettingsProvider, useSettingsContext } from "./state/SettingsContext";
 import { SheetProvider, useSheetContext } from "./state/SheetContext";
@@ -14,6 +14,8 @@ import { tracer, setLogLevel, LogLevel } from "./eval/tracing";
 import { DEFAULT_SHEET_TITLE, deriveTitleFromContent } from "./utils/sheetTitle";
 import { initFxRates } from "./services/fxRates";
 import { useFxStatus } from "./hooks/useFxStatus";
+import { getSmartPadText } from "./components/editorText";
+import { sanitizeReferencePlaceholdersForDisplay } from "./references/referenceIds";
 
 const SHEET_DRAG_TYPE = "application/x-smartpad-sheet";
 
@@ -136,6 +138,8 @@ function AppContent() {
 }
 
 function SheetSidebar() {
+  const { settings } = useSettingsContext();
+  const { editor } = useEditorContext();
   const {
     sheets,
     activeSheetId,
@@ -183,8 +187,18 @@ function SheetSidebar() {
     return safe ? safe.replace(/\s+/g, "_") : "smartpad";
   };
 
+  const getExportContent = (sheetId: string, content: string) => {
+    if (settings.referenceTextExportMode === "preserve") {
+      return content || "";
+    }
+    if (activeSheetId === sheetId && editor) {
+      return getSmartPadText(editor, { referenceMode: "readable" });
+    }
+    return sanitizeReferencePlaceholdersForDisplay(content || "", "result");
+  };
+
   const downloadSheet = (title: string, content: string) => {
-    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    const blob = new Blob([content || ""], { type: "text/markdown;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -200,7 +214,7 @@ function SheetSidebar() {
     const activeSheets = sheets.filter((sheet) => !sheet.is_trashed);
     activeSheets.forEach((sheet) => {
       const filename = `${sanitizeFilename(sheet.title)}.md`;
-      zip.file(filename, sheet.content || "");
+      zip.file(filename, getExportContent(sheet.id, sheet.content || ""));
     });
     const blob = await zip.generateAsync({ type: "blob" });
     const url = URL.createObjectURL(blob);
@@ -434,7 +448,7 @@ function SheetSidebar() {
                     title="Download"
                     onClick={(event) => {
                       event.stopPropagation();
-                      downloadSheet(sheet.title, sheet.content);
+                      downloadSheet(sheet.title, getExportContent(sheet.id, sheet.content || ""));
                     }}
                   >
                     <i className="fas fa-download" aria-hidden="true" />

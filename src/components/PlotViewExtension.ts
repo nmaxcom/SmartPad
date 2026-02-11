@@ -35,6 +35,7 @@ import { getDateLocaleEffective } from "../types/DateValue";
 import { applyThousandsSeparator } from "../utils/numberFormatting";
 
 const plotViewPluginKey = new PluginKey("plotView");
+const ENABLE_RESULT_CLICK_PLOTTING = false;
 
 type PlotSource = "persistent" | "transient";
 
@@ -2537,6 +2538,9 @@ export const PlotViewExtension = Extension.create({
                 ".semantic-result-display"
               ) as HTMLElement | null;
               if (resultTarget) {
+                if (!ENABLE_RESULT_CLICK_PLOTTING) {
+                  return false;
+                }
                 const pos = view.posAtDOM(resultTarget, 0);
                 if (pos === null || pos === undefined) return false;
 

@@ -69,6 +69,70 @@
   margin: 0;
 }
 
+.editor-content p.semantic-source-line-highlight {
+  background: color-mix(in srgb, var(--syntax-result-bg) 72%, transparent);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--syntax-result-border) 70%, transparent);
+}
+
+.editor-container.result-lane-enabled .editor-content p {
+  position: relative;
+  padding-right: 10rem;
+}
+
+.editor-container.result-lane-enabled .editor-content p .semantic-lane-result-wrapper {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  max-width: 42%;
+}
+
+.editor-container.result-lane-enabled .editor-content p .semantic-wrapper[data-result-node="true"] {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  max-width: 42%;
+}
+
+.editor-container.result-lane-enabled
+  .editor-content
+  p
+  .semantic-lane-result-wrapper
+  .semantic-result-container,
+.editor-container.result-lane-enabled
+  .editor-content
+  p
+  .semantic-wrapper[data-result-node="true"]
+  .semantic-result-container {
+  margin-left: 0;
+}
+
+@media (max-width: 980px) {
+  .editor-container.result-lane-enabled .editor-content p {
+    padding-right: 0;
+  }
+
+  .editor-container.result-lane-enabled .editor-content p .semantic-lane-result-wrapper {
+    position: static;
+    transform: none;
+    display: inline-flex;
+    max-width: none;
+  }
+
+  .editor-container.result-lane-enabled .editor-content p .semantic-wrapper[data-result-node="true"] {
+    position: static;
+    transform: none;
+    display: inline-flex;
+    max-width: none;
+  }
+}
+
 /* TipTap Placeholder Styles */
 .ProseMirror.is-editor-empty p:first-child::before {
   content: attr(data-placeholder);
@@ -224,15 +288,57 @@ body.number-scrubbing * {
   display: inline-flex;
   align-items: center;
   line-height: 1;
+  cursor: pointer;
 }
 
 .semantic-live-result-display {
-  color: var(--syntax-live-result);
   margin-left: 1ch;
+  cursor: pointer;
 }
 
 .semantic-result-container.semantic-live-result-container {
   margin-left: 0;
+}
+
+.semantic-reference-chip {
+  color: var(--syntax-result);
+  background-color: var(--syntax-result-bg);
+  border: 1px solid var(--syntax-result-border);
+  border-radius: 6px;
+  padding: 1px 6px;
+  margin: 0 0.18ch;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: all;
+}
+
+.semantic-reference-chip:hover {
+  box-shadow: 0 0 0 1px rgba(124, 93, 250, 0.28);
+}
+
+.semantic-reference-chip.semantic-reference-flash {
+  animation: resultFlash 900ms ease-out;
+}
+
+.semantic-reference-broken {
+  border-radius: 6px;
+}
+
+.semantic-reference-broken .semantic-reference-chip,
+.semantic-reference-chip.semantic-reference-broken {
+  color: var(--syntax-error);
+  background-color: var(--syntax-error-bg);
+  border-color: var(--syntax-error-border);
+}
+
+.semantic-reference-line-warning {
+  margin-left: 0.65ch;
+  color: var(--syntax-error);
+  font-size: 0.86em;
+  opacity: 0.95;
 }
 
 /* Result text is inserted as real text nodes in the widget for selection/copy */
@@ -326,6 +432,7 @@ body.number-scrubbing * {
 .semantic-result-display,
 .semantic-live-result-display,
 .semantic-assignment-display,
+.semantic-reference-chip,
 .semantic-error,
 .semantic-error-result,
 .semantic-trigger {
@@ -337,6 +444,7 @@ body.number-scrubbing * {
 .semantic-result-display,
 .semantic-live-result-display,
 .semantic-assignment-display,
+.semantic-reference-chip,
 .semantic-error-result {
   user-select: text;
   pointer-events: auto;
@@ -344,10 +452,13 @@ body.number-scrubbing * {
 
 .semantic-wrapper {
   cursor: text;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
 }
 
 .semantic-result-container {
-  margin-left: -0.25ch;
+  margin-left: 0;
   display: inline-flex;
   align-items: center;
 }

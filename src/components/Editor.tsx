@@ -1,9 +1,9 @@
-import React, { useCallback, useRef, useEffect, useState, createContext, useContext } from "react";
+import React, { useCallback, useRef, useEffect, createContext, useContext } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import { Extension } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
-import { Fragment, Slice } from "@tiptap/pm/model";
+import { Fragment, Slice, Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { TextSelection } from "@tiptap/pm/state";
 import "./Editor.css";
 import { useVariables } from "../state/useVariables";
@@ -27,24 +27,19 @@ import { ResultsDecoratorExtension } from "./ResultsDecoratorExtension";
 import { VariableHoverExtension } from "./VariableHoverExtension";
 import { normalizePastedHTML } from "./pasteTransforms";
 import { ResultInlineNode } from "./ResultInlineNode";
+import { ReferenceInlineNode } from "./ReferenceInlineNode";
 import { ResultInteractionExtension } from "./ResultInteractionExtension";
+import { ResultReferenceInteractionExtension } from "./ResultReferenceInteractionExtension";
 import { PlotViewExtension } from "./PlotViewExtension";
-import { getSmartPadText } from "./editorText";
 import { getDateLocaleEffective } from "../types/DateValue";
+import { LineIdExtension } from "./LineIdExtension";
 // Import helper to identify combined assignment nodes (e.g. "speed = slider(...)")
 import { parseLine } from "../parsing/astParser";
 import { recordEquationFromNode } from "../solve/equationStore";
-import type { ASTNode } from "../parsing/ast";
 import { isExpressionNode } from "../parsing/ast";
-import {
-  defaultRegistry,
-  RenderNode,
-  isTextRenderNode,
-  isErrorRenderNode,
-  isMathResultRenderNode,
-  isVariableRenderNode,
-  isCombinedRenderNode,
-} from "../eval";
+import { SemanticParsers, NumberValue, SymbolicValue, SemanticValueTypes } from "../types";
+import { defaultRegistry } from "../eval";
+import type { RenderNode } from "../eval";
 import type { EvaluationContext } from "../eval";
 import {
   getLiveResultMetrics,
@@ -103,6 +98,107 @@ const createEnterKeyExtension = () =>
     },
   });
 
+interface LineReferenceUsage {
+  placeholderKey: string;
+  sourceLineId: string;
+  sourceLine: number;
+  sourceLabel: string;
+  sourceValue: string;
+}
+
+interface EditorLineData {
+  line: number;
+  lineId: string;
+  text: string;
+  positionText: string;
+  start: number;
+  references: LineReferenceUsage[];
+}
+
+interface LineResultState {
+  value: any | null;
+  display: string;
+  hasError: boolean;
+  errorMessage?: string;
+}
+
+const extractParagraphTextAndReferences = (node: ProseMirrorNode): {
+  text: string;
+  positionText: string;
+  references: LineReferenceUsage[];
+} => {
+  let text = "";
+  let positionText = "";
+  const references: LineReferenceUsage[] = [];
+
+  node.descendants((child) => {
+    const nodeName = child.type?.name;
+    if (nodeName === "resultToken") {
+      return false;
+    }
+    if (nodeName === "referenceToken") {
+      const placeholderKey = String(child.attrs?.placeholderKey || "").trim();
+      const sourceLineId = String(child.attrs?.sourceLineId || "").trim();
+      const sourceLine = Number(child.attrs?.sourceLine || 0);
+      const sourceLabel = String(child.attrs?.label || "").trim();
+      const sourceValue = String(child.attrs?.sourceValue || "").trim();
+      if (placeholderKey) {
+        text += placeholderKey;
+        positionText += "§";
+        references.push({
+          placeholderKey,
+          sourceLineId,
+          sourceLine,
+          sourceLabel,
+          sourceValue,
+        });
+      }
+      return false;
+    }
+    if (child.isText) {
+      text += child.text || "";
+      positionText += child.text || "";
+    }
+    return undefined;
+  });
+
+  return { text, positionText, references };
+};
+
+const extractEditorLineData = (doc: ProseMirrorNode): EditorLineData[] => {
+  const lines: EditorLineData[] = [];
+  let line = 0;
+  doc.forEach((node: ProseMirrorNode, offset: number) => {
+    if (!node.isTextblock) return;
+    line += 1;
+    const start = offset + 1;
+    const lineId = String(node.attrs?.lineId || "");
+    const extracted = extractParagraphTextAndReferences(node);
+    lines.push({
+      line,
+      lineId,
+      text: extracted.text,
+      positionText: extracted.positionText,
+      start,
+      references: extracted.references,
+    });
+  });
+  return lines;
+};
+
+const parseRenderNodeValue = (renderNode: any): any | null => {
+  if (!renderNode) return null;
+  const raw = renderNode.result;
+  if (typeof raw === "number") {
+    return NumberValue.from(raw);
+  }
+  if (typeof raw === "string") {
+    const parsed = SemanticParsers.parse(raw.trim());
+    return parsed || SymbolicValue.from(raw.trim());
+  }
+  return null;
+};
+
 // Create Editor Context
 interface EditorContextType {
   editor: any;
@@ -123,7 +219,12 @@ export const useEditorContext = () => {
 export function EditorProvider({ children }: { children: React.ReactNode }) {
   const { replaceAllVariables } = useVariables();
   const { settings } = useSettingsContext();
+  const settingsRef = useRef(settings);
   const isUpdatingRef = useRef(false);
+
+  useEffect(() => {
+    settingsRef.current = settings;
+  }, [settings]);
 
   // Use the reactive store from VariableContext
   const { reactiveStore } = useVariableContext();
@@ -142,8 +243,8 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
 
       try {
         // PROPER TipTap approach: Never modify user input text, only use decorations
-        const content = getSmartPadText(editor);
-        const lines = content.split("\n");
+        const lineData = extractEditorLineData(editor.state.doc);
+        const lines = lineData.map((entry) => entry.text);
 
         // STAGE 1: Parse user input as-is (no cleaning, no text manipulation)
         console.time("handleUpdateV2-parsing");
@@ -163,18 +264,44 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         const collectedRenderNodes: RenderNode[] = [];
         const functionStore = new Map<string, import("../parsing/ast").FunctionDefinitionNode>();
         const equationStore: import("../solve/equationStore").EquationEntry[] = [];
+        const lineResultById = new Map<string, LineResultState>();
+        const lineResultByLine = new Map<number, LineResultState>();
+        const lineResultStatusById = new Map<
+          string,
+          { hasError: boolean; errorMessage?: string; display: string }
+        >();
+        const brokenReferenceByLine = new Map<
+          number,
+          { hasBroken: boolean; message: string; sourceLineIds: string[] }
+        >();
         // Pre-compute paragraph text and absolute starts directly from ProseMirror
         const lineToPositions = new Map<number, { exprFrom: number; exprTo: number; from: number; to: number }>();
-        const paragraphData: Array<{ start: number; text: string }> = [/* 1-based */];
-        {
-          let paragraphIndex = 0;
-          editor.state.doc.forEach((node: any, offset: number) => {
-            if (!node.isTextblock) return;
-            paragraphIndex += 1;
-            const nodeStart = offset + 1; // first text position inside this textblock
-            paragraphData[paragraphIndex] = { start: nodeStart, text: String(node.textContent || "") };
+        const paragraphData: Array<{ start: number; text: string; lineId: string }> = [
+          /* 1-based */
+        ];
+        const setLineResultState = (
+          lineNumber: number,
+          targetLineId: string,
+          state: LineResultState
+        ) => {
+          lineResultByLine.set(lineNumber, state);
+          if (!targetLineId) {
+            return;
+          }
+          lineResultById.set(targetLineId, state);
+          lineResultStatusById.set(targetLineId, {
+            hasError: state.hasError,
+            errorMessage: state.errorMessage,
+            display: state.display,
           });
-        }
+        };
+        lineData.forEach((entry) => {
+          paragraphData[entry.line] = {
+            start: entry.start,
+            text: entry.positionText,
+            lineId: entry.lineId,
+          };
+        });
         for (let lineNum = 1; lineNum < paragraphData.length; lineNum++) {
           const data = paragraphData[lineNum];
           if (!data) continue;
@@ -186,14 +313,11 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
           const to = from + 2;
           lineToPositions.set(lineNum, { exprFrom, exprTo, from, to });
         }
-        try {
-          (window as any).__paragraphData = paragraphData;
-          (window as any).__lineToPositions = Array.from(lineToPositions.entries());
-          console.debug("[Editor] paragraphData", paragraphData);
-          console.debug("[Editor] lineToPositions", Array.from(lineToPositions.entries()));
-        } catch {}
         for (let index = 0; index < astNodes.length; index++) {
           const node = astNodes[index] as any;
+          const lineInfo = lineData[index];
+          const lineId = lineInfo?.lineId || "";
+          const lineReferences = lineInfo?.references || [];
 
           // Create current variable context (updated for each line)
           const createCurrentVariableContext = (): Map<string, Variable> => {
@@ -202,10 +326,58 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
               // Use semantic values directly - no more legacy conversion needed
               variableContext.set(variable.name, variable);
             });
+
+            const brokenSourceLineIds: string[] = [];
+            for (const ref of lineReferences) {
+              const sourceById = ref.sourceLineId ? lineResultById.get(ref.sourceLineId) : null;
+              const sourceByLine = ref.sourceLine > 0 ? lineResultByLine.get(ref.sourceLine) : null;
+              const source = sourceById || sourceByLine || null;
+              if (!source || source.hasError || !source.value) {
+                if (ref.sourceLineId) {
+                  brokenSourceLineIds.push(ref.sourceLineId);
+                } else if (ref.sourceLine > 0) {
+                  const fallbackLineId = lineData[ref.sourceLine - 1]?.lineId;
+                  if (fallbackLineId) {
+                    brokenSourceLineIds.push(fallbackLineId);
+                  }
+                }
+
+                if (!source && ref.sourceValue) {
+                  const parsedFallback = SemanticParsers.parse(ref.sourceValue);
+                  if (parsedFallback) {
+                    variableContext.set(ref.placeholderKey, {
+                      name: ref.placeholderKey,
+                      value: parsedFallback,
+                      rawValue: ref.sourceValue,
+                      createdAt: new Date(),
+                      updatedAt: new Date(),
+                    });
+                  }
+                }
+                continue;
+              }
+              variableContext.set(ref.placeholderKey, {
+                name: ref.placeholderKey,
+                value: source.value,
+                rawValue: source.display || source.value.toString(),
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              });
+            }
+
+            if (brokenSourceLineIds.length > 0) {
+              brokenReferenceByLine.set(index + 1, {
+                hasBroken: true,
+                message: "source line has error",
+                sourceLineIds: Array.from(new Set(brokenSourceLineIds)),
+              });
+            }
             return variableContext;
           };
 
           const currentVariableContext = createCurrentVariableContext();
+          const brokenRefState = brokenReferenceByLine.get(index + 1);
+          const hasBrokenReferences = !!brokenRefState?.hasBroken;
 
           const evaluationContext: EvaluationContext = {
             variableStore: reactiveStore,
@@ -241,6 +413,40 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
           const renderNode = defaultRegistry.evaluate(node, evaluationContext);
           const evalDurationMs = performance.now() - evalStart;
 
+          if (hasBrokenReferences) {
+            const warningNode: RenderNode = {
+              type: "error",
+              line: index + 1,
+              originalRaw: lines[index] ?? node.raw ?? "",
+              error: brokenRefState?.message || "source line has error",
+              errorType: "runtime",
+              displayText: `⚠ ${brokenRefState?.message || "source line has error"}`,
+              livePreview: !String(node.raw || "").includes("=>"),
+            };
+            collectedRenderNodes.push(warningNode);
+            lineResultByLine.set(index + 1, {
+              value: null,
+              display: warningNode.displayText,
+              hasError: true,
+              errorMessage: warningNode.error,
+            });
+            if (lineId) {
+              lineResultById.set(lineId, {
+                value: null,
+                display: warningNode.displayText,
+                hasError: true,
+                errorMessage: warningNode.error,
+              });
+              lineResultStatusById.set(lineId, {
+                hasError: true,
+                errorMessage: warningNode.error,
+                display: warningNode.displayText,
+              });
+            }
+            recordEquationFromNode(node, equationStore);
+            continue;
+          }
+
           if (isImplicitExpressionLine) {
             if (!settings.liveResultEnabled) {
               // Keep existing no-=> expression lines visually quiet when Live Result is off.
@@ -271,6 +477,48 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
             }
 
             recordEquationFromNode(node, equationStore);
+            if (
+              renderNode &&
+              (renderNode.type === "mathResult" || renderNode.type === "combined")
+            ) {
+              const semanticValue = parseRenderNodeValue(renderNode);
+              lineResultByLine.set(index + 1, {
+                value: semanticValue,
+                display: String((renderNode as any).result ?? ""),
+                hasError: false,
+              });
+              if (lineId) {
+                lineResultById.set(lineId, {
+                  value: semanticValue,
+                  display: String((renderNode as any).result ?? ""),
+                  hasError: false,
+                });
+                lineResultStatusById.set(lineId, {
+                  hasError: false,
+                  display: String((renderNode as any).result ?? ""),
+                });
+              }
+            } else {
+              lineResultByLine.set(index + 1, {
+                value: null,
+                display: "",
+                hasError: true,
+                errorMessage: "evaluation failed",
+              });
+              if (lineId) {
+                lineResultById.set(lineId, {
+                  value: null,
+                  display: "",
+                  hasError: true,
+                  errorMessage: "evaluation failed",
+                });
+                lineResultStatusById.set(lineId, {
+                  hasError: true,
+                  errorMessage: "evaluation failed",
+                  display: "",
+                });
+              }
+            }
             continue;
           }
 
@@ -278,45 +526,155 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
             collectedRenderNodes.push(renderNode);
           }
 
-          if (settings.liveResultEnabled && node.type === "plainText") {
+          if (node.type === "plainText") {
             const rawLine = lines[index] ?? node.raw ?? "";
-            if (!isLikelyLiveExpression(rawLine, currentVariableContext, functionStore)) {
-              recordLiveResultSuppressed("plaintext");
+            const looksLikeLiveExpression = isLikelyLiveExpression(
+              rawLine,
+              currentVariableContext,
+              functionStore
+            );
+            if (!looksLikeLiveExpression) {
+              if (settings.liveResultEnabled) {
+                recordLiveResultSuppressed("plaintext");
+              }
             } else {
               const candidateNode = parseLine(`${rawLine} =>`, index + 1);
               if (!isExpressionNode(candidateNode)) {
-                recordLiveResultSuppressed("incomplete");
+                if (settings.liveResultEnabled) {
+                  recordLiveResultSuppressed("incomplete");
+                }
+                setLineResultState(index + 1, lineId, {
+                  value: null,
+                  display: "",
+                  hasError: true,
+                  errorMessage: "evaluation failed",
+                });
               } else if (
                 hasUnresolvedLiveIdentifiers(candidateNode.components, currentVariableContext)
               ) {
-                recordLiveResultSuppressed("unresolved");
+                if (settings.liveResultEnabled) {
+                  recordLiveResultSuppressed("unresolved");
+                }
+                setLineResultState(index + 1, lineId, {
+                  value: null,
+                  display: "",
+                  hasError: true,
+                  errorMessage: "evaluation failed",
+                });
               } else {
                 const liveStart = performance.now();
                 const liveRenderNode = defaultRegistry.evaluate(
                   candidateNode,
                   evaluationContext
                 );
-                recordLiveResultEvaluation(performance.now() - liveStart);
+                if (settings.liveResultEnabled) {
+                  recordLiveResultEvaluation(performance.now() - liveStart);
+                }
                 if (
                   liveRenderNode &&
                   (liveRenderNode.type === "mathResult" ||
                     liveRenderNode.type === "combined")
                 ) {
-                  collectedRenderNodes.push({
-                    ...liveRenderNode,
-                    line: index + 1,
-                    originalRaw: rawLine,
-                    livePreview: true,
-                  } as RenderNode);
-                  recordLiveResultRendered();
+                  if (settings.liveResultEnabled) {
+                    collectedRenderNodes.push({
+                      ...liveRenderNode,
+                      line: index + 1,
+                      originalRaw: rawLine,
+                      livePreview: true,
+                    } as RenderNode);
+                    recordLiveResultRendered();
+                  }
+                  setLineResultState(index + 1, lineId, {
+                    value: parseRenderNodeValue(liveRenderNode),
+                    display: String((liveRenderNode as any).result ?? ""),
+                    hasError: false,
+                  });
                 } else {
-                  recordLiveResultSuppressed("error");
+                  if (settings.liveResultEnabled) {
+                    recordLiveResultSuppressed("error");
+                  }
+                  setLineResultState(index + 1, lineId, {
+                    value: null,
+                    display: "",
+                    hasError: true,
+                    errorMessage: "evaluation failed",
+                  });
                 }
               }
             }
           }
 
           recordEquationFromNode(node, equationStore);
+
+          if (renderNode && renderNode.type === "error") {
+            const display = String((renderNode as any).displayText || (renderNode as any).error || "");
+            lineResultByLine.set(index + 1, {
+              value: null,
+              display,
+              hasError: true,
+              errorMessage: String((renderNode as any).error || "error"),
+            });
+            if (lineId) {
+              lineResultById.set(lineId, {
+                value: null,
+                display,
+                hasError: true,
+                errorMessage: String((renderNode as any).error || "error"),
+              });
+              lineResultStatusById.set(lineId, {
+                hasError: true,
+                errorMessage: String((renderNode as any).error || "error"),
+                display,
+              });
+            }
+          } else if (
+            renderNode &&
+            (renderNode.type === "mathResult" || renderNode.type === "combined")
+          ) {
+            const semanticValue = parseRenderNodeValue(renderNode);
+            const display = String((renderNode as any).result ?? "");
+            lineResultByLine.set(index + 1, {
+              value: semanticValue,
+              display,
+              hasError: false,
+            });
+            if (lineId) {
+              lineResultById.set(lineId, {
+                value: semanticValue,
+                display,
+                hasError: false,
+              });
+              lineResultStatusById.set(lineId, {
+                hasError: false,
+                display,
+              });
+            }
+          } else if ((node as any).type === "variableAssignment") {
+            const variableName = String((node as any).variableName || "");
+            const variable = variableName ? reactiveStore.getVariable(variableName) : null;
+            const value = variable?.value || null;
+            const display = variable?.rawValue || "";
+            const hasError = !!(value && SemanticValueTypes.isError(value as any));
+            lineResultByLine.set(index + 1, {
+              value,
+              display,
+              hasError,
+              errorMessage: hasError ? String((value as any).toString?.() || "error") : undefined,
+            });
+            if (lineId) {
+              lineResultById.set(lineId, {
+                value,
+                display,
+                hasError,
+                errorMessage: hasError ? String((value as any).toString?.() || "error") : undefined,
+              });
+              lineResultStatusById.set(lineId, {
+                hasError,
+                errorMessage: hasError ? String((value as any).toString?.() || "error") : undefined,
+                display,
+              });
+            }
+          }
         }
 
         // After evaluation, attach positions by matching paragraph expressions to render nodes' expressions
@@ -370,11 +728,13 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
           // Increment evaluation sequence counter for deterministic test waiting
           (window as any).__evaluationSeq = ((window as any).__evaluationSeq || 0) + 1;
           (window as any).__liveResultMetrics = getLiveResultMetrics();
+          (window as any).__lineResultStatusById = Array.from(lineResultStatusById.entries());
           
           window.dispatchEvent(
             new CustomEvent("evaluationDone", { 
               detail: { 
                 renderNodes: collectedRenderNodes,
+                lineResultStatusById: Array.from(lineResultStatusById.entries()),
                 sequence: (window as any).__evaluationSeq 
               } 
             })
@@ -438,6 +798,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       Placeholder.configure({
         placeholder: "Start typing...",
       }),
+      LineIdExtension,
       createEnterKeyExtension(),
 
       // Semantic highlighting marks
@@ -451,8 +812,13 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       TriggerMark,
       // Inline node for computed results (selectable, non-editable)
       ResultInlineNode,
+      ReferenceInlineNode,
       // Keyboard/selection behavior for result tokens
       ResultInteractionExtension,
+      // Interactions that turn result chips into reusable reference chips
+      ResultReferenceInteractionExtension.configure({
+        getSettings: () => settingsRef.current,
+      }),
       // Number scrubber for interactive dragging
       NumberScrubberExtension,
       // Semantic highlighting extension with variable context
@@ -526,6 +892,12 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         slice.content.textBetween(0, slice.content.size, "\n", (node) => {
           if (node.type?.name === "resultToken") {
             return node.textContent || node.attrs?.value || "";
+          }
+          if (node.type?.name === "referenceToken") {
+            if (settingsRef.current.referenceTextExportMode === "preserve") {
+              return node.attrs?.placeholderKey || node.attrs?.sourceValue || "value";
+            }
+            return node.attrs?.sourceValue || node.attrs?.label || "value";
           }
           return "";
         }),
@@ -623,9 +995,11 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
 
 function Editor() {
   const { editor } = useEditorContext();
+  const { settings } = useSettingsContext();
+  const laneClass = settings.resultLaneEnabled ? "result-lane-enabled" : "result-lane-disabled";
 
   return (
-    <div className="editor-container" data-testid="smart-pad-editor">
+    <div className={`editor-container ${laneClass}`} data-testid="smart-pad-editor">
       <EditorContent editor={editor} className="editor-content" />
     </div>
   );

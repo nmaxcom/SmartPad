@@ -47,6 +47,10 @@ export const ResultsDecoratorExtension = Extension.create({
               if (child.type?.name === "resultToken") {
                 return false;
               }
+              if (child.type?.name === "referenceToken") {
+                text += "§";
+                return false;
+              }
               if (child.isText) {
                 text += child.text;
               }
@@ -94,6 +98,11 @@ export const ResultsDecoratorExtension = Extension.create({
           };
 
           const resultHistory = new Map<string, string>();
+          const liveResultHistory = new Map<string, string>();
+          const referenceValueHistory = new Map<string, string>();
+          const liveFlashUntil = new Map<string, number>();
+          const referenceFlashUntil = new Map<string, number>();
+          const FLASH_DURATION_MS = 900;
 
           // Only eligible node types should create widgets
           const isWidgetEligible = (rn: any) =>
@@ -102,7 +111,11 @@ export const ResultsDecoratorExtension = Extension.create({
           // Helper to rebuild decorations from render nodes
           const buildDecorations = (
             doc: ProseMirrorNode,
-            renderNodes: RenderNode[]
+            renderNodes: RenderNode[],
+            lineResultStatusById: Map<
+              string,
+              { hasError: boolean; errorMessage?: string; display?: string }
+            >
           ): DecorationSet => {
             const decorations: Decoration[] = [];
 
@@ -117,7 +130,12 @@ export const ResultsDecoratorExtension = Extension.create({
             // Derive positions by scanning paragraphs for assignment errors (no =>)
             if (renderNodes.length > 0) {
               // Build paragraph index: 1-based line numbers
-              const paragraphIndex: Array<{ start: number; text: string }> = [
+              const paragraphIndex: Array<{
+                start: number;
+                text: string;
+                lineId: string;
+                node: ProseMirrorNode;
+              }> = [
                 /*1-based*/
               ];
               let line = 0;
@@ -126,7 +144,8 @@ export const ResultsDecoratorExtension = Extension.create({
                 line += 1;
                 const start = offset + 1;
                 const text = getNodeTextWithoutResults(node);
-                paragraphIndex[line] = { start, text };
+                const lineId = String((node as any).attrs?.lineId || "");
+                paragraphIndex[line] = { start, text, lineId, node };
               });
 
               for (let i = 1; i < paragraphIndex.length; i++) {
@@ -147,22 +166,40 @@ export const ResultsDecoratorExtension = Extension.create({
                       : String(liveNode.displayText || "")
                           .replace(/^.*=>\s*/, "")
                           .trim();
+                  const sourceLabel = String(
+                    liveNode.expression ||
+                      liveNode.variableName ||
+                      (liveNode.originalRaw || info.text || "").replace(/§/g, "").trim()
+                  ).trim();
                   if (liveText) {
+                    const liveHistoryKey = `${info.lineId || i}`;
+                    const previousLiveValue = liveResultHistory.get(liveHistoryKey);
+                    if (previousLiveValue !== undefined && previousLiveValue !== liveText) {
+                      liveFlashUntil.set(liveHistoryKey, Date.now() + FLASH_DURATION_MS);
+                    }
+                    liveResultHistory.set(liveHistoryKey, liveText);
+                    const flashLiveResult = (liveFlashUntil.get(liveHistoryKey) || 0) > Date.now();
                     const anchor = info.start + info.text.length;
                     const widget = Decoration.widget(
                       anchor,
                       () => {
                         const wrapper = document.createElement("span");
-                        wrapper.className = "semantic-wrapper";
+                        wrapper.className =
+                          "semantic-wrapper semantic-lane-result-wrapper semantic-live-result-wrapper";
                         const container = document.createElement("span");
                         container.className =
                           "semantic-result-container semantic-live-result-container";
                         const span = document.createElement("span");
-                        span.className =
-                          "semantic-result-display semantic-live-result-display";
+                        span.className = flashLiveResult
+                          ? "semantic-result-display semantic-live-result-display semantic-result-flash"
+                          : "semantic-result-display semantic-live-result-display";
                         span.setAttribute("data-result", liveText);
+                        span.setAttribute("data-source-line-id", info.lineId || "");
+                        span.setAttribute("data-source-line", String(i));
+                        span.setAttribute("data-source-label", sourceLabel);
                         span.setAttribute("title", liveText);
                         span.setAttribute("aria-label", liveText);
+                        span.setAttribute("draggable", "true");
                         span.textContent = liveText;
                         container.appendChild(span);
                         wrapper.appendChild(container);
@@ -202,7 +239,8 @@ export const ResultsDecoratorExtension = Extension.create({
                   anchor,
                   () => {
                     const wrapper = document.createElement("span");
-                    wrapper.className = "semantic-wrapper";
+                    wrapper.className =
+                      "semantic-wrapper semantic-lane-result-wrapper semantic-error-result-wrapper";
                     const container = document.createElement("span");
                     container.className = "semantic-result-container";
                     const span = document.createElement("span");
@@ -219,6 +257,58 @@ export const ResultsDecoratorExtension = Extension.create({
                 );
                 decorations.push(widget);
               }
+
+              for (let i = 1; i < paragraphIndex.length; i++) {
+                const info = paragraphIndex[i];
+                if (!info) continue;
+                const brokenSources = new Set<string>();
+
+                info.node.nodesBetween(0, info.node.content.size, (child: any, pos: number) => {
+                  if (child.type?.name !== "referenceToken") {
+                    return undefined;
+                  }
+                  const sourceLine = Number(child.attrs?.sourceLine || 0);
+                  const sourceLineIdRaw = String(child.attrs?.sourceLineId || "");
+                  const sourceLineId =
+                    sourceLineIdRaw ||
+                    (sourceLine > 0 ? String(paragraphIndex[sourceLine]?.lineId || "") : "");
+                  if (!sourceLineId) {
+                    return false;
+                  }
+                  const sourceStatus = lineResultStatusById.get(sourceLineId);
+                  if (!sourceStatus?.hasError) {
+                    return false;
+                  }
+                  brokenSources.add(sourceLineId);
+                  const from = info.start + pos;
+                  const to = from + child.nodeSize;
+                  decorations.push(
+                    Decoration.inline(from, to, {
+                      class: "semantic-reference-broken",
+                    })
+                  );
+                  return false;
+                });
+
+                if (brokenSources.size > 0) {
+                  const anchor = info.start + info.node.content.size;
+                  decorations.push(
+                    Decoration.widget(
+                      anchor,
+                      () => {
+                        const wrapper = document.createElement("span");
+                        wrapper.className = "semantic-wrapper semantic-reference-warning-wrapper";
+                        const warning = document.createElement("span");
+                        warning.className = "semantic-reference-line-warning";
+                        warning.textContent = "⚠ source line has error";
+                        wrapper.appendChild(warning);
+                        return wrapper;
+                      },
+                      { side: 1 }
+                    )
+                  );
+                }
+              }
             }
 
             return DecorationSet.create(doc, decorations);
@@ -226,15 +316,31 @@ export const ResultsDecoratorExtension = Extension.create({
 
           // Global event listener
           const listener = (e: Event) => {
-            const custom = e as CustomEvent<{ renderNodes: RenderNode[]; sequence?: number }>;
+            const custom = e as CustomEvent<{
+              renderNodes: RenderNode[];
+              lineResultStatusById?: Array<
+                [string, { hasError: boolean; errorMessage?: string; display?: string }]
+              >;
+              sequence?: number;
+            }>;
             const renderNodes = custom.detail?.renderNodes ?? [];
+            const lineResultStatusById = new Map(
+              (custom.detail?.lineResultStatusById || []) as Array<
+                [string, { hasError: boolean; errorMessage?: string; display?: string }]
+              >
+            );
 
             const resultNodeType = view.state.schema.nodes.resultToken;
             const tr = view.state.tr;
             let changed = false;
 
             // Build paragraph index for matching results (1-based line numbers)
-            const paragraphIndex: Array<{ start: number; text: string; node: ProseMirrorNode }> = [
+            const paragraphIndex: Array<{
+              start: number;
+              text: string;
+              node: ProseMirrorNode;
+              lineId: string;
+            }> = [
               /*1-based*/
             ];
             let line = 0;
@@ -243,16 +349,93 @@ export const ResultsDecoratorExtension = Extension.create({
               line += 1;
               const start = offset + 1;
               const text = getNodeTextWithoutResults(node);
-              paragraphIndex[line] = { start, text, node };
+              const lineId = String((node as any).attrs?.lineId || "");
+              paragraphIndex[line] = { start, text, node, lineId };
+            });
+            const lineNumberById = new Map<string, number>();
+            paragraphIndex.forEach((entry, idx) => {
+              if (!entry?.lineId) return;
+              lineNumberById.set(entry.lineId, idx);
             });
 
-          const eligibleNodes = (renderNodes as any[]).filter((rn) => isWidgetEligible(rn));
-          const eligibleNodesByLine = new Map<number, any[]>();
-          eligibleNodes.forEach((rn) => {
-            const list = eligibleNodesByLine.get(rn.line) || [];
-            list.push(rn);
-            eligibleNodesByLine.set(rn.line, list);
-          });
+            const referenceNodeType = view.state.schema.nodes.referenceToken;
+            if (referenceNodeType) {
+              for (let i = paragraphIndex.length - 1; i >= 1; i--) {
+                const info = paragraphIndex[i];
+                if (!info) continue;
+
+                info.node.nodesBetween(0, info.node.content.size, (node: ProseMirrorNode, pos) => {
+                  if (node.type !== referenceNodeType) {
+                    return undefined;
+                  }
+
+                  const attrs: any = node.attrs || {};
+                  const placeholderKey = String(attrs.placeholderKey || "").trim();
+                  const sourceLineRaw = Number(attrs.sourceLine || 0);
+                  let sourceLineId = String(attrs.sourceLineId || "").trim();
+
+                  if ((!sourceLineId || !lineResultStatusById.has(sourceLineId)) && sourceLineRaw > 0) {
+                    sourceLineId = String(paragraphIndex[sourceLineRaw]?.lineId || "").trim();
+                  }
+
+                  const sourceStatus = sourceLineId ? lineResultStatusById.get(sourceLineId) : undefined;
+                  const sourceDisplay =
+                    sourceStatus && !sourceStatus.hasError
+                      ? String(sourceStatus.display || "").trim()
+                      : "";
+                  const previousDisplay = String(attrs.sourceValue || attrs.label || "").trim();
+                  const nextDisplay = sourceDisplay || previousDisplay;
+                  const historyKey = placeholderKey || `${i}:${pos}`;
+                  const priorSeen = referenceValueHistory.get(historyKey);
+                  if (sourceDisplay && priorSeen !== undefined && priorSeen !== sourceDisplay) {
+                    referenceFlashUntil.set(historyKey, Date.now() + FLASH_DURATION_MS);
+                  }
+                  const shouldFlash = (referenceFlashUntil.get(historyKey) || 0) > Date.now();
+
+                  if (sourceDisplay) {
+                    referenceValueHistory.set(historyKey, sourceDisplay);
+                  } else if (priorSeen === undefined && previousDisplay) {
+                    referenceValueHistory.set(historyKey, previousDisplay);
+                  }
+
+                  const resolvedSourceLine =
+                    sourceLineRaw > 0
+                      ? sourceLineRaw
+                      : sourceLineId
+                        ? Number(lineNumberById.get(sourceLineId) || 0)
+                        : 0;
+                  const nextLabel = nextDisplay || String(attrs.label || "value");
+                  const attrsChanged =
+                    String(attrs.sourceLineId || "") !== sourceLineId ||
+                    Number(attrs.sourceLine || 0) !== resolvedSourceLine ||
+                    String(attrs.sourceValue || "") !== nextDisplay ||
+                    String(attrs.label || "") !== nextLabel ||
+                    Boolean(attrs.flash) !== shouldFlash;
+
+                  if (attrsChanged) {
+                    tr.setNodeMarkup(info.start + pos, undefined, {
+                      ...attrs,
+                      sourceLineId,
+                      sourceLine: resolvedSourceLine,
+                      sourceValue: nextDisplay,
+                      label: nextLabel,
+                      flash: shouldFlash,
+                    });
+                    changed = true;
+                  }
+
+                  return false;
+                });
+              }
+            }
+
+            const eligibleNodes = (renderNodes as any[]).filter((rn) => isWidgetEligible(rn));
+            const eligibleNodesByLine = new Map<number, any[]>();
+            eligibleNodes.forEach((rn) => {
+              const list = eligibleNodesByLine.get(rn.line) || [];
+              list.push(rn);
+              eligibleNodesByLine.set(rn.line, list);
+            });
 
           // Update inline result nodes from bottom to top so positions stay valid
             for (let i = paragraphIndex.length - 1; i >= 1; i--) {
@@ -337,6 +520,9 @@ export const ResultsDecoratorExtension = Extension.create({
             if (!matched) {
               matched = matchByExpression(eligibleNodes);
             }
+            if (!matched && lineCandidates.length === 1) {
+              matched = lineCandidates[0];
+            }
 
               const afterArrowPos = info.start + arrowIdx + 2;
               const lineEndPos = info.start + info.node.content.size;
@@ -380,7 +566,9 @@ export const ResultsDecoratorExtension = Extension.create({
                 !!existingResult &&
                 existingResult.type === resultNodeType &&
                 existingText === normalizedResult &&
-                !!existingResult.attrs.isError === isError;
+                !!existingResult.attrs.isError === isError &&
+                String(existingResult.attrs.sourceLineId || "") === String(info.lineId || "") &&
+                Number(existingResult.attrs.sourceLine || 0) === i;
 
                 if (!hasExpected) {
                   tr.delete(afterArrowPos, lineEndPos);
@@ -392,7 +580,15 @@ export const ResultsDecoratorExtension = Extension.create({
                   tr.insert(
                     afterArrowPos + spaceNode.nodeSize,
                     resultNodeType.create(
-                      { value: normalizedResult, isError, flash: flashValue, delta: deltaValue },
+                      {
+                        value: normalizedResult,
+                        isError,
+                        flash: flashValue,
+                        delta: deltaValue,
+                        sourceLineId: info.lineId || "",
+                        sourceLine: i,
+                        sourceLabel: exprText.replace(/§/g, "").trim(),
+                      },
                       content
                     )
                   );
@@ -404,7 +600,7 @@ export const ResultsDecoratorExtension = Extension.create({
               }
             }
 
-            const decoSet = buildDecorations(tr.doc, renderNodes);
+            const decoSet = buildDecorations(tr.doc, renderNodes, lineResultStatusById);
             const finalSet: DecorationSet = decoSet;
 
             const currentSet = pluginKey.getState(view.state) as DecorationSet | undefined;

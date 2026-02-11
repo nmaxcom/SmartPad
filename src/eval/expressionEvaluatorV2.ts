@@ -183,7 +183,7 @@ export class SimpleExpressionParser {
             return true;
           }
         }
-        if (component.type === "variable") {
+        if (component.type === "variable" || component.type === "resultReference") {
           const variable = context.variableContext.get(component.value);
           if (
             variable?.value instanceof SemanticValue &&
@@ -461,7 +461,8 @@ export class SimpleExpressionParser {
         const parsed = SemanticParsers.parse(component.value);
         return parsed || ErrorValue.semanticError(`Cannot parse literal: "${component.value}"`);
       }
-      case "variable": {
+      case "variable":
+      case "resultReference": {
         const variable = context.variableContext.get(component.value);
         if (!variable) {
           if (

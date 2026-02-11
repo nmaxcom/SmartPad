@@ -86,6 +86,7 @@ export interface ExpressionComponent {
   readonly type:
     | "literal"
     | "variable"
+    | "resultReference"
     | "operator"
     | "function"
     | "parentheses"
