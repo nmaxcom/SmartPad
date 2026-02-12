@@ -15,6 +15,7 @@ Primary goals:
 4. If a request is ambiguous and execution risk is high, ask a short clarifying question.
 5. If execution can proceed safely, implement first and report results.
 6. When asked "what is pending", answer from the journal's Pending Index.
+7. Auto-commit completed logical work by default unless user says to hold commits.
 
 ## Journal Update Protocol (Every Interaction)
 For each interaction, append one journal entry in `docs/EXECUTIVE_JOURNAL.md`.
@@ -67,3 +68,10 @@ Primary triggers:
 After every docs maintenance action:
 1. Report findings or changes.
 2. Update pending tasks in `docs/EXECUTIVE_JOURNAL.md`.
+
+## Automatic Spec + Docs Sync
+When a feature is added or behavior is modified:
+1. Check if `docs/Specs/` needs an update.
+2. Check if user-facing docs need an update.
+3. Add or adjust tests for the changed behavior.
+4. Run docs drift check (`npm run docs:drift`) before finalizing.

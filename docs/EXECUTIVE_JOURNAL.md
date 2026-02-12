@@ -12,7 +12,8 @@
 | P-2026-02-11-06 | Implement actual docs site and app docs link | Assistant | 2026-02-13 | todo | Scaffold docs site and link from app header |
 | P-2026-02-12-01 | Add project AGENTS.md with executive and docs rules | Assistant | 2026-02-12 | done | Created AGENTS.md at repo root |
 | P-2026-02-12-02 | Establish multi-level todo system with focus lane | Assistant | 2026-02-12 | done | Added TODO system and backlog files |
-| P-2026-02-12-03 | Propose stronger anti-regression test approach | Assistant | 2026-02-13 | in_progress | Deliver concrete testing gate recommendation |
+| P-2026-02-12-03 | Propose stronger anti-regression test approach | Assistant | 2026-02-13 | done | Added testing and regression policy to AGENTS/manual |
+| P-2026-02-12-04 | Enforce automatic spec/docs sync checks in AI guidance | Assistant | 2026-02-13 | done | Added automatic change-sync workflow and policies |
 
 ---
 
@@ -175,3 +176,28 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   Rich/plain-text reference remap across arbitrary external edits still needs a deeper interoperability pass (tracked in implementation gaps).
+
+## Entry J-2026-02-12-02
+
+*   Timestamp: 2026-02-12 23:24:07 CET
+*   Summary:
+    *   User requested automatic commits by default and stronger AI-owned spec/docs/test maintenance.
+    *   User asked whether targeted tests include adding tests to suite.
+*   Decisions:
+    *   Enable auto-commit policy in project guidance.
+    *   Enforce spec-first sync policy for behavior changes.
+    *   Clarify regression expectation: changed behavior requires test updates/additions.
+*   User directives:
+    *   Make AI handle spec and docs maintenance without requiring manual prompting.
+*   Assistant commitments:
+    *   Auto-commit completed logical work unless user asks to hold.
+    *   Automatically check and update specs/docs/tests for feature or behavior changes.
+*   Artifacts:
+    *   `AGENTS.md` (updated)
+    *   `docs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` (updated)
+    *   `docs/AI_DOCS_OPERATIONS.md` (updated)
+*   Pending updates:
+    *   `P-2026-02-12-03` marked `done`.
+    *   `P-2026-02-12-04` marked `done`.
+*   Risks/blockers:
+    *   Policy is now explicit; enforcement quality depends on maintaining `docs/spec-map.json` mappings.

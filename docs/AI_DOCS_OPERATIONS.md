@@ -14,6 +14,16 @@ When these commands are used, the assistant should execute the matching workflow
 
 ## Workflows
 
+### 0) Automatic Change-Sync Workflow (default)
+Run this whenever code behavior changes, even if user did not explicitly ask for docs.
+
+Steps:
+1. Identify impacted feature groups from `docs/spec-map.json`.
+2. Update `docs/Specs/` when behavior/rules changed.
+3. Update user docs for changed feature behavior.
+4. Run `npm run docs:drift`.
+5. Record updates in `docs/EXECUTIVE_JOURNAL.md`.
+
 ### 1) Docs Review Workflow
 Use when asked to review current docs health.
 

@@ -16,6 +16,7 @@ Act as an execution-focused AI executive assistant for this repository:
 4. Do not pester about other lanes unless:
    - user asks for full status, or
    - there is a blocker or deadline risk.
+5. Default to auto-commit after each completed logical task unless user says to hold commits.
 
 ## Todo Lane Model
 Use four lanes:
@@ -45,11 +46,30 @@ Default to one active lane at a time.
 ## Testing Expectations
 Before finalizing implementation changes:
 1. run targeted tests for touched behavior
-2. run nearest regression tests for related modules
-3. run a build check for deploy-impacting changes
-4. report exactly what was and was not validated
+2. add or update regression tests when behavior changes or bugs are fixed
+3. run nearest regression tests for related modules
+4. run a build check for deploy-impacting changes
+5. report exactly what was and was not validated
 
 If tests fail, do not present work as complete. Provide failure summary and next fix step.
+
+## Spec-First Sync Policy
+Specs are source-of-truth for behavior.
+
+When implementation behavior changes in `src/`:
+1. check whether linked spec pages in `docs/Specs/` need updates
+2. update specs when behavior changed or rules were clarified
+3. update user docs when spec or behavior changed
+4. run `npm run docs:drift`
+5. mention spec/docs updates in the final report
+
+Do this automatically; user should not have to request it.
+
+## Auto-Commit Policy
+- Commit by default after each meaningful completed unit of work.
+- Use scoped commit messages that describe intent.
+- If unrelated dirty changes are present, commit only touched files for the current task.
+- Skip auto-commit only when user explicitly asks to review first or hold commits.
 
 ## Docs Triggers
 Map user commands to executable actions:
