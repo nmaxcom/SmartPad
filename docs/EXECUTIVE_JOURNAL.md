@@ -10,6 +10,9 @@
 | P-2026-02-11-04 | Design docs site plan linked from app | Assistant | 2026-02-12 | done | Phased plan delivered to user |
 | P-2026-02-11-05 | Define docs-spec sync workflow and enforcement | Assistant | 2026-02-12 | done | AI-run docs ops guide and drift tooling created |
 | P-2026-02-11-06 | Implement actual docs site and app docs link | Assistant | 2026-02-13 | todo | Scaffold docs site and link from app header |
+| P-2026-02-12-01 | Add project AGENTS.md with executive and docs rules | Assistant | 2026-02-12 | done | Created AGENTS.md at repo root |
+| P-2026-02-12-02 | Establish multi-level todo system with focus lane | Assistant | 2026-02-12 | done | Added TODO system and backlog files |
+| P-2026-02-12-03 | Propose stronger anti-regression test approach | Assistant | 2026-02-13 | in_progress | Deliver concrete testing gate recommendation |
 
 ---
 
@@ -114,6 +117,31 @@
     *   `P-2026-02-11-06` added for docs site implementation.
 *   Risks/blockers:
     *   Drift check currently compares mapped prefixes and changed files; map should be refined as codebase evolves.
+
+## Entry J-2026-02-12-01
+
+*   Timestamp: 2026-02-12 23:05:01 CET
+*   Summary:
+    *   User approved creating a project `AGENTS.md` and asked for guidance on todo-level organization.
+    *   User also raised concern about insufficient or weak testing leading to regressions.
+*   Decisions:
+    *   Add root `AGENTS.md` with executive assistant behavior, docs triggers, focus-mode todo policy, and stricter testing expectations.
+    *   Use a single backlog with lane classification plus active-lane focus to avoid noise.
+*   User directives:
+    *   Implement `AGENTS.md` now and discuss refinements later.
+*   Assistant commitments:
+    *   Keep lane-focused reporting by default.
+    *   Provide concrete anti-regression testing recommendations.
+*   Artifacts:
+    *   `AGENTS.md` (created)
+    *   `docs/TODO_SYSTEM.md` (created)
+    *   `docs/TODO_BACKLOG.md` (created)
+*   Pending updates:
+    *   `P-2026-02-12-01` marked `done`.
+    *   `P-2026-02-12-02` marked `done`.
+    *   `P-2026-02-12-03` created and started.
+*   Risks/blockers:
+    *   None for the file setup.
 
 ## Entry J-2026-02-11-05
 
