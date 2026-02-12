@@ -14,6 +14,7 @@
 | P-2026-02-12-02 | Establish multi-level todo system with focus lane | Assistant | 2026-02-12 | done | Added TODO system and backlog files |
 | P-2026-02-12-03 | Propose stronger anti-regression test approach | Assistant | 2026-02-13 | done | Added testing and regression policy to AGENTS/manual |
 | P-2026-02-12-04 | Enforce automatic spec/docs sync checks in AI guidance | Assistant | 2026-02-13 | done | Added automatic change-sync workflow and policies |
+| P-2026-02-12-05 | Close documentation-system enforcement gaps | Assistant | 2026-02-14 | in_progress | Prioritize CI integration, docs site, and map coverage fixes |
 
 ---
 
@@ -201,3 +202,22 @@
     *   `P-2026-02-12-04` marked `done`.
 *   Risks/blockers:
     *   Policy is now explicit; enforcement quality depends on maintaining `docs/spec-map.json` mappings.
+
+## Entry J-2026-02-12-03
+
+*   Timestamp: 2026-02-12 23:34:17 CET / 2026-02-12 23:34:17 UTC
+*   Summary:
+    *   User requested identification of what is still missing in the documentation system.
+    *   Assistant ran a focused audit on docs guidance, scripts, workflows, and app integration points.
+*   Decisions:
+    *   Produce a severity-ranked gap list and conversion plan.
+*   User directives:
+    *   Find missing elements in the full documentation setup.
+*   Assistant commitments:
+    *   Prioritize enforcement and reliability gaps before cosmetic docs work.
+*   Artifacts:
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   `P-2026-02-12-05` created and started.
+*   Risks/blockers:
+    *   Existing docs policies can be bypassed without CI enforcement and improved map coverage.
