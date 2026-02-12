@@ -19,10 +19,13 @@ Run this whenever code behavior changes, even if user did not explicitly ask for
 
 Steps:
 1. Identify impacted feature groups from `docs/spec-map.json`.
-2. Update `docs/Specs/` when behavior/rules changed.
-3. Update user docs for changed feature behavior.
-4. Run `npm run docs:drift`.
-5. Record updates in `docs/EXECUTIVE_JOURNAL.md`.
+2. Update `docs/spec-map.json` if new files/areas are introduced or mapping changed.
+3. Update `docs/Specs/` when behavior/rules changed.
+4. Update user docs for changed feature behavior.
+5. Run `npm run docs:map`.
+6. Run `npm run docs:drift`.
+7. Run `npm run spec:test`.
+8. Record updates in `docs/EXECUTIVE_JOURNAL.md`.
 
 ### 1) Docs Review Workflow
 Use when asked to review current docs health.

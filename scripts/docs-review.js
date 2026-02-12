@@ -7,15 +7,11 @@ const specMapPath = path.join(repoRoot, "docs", "spec-map.json");
 
 const getChangedFiles = (rangeArg) => {
   const range = rangeArg || "HEAD~1...HEAD";
-  try {
-    const output = execSync(`git diff --name-only ${range}`, { encoding: "utf8" });
-    return output
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean);
-  } catch {
-    return [];
-  }
+  const output = execSync(`git diff --name-only ${range}`, { encoding: "utf8" });
+  return output
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
 };
 
 const startsWithAny = (file, prefixes) => prefixes.some((prefix) => file.startsWith(prefix));
@@ -36,8 +32,9 @@ const main = () => {
     .map((group) => {
       const specHits = changedFiles.filter((f) => startsWithAny(f, group.specPrefixes));
       const docHits = changedFiles.filter((f) => startsWithAny(f, group.docPrefixes));
+      const testHits = changedFiles.filter((f) => startsWithAny(f, group.testPrefixes || []));
       if (!specHits.length && !docHits.length) return null;
-      return { name: group.name, specHits, docHits };
+      return { name: group.name, specHits, docHits, testHits };
     })
     .filter(Boolean);
 
@@ -63,6 +60,7 @@ const main = () => {
     console.log(`- ${group.name}`);
     console.log(`  spec/code hits: ${group.specHits.length}`);
     console.log(`  docs hits: ${group.docHits.length}`);
+    console.log(`  test hits: ${group.testHits.length}`);
   });
 };
 

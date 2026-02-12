@@ -7,6 +7,7 @@ interface AppHeaderProps {
 }
 
 const BUG_REPORT_URL = "https://github.com/nmaxcom/SmartPad/issues/new?template=bug_report.yml";
+const DOCS_URL = `${import.meta.env.BASE_URL}docs/`;
 
 type PanelToggleKey = "showVariablePanel" | "showTemplatePanel" | "showSettingsPanel";
 
@@ -70,6 +71,18 @@ function AppHeader({ onSettingsClick }: AppHeaderProps) {
             <i className="fas fa-cog" aria-hidden="true" />
           </button>
         )}
+
+        <a
+          className="header-docs-btn"
+          href={DOCS_URL}
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Open documentation"
+          title="Open documentation"
+        >
+          <i className="fas fa-book-open" aria-hidden="true" />
+          <span>Docs</span>
+        </a>
 
         <a
           className="header-report-bug-btn"

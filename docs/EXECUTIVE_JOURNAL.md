@@ -14,7 +14,7 @@
 | P-2026-02-12-02 | Establish multi-level todo system with focus lane | Assistant | 2026-02-12 | done | Added TODO system and backlog files |
 | P-2026-02-12-03 | Propose stronger anti-regression test approach | Assistant | 2026-02-13 | done | Added testing and regression policy to AGENTS/manual |
 | P-2026-02-12-04 | Enforce automatic spec/docs sync checks in AI guidance | Assistant | 2026-02-13 | done | Added automatic change-sync workflow and policies |
-| P-2026-02-12-05 | Close documentation-system enforcement gaps | Assistant | 2026-02-14 | in_progress | Prioritize CI integration, docs site, and map coverage fixes |
+| P-2026-02-12-05 | Close documentation-system enforcement gaps | Assistant | 2026-02-14 | done | Implemented CI gates, docs surface, mapping and sync checks |
 
 ---
 
@@ -221,3 +221,38 @@
     *   `P-2026-02-12-05` created and started.
 *   Risks/blockers:
     *   Existing docs policies can be bypassed without CI enforcement and improved map coverage.
+
+## Entry J-2026-02-12-04
+
+*   Timestamp: 2026-02-12 23:58:39 CET / 2026-02-12 23:58:39 UTC
+*   Summary:
+    *   User pointed out missing explicit rule to keep `docs/spec-map.json` updated.
+    *   Assistant implemented full documentation-system hardening based on prior gap audit.
+*   Decisions:
+    *   Enforce spec-map maintenance as a mandatory AI rule.
+    *   Add executable checks for map coverage and spec-test sync.
+    *   Add a docs web surface and link it from the app header.
+*   User directives:
+    *   Fix all identified documentation-system gaps.
+*   Assistant commitments:
+    *   Keep docs/spec/test sync checks in default workflow.
+*   Artifacts:
+    *   `AGENTS.md` (updated)
+    *   `docs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` (updated)
+    *   `docs/AI_DOCS_OPERATIONS.md` (updated)
+    *   `docs/spec-map.json` (expanded coverage + test mappings)
+    *   `scripts/spec-map-coverage-check.js` (new)
+    *   `scripts/spec-test-sync-check.js` (new)
+    *   `scripts/docs-review.js` (updated)
+    *   `scripts/docs-drift-check.js` (updated)
+    *   `package.json` (added `docs:map` and `spec:test`)
+    *   `.github/workflows/ci.yml` (added docs/spec gates)
+    *   `.github/workflows/documentation-maintenance.yml` (added consistency checks)
+    *   `public/docs/index.html` (new docs entry page)
+    *   `public/docs/styles.css` (new docs styling)
+    *   `src/components/Layout/AppHeader.tsx` (added Docs link)
+    *   `src/components/Layout/AppHeader.css` (added Docs button styles)
+*   Pending updates:
+    *   `P-2026-02-12-05` marked `done`.
+*   Risks/blockers:
+    *   The docs page is currently a starter surface; full feature-by-feature depth still needs iterative content expansion.

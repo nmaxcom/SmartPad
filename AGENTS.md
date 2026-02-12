@@ -60,8 +60,11 @@ When implementation behavior changes in `src/`:
 1. check whether linked spec pages in `docs/Specs/` need updates
 2. update specs when behavior changed or rules were clarified
 3. update user docs when spec or behavior changed
-4. run `npm run docs:drift`
-5. mention spec/docs updates in the final report
+4. update `docs/spec-map.json` when new feature areas/files are introduced or mapping changes
+5. run `npm run docs:map`
+6. run `npm run docs:drift`
+7. run `npm run spec:test`
+8. mention spec/docs/spec-map/test updates in the final report
 
 Do this automatically; user should not have to request it.
 

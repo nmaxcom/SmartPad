@@ -1,0 +1,140 @@
+:root {
+  --bg: #f5f2ea;
+  --paper: #fffdf9;
+  --ink: #1f2430;
+  --muted: #4f5a6a;
+  --brand: #145f63;
+  --accent: #d4572f;
+  --border: #d9d2c3;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: radial-gradient(circle at 20% 0%, #fdf8ea, var(--bg) 58%);
+}
+
+.hero {
+  padding: 56px 20px 40px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(130deg, #fffdf8, #f0efe8);
+}
+
+.hero-inner {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--brand);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+h1 {
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: clamp(2rem, 5vw, 3rem);
+  margin: 8px 0 12px;
+}
+
+.subtitle {
+  color: var(--muted);
+  max-width: 62ch;
+}
+
+.hero-actions {
+  margin-top: 18px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 10px 16px;
+  border: 1px solid transparent;
+  font-weight: 600;
+}
+
+.btn-primary {
+  background: var(--brand);
+  color: #fff;
+}
+
+.btn-secondary {
+  border-color: var(--border);
+  color: var(--ink);
+  background: #fff;
+}
+
+.content {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 18px;
+}
+
+.toc {
+  position: sticky;
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-self: start;
+}
+
+.toc a {
+  text-decoration: none;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.card {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 14px;
+  box-shadow: 0 6px 18px rgba(22, 33, 44, 0.04);
+}
+
+.card h2 {
+  margin-top: 0;
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+}
+
+pre {
+  overflow-x: auto;
+  background: #1f2430;
+  color: #f3f6fb;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+code {
+  font-family: "Fira Code", "JetBrains Mono", monospace;
+}
+
+@media (max-width: 900px) {
+  .content {
+    grid-template-columns: 1fr;
+  }
+
+  .toc {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}

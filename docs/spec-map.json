@@ -2,28 +2,105 @@
   "groups": [
     {
       "name": "Expression Engine",
-      "specPrefixes": ["src/eval/", "src/parsing/", "docs/Specs/LiveResult.spec.md"],
-      "docPrefixes": ["docs/TestSyntaxGuide.md", "docs/MATH_CAPABILITIES.md", "docs/notes.md"]
+      "specPrefixes": [
+        "src/eval/",
+        "src/parsing/",
+        "src/lowering/",
+        "src/math/",
+        "docs/Specs/LiveResult.spec.md"
+      ],
+      "docPrefixes": [
+        "docs/TestSyntaxGuide.md",
+        "docs/MATH_CAPABILITIES.md",
+        "docs/notes.md",
+        "public/docs/"
+      ],
+      "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
     },
     {
       "name": "Units And Conversions",
-      "specPrefixes": ["src/units/", "docs/Specs/duration.spec.md", "docs/Unit.spec.md"],
-      "docPrefixes": ["docs/Unit.spec.md", "docs/MATH_CAPABILITIES.md", "docs/UnitDecisionForks.md"]
+      "specPrefixes": [
+        "src/units/",
+        "docs/Specs/duration.spec.md",
+        "docs/Unit.spec.md"
+      ],
+      "docPrefixes": [
+        "docs/Unit.spec.md",
+        "docs/MATH_CAPABILITIES.md",
+        "docs/UnitDecisionForks.md",
+        "public/docs/"
+      ],
+      "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
     },
     {
       "name": "Currency And FX",
-      "specPrefixes": ["src/services/fxRates.ts", "src/utils/currencyFx.ts", "docs/Specs/Currency.spec.md"],
-      "docPrefixes": ["docs/MATH_CAPABILITIES.md", "docs/notes.md"]
+      "specPrefixes": [
+        "src/services/fxRates.ts",
+        "src/utils/currencyFx.ts",
+        "docs/Specs/Currency.spec.md"
+      ],
+      "docPrefixes": ["docs/MATH_CAPABILITIES.md", "docs/notes.md", "public/docs/"],
+      "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
     },
     {
       "name": "Lists And Ranges",
-      "specPrefixes": ["src/utils/listExpression.ts", "src/utils/rangeExpression.ts", "docs/Specs/Lists.spec.md", "docs/Specs/Ranges.spec.md"],
-      "docPrefixes": ["docs/TestSyntaxGuide.md", "docs/MATH_CAPABILITIES.md"]
+      "specPrefixes": [
+        "src/utils/listExpression.ts",
+        "src/utils/rangeExpression.ts",
+        "src/types/ListValue.ts",
+        "docs/Specs/Lists.spec.md",
+        "docs/Specs/Ranges.spec.md"
+      ],
+      "docPrefixes": ["docs/TestSyntaxGuide.md", "docs/MATH_CAPABILITIES.md", "public/docs/"],
+      "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
+    },
+    {
+      "name": "Date Time And Duration",
+      "specPrefixes": ["src/date/", "src/utils/localeDateNormalization.ts", "docs/DATE_MATH.md"],
+      "docPrefixes": ["docs/DATE_MATH.md", "docs/TestSyntaxGuide.md", "public/docs/"],
+      "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
+    },
+    {
+      "name": "Solve And Symbolic Math",
+      "specPrefixes": ["src/solve/", "src/types/SymbolicValue.ts", "docs/notes.md"],
+      "docPrefixes": ["docs/MATH_CAPABILITIES.md", "docs/notes.md", "public/docs/"],
+      "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
+    },
+    {
+      "name": "Plotting And Visualization",
+      "specPrefixes": ["src/plotting/", "docs/Specs/Plotting.spec.md"],
+      "docPrefixes": ["docs/Specs/Plotting.spec.md", "docs/notes.md", "public/docs/"],
+      "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
+    },
+    {
+      "name": "Editor And Result Chips",
+      "specPrefixes": [
+        "src/components/Editor.tsx",
+        "src/components/Result",
+        "src/components/Reference",
+        "docs/Specs/ResultChipsAndValueGraph.spec.md"
+      ],
+      "docPrefixes": ["docs/Specs/ResultChipsAndValueGraph.spec.md", "docs/notes.md", "public/docs/"],
+      "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
+    },
+    {
+      "name": "Sheet Storage And File Management",
+      "specPrefixes": ["src/storage/", "src/components/SheetSync.tsx", "docs/Specs/FileManagement.spec.md"],
+      "docPrefixes": ["docs/Specs/FileManagement.spec.md", "docs/ABOUT.md", "public/docs/"],
+      "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
     },
     {
       "name": "UI Panels And Settings",
-      "specPrefixes": ["src/components/ui/", "src/components/Layout/", "src/state/settingsStore.ts", "docs/Specs/FileManagement.spec.md"],
-      "docPrefixes": ["docs/ABOUT.md", "docs/notes.md"]
+      "specPrefixes": [
+        "src/components/ui/",
+        "src/components/Layout/",
+        "src/state/settingsStore.ts",
+        "src/state/SettingsContext.tsx",
+        "src/styles/",
+        "src/App.tsx"
+      ],
+      "docPrefixes": ["docs/ABOUT.md", "docs/notes.md", "public/docs/"],
+      "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
     }
   ]
 }

@@ -73,5 +73,8 @@ After every docs maintenance action:
 When a feature is added or behavior is modified:
 1. Check if `docs/Specs/` needs an update.
 2. Check if user-facing docs need an update.
-3. Add or adjust tests for the changed behavior.
-4. Run docs drift check (`npm run docs:drift`) before finalizing.
+3. Update `docs/spec-map.json` when mappings are missing or changed.
+4. Add or adjust tests for the changed behavior.
+5. Run spec-map coverage check (`npm run docs:map`) before finalizing.
+6. Run docs drift check (`npm run docs:drift`) before finalizing.
+7. Run spec-test sync check (`npm run spec:test`) before finalizing.

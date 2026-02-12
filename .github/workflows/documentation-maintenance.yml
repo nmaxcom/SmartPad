@@ -25,4 +25,32 @@ jobs:
         # The action will automatically find all .md files within these paths.
         search_paths: |
           docs/
-          README.md 
+          README.md
+
+  docs-consistency:
+    runs-on: ubuntu-latest
+    name: 📚 Check Docs Consistency
+    if: github.event_name == 'pull_request'
+    env:
+      DIFF_RANGE: ${{ github.event.pull_request.base.sha }}...${{ github.sha }}
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🧭 Spec-map coverage
+        run: npm run docs:map -- "$DIFF_RANGE"
+
+      - name: 🧪 Spec-test sync
+        run: npm run spec:test -- "$DIFF_RANGE"
+
+      - name: 📖 Docs drift check
+        run: npm run docs:drift -- "$DIFF_RANGE"

@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartPad Docs</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero-inner">
+        <p class="eyebrow">SmartPad Documentation</p>
+        <h1>Complete feature guide with practical examples</h1>
+        <p class="subtitle">
+          Learn variables, live math, units, currency, dates, ranges, sheets, and troubleshooting.
+        </p>
+        <div class="hero-actions">
+          <a href="../" class="btn btn-primary">Open SmartPad App</a>
+          <a href="https://github.com/nmaxcom/SmartPad/issues/new?template=bug_report.yml" class="btn btn-secondary" target="_blank" rel="noreferrer">Report a bug</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <nav class="toc">
+        <a href="#quick-start">Quick Start</a>
+        <a href="#variables">Variables</a>
+        <a href="#live-results">Live Results</a>
+        <a href="#units">Units</a>
+        <a href="#currency">Currency and FX</a>
+        <a href="#lists">Lists and Ranges</a>
+        <a href="#dates">Dates</a>
+        <a href="#sheets">Sheets and Files</a>
+        <a href="#specs">Specs and Source of Truth</a>
+      </nav>
+
+      <section id="quick-start" class="card">
+        <h2>Quick Start</h2>
+        <p>SmartPad is a text-first computation pad. Type naturally and use <code>=&gt;</code> to ask for an immediate result.</p>
+        <pre><code>hours = 38
+rate = $65
+weekly_pay = hours * rate =&gt; $2,470.00</code></pre>
+      </section>
+
+      <section id="variables" class="card">
+        <h2>Variables and dependencies</h2>
+        <p>Define values once, then reuse them. Updating an upstream variable recalculates dependent results.</p>
+        <pre><code>radius = 5 m
+height = 10 m
+volume = PI * radius^2 * height =&gt; 785.40 m^3</code></pre>
+      </section>
+
+      <section id="live-results" class="card">
+        <h2>Live result behavior</h2>
+        <ul>
+          <li>Use <code>=&gt;</code> to display a result in-line.</li>
+          <li>Incomplete comparators like trailing <code>=</code> are intentionally suppressed to avoid parser leakage.</li>
+          <li>Assignments with supported phrase forms (like percentage forms) can still show previews.</li>
+        </ul>
+      </section>
+
+      <section id="units" class="card">
+        <h2>Units and conversion</h2>
+        <pre><code>distance = 12 km
+distance to mi =&gt; 7.46 mi
+
+force = 100 N
+force to lbf =&gt; 22.48 lbf</code></pre>
+      </section>
+
+      <section id="currency" class="card">
+        <h2>Currency and FX</h2>
+        <p>SmartPad supports currency symbols and external FX providers with local caching fallback.</p>
+        <pre><code>salary = €3000
+salary to $ =&gt; (depends on latest FX rate)</code></pre>
+      </section>
+
+      <section id="lists" class="card">
+        <h2>Lists and ranges</h2>
+        <pre><code>scores = 10, 12, 15, 9
+avg(scores) =&gt; 11.5
+
+1..5 =&gt; 1, 2, 3, 4, 5</code></pre>
+      </section>
+
+      <section id="dates" class="card">
+        <h2>Date and duration math</h2>
+        <pre><code>start = 2026-02-01
+end = 2026-02-12
+end - start =&gt; 11 days</code></pre>
+      </section>
+
+      <section id="sheets" class="card">
+        <h2>Sheets, import, export</h2>
+        <p>Use the sheet sidebar to create, rename, reorder, trash, restore, and export/import markdown and zip files.</p>
+      </section>
+
+      <section id="specs" class="card">
+        <h2>Specs and source of truth</h2>
+        <p>Behavior contracts are tracked in <code>docs/Specs/</code>. The AI keeps specs, tests, and docs synchronized via <code>docs/spec-map.json</code> and CI checks.</p>
+        <p>Primary references:</p>
+        <ul>
+          <li><a href="../../docs/Specs/ResultChipsAndValueGraph.spec.md">Result Chips Spec</a></li>
+          <li><a href="../../docs/Specs/Currency.spec.md">Currency Spec</a></li>
+          <li><a href="../../docs/DATE_MATH.md">Date Math Guide</a></li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

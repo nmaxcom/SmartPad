@@ -8,15 +8,11 @@ const specMapPath = path.join(repoRoot, "docs", "spec-map.json");
 const range = process.argv[2] || "HEAD~1...HEAD";
 
 const getChangedFiles = (diffRange) => {
-  try {
-    const output = execSync(`git diff --name-only ${diffRange}`, { encoding: "utf8" });
-    return output
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean);
-  } catch {
-    return [];
-  }
+  const output = execSync(`git diff --name-only ${diffRange}`, { encoding: "utf8" });
+  return output
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
 };
 
 const startsWithAny = (file, prefixes) => prefixes.some((prefix) => file.startsWith(prefix));
