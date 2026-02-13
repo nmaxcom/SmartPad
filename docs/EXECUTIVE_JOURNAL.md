@@ -17,6 +17,8 @@
 | P-2026-02-12-05 | Close documentation-system enforcement gaps | Assistant | 2026-02-14 | done | Implemented CI gates, docs surface, mapping and sync checks |
 | P-2026-02-13-01 | Refresh todo lanes to reflect current priorities | Assistant | 2026-02-14 | done | Active lane switched to project; backlog normalized |
 | P-2026-02-13-02 | Deliver prioritized next-step execution list | Assistant | 2026-02-14 | done | Provided immediate action sequence from updated backlog |
+| P-2026-02-13-03 | Add explicit docs-engine and docs-generation tasks | Assistant | 2026-02-14 | done | Added Docusaurus decision and generation pipeline tasks |
+| P-2026-02-13-04 | Clarify why docs link currently opens SmartPad | Assistant | 2026-02-14 | done | Root cause identified: local dev routing and unpushed commits |
 
 ---
 
@@ -280,3 +282,24 @@
     *   `P-2026-02-13-02` marked `done`.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-13-02
+
+*   Timestamp: 2026-02-13 23:32:51 CET / 2026-02-13 23:32:51 UTC
+*   Summary:
+    *   User challenged missing task coverage for true web-doc generation and Docusaurus specifics.
+    *   Assistant validated state and found local branch is ahead of remote by 7 commits.
+*   Decisions:
+    *   Add explicit tasks for docs engine decision, generated-doc pipeline, and docs-link parity.
+*   User directives:
+    *   Ensure planning includes actual docs generation work, not only a placeholder page.
+*   Assistant commitments:
+    *   Add tracked tasks now and explain current docs-link behavior.
+*   Artifacts:
+    *   `docs/TODO_BACKLOG.md` (updated with T-2026-02-13-04/05/06)
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   `P-2026-02-13-03` marked `done`.
+    *   `P-2026-02-13-04` marked `done`.
+*   Risks/blockers:
+    *   Live site will not reflect latest docs behavior until local commits are pushed.
