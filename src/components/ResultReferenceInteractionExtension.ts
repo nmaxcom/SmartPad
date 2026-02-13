@@ -48,6 +48,19 @@ const getTextAt = (doc: any, from: number, to: number): string =>
 
 const isWordBoundary = (value: string): boolean => !/[a-zA-Z0-9_]/.test(value || "");
 
+const getSelectedTextblockLineId = (state: any): string => {
+  const selection = state?.selection;
+  const $from = selection?.$from;
+  if (!$from) return "";
+  for (let depth = $from.depth; depth >= 0; depth -= 1) {
+    const node = $from.node(depth);
+    if (node?.isTextblock) {
+      return String((node as any).attrs?.lineId || "").trim();
+    }
+  }
+  return "";
+};
+
 const getEventElement = (eventTarget: EventTarget | null): HTMLElement | null => {
   if (!eventTarget) return null;
   if (eventTarget instanceof HTMLElement) return eventTarget;
@@ -137,6 +150,29 @@ const insertReferenceAt = (
   }
 };
 
+const insertReferenceOnNewLine = (
+  view: any,
+  payload: ReferencePayload,
+  mode: "reference" | "value" = "reference"
+): number | null => {
+  const { state } = view;
+  const { $from } = state.selection;
+  let textblockDepth = $from.depth;
+  while (textblockDepth > 0 && !$from.node(textblockDepth).isTextblock) {
+    textblockDepth -= 1;
+  }
+  if (textblockDepth <= 0 || !$from.node(textblockDepth).isTextblock) {
+    return null;
+  }
+
+  const lineEnd = $from.end(textblockDepth);
+  const splitSelectionPos = Math.max(1, Math.min(lineEnd + 1, state.doc.content.size));
+  const splitTr = state.tr.split(lineEnd);
+  splitTr.setSelection(TextSelection.create(splitTr.doc, splitSelectionPos));
+  view.dispatch(splitTr);
+  return insertReferenceAt(view, payload, view.state.selection.from, mode);
+};
+
 const payloadFromElement = (target: HTMLElement): ReferencePayload | null => {
   const fallbackLineId = String(
     target.closest("p[data-line-id]")?.getAttribute("data-line-id") || ""
@@ -182,6 +218,52 @@ const findSelectedReferencePayload = (state: any): ReferencePayload | null => {
         sourceValue: String(node.attrs.sourceValue || ""),
         placeholderKey: String(node.attrs.placeholderKey || ""),
       };
+      return false;
+    }
+    return undefined;
+  });
+  return found;
+};
+
+const findDirectlySelectedReferencePayload = (state: any): ReferencePayload | null => {
+  const referenceType = state.schema.nodes.referenceToken;
+  if (!referenceType) return null;
+  if (!(state.selection instanceof NodeSelection)) return null;
+  const node = state.selection.node;
+  if (!node || node.type !== referenceType) return null;
+  return {
+    sourceLineId: String(node.attrs.sourceLineId || ""),
+    sourceLine: Number(node.attrs.sourceLine || 0),
+    sourceLabel: String(node.attrs.label || "value"),
+    sourceValue: String(node.attrs.sourceValue || ""),
+    placeholderKey: String(node.attrs.placeholderKey || ""),
+  };
+};
+
+const getReferenceRangeInSelection = (state: any): { from: number; to: number } | null => {
+  const referenceType = state.schema.nodes.referenceToken;
+  if (!referenceType) return null;
+  const { selection } = state;
+
+  if (selection instanceof NodeSelection && selection.node?.type === referenceType) {
+    return { from: selection.from, to: selection.to };
+  }
+
+  if (selection.empty) {
+    const $from = selection.$from;
+    if ($from.nodeAfter?.type === referenceType) {
+      return { from: $from.pos, to: $from.pos + $from.nodeAfter.nodeSize };
+    }
+    if ($from.nodeBefore?.type === referenceType) {
+      return { from: $from.pos - $from.nodeBefore.nodeSize, to: $from.pos };
+    }
+    return null;
+  }
+
+  let found: { from: number; to: number } | null = null;
+  state.doc.nodesBetween(selection.from, selection.to, (node: any, pos: number) => {
+    if (node.type === referenceType) {
+      found = { from: pos, to: pos + node.nodeSize };
       return false;
     }
     return undefined;
@@ -433,6 +515,15 @@ export const ResultReferenceInteractionExtension = Extension.create({
               }),
             ]);
           },
+          handleTextInput: (view, _from, _to, text) => {
+            const range = getReferenceRangeInSelection(view.state);
+            if (!range) return false;
+            const insertPos = range.to;
+            const tr = view.state.tr.insertText(text, insertPos, insertPos);
+            tr.setSelection(TextSelection.create(tr.doc, insertPos + text.length));
+            view.dispatch(tr);
+            return true;
+          },
           handleKeyDown: (view, event) => {
             const isMod = event.metaKey || event.ctrlKey;
             if (!isMod || event.altKey) {
@@ -514,8 +605,35 @@ export const ResultReferenceInteractionExtension = Extension.create({
               if (!payload) {
                 return true;
               }
-              const insertionPos = view.state.selection.from;
               const insertMode = getChipInsertMode();
+              if (insertMode === "reference") {
+                const activeLineId = getSelectedTextblockLineId(view.state);
+                if (
+                  activeLineId &&
+                  payload.sourceLineId &&
+                  activeLineId === payload.sourceLineId
+                ) {
+                  const insertedOnNewLine = insertReferenceOnNewLine(
+                    view,
+                    payload,
+                    "reference"
+                  );
+                  if (typeof insertedOnNewLine === "number") {
+                    postInsertCursor = insertedOnNewLine;
+                    consumeResultClick = true;
+                    view.focus();
+                    return true;
+                  }
+                  logRefDebug("skip self-reference insert (new line failed)", {
+                    activeLineId,
+                    sourceLineId: payload.sourceLineId,
+                  });
+                  postInsertCursor = null;
+                  consumeResultClick = false;
+                  return true;
+                }
+              }
+              const insertionPos = view.state.selection.from;
               const insertedCursor = insertReferenceAt(view, payload, insertionPos, insertMode);
               if (typeof insertedCursor === "number") {
                 postInsertCursor = insertedCursor;
@@ -617,7 +735,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
             },
             copy: (view, event) => {
               if (!event.clipboardData) return false;
-              const payload = findSelectedReferencePayload(view.state);
+              const payload = findDirectlySelectedReferencePayload(view.state);
               if (!payload) return false;
               event.clipboardData.setData(CLIPBOARD_MIME, JSON.stringify(payload));
               event.clipboardData.setData(

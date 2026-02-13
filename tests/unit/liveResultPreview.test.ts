@@ -1,4 +1,8 @@
-import { shouldShowLiveForAssignmentValue } from "../../src/eval/liveResultPreview";
+import {
+  isLikelyLiveExpression,
+  shouldBypassUnresolvedLiveGuard,
+  shouldShowLiveForAssignmentValue,
+} from "../../src/eval/liveResultPreview";
 import type { Variable } from "../../src/state/types";
 
 const buildVariable = (name: string): Variable => ({
@@ -10,6 +14,14 @@ const buildVariable = (name: string): Variable => ({
 });
 
 describe("shouldShowLiveForAssignmentValue", () => {
+  test("treats word operators as live-expression signals in plain lines", () => {
+    const variableContext = new Map<string, Variable>();
+    const functionStore = new Map<string, any>();
+    expect(isLikelyLiveExpression("distance to km", variableContext, functionStore)).toBe(true);
+    expect(isLikelyLiveExpression("distance in km", variableContext, functionStore)).toBe(true);
+    expect(isLikelyLiveExpression("price as %", variableContext, functionStore)).toBe(true);
+  });
+
   test("returns false for plain literal assignment values", () => {
     const variableContext = new Map<string, Variable>();
     const functionStore = new Map<string, any>();
@@ -43,6 +55,26 @@ describe("shouldShowLiveForAssignmentValue", () => {
       shouldShowLiveForAssignmentValue("discount off base price", variableContext, functionStore)
     ).toBe(true);
     expect(shouldShowLiveForAssignmentValue("myFunc(2)", variableContext, functionStore)).toBe(
+      true
+    );
+  });
+
+  test("unresolved guard bypass triggers for phrase operators used by percentage syntax", () => {
+    expect(shouldBypassUnresolvedLiveGuard("discount off base price")).toBe(true);
+    expect(shouldBypassUnresolvedLiveGuard("tax on final price")).toBe(true);
+    expect(shouldBypassUnresolvedLiveGuard("60mph to km")).toBe(true);
+    expect(shouldBypassUnresolvedLiveGuard("distance in mi")).toBe(true);
+    expect(shouldBypassUnresolvedLiveGuard("120 per h")).toBe(true);
+    expect(shouldBypassUnresolvedLiveGuard("alpha + beta")).toBe(false);
+  });
+
+  test("recognizes word-operator live expressions without symbols", () => {
+    const variableContext = new Map<string, Variable>();
+    const functionStore = new Map<string, any>();
+    expect(shouldShowLiveForAssignmentValue("60mph to km", variableContext, functionStore)).toBe(
+      true
+    );
+    expect(shouldShowLiveForAssignmentValue("distance in km", variableContext, functionStore)).toBe(
       true
     );
   });

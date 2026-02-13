@@ -75,6 +75,29 @@ test.describe("Result References", () => {
     await expect(page.locator(".ProseMirror")).not.toContainText("@L");
   });
 
+  test("clicking a live result on the same source line inserts chip on a new line", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("max(3, 7) * 1492429");
+    await waitForUIRenderComplete(page);
+
+    const line = page.locator(".ProseMirror p").first();
+    const liveChip = line.locator(".semantic-live-result-display");
+    await expect(liveChip).toHaveCount(1);
+
+    await line.click({ position: { x: 10, y: 8 } });
+    await liveChip.click();
+    await waitForUIRenderComplete(page);
+
+    const secondLine = page.locator(".ProseMirror p").nth(1);
+    await expect(secondLine.locator(".semantic-reference-chip")).toHaveCount(1);
+    await expect(secondLine.locator(".semantic-reference-chip").first()).toHaveText("10447003");
+    await expect(line).not.toContainText("source line has error");
+    await expect(secondLine).not.toContainText("source line has error");
+  });
+
   test("drag/drop and copy/paste preserve reference chips", async ({ page }) => {
     const editor = page.locator('[data-testid="smart-pad-editor"]');
     await editor.click();
@@ -597,4 +620,170 @@ test.describe("Result References", () => {
     expect(paragraphTexts.some((line) => line.includes("+ 5 =>"))).toBeTruthy();
     await expect(page.locator(".semantic-reference-chip")).toHaveCount(2);
   });
+
+  test("select-all copy with chips does not collapse clipboard text to a single placeholder", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("100 + 20 =>");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type(" ");
+    await waitForUIRenderComplete(page);
+
+    const sourceChip = page.locator(".ProseMirror p").first().locator(".semantic-result-display");
+    const line2 = page.locator(".ProseMirror p").nth(1);
+    await line2.click({ position: { x: 16, y: 8 } });
+    await sourceChip.click();
+    await page.keyboard.type(" + 5 =>");
+    await waitForUIRenderComplete(page);
+
+    const copiedText = await page.evaluate(() => {
+      const editorInstance = (window as any).tiptapEditor;
+      if (!editorInstance) return "";
+      editorInstance.commands.focus();
+      editorInstance.commands.selectAll();
+      const clipboard = new DataTransfer();
+      const evt = new ClipboardEvent("copy", { clipboardData: clipboard });
+      editorInstance.view.dom.dispatchEvent(evt);
+      return clipboard.getData("text/plain");
+    });
+
+    expect(copiedText).toContain("100 + 20 =>");
+    expect(copiedText).toContain("+ 5 =>");
+    expect(copiedText.trim()).not.toMatch(/^__sp_ref_[a-z0-9]+__$/i);
+  });
+
+  test("live preview renders for phrase percentage unit expressions without =>", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("10% of 155 N");
+    await waitForUIRenderComplete(page);
+
+    await expect(page.locator(".ProseMirror p").first().locator(".semantic-live-result-display")).toHaveAttribute(
+      "data-result",
+      /15\.5\s*N/
+    );
+  });
+
+  test("click-inserted reference used in explicit trigger expression keeps a single reference token", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("PI * 9.2");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type(" ");
+    await waitForUIRenderComplete(page);
+
+    const sourceLive = page.locator(".ProseMirror p").first().locator(".semantic-live-result-display");
+    const dependent = page.locator(".ProseMirror p").nth(1);
+    await dependent.click({ position: { x: 16, y: 8 } });
+    await sourceLive.click();
+    await page.keyboard.type("*2=>");
+    await waitForUIRenderComplete(page);
+
+    await expect(dependent.locator(".semantic-reference-chip")).toHaveCount(1);
+    await expect(dependent.locator(".semantic-result-display").last()).toHaveAttribute(
+      "data-result",
+      /57\.8/
+    );
+
+    const nodeSummary = await page.evaluate(() => {
+      const editorInstance = (window as any).tiptapEditor;
+      if (!editorInstance) return null;
+      const paragraph = editorInstance.state.doc.child(1);
+      const parts: string[] = [];
+      let referenceCount = 0;
+      paragraph.forEach((node: any) => {
+        if (node.type?.name === "referenceToken") {
+          parts.push("ref");
+          referenceCount += 1;
+        }
+        if (node.isText) parts.push(node.text || "");
+      });
+      return { parts, referenceCount };
+    });
+    expect(nodeSummary?.referenceCount).toBe(1);
+    expect(nodeSummary?.parts.join("")).toContain(" *2=>");
+    expect(nodeSummary?.parts.join("")).not.toContain("28.928.9");
+  });
+
+  test("completing => after an intermediate '=' does not duplicate chip value text", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("PI * 10");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type(" ");
+    await waitForUIRenderComplete(page);
+
+    const sourceLive = page.locator(".ProseMirror p").first().locator(".semantic-live-result-display");
+    const dependent = page.locator(".ProseMirror p").nth(1);
+    await dependent.click({ position: { x: 16, y: 8 } });
+    await sourceLive.click();
+    await page.keyboard.type("*2=");
+    await waitForUIRenderComplete(page);
+    await page.keyboard.type(">");
+    await waitForUIRenderComplete(page);
+
+    await expect(dependent.locator(".semantic-reference-chip")).toHaveCount(1);
+    await expect(dependent.locator(".semantic-result-display").last()).toHaveAttribute(
+      "data-result",
+      /62\.84/
+    );
+    await expect(dependent).not.toContainText("__sp_ref_");
+
+    const nodeSummary = await page.evaluate(() => {
+      const editorInstance = (window as any).tiptapEditor;
+      if (!editorInstance) return null;
+      const paragraph = editorInstance.state.doc.child(1);
+      let referenceCount = 0;
+      let literalText = "";
+      paragraph.forEach((node: any) => {
+        if (node.type?.name === "referenceToken") {
+          referenceCount += 1;
+        } else if (node.isText) {
+          literalText += node.text || "";
+        }
+      });
+      return { referenceCount, literalText };
+    });
+    expect(nodeSummary?.referenceCount).toBe(1);
+    expect(nodeSummary?.literalText).toContain("*2=>");
+    expect(nodeSummary?.literalText.replace(/\s+/g, "")).not.toContain("31.4231.42");
+  });
+
+  test("typing while reference chip is node-selected inserts after chip without flattening", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("PI * 10");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type(" ");
+    await waitForUIRenderComplete(page);
+
+    const sourceLive = page.locator(".ProseMirror p").first().locator(".semantic-live-result-display");
+    const dependent = page.locator(".ProseMirror p").nth(1);
+    await dependent.click({ position: { x: 16, y: 8 } });
+    await sourceLive.click();
+    await waitForUIRenderComplete(page);
+
+    await dependent.locator(".semantic-reference-chip").first().click();
+    await page.keyboard.type("*2=>");
+    await waitForUIRenderComplete(page);
+
+    await expect(dependent.locator(".semantic-reference-chip")).toHaveCount(1);
+    await expect(dependent).not.toContainText("__sp_ref_");
+    await expect(dependent).not.toContainText("31.4231.42");
+    await expect(dependent.locator(".semantic-result-display").last()).toHaveAttribute(
+      "data-result",
+      /62\.84/
+    );
+  });
+
 });

@@ -129,6 +129,7 @@ Flow:
 1. User places caret in expression.
 2. User clicks a source result chip.
 3. SmartPad inserts a reference chip token at caret.
+4. If caret is on the same source line as the clicked live result, SmartPad creates a new line and inserts the chip there (prevents self-reference loops).
 
 User sees:
 
@@ -159,6 +160,12 @@ Flow:
 3. Insert linked chip reference (not literal text) when destination supports rich format.
 4. For SmartPad text round-trip, serialize as SmartPad reference token (not literal value).
 5. For external plain-text export, behavior follows `referenceTextExportMode`.
+
+Guardrails:
+
+1. Copy interception must apply only when a reference chip node itself is selected.
+2. Normal line/multi-line copy must keep native editor behavior (no single-chip clipboard hijack).
+3. Pasting rich SmartPad content with chips should preserve chips and linked behavior.
 
 ---
 
@@ -292,7 +299,15 @@ Add:
 Plain explanation:
 By default SmartPad keeps references alive when copying/exporting text, so pasted content can come back as real chips later.
 
-### 8.7 Current SmartPad Touchpoints (Implementation map)
+### 8.7 Live Result Expansion Rules
+
+1. Live result should render for non-trivial assignment RHS values even without `=>`.
+2. Non-trivial means: includes math operators, conversion keywords, percentage phrase operators (`of/on/off/as/is/per`), known variables, or function calls.
+3. Simple literal assignments (e.g. `x = 42`, `tax = 8%`, `price = $120`) do not render live chips by default.
+4. While user is in incomplete comparator/trigger states (e.g. trailing `=` before typing `>`), live result is suppressed to avoid placeholder gibberish/noise.
+5. Phrase-based percentage expressions (e.g. `discount off base price`, `tax on final price`) bypass unresolved-identifier pre-check and are evaluated directly.
+
+### 8.8 Current SmartPad Touchpoints (Implementation map)
 
 Expected primary touchpoints in current codebase:
 
@@ -321,6 +336,7 @@ Expected primary touchpoints in current codebase:
 4. Copying sheet section with both source and dependents should remap links within pasted block when possible.
 5. If remap impossible, keep external link or downgrade to literal based on paste option.
 6. Cycles are detected and shown as cycle errors on participating lines.
+7. Typing intermediate trigger text (e.g. `=` while building `=>`) must never surface internal reference placeholders in live UI output.
 
 ---
 

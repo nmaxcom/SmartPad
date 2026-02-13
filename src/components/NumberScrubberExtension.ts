@@ -111,56 +111,49 @@ export const NumberScrubberExtension = Extension.create({
 
                     // Apply bounds (prevent division by zero, extreme values)
                     const boundedValue = applyBounds(newValue);
-                    const deltaFromStart = boundedValue - scrubState.startValue;
 
                     // Format value preserving original precision
                     const formattedValue = formatNumber(boundedValue, scrubState.decimalPlaces);
+                    const displayedValue = parseFloat(formattedValue);
+                    const deltaFromStart = displayedValue - scrubState.startValue;
 
-                    // Update the document
-                    const tr = view.state.tr.replaceWith(
-                      scrubState.elementStart,
-                      scrubState.elementEnd,
-                      view.state.schema.text(formattedValue)
-                    );
-
-                    // Update element end position for next update
-                    scrubState.elementEnd = scrubState.elementStart + formattedValue.length;
-
-                    view.dispatch(tr);
+                    applyScrubValue(view, scrubState, formattedValue);
 
                     // Update floating delta chip near the cursor
                     updateDeltaChip(
                       scrubState.deltaChip,
                       deltaFromStart,
                       scrubState.decimalPlaces,
-                      e.clientX,
-                      e.clientY
+                      view,
+                      scrubState
                     );
                   }
                 };
 
                 const handleMouseUp = () => {
+                  document.removeEventListener("mousemove", handleMouseMove);
+                  document.removeEventListener("mouseup", handleMouseUp);
+                  window.removeEventListener("mouseleave", handleMouseUp);
+
                   // Remove dragging class and global cursor immediately
                   if (scrubState.dragElement) {
                     scrubState.dragElement.classList.remove("dragging");
                   }
-                  removeDeltaChip(scrubState.deltaChip);
                   document.body.classList.remove("number-scrubbing");
 
                   // If we didn't move (simple click), allow normal cursor placement
                   if (!scrubState.hasMoved) {
+                    removeDeltaChip(scrubState.deltaChip);
                     // Place cursor at click position but keep the scrubbable mark
                     const tr = view.state.tr;
                     tr.setSelection(TextSelection.create(tr.doc, cursorPos));
                     view.dispatch(tr);
                     view.focus();
+                    delete (plugin as any).scrubState;
+                    return;
                   }
 
-                  document.removeEventListener("mousemove", handleMouseMove);
-                  document.removeEventListener("mouseup", handleMouseUp);
-                  window.removeEventListener("mouseleave", handleMouseUp);
-
-                  // Clean up plugin state
+                  removeDeltaChip(scrubState.deltaChip);
                   delete (plugin as any).scrubState;
                 };
 
@@ -250,6 +243,21 @@ function formatNumber(value: number, decimalPlaces: number): string {
   return value.toFixed(decimalPlaces);
 }
 
+function applyScrubValue(
+  view: EditorView,
+  scrubState: NumberScrubState,
+  formattedValue: string
+): void {
+  const tr = view.state.tr.replaceWith(
+    scrubState.elementStart,
+    scrubState.elementEnd,
+    view.state.schema.text(formattedValue)
+  );
+
+  scrubState.elementEnd = scrubState.elementStart + formattedValue.length;
+  view.dispatch(tr);
+}
+
 function createDeltaChip(): HTMLDivElement | null {
   if (typeof document === "undefined") return null;
   const chip = document.createElement("div");
@@ -268,15 +276,35 @@ function updateDeltaChip(
   chip: HTMLDivElement | null,
   deltaValue: number,
   decimalPlaces: number,
-  clientX: number,
-  clientY: number
+  view: EditorView,
+  scrubState: NumberScrubState
 ): void {
   if (!chip) return;
 
   const formattedDelta = formatDelta(deltaValue, decimalPlaces);
+  let x = 0;
+  let y = 0;
+
+  try {
+    const startCoords = view.coordsAtPos(scrubState.elementStart);
+    const endPos = Math.max(scrubState.elementStart + 1, scrubState.elementEnd);
+    const endCoords = view.coordsAtPos(endPos);
+    x = (startCoords.left + endCoords.right) / 2;
+    y = Math.min(startCoords.top, endCoords.top);
+  } catch {
+    // Fallback if coords are unavailable while doc is reconciling.
+    const fallback = scrubState.dragElement?.getBoundingClientRect();
+    if (fallback) {
+      x = fallback.left + fallback.width / 2;
+      y = fallback.top;
+    } else {
+      return;
+    }
+  }
+
   chip.textContent = formattedDelta;
-  chip.style.left = `${clientX}px`;
-  chip.style.top = `${clientY - 28}px`;
+  chip.style.left = `${x}px`;
+  chip.style.top = `${y - 6}px`;
   chip.classList.toggle("is-positive", deltaValue >= 0);
   chip.classList.toggle("is-negative", deltaValue < 0);
 }
@@ -287,8 +315,6 @@ function formatDelta(deltaValue: number, decimalPlaces: number): string {
 
   if (decimalPlaces > 0) {
     core = absDelta.toFixed(decimalPlaces);
-  } else if (absDelta < 10) {
-    core = absDelta.toFixed(1);
   } else {
     core = Math.round(absDelta).toString();
   }

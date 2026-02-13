@@ -118,7 +118,27 @@ export const ResultInteractionExtension = Extension.create({
         const { state, view } = this.editor;
         const { selection } = state;
         const range = getResultRangeInSelection(state, selection);
-        if (!range) return false;
+        if (!range) {
+          if (!selection.empty) {
+            const tr = state.tr.delete(selection.from, selection.to);
+            const anchor = Math.max(1, Math.min(selection.from, tr.doc.content.size));
+            tr.setSelection(TextSelection.create(tr.doc, anchor));
+            view.dispatch(tr);
+            return true;
+          }
+
+          const textSelection = selection as TextSelection;
+          if (textSelection.$from.parentOffset === 0) {
+            return false;
+          }
+
+          const deleteFrom = Math.max(1, textSelection.from - 1);
+          const tr = state.tr.delete(deleteFrom, textSelection.from);
+          const anchor = Math.max(1, Math.min(deleteFrom, tr.doc.content.size));
+          tr.setSelection(TextSelection.create(tr.doc, anchor));
+          view.dispatch(tr);
+          return true;
+        }
         if (!selection.empty) {
           const tr = state.tr.delete(selection.from, selection.to);
           const anchor = Math.min(Math.max(selection.from, 0), tr.doc.content.size);

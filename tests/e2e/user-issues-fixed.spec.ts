@@ -124,6 +124,52 @@ test.describe("User Issues Fixed", () => {
     expect(result || "").toMatch(/15\.5\s*N/);
   });
 
+  test("live results appear on non-trivial assignment values without =>", async ({ page }) => {
+    await page.evaluate(() => {
+      const key = "smartpad-settings";
+      const existing = JSON.parse(localStorage.getItem(key) || "{}");
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          ...existing,
+          liveResultEnabled: true,
+        })
+      );
+    });
+    await page.reload();
+    await waitForEditorReady(page);
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      if (!editor) return;
+      editor.commands.setContent("<p></p>");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    const pm = page.locator(".ProseMirror");
+    await pm.click();
+    await pm.type("discount = 15%");
+    await page.keyboard.press("Enter");
+    await pm.type("base price = $120.50");
+    await page.keyboard.press("Enter");
+    await pm.type("final price = discount off base price");
+    await page.keyboard.press("Enter");
+    await pm.type("especial = discount * 2");
+    await page.keyboard.press("Enter");
+    await pm.type("tax = 8%");
+    await page.keyboard.press("Enter");
+    await pm.type("total = tax on final price");
+    await waitForUIRenderComplete(page);
+
+    const lines = page.locator(".ProseMirror p");
+    await expect(lines.nth(0).locator(".semantic-live-result-display")).toHaveCount(0);
+    await expect(lines.nth(1).locator(".semantic-live-result-display")).toHaveCount(0);
+    await expect(lines.nth(2).locator(".semantic-live-result-display")).toHaveCount(1);
+    await expect(lines.nth(3).locator(".semantic-live-result-display")).toHaveCount(1);
+    await expect(lines.nth(4).locator(".semantic-live-result-display")).toHaveCount(0);
+    await expect(lines.nth(5).locator(".semantic-live-result-display")).toHaveCount(1);
+  });
+
   test("math functions and parentheses evaluate correctly", async ({ page }) => {
     const pm = page.locator(".ProseMirror");
     await pm.click();
@@ -328,6 +374,63 @@ test.describe("User Issues Fixed", () => {
     expect(clipboardInfo.text).toContain("5");
     expect(clipboardInfo.text).toContain("8");
     expect(clipboardInfo.text).not.toContain("\n\n");
+  });
+
+  test("single numeric input remains deletable with backspace", async ({ page }) => {
+    const pm = page.locator(".ProseMirror");
+    await pm.click();
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      if (!editor) return;
+      editor.commands.setContent("<p></p>");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    await pm.type("6");
+    await waitForUIRenderComplete(page);
+
+    await page.keyboard.press("Backspace");
+    await waitForUIRenderComplete(page);
+
+    const editorPlainText = await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      return editor ? editor.getText() : "";
+    });
+    const firstLineText = await page.locator(".ProseMirror p").first().innerText();
+    expect(editorPlainText.trim()).toBe("");
+    expect((firstLineText || "").trim()).toBe("");
+  });
+
+  test("select-copy-paste keeps text stable when a line has live result chips", async ({ page }) => {
+    const pm = page.locator(".ProseMirror");
+    await pm.click();
+    await page.keyboard.press("Control+a");
+    await page.keyboard.press("Delete");
+
+    await pm.type("known = 5");
+    await page.keyboard.press("Enter");
+    await pm.type("known*3");
+    await page.keyboard.press("Enter");
+    await pm.type("2+2=>");
+    await waitForUIRenderComplete(page);
+
+    await page.keyboard.press("Control+a");
+    await page.keyboard.press("Control+c");
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Control+v");
+    await waitForUIRenderComplete(page);
+
+    const textSnapshot = await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      if (!editor) return "";
+      return editor.getText();
+    });
+
+    expect(textSnapshot).toContain("known = 5");
+    expect(textSnapshot).toContain("known*3");
+    expect(textSnapshot).toContain("2+2=>");
   });
 
   test("unit conversions show the correct result for the line", async ({ page }) => {

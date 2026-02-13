@@ -42,6 +42,8 @@ const hasIdentifierBoundaryMatch = (input: string, identifier: string): boolean 
   return pattern.test(input);
 };
 
+const LIVE_WORD_OPERATOR_REGEX = /\b(of|off|on|to|in|as|is|per)\b/i;
+
 export const isLikelyLiveExpression = (
   line: string,
   variableContext: Map<string, Variable>,
@@ -58,7 +60,7 @@ export const isLikelyLiveExpression = (
 
   if (/\d/.test(trimmed)) return true;
   if (/[+\-*/^%()]/.test(trimmed)) return true;
-  if (/\b(to|in)\b/i.test(trimmed)) return true;
+  if (LIVE_WORD_OPERATOR_REGEX.test(trimmed)) return true;
   if (/\b(PI|E)\b/.test(trimmed)) return true;
 
   const hasKnownVariable = Array.from(variableContext.keys()).some((name) =>
@@ -83,7 +85,7 @@ export const shouldShowLiveForAssignmentValue = (
   const hasMathOperators = /[+\-*/^()]/.test(trimmed);
   if (hasMathOperators) return true;
 
-  const hasLanguageOperators = /\b(of|off|on|to|in|as|per)\b/i.test(trimmed);
+  const hasLanguageOperators = LIVE_WORD_OPERATOR_REGEX.test(trimmed);
   if (hasLanguageOperators) return true;
 
   const hasKnownVariable = Array.from(variableContext.keys()).some((name) =>
@@ -98,6 +100,9 @@ export const shouldShowLiveForAssignmentValue = (
 
   return false;
 };
+
+export const shouldBypassUnresolvedLiveGuard = (expression: string): boolean =>
+  LIVE_WORD_OPERATOR_REGEX.test(expression);
 
 const collectVariableNames = (components: ExpressionComponent[]): Set<string> => {
   const names = new Set<string>();

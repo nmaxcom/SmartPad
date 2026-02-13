@@ -53,6 +53,22 @@ export default defineConfig({
       testMatch: "**/*.spec.ts",
       testIgnore: "**/app.spec.ts-snapshots/**/*.spec.ts",
     },
+    {
+      name: "google-chrome",
+      use: {
+        ...devices["Desktop Chrome"],
+        channel: "chrome",
+        launchOptions: {
+          args: [
+            "--force-dark-mode",
+            "--enable-features=WebUIDarkMode,WebContentsForceDark",
+            "--enable-force-dark",
+          ],
+        },
+      },
+      testMatch: "**/*.spec.ts",
+      testIgnore: "**/app.spec.ts-snapshots/**/*.spec.ts",
+    },
 
     // Visual tests project - separate configuration for screenshot testing
     {

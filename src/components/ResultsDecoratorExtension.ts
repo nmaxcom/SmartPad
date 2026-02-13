@@ -147,13 +147,16 @@ export const ResultsDecoratorExtension = Extension.create({
                         const wrapper = document.createElement("span");
                         wrapper.className =
                           "semantic-wrapper semantic-lane-result-wrapper semantic-live-result-wrapper";
+                        wrapper.setAttribute("contenteditable", "false");
                         const container = document.createElement("span");
                         container.className =
                           "semantic-result-container semantic-live-result-container";
+                        container.setAttribute("contenteditable", "false");
                         const span = document.createElement("span");
                         span.className = flashLiveResult
                           ? "semantic-result-display semantic-live-result-display semantic-result-flash"
                           : "semantic-result-display semantic-live-result-display";
+                        span.setAttribute("contenteditable", "false");
                         span.setAttribute("data-result", liveText);
                         span.setAttribute("data-source-line-id", info.lineId || "");
                         span.setAttribute("data-source-line", String(i));
@@ -202,10 +205,13 @@ export const ResultsDecoratorExtension = Extension.create({
                     const wrapper = document.createElement("span");
                     wrapper.className =
                       "semantic-wrapper semantic-lane-result-wrapper semantic-error-result-wrapper";
+                    wrapper.setAttribute("contenteditable", "false");
                     const container = document.createElement("span");
                     container.className = "semantic-result-container";
+                    container.setAttribute("contenteditable", "false");
                     const span = document.createElement("span");
                     span.className = "semantic-error-result";
+                    span.setAttribute("contenteditable", "false");
                     span.setAttribute("data-result", resultText);
                     span.setAttribute("title", resultText);
                     span.setAttribute("aria-label", resultText);
@@ -259,8 +265,10 @@ export const ResultsDecoratorExtension = Extension.create({
                       () => {
                         const wrapper = document.createElement("span");
                         wrapper.className = "semantic-wrapper semantic-reference-warning-wrapper";
+                        wrapper.setAttribute("contenteditable", "false");
                         const warning = document.createElement("span");
                         warning.className = "semantic-reference-line-warning";
+                        warning.setAttribute("contenteditable", "false");
                         warning.textContent = "⚠ source line has error";
                         wrapper.appendChild(warning);
                         return wrapper;
@@ -319,7 +327,62 @@ export const ResultsDecoratorExtension = Extension.create({
               lineNumberById.set(entry.lineId, idx);
             });
 
+            const normalizeValue = (value: string): string => value.replace(/\s+/g, "").trim();
+            const duplicateLiteralRemovals: Array<{ from: number; to: number }> = [];
             const referenceNodeType = view.state.schema.nodes.referenceToken;
+            if (referenceNodeType) {
+              for (let i = paragraphIndex.length - 1; i >= 1; i--) {
+                const info = paragraphIndex[i];
+                if (!info) continue;
+                let childOffset = 0;
+                for (let c = 0; c < info.node.childCount - 1; c++) {
+                  const child = info.node.child(c);
+                  const next = info.node.child(c + 1);
+                  if (child.type !== referenceNodeType || !next.isText) {
+                    childOffset += child.nodeSize;
+                    continue;
+                  }
+                  const sourceValue = String((child.attrs as any)?.sourceValue || "").trim();
+                  if (!sourceValue) {
+                    childOffset += child.nodeSize;
+                    continue;
+                  }
+                  const nextText = String(next.text || "");
+                  const leadingWhitespace = nextText.match(/^\s*/)?.[0]?.length || 0;
+                  const trimmedText = nextText.slice(leadingWhitespace);
+                  if (!trimmedText) {
+                    childOffset += child.nodeSize;
+                    continue;
+                  }
+                  const normalizedSource = normalizeValue(sourceValue);
+                  if (!normalizedSource) {
+                    childOffset += child.nodeSize;
+                    continue;
+                  }
+                  if (!trimmedText.startsWith(sourceValue)) {
+                    childOffset += child.nodeSize;
+                    continue;
+                  }
+                  const nextChar = trimmedText[sourceValue.length] || "";
+                  if (nextChar && !/[\s+\-*/^%=),]/.test(nextChar)) {
+                    childOffset += child.nodeSize;
+                    continue;
+                  }
+                  const absoluteStart = info.start + childOffset + child.nodeSize + leadingWhitespace;
+                  duplicateLiteralRemovals.push({
+                    from: absoluteStart,
+                    to: absoluteStart + sourceValue.length,
+                  });
+                  childOffset += child.nodeSize;
+                }
+              }
+            }
+
+            for (let r = duplicateLiteralRemovals.length - 1; r >= 0; r--) {
+              const removal = duplicateLiteralRemovals[r];
+              tr.delete(removal.from, removal.to);
+              changed = true;
+            }
             if (referenceNodeType) {
               for (let i = paragraphIndex.length - 1; i >= 1; i--) {
                 const info = paragraphIndex[i];

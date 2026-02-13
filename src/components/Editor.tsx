@@ -48,6 +48,7 @@ import {
   recordLiveResultEvaluation,
   recordLiveResultRendered,
   recordLiveResultSuppressed,
+  shouldBypassUnresolvedLiveGuard,
   shouldShowLiveForAssignmentValue,
 } from "../eval/liveResultPreview";
 
@@ -468,7 +469,10 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
               continue;
             }
 
-            if (hasUnresolvedLiveIdentifiers(node.components, currentVariableContext)) {
+            if (
+              hasUnresolvedLiveIdentifiers(node.components, currentVariableContext) &&
+              !shouldBypassUnresolvedLiveGuard(trimmedRawExpression)
+            ) {
               recordLiveResultSuppressed("unresolved");
               recordEquationFromNode(node, equationStore);
               continue;
@@ -586,7 +590,8 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
                   errorMessage: "evaluation failed",
                 });
               } else if (
-                hasUnresolvedLiveIdentifiers(candidateNode.components, currentVariableContext)
+                hasUnresolvedLiveIdentifiers(candidateNode.components, currentVariableContext) &&
+                !shouldBypassUnresolvedLiveGuard(rawLine)
               ) {
                 if (settings.liveResultEnabled) {
                   recordLiveResultSuppressed("unresolved");
@@ -642,30 +647,42 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
 
           if (node.type === "variableAssignment" && settings.liveResultEnabled) {
             const rawValue = String((node as any).rawValue || "").trim();
-            const variableName = String((node as any).variableName || "");
             if (
               rawValue &&
               shouldShowLiveForAssignmentValue(rawValue, currentVariableContext, functionStore)
             ) {
-              const variable = variableName ? reactiveStore.getVariable(variableName) : null;
-              const variableValue = variable?.value || null;
-              const variableDisplay = String(variable?.rawValue || "").trim();
-              if (variableValue && !SemanticValueTypes.isError(variableValue as any) && variableDisplay) {
-                collectedRenderNodes.push({
-                  type: "mathResult",
-                  line: index + 1,
-                  expression: rawValue,
-                  result: variableDisplay,
-                  displayText: `${rawValue} => ${variableDisplay}`,
-                  originalRaw: lines[index] ?? node.raw ?? "",
-                  livePreview: true,
-                } as RenderNode);
-                recordLiveResultRendered();
+              const candidateNode = parseLine(`${rawValue} =>`, index + 1);
+              if (!isExpressionNode(candidateNode)) {
+                recordLiveResultSuppressed("incomplete");
+              } else if (
+                hasUnresolvedLiveIdentifiers(candidateNode.components, currentVariableContext) &&
+                !shouldBypassUnresolvedLiveGuard(rawValue)
+              ) {
+                recordLiveResultSuppressed("unresolved");
               } else {
-                recordLiveResultSuppressed("error");
+                const previewStart = performance.now();
+                const previewRenderNode = defaultRegistry.evaluate(candidateNode, evaluationContext);
+                recordLiveResultEvaluation(performance.now() - previewStart);
+                if (
+                  previewRenderNode &&
+                  (previewRenderNode.type === "mathResult" ||
+                    previewRenderNode.type === "combined")
+                ) {
+                  collectedRenderNodes.push({
+                    ...previewRenderNode,
+                    line: index + 1,
+                    originalRaw: lines[index] ?? node.raw ?? "",
+                    livePreview: true,
+                  } as RenderNode);
+                  recordLiveResultRendered();
+                } else {
+                  recordLiveResultSuppressed("error");
+                }
               }
             } else {
-              recordLiveResultSuppressed("plaintext");
+              if (rawValue) {
+                recordLiveResultSuppressed("plaintext");
+              }
             }
           }
 
