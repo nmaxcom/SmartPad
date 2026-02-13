@@ -303,3 +303,27 @@
     *   `P-2026-02-13-04` marked `done`.
 *   Risks/blockers:
     *   Live site will not reflect latest docs behavior until local commits are pushed.
+
+## Entry J-2026-02-14-01
+
+*   Timestamp: 2026-02-14 00:12:21 CET / 2026-02-14 00:12:21 UTC
+*   Summary:
+    *   User requested same-line live-result click behavior change: create a new line and place the reference chip there.
+    *   Assistant implemented insertion-on-new-line for same-line source clicks to avoid self-reference loops.
+*   Decisions:
+    *   Preserve normal click-to-insert at caret for cross-line cases.
+    *   For same-line source clicks in `reference` mode, split line and insert chip on the new line.
+*   User directives:
+    *   "when a user clicks a live result when the caret is still in that line, create a new line with that chip in it."
+*   Assistant commitments:
+    *   Add regression test for the same-line click scenario.
+    *   Sync spec/docs and run required validation checks.
+*   Artifacts:
+    *   `src/components/ResultReferenceInteractionExtension.ts` (updated behavior)
+    *   `tests/e2e/result-reference.spec.ts` (new/updated regression test)
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md` (updated click-flow rule)
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   None.
+*   Risks/blockers:
+    *   Behavior is intentionally scoped to `reference` insert mode; `value` mode remains unchanged.
