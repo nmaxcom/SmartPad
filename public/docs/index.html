@@ -10,10 +10,11 @@
     <header class="hero">
       <div class="hero-inner">
         <p class="eyebrow">SmartPad Documentation</p>
-        <h1>Complete feature guide with practical examples</h1>
+        <h1>Web docs generated from source specs</h1>
         <p class="subtitle">
-          Learn variables, live math, units, currency, dates, ranges, sheets, and troubleshooting.
+          This page is generated from <code>docs/Specs/*.spec.md</code> so site docs stay aligned with implementation contracts.
         </p>
+        <p class="subtitle">Generated: 2026-02-13T23:54:53.033Z</p>
         <div class="hero-actions">
           <a href="../" class="btn btn-primary">Open SmartPad App</a>
           <a href="https://github.com/nmaxcom/SmartPad/issues/new?template=bug_report.yml" class="btn btn-secondary" target="_blank" rel="noreferrer">Report a bug</a>
@@ -23,87 +24,249 @@
 
     <main class="content">
       <nav class="toc">
-        <a href="#quick-start">Quick Start</a>
-        <a href="#variables">Variables</a>
-        <a href="#live-results">Live Results</a>
-        <a href="#units">Units</a>
-        <a href="#currency">Currency and FX</a>
-        <a href="#lists">Lists and Ranges</a>
-        <a href="#dates">Dates</a>
-        <a href="#sheets">Sheets and Files</a>
-        <a href="#specs">Specs and Source of Truth</a>
+        <a href="#overview">Overview</a>
+        <a href="#spec-currency">Currency + FX</a>
+<a href="#spec-duration">Duration</a>
+<a href="#spec-filemanagement">File Management</a>
+<a href="#spec-lists">Lists in Smartpad — single comprehensive document (markdown)</a>
+<a href="#spec-liveresult">Live Result</a>
+<a href="#spec-locale">Date/Time Ranges &amp; Display Spec (Locale-aware, Opinionated, With Tests)</a>
+<a href="#spec-plotting">Interactive Dependency Views (Plotting &amp; Exploration)</a>
+<a href="#spec-ranges">Range List Generation in Smartpad (Updated Spec — Rudimentary v1 + Extensions)</a>
+<a href="#spec-resultchipsandvaluegraph">Result Chips + Value Graph Spec (V2)</a>
       </nav>
 
-      <section id="quick-start" class="card">
-        <h2>Quick Start</h2>
-        <p>SmartPad is a text-first computation pad. Type naturally and use <code>=&gt;</code> to ask for an immediate result.</p>
-        <pre><code>hours = 38
-rate = $65
-weekly_pay = hours * rate =&gt; $2,470.00</code></pre>
+      <section id="overview" class="card">
+        <h2>Overview</h2>
+        <p>
+          This public docs surface is generated, not hand-written. Update specs first, then run
+          <code>npm run docs:web:build</code> to refresh this site content.
+        </p>
+        <p>
+          Total specs included: <strong>9</strong>
+        </p>
       </section>
 
-      <section id="variables" class="card">
-        <h2>Variables and dependencies</h2>
-        <p>Define values once, then reuse them. Updating an upstream variable recalculates dependent results.</p>
-        <pre><code>radius = 5 m
-height = 10 m
-volume = PI * radius^2 * height =&gt; 785.40 m^3</code></pre>
+      
+      <section id="spec-currency" class="card spec-card">
+        <h2>SmartPad Currency + FX Spec</h2>
+        <p>This spec defines currency as a first-class unit, how FX conversion works, and how manual rate overrides interact with live data. It is written to fit SmartPad&#39;s existing unit math and `to`/`in` conversion rules.</p>
+        <p>
+          <a href="../../docs/Specs/Currency.spec.md">Open source spec</a>
+        </p>
+        <h3>Coverage</h3>
+        <ul><li>0) Goals</li>
+<li>1) Currency units and symbols</li>
+<li>2) Conversion syntax (must use `to` / `in`)</li>
+<li>3) FX conversion behavior</li>
+<li>4) Manual FX overrides (take precedence)</li>
+<li>5) Currency with units (rates)</li>
+<li>6) Formatting and display</li>
+<li>7) Settings indicator (status + provider)</li>
+<li>8) Regular user examples (syntax)</li>
+<li>9) Edge cases and guardrails</li>
+<li>10) Implementation notes (fit with current code)</li></ul>
+        <div class="examples">
+          <h4>Positive example</h4><pre><code>price = $19.99
+price in EUR =&gt; EUR 18.42
+
+rate = CAD 120
+rate in USD =&gt; $88.35
+
+btc = BTC 0.015
+btc in USD =&gt; $937.42</code></pre>
+          <h4>Edge-case example</h4><p>Edge-case example not yet present in source spec.</p>
+        </div>
       </section>
 
-      <section id="live-results" class="card">
-        <h2>Live result behavior</h2>
-        <ul>
-          <li>Use <code>=&gt;</code> to display a result in-line.</li>
-          <li>Incomplete comparators like trailing <code>=</code> are intentionally suppressed to avoid parser leakage.</li>
-          <li>Assignments with supported phrase forms (like percentage forms) can still show previews.</li>
-        </ul>
+      <section id="spec-duration" class="card spec-card">
+        <h2>Duration</h2>
+        <p>A `Duration` is a signed sum of component parts (hours/minutes/seconds/etc).</p>
+        <p>
+          <a href="../../docs/Specs/duration.spec.md">Open source spec</a>
+        </p>
+        <h3>Coverage</h3>
+        <ul><li>1) New concept: `Duration` is a first-class value (not just “unit math”)</li>
+<li>2) Time-of-day values: support `Time` as distinct from `DateTime`</li>
+<li>3) Conversions: `to` should work for Duration and Time</li>
+<li>4) DateTime + Duration parsing: accept “duration phrases” without punctuation</li>
+<li>5) Disambiguation + safety rules (stuff that will bite you later)</li>
+<li>6) Concrete expected outputs for your 3 failing lines</li>
+<li>7) Extra examples you probably want tests for (high value)</li></ul>
+        <div class="examples">
+          <h4>Positive example</h4><p>Example not yet added in source spec.</p>
+          <h4>Edge-case example</h4><p>Edge-case example not yet present in source spec.</p>
+        </div>
       </section>
 
-      <section id="units" class="card">
-        <h2>Units and conversion</h2>
-        <pre><code>distance = 12 km
-distance to mi =&gt; 7.46 mi
-
-force = 100 N
-force to lbf =&gt; 22.48 lbf</code></pre>
+      <section id="spec-filemanagement" class="card spec-card">
+        <h2>File Management</h2>
+        <p>Build a robust, markdown-based file management system using **IndexedDB** for persistence. It must support multiple sheets, sidebar navigation, and effortless import/export functionality while maintaining a &quot;scratchpad&quot; aesthetic.</p>
+        <p>
+          <a href="../../docs/Specs/FileManagement.spec.md">Open source spec</a>
+        </p>
+        <h3>Coverage</h3>
+        <ul><li>1. Objective</li>
+<li>2. Technical Architecture</li>
+<li>3. User Experience &amp; UI Flow</li>
+<li>4. Functional Requirements</li></ul>
+        <div class="examples">
+          <h4>Positive example</h4><p>Example not yet added in source spec.</p>
+          <h4>Edge-case example</h4><p>Edge-case example not yet present in source spec.</p>
+        </div>
       </section>
 
-      <section id="currency" class="card">
-        <h2>Currency and FX</h2>
-        <p>SmartPad supports currency symbols and external FX providers with local caching fallback.</p>
-        <pre><code>salary = €3000
-salary to $ =&gt; (depends on latest FX rate)</code></pre>
+      <section id="spec-lists" class="card spec-card">
+        <h2>Lists in Smartpad — single comprehensive document (markdown)</h2>
+        <p>A **list** is a single value that contains **many values** of the same semantic kind (numbers, currency amounts, lengths, durations, etc.). Lists let users do in one line what they’d otherwise do with:</p>
+        <p>
+          <a href="../../docs/Specs/Lists.spec.md">Open source spec</a>
+        </p>
+        <h3>Coverage</h3>
+        <ul><li>Overview: what a “list” is and why it matters</li>
+<li>What counts as a list</li>
+<li>Limits</li>
+<li>Creating lists</li>
+<li>Display, formatting, and ambiguity rules</li>
+<li>Applying units/currency to whole lists</li>
+<li>Aggregations (reduce list → scalar)</li>
+<li>Indexing and slicing</li>
+<li>Sorting and ordering</li>
+<li>Filtering</li>
+<li>Mapping (element-wise transforms)</li>
+<li>Pairwise operations (zip behavior)</li></ul>
+        <div class="examples">
+          <h4>Positive example</h4><pre><code>xs = 10, 20, 30
+ys = xs[2..2]
+ys =&gt;20
+count(ys) =&gt; 1</code></pre>
+          <h4>Edge-case example</h4><pre><code>x = 20
+count(x) =&gt; ⚠️ Expected list</code></pre>
+        </div>
       </section>
 
-      <section id="lists" class="card">
-        <h2>Lists and ranges</h2>
-        <pre><code>scores = 10, 12, 15, 9
-avg(scores) =&gt; 11.5
-
-1..5 =&gt; 1, 2, 3, 4, 5</code></pre>
+      <section id="spec-liveresult" class="card spec-card">
+        <h2>SmartPad Live Result Spec</h2>
+        <p>This spec defines `Live result`, a mode where evaluable lines show their result while the user types, without requiring `=&gt;`.</p>
+        <p>
+          <a href="../../docs/Specs/LiveResult.spec.md">Open source spec</a>
+        </p>
+        <h3>Coverage</h3>
+        <ul><li>0) Goals</li>
+<li>1) Setting</li>
+<li>2) Core Behavior</li>
+<li>3) Line Eligibility (What Live Result Should Ignore)</li>
+<li>4) State and Side-Effect Safety</li>
+<li>5) Debounce and Timing</li>
+<li>6) Visual Treatment</li>
+<li>7) Unknown Variables and Incomplete Input</li>
+<li>8) Counters / Observability</li>
+<li>9) Acceptance Criteria</li>
+<li>10) Test Plan</li>
+<li>11) Out of Scope (V1)</li></ul>
+        <div class="examples">
+          <h4>Positive example</h4><p>Example not yet added in source spec.</p>
+          <h4>Edge-case example</h4><p>Edge-case example not yet present in source spec.</p>
+        </div>
       </section>
 
-      <section id="dates" class="card">
-        <h2>Date and duration math</h2>
-        <pre><code>start = 2026-02-01
-end = 2026-02-12
-end - start =&gt; 11 days</code></pre>
+      <section id="spec-locale" class="card spec-card">
+        <h2>SmartPad Date/Time Ranges &amp; Display Spec (Locale-aware, Opinionated, With Tests)</h2>
+        <p>This spec resolves current failures and confusion around:</p>
+        <p>
+          <a href="../../docs/Specs/Locale.spec.md">Open source spec</a>
+        </p>
+        <h3>Coverage</h3>
+        <ul><li>1) Range Expression Routing (must happen before date-math and solver)</li>
+<li>2) Range Grammar (natural “step” suffix, not named args)</li>
+<li>3) Locale-Aware Date/Datetime Input Parsing (es-ES)</li>
+<li>4) Date/Time/Datetime Range Semantics</li>
+<li>5) Guardrails (must be a user setting)</li>
+<li>6) Error Normalization (no raw parser leaks for `..`)</li>
+<li>7) Output Formatting (Timezone label + compact display)</li>
+<li>8) Reference Test Set (focused on the reported failures)</li></ul>
+        <div class="examples">
+          <h4>Positive example</h4><pre><code>slots = 01-02-2023 09:00..14-02-2023 11:00 step 64 min =&gt;</code></pre>
+          <h4>Edge-case example</h4><pre><code>period = 2026-01-01..2026-01-05 =&gt;⚠️ Date/time ranges require a duration step (e.g., step 1 day)</code></pre>
+        </div>
       </section>
 
-      <section id="sheets" class="card">
-        <h2>Sheets, import, export</h2>
-        <p>Use the sheet sidebar to create, rename, reorder, trash, restore, and export/import markdown and zip files.</p>
+      <section id="spec-plotting" class="card spec-card">
+        <h2>Smartpad — Interactive Dependency Views (Plotting &amp; Exploration)</h2>
+        <p>This feature enables **direct, playful exploration of quantitative relationships** inside Smartpad documents.</p>
+        <p>
+          <a href="../../docs/Specs/Plotting.spec.md">Open source spec</a>
+        </p>
+        <h3>Coverage</h3>
+        <ul><li>0. Purpose</li>
+<li>1. Core Philosophy &amp; Non-Negotiables</li>
+<li>2. Mental Model</li>
+<li>3. High-Level UX Flow</li>
+<li>4. Persistent Views (Detached Views)</li>
+<li>5. Mini-Grammar for `@view`</li>
+<li>6. Binding Rules</li>
+<li>7. View Lifecycle States</li>
+<li>8. Domain Inference Rules</li>
+<li>9. Pan &amp; Zoom</li>
+<li>10. Chart Size</li>
+<li>11. Multiple Series &amp; Lists</li></ul>
+        <div class="examples">
+          <h4>Positive example</h4><pre><code>a + b =&gt; 20%</code></pre>
+          <h4>Edge-case example</h4><p>Edge-case example not yet present in source spec.</p>
+        </div>
       </section>
 
-      <section id="specs" class="card">
-        <h2>Specs and source of truth</h2>
-        <p>Behavior contracts are tracked in <code>docs/Specs/</code>. The AI keeps specs, tests, and docs synchronized via <code>docs/spec-map.json</code> and CI checks.</p>
-        <p>Primary references:</p>
-        <ul>
-          <li><a href="../../docs/Specs/ResultChipsAndValueGraph.spec.md">Result Chips Spec</a></li>
-          <li><a href="../../docs/Specs/Currency.spec.md">Currency Spec</a></li>
-          <li><a href="../../docs/DATE_MATH.md">Date Math Guide</a></li>
-        </ul>
+      <section id="spec-ranges" class="card spec-card">
+        <h2>Range List Generation in Smartpad (Updated Spec — Rudimentary v1 + Extensions)</h2>
+        <p>This spec defines **range-generated lists** (e.g., `1..5`) as an incremental feature to implement before the full list spec, while adding two key unit-related behaviors and a forward-looking plan for date/time ranges.</p>
+        <p>
+          <a href="../../docs/Specs/Ranges.spec.md">Open source spec</a>
+        </p>
+        <h3>Coverage</h3>
+        <ul><li>Overview: what range-generated lists are and why they matter</li>
+<li>Design decision: use `..` (not `to`) for range generation</li>
+<li>Scope</li>
+<li>Syntax</li>
+<li>Semantics &amp; rules (Numeric ranges)</li>
+<li>Postfix `to` on lists (Unit annotation vs conversion)</li>
+<li>Maximum list size guardrail (Setting)</li>
+<li>Composition with existing features</li>
+<li>Proposed extension: date and time ranges</li>
+<li>Minimal test suite summary (Numeric v1 + unit postfix)</li>
+<li>Notes for implementation order (recommended)</li></ul>
+        <div class="examples">
+          <h4>Positive example</h4><pre><code>&lt;start&gt;..&lt;end&gt;
+&lt;start&gt;..&lt;end&gt; step &lt;step&gt;</code></pre>
+          <h4>Edge-case example</h4><pre><code>0..10 step 0 =&gt;⚠️ step cannot be 0</code></pre>
+        </div>
+      </section>
+
+      <section id="spec-resultchipsandvaluegraph" class="card spec-card">
+        <h2>SmartPad Result Chips + Value Graph Spec (V2)</h2>
+        <p>This spec extends Live Result into a full interaction model where results are:</p>
+        <p>
+          <a href="../../docs/Specs/ResultChipsAndValueGraph.spec.md">Open source spec</a>
+        </p>
+        <h3>Coverage</h3>
+        <ul><li>0) Product Intent</li>
+<li>1) Scope</li>
+<li>2) UX Pillars</li>
+<li>3) Feature Overview</li>
+<li>4) Visual System</li>
+<li>5) Interaction Model</li>
+<li>6) Broken Dependency UX (Requested &quot;tax&quot; case)</li>
+<li>7) Internal Data Model</li>
+<li>8) System Integration</li>
+<li>9) Interaction Rules and Edge Cases</li>
+<li>10) Accessibility</li>
+<li>11) Performance Targets</li></ul>
+        <div class="examples">
+          <h4>Positive example</h4><pre><code>monthly rent = 2500                              [2,500]
+phone bill   = 45                                   [45]
+food = 50/day * 30 days                          [1,500]
+total cost per month                             [4,045]</code></pre>
+          <h4>Edge-case example</h4><p>Edge-case example not yet present in source spec.</p>
+        </div>
       </section>
     </main>
   </body>

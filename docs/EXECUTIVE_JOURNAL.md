@@ -346,3 +346,41 @@
     *   None.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-14-03
+
+*   Timestamp: 2026-02-14 00:55:03 CET / 2026-02-13 23:55:03 UTC
+*   Summary:
+    *   User clarified they want execution on site-doc tasks (including Docusaurus-vs-static direction), not only status reporting.
+    *   Assistant delivered docs architecture decision plus a working generated web-docs pipeline sourced from `docs/Specs/*.spec.md`.
+*   Decisions:
+    *   Adopt generated static docs (`public/docs/`) as current production path.
+    *   Defer Docusaurus unless versioning/search/multi-page authoring needs justify migration.
+*   User directives:
+    *   Work on tasks related to having working docs on the site.
+*   Assistant commitments:
+    *   Keep specs as source of truth for public docs content.
+    *   Continue filling missing runnable example coverage for specs lacking fenced examples.
+*   Artifacts:
+    *   `scripts/generate-web-docs.js` (new: spec-to-web generator)
+    *   `public/docs/index.html` (regenerated from all specs)
+    *   `public/docs/styles.css` (updated for generated sections/examples)
+    *   `tests/unit/generateWebDocs.test.ts` (new regression tests for generator helpers)
+    *   `package.json` (added `docs:web:build`)
+    *   `docs/WEB_DOCS_ARCHITECTURE_DECISION.md` (new decision memo)
+    *   `docs/TODO_BACKLOG.md` (status updates)
+*   Pending updates:
+    *   `T-2026-02-13-04` marked `done`.
+    *   `T-2026-02-13-05` marked `done`.
+    *   `T-2026-02-12-02` marked `done`.
+    *   `T-2026-02-13-01` marked `done`.
+    *   `T-2026-02-13-02` moved to `in_progress` (example backfill remaining).
+*   Validation:
+    *   `npm run docs:web:build` passed.
+    *   `npm run test:unit -- --runTestsByPath tests/unit/generateWebDocs.test.ts` passed.
+    *   `npm run docs:map` passed.
+    *   `npm run docs:drift` passed.
+    *   `npm run spec:test` passed.
+    *   `npm run build` passed (existing Vite large-chunk warning remains).
+*   Risks/blockers:
+    *   Several specs still lack fenced runnable examples; generated page currently shows placeholders for those cases.
