@@ -327,3 +327,22 @@
     *   None.
 *   Risks/blockers:
     *   Behavior is intentionally scoped to `reference` insert mode; `value` mode remains unchanged.
+
+## Entry J-2026-02-14-02
+
+*   Timestamp: 2026-02-14 00:45:36 CET / 2026-02-13 23:45:36 UTC
+*   Summary:
+    *   User asked for current pending work.
+    *   Assistant reviewed todo system state and confirmed active lane from backlog.
+*   Decisions:
+    *   Report pending items from active lane `project` first, then offer cross-lane/full-backlog view.
+*   User directives:
+    *   "what do we have pending?"
+*   Assistant commitments:
+    *   Provide lane-focused pending list with priorities and due dates.
+*   Artifacts:
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   None.
+*   Risks/blockers:
+    *   None.
