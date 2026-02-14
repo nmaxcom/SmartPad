@@ -1127,3 +1127,33 @@
     *   `npm run spec:test` passed.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-14-20
+
+*   Timestamp: 2026-02-15 00:31:18 CET / 2026-02-14 23:31:18 UTC
+*   Summary:
+    *   User provided DOM/CSS evidence of duplicated chip text and red styling (`semantic-error` + `::after` content injection).
+    *   Assistant identified dual root causes: generic `.semantic-error::after` duplicated chip `data-result`, and semantic highlight error decoration overlapped reference atoms.
+    *   Implemented CSS and highlight-range fixes plus e2e regression coverage.
+*   Decisions:
+    *   Remove generic `.semantic-error::after` content rendering to avoid synthetic duplicate values.
+    *   Prevent semantic highlight decorations from applying over `referenceToken` ranges and parse reference placeholders with numeric stand-in for tokenization stability.
+*   User directives:
+    *   Determine why line/chip turn red and why chip number is duplicated in `::after`.
+*   Assistant commitments:
+    *   Keep reference-chip rendering free of pseudo-content duplication.
+*   Artifacts:
+    *   `src/components/Editor.css` (removed generic error `::after` content rule)
+    *   `src/components/SemanticHighlightExtension.ts` (reference-safe parsing and decoration range exclusion)
+    *   `tests/e2e/result-reference.spec.ts` (new regression: chip should not get duplicate via `::after` or `semantic-error`)
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   None.
+*   Validation:
+    *   `npx playwright test tests/e2e/result-reference.spec.ts -g "reference chip does not get synthetic duplicate value via semantic-error::after|selected reference chip typing ignores accidental echoed chip label prefix|completing => after an intermediate '=' does not duplicate chip value text" --project=chromium` passed.
+    *   `npm run build` passed.
+    *   `npm run docs:drift` passed.
+    *   `npm run spec:test` passed.
+    *   `npm run docs:map` failed due unrelated workspace file not mapped: `src/state/SheetContext.tsx`.
+*   Risks/blockers:
+    *   `docs:map` gate currently blocked by unrelated existing local change outside this fix scope.

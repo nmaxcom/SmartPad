@@ -814,6 +814,34 @@ test.describe("Result References", () => {
     );
   });
 
+  test("reference chip does not get synthetic duplicate value via semantic-error::after", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("PI*10");
+    await waitForUIRenderComplete(page);
+
+    const sourceLine = page.locator(".ProseMirror p").first();
+    const sourceLive = sourceLine.locator(".semantic-live-result-display");
+    await sourceLine.click({ position: { x: 8, y: 8 } });
+    await sourceLive.click();
+    await page.keyboard.type("*2=>");
+    await waitForUIRenderComplete(page);
+
+    const dependent = page.locator(".ProseMirror p").nth(1);
+    const chip = dependent.locator(".semantic-reference-chip").first();
+    await expect(chip).toHaveCount(1);
+    await expect(chip).not.toHaveClass(/semantic-error/);
+
+    const afterContent = await chip.evaluate((el) => {
+      return window.getComputedStyle(el as Element, "::after").content || "";
+    });
+    expect(afterContent).not.toContain("31.42");
+
+    await expect(dependent).not.toContainText("31.4231.42");
+  });
+
   test("duplicate literal cleanup works even when reference sourceValue and visible label differ", async ({
     page,
   }) => {

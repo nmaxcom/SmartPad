@@ -446,11 +446,8 @@ body.number-scrubbing * {
 }
 
 /* Display error text using data-result attribute */
-.semantic-error::after {
-  content: attr(data-result);
-  color: var(--syntax-error);
-  font-weight: 600;
-}
+/* Do not synthesize error text from data-result on generic semantic-error spans.
+   This duplicates values for reference chips when they receive semantic-error decoration. */
 
 .semantic-trigger {
   color: var(--syntax-trigger);

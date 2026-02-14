@@ -211,8 +211,12 @@ export const SemanticHighlightExtension = Extension.create({
         }
 
         const text = getTokenizableLineText(node);
+        // Reference atoms are represented as a single placeholder rune for offset alignment.
+        // Parse using a numeric stand-in so normal expression tokenization still works and
+        // does not degrade to full-line "error" highlighting on valid reference expressions.
+        const parseText = text.includes("§") ? text.replace(/§/g, "1") : text;
         const lineNumber = Math.floor(offset / 100); // Approximate line number
-        const astNode = parseLine(text, lineNumber); // Parse text into AST
+        const astNode = parseLine(parseText, lineNumber); // Parse text into AST
         const variableContext = getVariableContext();
         let tokens = extractTokensFromASTNode(astNode, variableContext);
         if (
@@ -223,12 +227,19 @@ export const SemanticHighlightExtension = Extension.create({
           tokens = tokenizeExpression(text, 0, variableContext);
         }
         const resultRanges: Array<{ from: number; to: number }> = [];
+        const referenceRanges: Array<{ from: number; to: number }> = [];
 
         node.descendants((child, pos) => {
           if (child.type?.name === "resultToken") {
             const from = offset + pos + 1;
             const to = from + child.nodeSize - 1;
             resultRanges.push({ from, to });
+            return false;
+          }
+          if (child.type?.name === "referenceToken") {
+            const from = offset + pos + 1;
+            const to = from + child.nodeSize;
+            referenceRanges.push({ from, to });
             return false;
           }
           return true;
@@ -238,7 +249,8 @@ export const SemanticHighlightExtension = Extension.create({
           const from = offset + token.start + 1; // +1 for paragraph node
           const to = offset + token.end + 1;
           const isInResult = resultRanges.some((range) => from < range.to && to > range.from);
-          if (isInResult) {
+          const isInReference = referenceRanges.some((range) => from < range.to && to > range.from);
+          if (isInResult || isInReference) {
             return;
           }
 
