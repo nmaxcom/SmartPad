@@ -1,9 +1,47 @@
 ---
-title: "Lists in Smartpad — single comprehensive document (markdown)"
-description: "A **list** is a single value that contains **many values** of the same semantic kind (numbers, currency amounts, lengths, durations, etc.). Lists let users do in one line what they’d otherwise do with:"
+title: "Lists"
+description: "Defines list creation, aggregations, filtering, mapping, sorting, indexing, and unit-safe list operations."
 ---
 
 > Source: `docs/Specs/Lists.spec.md`
+
+## At a glance
+
+Defines list creation, aggregations, filtering, mapping, sorting, indexing, and unit-safe list operations.
+
+## Quick examples
+
+### Happy path
+```text
+xs = 10, 20, 30
+ys = xs[2..2]
+ys =>20
+count(ys) => 1
+```
+
+### Edge case
+```text
+x = 20
+count(x) => ⚠️ Expected list
+```
+
+## What this covers
+
+- Overview: what a “list” is and why it matters
+- What counts as a list
+- Limits
+- Creating lists
+- Display, formatting, and ambiguity rules
+- Applying units/currency to whole lists
+- Aggregations (reduce list → scalar)
+- Indexing and slicing
+- Sorting and ordering
+- Filtering
+
+## Full specification
+
+<details>
+<summary>Open full spec: Lists in Smartpad — single comprehensive document (markdown)</summary>
 
 ## Overview: what a “list” is and why it matters
 
@@ -726,3 +764,5 @@ reps = 5, 5, 3
 volume = weights * reps => 400 kg, 425 kg, 270 kg
 sum(volume) => 1095 kg
 ```
+
+</details>

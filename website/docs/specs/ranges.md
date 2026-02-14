@@ -1,9 +1,44 @@
 ---
-title: "Range List Generation in Smartpad (Updated Spec — Rudimentary v1 + Extensions)"
-description: "This spec defines **range-generated lists** (e.g., `1..5`) as an incremental feature to implement before the full list spec, while adding two key unit-related behaviors and a forward-looking plan for date/time ranges."
+title: "Ranges"
+description: "Defines numeric and date/time range generation, step rules, guardrails, and list interoperability."
 ---
 
 > Source: `docs/Specs/Ranges.spec.md`
+
+## At a glance
+
+Defines numeric and date/time range generation, step rules, guardrails, and list interoperability.
+
+## Quick examples
+
+### Happy path
+```text
+<start>..<end>
+<start>..<end> step <step>
+```
+
+### Edge case
+```text
+0..10 step 0 =>⚠️ step cannot be 0
+```
+
+## What this covers
+
+- Overview: what range-generated lists are and why they matter
+- Design decision: use `..` (not `to`) for range generation
+- Scope
+- Syntax
+- Semantics & rules (Numeric ranges)
+- Postfix `to` on lists (Unit annotation vs conversion)
+- Maximum list size guardrail (Setting)
+- Composition with existing features
+- Proposed extension: date and time ranges
+- Minimal test suite summary (Numeric v1 + unit postfix)
+
+## Full specification
+
+<details>
+<summary>Open full spec: Range List Generation in Smartpad (Updated Spec — Rudimentary v1 + Extensions)</summary>
 
 This spec defines **range-generated lists** (e.g., `1..5`) as an incremental feature to implement before the full list spec, while adding two key unit-related behaviors and a forward-looking plan for date/time ranges.
 
@@ -417,3 +452,5 @@ mix to m =>⚠️ Cannot convert s to m (incompatible dimensions)
 2. Guardrail as a setting (readable by evaluator)
 3. Postfix `to` on lists: annotation for unitless lists, conversion for unit-bearing lists (strict mixed behavior)
 4. (Optional later) Date/time ranges with duration step and calendar rules
+
+</details>

@@ -5,7 +5,18 @@ slug: /
 
 # SmartPad Documentation
 
-This docs site is powered by Docusaurus and generated from SmartPad specs.
+SmartPad docs are generated from specs, then organized into feature guides.
+
+## Start here
+
+- Read the guide index: [Feature Guides](/specs)
+- Learn core editor behavior first:
+  - [Live Results](./specs/live-results)
+  - [Result Chips and References](./specs/result-chips-and-references)
+- Then move to domain guides:
+  - [Currency and FX](./specs/currency-and-fx)
+  - [Lists](./specs/lists)
+  - [Ranges](./specs/ranges)
 
 ## Local workflow
 
