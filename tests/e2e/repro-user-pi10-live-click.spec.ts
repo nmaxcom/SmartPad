@@ -2,6 +2,61 @@ import { expect, test } from "@playwright/test";
 import { waitForUIRenderComplete } from "./utils";
 
 test.describe("User Repro: PI*10 click live result then *2=>", () => {
+  test("trace api captures result-click and reference text-input events", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForSelector('[data-testid="smart-pad-editor"]');
+    await page.evaluate(() => {
+      (window as any).__SP_REF_TRACE_CLEAR?.();
+      (window as any).__SP_REF_TRACE_ENABLE?.(true);
+      const key = "smartpad-settings";
+      const existing = JSON.parse(localStorage.getItem(key) || "{}");
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          ...existing,
+          liveResultEnabled: true,
+          chipInsertMode: "reference",
+          groupThousands: true,
+          resultLaneEnabled: false,
+        })
+      );
+    });
+    await page.reload();
+    await page.waitForSelector('[data-testid="smart-pad-editor"]');
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      if (editor) {
+        editor.commands.setContent("<p></p>");
+        window.dispatchEvent(new Event("forceEvaluation"));
+      }
+      (window as any).__SP_REF_TRACE_CLEAR?.();
+      (window as any).__SP_REF_TRACE_ENABLE?.(true);
+    });
+    await waitForUIRenderComplete(page);
+
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("PI*10");
+    const line = page.locator(".ProseMirror p").first();
+    const sourceLive = line.locator(".semantic-live-result-display");
+    await line.click({ position: { x: 8, y: 8 } });
+    await sourceLive.click();
+    await page.keyboard.type("*2=>");
+    await waitForUIRenderComplete(page);
+
+    const logs = await page.evaluate(() => {
+      return (window as any).__SP_REF_TRACE_DUMP?.() || [];
+    });
+    const events = logs.map((entry: any) => String(entry?.event || ""));
+    expect(events).toContain("traceToggle");
+    expect(events).toContain("resultMouseDown");
+    expect(events).toContain("insertReferenceAt");
+
+    await page.evaluate(() => {
+      (window as any).__SP_REF_TRACE_ENABLE?.(false);
+    });
+  });
+
   test("stays stable without duplicate literal when new line is auto-created from same source line", async ({
     page,
   }) => {

@@ -5,6 +5,11 @@ import { Node as ProseMirrorNode } from "prosemirror-model";
 import type { RenderNode } from "../eval/renderNodes";
 import { parseVariableAssignment } from "../parsing/variableParser";
 
+const REF_TRACE_FLAG = "__SP_REF_TRACE_ENABLED";
+const REF_TRACE_LOG_STORE = "__SP_REF_TRACE_LOGS";
+const REF_TRACE_STORAGE_KEY = "smartpad-debug-ref-trace";
+const REF_TRACE_MAX_ENTRIES = 600;
+
 /**
  * ResultsDecoratorExtension
  * Listens for `evaluationDone` events dispatched by the Editor AST pipeline and
@@ -39,6 +44,31 @@ export const ResultsDecoratorExtension = Extension.create({
           },
         },
         view(view) {
+          const isRefTraceEnabled = (): boolean => {
+            if (typeof window === "undefined") return false;
+            if (Boolean((window as any)[REF_TRACE_FLAG])) return true;
+            try {
+              const raw = window.localStorage.getItem(REF_TRACE_STORAGE_KEY);
+              return raw === "1" || raw?.toLowerCase() === "true";
+            } catch {
+              return false;
+            }
+          };
+          const appendRefTrace = (event: string, payload?: Record<string, any>) => {
+            if (!isRefTraceEnabled() || typeof window === "undefined") return;
+            const logs = Array.isArray((window as any)[REF_TRACE_LOG_STORE])
+              ? (window as any)[REF_TRACE_LOG_STORE]
+              : [];
+            logs.push({
+              ts: Date.now(),
+              event,
+              payload: payload || {},
+            });
+            if (logs.length > REF_TRACE_MAX_ENTRIES) {
+              logs.splice(0, logs.length - REF_TRACE_MAX_ENTRIES);
+            }
+            (window as any)[REF_TRACE_LOG_STORE] = logs;
+          };
           const normalize = (s: string | undefined | null): string =>
             (s || "").replace(/\s+/g, "").trim();
           const getNodeTextWithoutResults = (node: ProseMirrorNode): string => {
@@ -393,6 +423,11 @@ export const ResultsDecoratorExtension = Extension.create({
               tr.delete(removal.from, removal.to);
               changed = true;
             }
+            if (duplicateLiteralRemovals.length > 0) {
+              appendRefTrace("duplicateLiteralRemovals", {
+                count: duplicateLiteralRemovals.length,
+              });
+            }
             if (referenceNodeType) {
               for (let i = paragraphIndex.length - 1; i >= 1; i--) {
                 const info = paragraphIndex[i];
@@ -447,6 +482,14 @@ export const ResultsDecoratorExtension = Extension.create({
                     Boolean(attrs.flash) !== shouldFlash;
 
                   if (attrsChanged) {
+                    appendRefTrace("referenceAttrsUpdated", {
+                      sourceLineId: sourceLineId || "",
+                      sourceLineRaw,
+                      resolvedSourceLine,
+                      previousDisplay,
+                      nextDisplay,
+                      shouldFlash,
+                    });
                     tr.setNodeMarkup(info.start + pos, undefined, {
                       ...attrs,
                       sourceLineId,

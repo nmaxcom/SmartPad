@@ -817,3 +817,34 @@
     *   `npm run spec:test` passed.
 *   Risks/blockers:
     *   Exact visual repro did not reoccur under automated runs; fix targets the class of duplicate-prefix insertion and stale metadata matching that can produce the reported output.
+
+## Entry J-2026-02-14-17
+
+*   Timestamp: 2026-02-14 03:33:24 CET / 2026-02-14 02:33:24 UTC
+*   Summary:
+    *   User reported the duplicate-literal issue still occurs on their side and requested tracing/logging to diagnose field behavior.
+    *   Assistant implemented bounded runtime tracing for result/reference interactions and decorator cleanup paths, plus e2e coverage that verifies trace capture on the user repro flow.
+*   Decisions:
+    *   Add always-available debug APIs for enabling, dumping, and clearing reference interaction traces.
+    *   Persist tracing preference in local storage so user-side repro sessions stay instrumented across reloads.
+*   User directives:
+    *   "it still fails, so let's implement some tracing or log measure so you can analyze what's causing this failure on my side"
+*   Assistant commitments:
+    *   Use the trace logs from user environment to isolate sequence/state divergence in the failing path.
+*   Artifacts:
+    *   `src/components/ResultReferenceInteractionExtension.ts` (trace buffer + API + event instrumentation)
+    *   `src/components/ResultsDecoratorExtension.ts` (trace hooks for duplicate cleanup and reference attr updates)
+    *   `tests/e2e/repro-user-pi10-live-click.spec.ts` (trace API capture test)
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md` (new runtime trace diagnostics section)
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   None.
+*   Validation:
+    *   `npx playwright test tests/e2e/repro-user-pi10-live-click.spec.ts -g "trace api captures result-click and reference text-input events|stays stable without duplicate literal when new line is auto-created from same source line" --project=chromium` passed.
+    *   `npx playwright test tests/e2e/result-reference.spec.ts -g "selected reference chip typing ignores accidental echoed chip label prefix|completing => after an intermediate '=' does not duplicate chip value text" --project=chromium` passed.
+    *   `npm run build` passed.
+    *   `npm run docs:map` passed.
+    *   `npm run spec:test` passed.
+    *   `npm run docs:drift` currently reports failure when run pre-commit against default `HEAD~1...HEAD` because that range points to prior commit only; expected to pass once this commit (code+docs together) is in range.
+*   Risks/blockers:
+    *   None. Remaining diagnosis depends on user-side trace capture from the failing run.

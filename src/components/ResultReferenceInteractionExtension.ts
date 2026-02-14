@@ -12,6 +12,11 @@ const DND_MIME = "application/x-smartpad-result-reference";
 const CLIPBOARD_MIME = "application/x-smartpad-reference";
 const REF_DEBUG_FLAG = "__SP_REF_DEBUG";
 const REF_DEBUG_LOG_STORE = "__SP_REF_DEBUG_LOGS";
+const REF_TRACE_FLAG = "__SP_REF_TRACE_ENABLED";
+const REF_TRACE_LOG_STORE = "__SP_REF_TRACE_LOGS";
+const REF_TRACE_STORAGE_KEY = "smartpad-debug-ref-trace";
+const REF_TRACE_API_INSTALLED = "__SP_REF_TRACE_API_INSTALLED";
+const REF_TRACE_MAX_ENTRIES = 600;
 
 interface ReferencePayload {
   sourceLineId: string;
@@ -31,7 +36,64 @@ const HIGHLIGHT_REFRESH_META = "spRefHighlightRefresh";
 const isRefDebugEnabled = (): boolean =>
   typeof window !== "undefined" && Boolean((window as any)[REF_DEBUG_FLAG]);
 
+const readTraceStoragePreference = (): boolean => {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = window.localStorage.getItem(REF_TRACE_STORAGE_KEY);
+    if (!raw) return false;
+    return raw === "1" || raw.toLowerCase() === "true";
+  } catch {
+    return false;
+  }
+};
+
+const isRefTraceEnabled = (): boolean =>
+  typeof window !== "undefined" &&
+  (Boolean((window as any)[REF_TRACE_FLAG]) || readTraceStoragePreference());
+
+const appendRefTrace = (event: string, payload?: Record<string, any>) => {
+  if (!isRefTraceEnabled() || typeof window === "undefined") return;
+  const logs = Array.isArray((window as any)[REF_TRACE_LOG_STORE])
+    ? (window as any)[REF_TRACE_LOG_STORE]
+    : [];
+  logs.push({
+    ts: Date.now(),
+    event,
+    payload: payload || {},
+  });
+  if (logs.length > REF_TRACE_MAX_ENTRIES) {
+    logs.splice(0, logs.length - REF_TRACE_MAX_ENTRIES);
+  }
+  (window as any)[REF_TRACE_LOG_STORE] = logs;
+};
+
+const installRefTraceApi = () => {
+  if (typeof window === "undefined") return;
+  if ((window as any)[REF_TRACE_API_INSTALLED]) return;
+  (window as any)[REF_TRACE_API_INSTALLED] = true;
+  (window as any).__SP_REF_TRACE_ENABLE = (enabled: boolean = true) => {
+    const next = Boolean(enabled);
+    (window as any)[REF_TRACE_FLAG] = next;
+    try {
+      window.localStorage.setItem(REF_TRACE_STORAGE_KEY, next ? "1" : "0");
+    } catch {}
+    appendRefTrace("traceToggle", { enabled: next });
+    return next;
+  };
+  (window as any).__SP_REF_TRACE_CLEAR = () => {
+    (window as any)[REF_TRACE_LOG_STORE] = [];
+    return true;
+  };
+  (window as any).__SP_REF_TRACE_DUMP = () => {
+    const logs = Array.isArray((window as any)[REF_TRACE_LOG_STORE])
+      ? (window as any)[REF_TRACE_LOG_STORE]
+      : [];
+    return logs.slice();
+  };
+};
+
 const logRefDebug = (...args: any[]) => {
+  appendRefTrace("debugLog", { args });
   if (!isRefDebugEnabled()) return;
   if (typeof window !== "undefined") {
     const logs = Array.isArray((window as any)[REF_DEBUG_LOG_STORE])
@@ -178,10 +240,25 @@ const insertReferenceAt = (
       afterSelection: view.state.selection.from,
       sourceLineId: payload.sourceLineId,
     });
+    appendRefTrace("insertReferenceAt", {
+      mode,
+      insertionPos,
+      cursor,
+      selectionPos,
+      sourceLineId: payload.sourceLineId,
+      sourceLine: payload.sourceLine,
+      sourceValue: payload.sourceValue,
+    });
     return cursor;
   } catch {
     logRefDebug("insertReferenceAt failed", {
       sourceLineId: payload.sourceLineId,
+      pos,
+    });
+    appendRefTrace("insertReferenceAtFailed", {
+      mode,
+      sourceLineId: payload.sourceLineId,
+      sourceLine: payload.sourceLine,
       pos,
     });
     return null;
@@ -458,6 +535,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
     return [
       new Plugin({
         view: (view) => {
+          installRefTraceApi();
           const syncHoverHighlight = () => {
             const hoveredReference = view.dom.querySelector(
               `${REFERENCE_SELECTOR}:hover`
@@ -558,6 +636,16 @@ export const ResultReferenceInteractionExtension = Extension.create({
             if (!range) return false;
             const selectedPayload = findSelectedReferencePayload(view.state);
             const insertText = stripEchoedReferencePrefix(text, selectedPayload);
+            appendRefTrace("handleTextInputOverReference", {
+              originalText: text,
+              insertedText: insertText,
+              strippedEchoPrefix: text !== insertText,
+              selectionFrom: view.state.selection.from,
+              selectionTo: view.state.selection.to,
+              sourceLineId: selectedPayload?.sourceLineId || "",
+              sourceValue: selectedPayload?.sourceValue || "",
+              sourceLabel: selectedPayload?.sourceLabel || "",
+            });
             if (!insertText) {
               return true;
             }
@@ -645,6 +733,13 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 selectionFrom: view.state.selection.from,
                 hasPayload: !!payload,
               });
+              appendRefTrace("resultMouseDown", {
+                selectionFrom: view.state.selection.from,
+                hasPayload: !!payload,
+                sourceLineId: payload?.sourceLineId || "",
+                sourceLine: payload?.sourceLine || 0,
+                sourceValue: payload?.sourceValue || "",
+              });
               if (!payload) {
                 return true;
               }
@@ -668,6 +763,10 @@ export const ResultReferenceInteractionExtension = Extension.create({
                     return true;
                   }
                   logRefDebug("skip self-reference insert (new line failed)", {
+                    activeLineId,
+                    sourceLineId: payload.sourceLineId,
+                  });
+                  appendRefTrace("selfReferenceInsertSkipped", {
                     activeLineId,
                     sourceLineId: payload.sourceLineId,
                   });
@@ -733,6 +832,10 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 );
                 view.dispatch(tr);
                 logRefDebug("consume result click restore", {
+                  restoreTo: clamped,
+                  selectionFrom: view.state.selection.from,
+                });
+                appendRefTrace("consumeResultClickRestore", {
                   restoreTo: clamped,
                   selectionFrom: view.state.selection.from,
                 });

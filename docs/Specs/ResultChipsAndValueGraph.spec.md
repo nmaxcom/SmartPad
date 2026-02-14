@@ -326,6 +326,32 @@ Expected primary touchpoints in current codebase:
 7. Export/import pipeline (sheet serialization and clipboard handlers)
    Preserve structured reference nodes in rich format and deterministic fallback in plain text.
 
+### 8.9 Runtime Trace Diagnostics (for flaky field bugs)
+
+SmartPad exposes a bounded in-browser trace buffer for result/reference interaction debugging.
+
+Runtime controls:
+
+1. `window.__SP_REF_TRACE_ENABLE(true|false)`
+   Enables/disables tracing and persists preference in `localStorage` key `smartpad-debug-ref-trace`.
+2. `window.__SP_REF_TRACE_DUMP()`
+   Returns the current trace entries array.
+3. `window.__SP_REF_TRACE_CLEAR()`
+   Clears trace entries.
+
+Trace scope (non-exhaustive):
+
+1. Result-chip mousedown insertion path (`resultMouseDown`, `insertReferenceAt`).
+2. Reference typing interception (`handleTextInputOverReference`).
+3. Post-insert click selection restore (`consumeResultClickRestore`).
+4. Duplicate-literal cleanup and reference metadata updates in decorator pass.
+
+Trace behavior:
+
+1. Buffer is bounded (oldest entries are dropped).
+2. Intended for diagnosing timing/state mismatches on user machines.
+3. Default is disabled unless manually enabled or persisted in local storage.
+
 ---
 
 ## 9) Interaction Rules and Edge Cases
