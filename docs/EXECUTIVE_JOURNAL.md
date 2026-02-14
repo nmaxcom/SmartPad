@@ -418,3 +418,22 @@
     *   `npm run build` passed (existing Vite chunk-size warning remains).
 *   Risks/blockers:
     *   Generated docs still contain placeholder example blocks for specs lacking fenced examples in source markdown.
+
+## Entry J-2026-02-14-05
+
+*   Timestamp: 2026-02-14 01:07:59 CET / 2026-02-14 00:07:59 UTC
+*   Summary:
+    *   User asked for exact rationale against choosing Docusaurus despite its maturity.
+    *   Assistant provided direct tradeoff analysis and decision criteria for when Docusaurus should be adopted.
+*   Decisions:
+    *   Current recommendation remains static generated docs now, with explicit migration triggers to Docusaurus.
+*   User directives:
+    *   "tell me exactly why shouldnt use something like docusaurus which we know is rock solid?"
+*   Assistant commitments:
+    *   Keep the decision framed as timing/scope tradeoff, not anti-Docusaurus.
+*   Artifacts:
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   None.
+*   Risks/blockers:
+    *   If docs complexity grows (versioning/search/multi-page IA), delaying Docusaurus too long would create migration debt.
