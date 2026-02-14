@@ -5,40 +5,47 @@ slug: /
 
 # SmartPad Documentation
 
-SmartPad docs are generated from specs, then organized into feature guides.
+SmartPad turns plain text into a live computational workspace for planning, analysis, and decision making.
+
+<div className="hero-panel">
+
+## Why teams use it
+
+- Write formulas in natural, notebook-style lines.
+- Mix numbers, units, dates, ranges, and lists in one flow.
+- Keep results live while editing, not after running a script.
+
+</div>
 
 ## Start here
 
-- Read the guide index: [Feature Guides](/specs)
-- Learn core editor behavior first:
-  - [Live Results](./specs/live-results)
-  - [Result Chips and References](./specs/result-chips-and-references)
-- Then move to domain guides:
-  - [Currency and FX](./specs/currency-and-fx)
-  - [Lists](./specs/lists)
-  - [Ranges](./specs/ranges)
+- Get productive fast: [Getting Started](/docs/guides/getting-started)
+- Learn reusable patterns: [Syntax Playbook](/docs/guides/syntax-playbook)
+- Browse practical workflows: [Examples Gallery](/docs/guides/examples-gallery)
+- Dive into full feature coverage: [Feature Guides](/docs/specs)
 
-## Local workflow
+## Local docs workflow
 
-1. Generate docs pages from specs:
+1. Regenerate docs from specs:
 
 ```bash
 npm run docs:docusaurus:generate
 ```
 
-2. Install docs dependencies:
+2. Build + sync docs into app public assets:
 
 ```bash
-npm --prefix website install
+npm run docs:docusaurus:publish-local
 ```
 
-3. Run docs site:
+3. Run SmartPad app (includes docs route):
 
 ```bash
-npm run docs:docusaurus:dev
+npm run dev
 ```
 
 ## Source of truth
 
-- Feature contracts live in `docs/Specs/*.spec.md`.
-- Docusaurus pages in `website/docs/specs/` are generated from those specs.
+- Feature contracts: `docs/Specs/*.spec.md`
+- Generated docs pages: `website/docs/specs/`
+- Docs generator: `scripts/generate-docusaurus-docs.js`

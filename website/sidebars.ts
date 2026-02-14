@@ -3,6 +3,17 @@ import type { SidebarsConfig } from "@docusaurus/plugin-content-docs";
 const sidebars: SidebarsConfig = {
   docsSidebar: [
     "intro",
+    {
+      type: "category",
+      label: "Start Here",
+      items: [
+        "guides/getting-started",
+        "guides/syntax-playbook",
+        "guides/examples-gallery",
+        "guides/troubleshooting",
+        "guides/feature-map",
+      ],
+    },
     "specs/index",
     {
       type: "category",

@@ -875,3 +875,40 @@
     *   `npm run spec:test` passed.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-14-19
+
+*   Timestamp: 2026-02-14 04:33:17 CET / 2026-02-14 03:33:17 UTC
+*   Summary:
+    *   User requested a major docs quality overhaul (theme, readability, navigation depth, and humane explanations), specifically calling out the green link palette, dull sidebar, and raw folded full-spec sections.
+    *   Assistant rebuilt the docs generation output and visual system so pages now read as user guides with practical sections, richer structure, and consistent branding.
+    *   Added Playwright-based docs crawl validation against the live `npm run dev` flow the user runs locally.
+*   Decisions:
+    *   Remove embedded/folded raw full-spec body from generated docs pages; replace with concise guide sections plus canonical spec links.
+    *   Expand docs IA with a dedicated “Start Here” journey set and richer feature index cards.
+    *   Validate docs via browser automation against `/docs/*` routes on the app dev server, not only isolated docs build.
+*   User directives:
+    *   Improve docs theme and remove ugly green link style.
+    *   Make docs humane, attractive, and exciting with better explanations/examples.
+    *   Ensure docs are tested via Playwright loop with the same runtime path (`npm run dev`) used locally.
+*   Assistant commitments:
+    *   Continue content backfill pass for deeper per-feature narratives and edge-case walkthroughs.
+*   Artifacts:
+    *   `scripts/generate-docusaurus-docs.js` (generator rewritten for guide-first pages + journey pages + expanded sidebar generation)
+    *   `website/src/css/custom.css` (new palette, typography, sidebar/nav/card styles, link styling, responsive polish)
+    *   `website/docs/intro.md` (rewritten landing page)
+    *   `website/docs/guides/*.md` (new generated Start Here docs)
+    *   `website/docs/specs/*.md`, `website/sidebars.ts`, `public/docs/*` (regenerated outputs)
+    *   `docs/TODO_BACKLOG.md` (docs overhaul statuses updated)
+    *   `docs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   `T-2026-02-14-07` remains `in_progress` for deeper narrative/edge-case content pass.
+*   Validation:
+    *   `npm run docs:docusaurus:publish-local` passed.
+    *   Playwright crawl loop across `/docs/`, `/docs/specs/`, `/docs/specs/currency-and-fx/`, `/docs/guides/getting-started/`, `/docs/guides/examples-gallery/`, `/docs/specs/live-results/` across 2 passes passed (no baseUrl load error, no page/console errors).
+    *   `npm run build` passed.
+    *   `npm run docs:map` passed.
+    *   `npm run docs:drift` failed due pre-existing unrelated changed file: `src/components/ResultReferenceInteractionExtension.ts` (mapped group `Editor And Result Chips`).
+    *   `npm run spec:test` failed for same unrelated changed file/test-sync scope.
+*   Risks/blockers:
+    *   Docs drift/spec-test checks are currently blocked by unrelated in-progress editor/result-chip changes in workspace; docs work itself is internally consistent and built successfully.
