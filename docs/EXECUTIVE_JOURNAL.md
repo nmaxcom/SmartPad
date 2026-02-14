@@ -1157,3 +1157,32 @@
     *   `npm run docs:map` failed due unrelated workspace file not mapped: `src/state/SheetContext.tsx`.
 *   Risks/blockers:
     *   `docs:map` gate currently blocked by unrelated existing local change outside this fix scope.
+
+## Entry J-2026-02-14-21
+
+*   Timestamp: 2026-02-15 00:48:15 CET / 2026-02-14 23:48:15 UTC
+*   Summary:
+    *   User clarified missing highlight on standalone `ys` query line.
+    *   Assistant updated semantic plain-text expression gate to highlight known/single-identifier query lines and extended range-index token support assertions.
+*   Decisions:
+    *   Treat standalone identifier queries as highlightable expression input so variable lookups like `ys` remain semantically visible.
+    *   Keep range-index syntax (`[`, `..`, `]`) highlighted as operators with numeric parts tokenized.
+*   User directives:
+    *   "i was referring to ys though!"
+*   Assistant commitments:
+    *   Preserve no-`=>` variable query highlighting while avoiding broad multi-word note highlighting.
+*   Artifacts:
+    *   `src/components/SemanticHighlightExtension.ts` (identifier-query highlight rule + range tokenization support)
+    *   `tests/e2e/semantic-highlighting.spec.ts` (added range-index and standalone variable-query highlight coverage)
+    *   `docs/spec-map.json` (mapped semantic highlight/editor css paths for coverage gate)
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   None.
+*   Validation:
+    *   `npx playwright test tests/e2e/semantic-highlighting.spec.ts -g "highlights range index syntax in variable expressions|highlights standalone known variable query without =>" --project=chromium` passed.
+    *   `npm run build` passed.
+    *   `npm run docs:map` passed.
+    *   `npm run docs:drift` passed.
+    *   `npm run spec:test` passed.
+*   Risks/blockers:
+    *   Repository currently contains many unrelated local changes; this work remains scoped to touched files only.

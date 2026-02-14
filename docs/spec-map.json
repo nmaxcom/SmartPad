@@ -76,6 +76,8 @@
       "name": "Editor And Result Chips",
       "specPrefixes": [
         "src/components/Editor.tsx",
+        "src/components/Editor.css",
+        "src/components/SemanticHighlightExtension.ts",
         "src/components/Result",
         "src/components/Reference",
         "docs/Specs/ResultChipsAndValueGraph.spec.md"

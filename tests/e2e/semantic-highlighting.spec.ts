@@ -140,6 +140,37 @@ test.describe("Semantic Highlighting", () => {
     await expect(line.locator(".semantic-keyword", { hasText: "off" })).toBeVisible();
   });
 
+  test("highlights range index syntax in variable expressions", async ({ page }) => {
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      if (!editor) return;
+      editor.commands.setContent("<p>xs = [1,2,3,4,5,6,7]</p><p>ys = xs[4..6]</p>");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    const line = page.locator(".ProseMirror p").nth(1);
+    await expect(line.locator(".semantic-operator", { hasText: "[" })).toBeVisible();
+    await expect(line.locator(".semantic-operator", { hasText: ".." })).toBeVisible();
+    await expect(line.locator(".semantic-operator", { hasText: "]" })).toBeVisible();
+    await expect(line.locator(".semantic-scrubbableNumber", { hasText: "4" })).toBeVisible();
+    await expect(line.locator(".semantic-scrubbableNumber", { hasText: "6" })).toBeVisible();
+  });
+
+  test("highlights standalone known variable query without =>", async ({ page }) => {
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      if (!editor) return;
+      editor.commands.setContent("<p>ys = 30</p><p>ys</p>");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    const queryLine = page.locator(".ProseMirror p").nth(1);
+    await expect(queryLine.locator(".semantic-variable", { hasText: "ys" })).toBeVisible();
+    await expect(queryLine.locator(".semantic-live-result-display")).toHaveCount(1);
+  });
+
   test("highlights results after evaluation", async ({ page }) => {
     await page.keyboard.type("5 + 3 =>");
     await waitForUIRenderComplete(page);

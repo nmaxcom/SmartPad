@@ -46,6 +46,15 @@ const shouldHighlightPlainTextAsExpression = (
     /\b[a-zA-Z_][a-zA-Z0-9_]*\s*\(/.test(trimmed) ||
     PURE_NUMBER_REGEX.test(trimmed);
 
+  const normalizedTrimmed = trimmed.replace(/\s+/g, " ");
+  const isKnownVariableQuery =
+    variableContext.has(trimmed) || variableContext.has(normalizedTrimmed);
+  const isSingleIdentifierQuery = /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(trimmed);
+
+  if (isKnownVariableQuery || isSingleIdentifierQuery) {
+    return true;
+  }
+
   if (!hasStrongSignal) {
     return false;
   }
@@ -513,6 +522,8 @@ export function tokenizeExpression(
   const functionRegex = /^([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/;
   const operatorRegex = /^[\+\-\*\/\^\%]/;
   const parenRegex = /^[\(\)]/;
+  const bracketRegex = /^[\[\]]/;
+  const rangeOperatorRegex = /^\.\./;
   const triggerRegex = /^=>/;
   const unitRegex = /^[a-zA-Z°µμΩ][a-zA-Z0-9°µμΩ\/\^\-\*\·]*/;
   const currencySymbolRegex = /^[\$€£¥₹₿]/;
@@ -582,7 +593,7 @@ export function tokenizeExpression(
           }
           // Check if it's a word boundary (not part of a larger word)
           const afterChar = expr[pos + varName.length];
-          if (!afterChar || /[\s\+\-\*\/\^\%\(\)]/.test(afterChar)) {
+          if (!afterChar || /[\s\+\-\*\/\^\%\(\)\[\]\.,]/.test(afterChar)) {
             pushToken({
               type: "variable",
               start: baseOffset + pos,
@@ -718,7 +729,21 @@ export function tokenizeExpression(
 
     // Check for operators and parentheses
     if (!matched) {
-      if (operatorRegex.test(expr[pos]) || parenRegex.test(expr[pos])) {
+      const rangeMatch = expr.substring(pos).match(rangeOperatorRegex);
+      if (rangeMatch) {
+        pushToken({
+          type: "operator",
+          start: baseOffset + pos,
+          end: baseOffset + pos + 2,
+          text: "..",
+        });
+        pos += 2;
+        matched = true;
+      } else if (
+        operatorRegex.test(expr[pos]) ||
+        parenRegex.test(expr[pos]) ||
+        bracketRegex.test(expr[pos])
+      ) {
         pushToken({
           type: "operator",
           start: baseOffset + pos,
