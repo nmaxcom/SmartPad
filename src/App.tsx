@@ -90,6 +90,16 @@ function AppContent() {
     document.documentElement.dataset.syntaxTheme = settings.syntaxTheme;
   }, [runtimeParams.forceSpatialNeon, settings.uiTheme, settings.syntaxTheme]);
 
+  useEffect(() => {
+    if (!runtimeParams.embed) return;
+    document.documentElement.classList.add("smartpad-embed-mode");
+    document.body.classList.add("smartpad-embed-mode");
+    return () => {
+      document.documentElement.classList.remove("smartpad-embed-mode");
+      document.body.classList.remove("smartpad-embed-mode");
+    };
+  }, [runtimeParams.embed]);
+
   // Show sidebar only if at least one panel is enabled
   const showSidebar =
     !runtimeParams.embed &&
@@ -117,7 +127,8 @@ function AppContent() {
         <SheetProvider>
           <EditorProvider>
             <SheetSync />
-            <DocsExampleImporter />
+            <DocsExampleImporter runtimeParams={runtimeParams} />
+            {runtimeParams.embed && <EmbedPreviewStatusReporter />}
             {!runtimeParams.embed && <AppHeader onSettingsClick={handleOpenSettings} />}
             {!runtimeParams.embed && fxStatus.provider === "offline" && fxStatus.source === "cache" && (
               <div className="fx-status-banner" role="status">
@@ -165,7 +176,7 @@ function hashString(input: string): string {
   return Math.abs(hash).toString(16);
 }
 
-function DocsExampleImporter() {
+function DocsExampleImporter({ runtimeParams }: { runtimeParams: RuntimeModeParams }) {
   const { createSheetFromContent } = useSheetContext();
   const importedRef = useRef(false);
 
@@ -175,6 +186,7 @@ function DocsExampleImporter() {
     const params = new URLSearchParams(window.location.search);
     const rawExample = params.get("sp_example");
     if (!rawExample) return;
+    if (runtimeParams.embed || !runtimeParams.shouldImportExample) return;
 
     importedRef.current = true;
     const rawTitle = params.get("sp_title");
@@ -205,7 +217,43 @@ function DocsExampleImporter() {
     } finally {
       stripParams();
     }
-  }, [createSheetFromContent]);
+  }, [createSheetFromContent, runtimeParams.embed, runtimeParams.shouldImportExample]);
+
+  return null;
+}
+
+function EmbedPreviewStatusReporter() {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const computeStatus = () => {
+      const errors = Array.from(document.querySelectorAll(".semantic-error-result"));
+      const results = document.querySelectorAll(".semantic-result-display").length;
+      const firstError = errors[0];
+      const errorReason =
+        firstError?.getAttribute("data-result")?.trim() ||
+        firstError?.textContent?.trim() ||
+        null;
+      window.parent?.postMessage(
+        {
+          type: "smartpad-embed-status",
+          payload: {
+            hasErrors: errors.length > 0,
+            errorCount: errors.length,
+            resultCount: results,
+            errorReason,
+          },
+        },
+        "*",
+      );
+    };
+
+    computeStatus();
+    const observer = new MutationObserver(() => computeStatus());
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, characterData: true });
+
+    return () => observer.disconnect();
+  }, []);
 
   return null;
 }

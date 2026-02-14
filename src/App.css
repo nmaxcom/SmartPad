@@ -244,6 +244,7 @@
 .app--embed .editor-card-container {
   border-radius: 0;
   padding: 0.75rem 1rem;
+  overflow: hidden;
 }
 
 .app--embed .editor-card-container::before {
@@ -252,6 +253,18 @@
   width: 860px;
   height: 860px;
   opacity: 0.95;
+}
+
+.app--embed .editor-container,
+.app--embed .editor-content,
+.app--embed .editor-content .ProseMirror {
+  min-height: 0;
+  height: 100%;
+}
+
+.app--embed .editor-content {
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* 

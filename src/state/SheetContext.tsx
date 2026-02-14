@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { deriveTitleFromContent, applyTitleToContent, DEFAULT_SHEET_TITLE } from "../utils/sheetTitle";
 import { SheetRecord, deleteSheet, generateSheetId, getAllSheets, getSheet, putSheet } from "../storage/sheetsDb";
 import { QUICK_TOUR_TEMPLATE } from "../templates/quickTourTemplate";
+import { parseEmbedPreviewParams, parseRuntimeModeParams } from "../utils/runtimeMode";
 
 interface SheetContextValue {
   sheets: SheetRecord[];
@@ -58,10 +59,21 @@ export function SheetProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const channelRef = useRef<BroadcastChannel | null>(null);
   const clientIdRef = useRef<string>(generateSheetId());
+  const runtimeParams = useMemo(
+    () => (typeof window === "undefined" ? parseRuntimeModeParams("") : parseRuntimeModeParams(window.location.search)),
+    []
+  );
+  const previewParams = useMemo(
+    () => (typeof window === "undefined" ? parseEmbedPreviewParams("") : parseEmbedPreviewParams(window.location.search)),
+    []
+  );
+  const isEphemeralEmbed = runtimeParams.embed && Boolean(previewParams.previewContent);
   const setActiveSheetId = useCallback((id: string) => {
     setActiveSheetIdState(id);
-    persistActiveSheetId(id);
-  }, []);
+    if (!isEphemeralEmbed) {
+      persistActiveSheetId(id);
+    }
+  }, [isEphemeralEmbed]);
 
   const upsertSheet = useCallback((record: SheetRecord) => {
     setSheets((prev) => {
@@ -104,6 +116,10 @@ export function SheetProvider({ children }: { children: React.ReactNode }) {
 
   const saveSheetRecord = useCallback(
     async (record: SheetRecord, broadcast: boolean) => {
+      if (isEphemeralEmbed) {
+        upsertSheet(record);
+        return;
+      }
       await putSheet(record);
       upsertSheet(record);
       if (broadcast && channelRef.current) {
@@ -114,7 +130,7 @@ export function SheetProvider({ children }: { children: React.ReactNode }) {
         });
       }
     },
-    [upsertSheet]
+    [isEphemeralEmbed, upsertSheet]
   );
 
   const getNextOrder = useCallback(() => {
@@ -256,6 +272,24 @@ export function SheetProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let isMounted = true;
     const init = async () => {
+      if (isEphemeralEmbed) {
+        const id = "docs-preview-sheet";
+        const now = Date.now();
+        const previewTitle = previewParams.previewTitle || "Docs Preview";
+        const previewContent = applyTitleToContent(previewParams.previewContent || "", previewTitle);
+        const previewSheet: SheetRecord = {
+          id,
+          title: previewTitle,
+          content: previewContent,
+          last_modified: now,
+          is_trashed: false,
+          order: 0,
+        };
+        setSheets([previewSheet]);
+        setActiveSheetIdState(id);
+        setIsLoading(false);
+        return;
+      }
       const records = await getAllSheets();
       if (!isMounted) return;
       if (records.length === 0) {
@@ -325,6 +359,9 @@ export function SheetProvider({ children }: { children: React.ReactNode }) {
   }, [saveSheetRecord]);
 
   useEffect(() => {
+    if (isEphemeralEmbed) {
+      return () => {};
+    }
     const channel = new BroadcastChannel(CHANNEL_NAME);
     channelRef.current = channel;
     channel.onmessage = async (event) => {
@@ -338,7 +375,7 @@ export function SheetProvider({ children }: { children: React.ReactNode }) {
       channel.close();
       channelRef.current = null;
     };
-  }, [saveSheetRecord]);
+  }, [isEphemeralEmbed, saveSheetRecord]);
 
   const activeSheet = useMemo(
     () => sheets.find((sheet) => sheet.id === activeSheetId) || null,

@@ -25,6 +25,12 @@ body {
   min-height: 100vh;
 }
 
+html.smartpad-embed-mode,
+body.smartpad-embed-mode {
+  overflow: hidden;
+  height: 100%;
+}
+
 /* 3. Remove default list styles */
 ol,
 ul {

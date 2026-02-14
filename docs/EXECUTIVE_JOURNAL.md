@@ -1090,3 +1090,40 @@
     *   None.
 *   Risks/blockers:
     *   Current traces do not include the defective state; root-cause event cannot be proven from non-failing runs.
+
+## Entry J-2026-02-14-26
+
+*   Timestamp: 2026-02-14 17:56:36 CET / 2026-02-14 16:56:36 UTC
+*   Summary:
+    *   User requested three concrete docs fixes: remove dual scrollbar behavior in embedded playgrounds, add explicit blocked-result status messaging, and stop docs browsing from creating SmartPad sheets.
+    *   Assistant implemented all three end-to-end and validated with Playwright technically and visually.
+*   Decisions:
+    *   Separate explicit import (`sp_import=1`) from embed preview mode (`sp_preview`) so browsing docs cannot mutate persistent sheet state.
+    *   Add an iframe-to-docs status channel via `postMessage` to expose error/ready/idle state with click-to-explain reasoning.
+    *   Enforce embed overflow rules so only one scroll surface remains active in preview context.
+*   User directives:
+    *   Add todos for the three issues and work in a loop until solved and proven with Playwright.
+*   Artifacts:
+    *   `docs/TODO_BACKLOG.md` (added and completed `T-2026-02-14-10/11/12`)
+    *   `src/utils/runtimeMode.ts` (added import/preview param parsing)
+    *   `src/App.tsx` (import gating, embed status reporter, embed class handling)
+    *   `src/state/SheetContext.tsx` (ephemeral embed preview mode with no persistent writes)
+    *   `src/App.css` and `src/styles/globals.css` (embed overflow constraints)
+    *   `website/src/components/ExamplePlayground.tsx` (separate open/import vs inline preview URLs, status UI, why/details)
+    *   `website/src/css/custom.css` (status component styling)
+    *   `tests/unit/appRuntimeMode.test.ts` (runtime parsing coverage)
+    *   `public/docs/*` (regenerated docs output)
+    *   `docs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   `npx jest tests/unit/appRuntimeMode.test.ts` passed.
+    *   `npm run docs:docusaurus:publish-local` passed.
+    *   `npm run build` passed.
+    *   Playwright verification script passed for:
+      - explicit status + “Why?” detail on erroring examples,
+      - embed overflow constraints (no iframe/document-level extra scroll surface),
+      - no sheet pollution (sheet titles/count unchanged before vs after browsing docs with embedded previews).
+    *   `npm run docs:map` passed.
+    *   `npm run docs:drift` passed.
+    *   `npm run spec:test` passed.
+*   Risks/blockers:
+    *   None.
