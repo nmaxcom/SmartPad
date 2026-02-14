@@ -732,3 +732,23 @@
     *   `T-2026-02-14-08` created (`todo`, p1, due 2026-02-19)
 *   Risks/blockers:
     *   Existing interaction expectations for result clicks may vary between users; UX choice should keep existing default behavior stable.
+
+## Entry J-2026-02-14-14
+
+*   Timestamp: 2026-02-14 02:53:13 CET / 2026-02-14 01:53:13 UTC
+*   Summary:
+    *   User requested explicit todos for example color highlighting and explanation quality improvements in docs.
+*   Decisions:
+    *   Add two new project-lane tasks with concrete deliverables and validation criteria.
+*   User directives:
+    *   "add todo for docs to show the examples with color highlight and fix overall explanations"
+*   Assistant commitments:
+    *   Execute highlighting and explanation rewrite tasks next in the docs lane.
+*   Artifacts:
+    *   `docs/TODO_BACKLOG.md` (added T-2026-02-14-06 and T-2026-02-14-07)
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   Added `T-2026-02-14-06`.
+    *   Added `T-2026-02-14-07`.
+*   Risks/blockers:
+    *   None.
