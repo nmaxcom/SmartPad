@@ -1,39 +1,33 @@
 ---
 title: "Lists"
-description: "Defines list creation, aggregations, filtering, mapping, sorting, indexing, and unit-safe list operations."
+description: "Aggregate, map, filter, sort, and index data with unit-aware operations."
 ---
 
 import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
-<div className="spotlight-panel">
-<h3>Lists</h3>
-<p><strong>What this unlocks:</strong> Defines list creation, aggregations, filtering, mapping, sorting, indexing, and unit-safe list operations.</p>
-<p><strong>Why teams care:</strong> Treat line-based notes like structured datasets when you need analysis depth.</p>
-<p><strong>Source spec:</strong> <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/Lists.spec.md">docs/Specs/Lists.spec.md</a></p>
+<div className="doc-hero">
+<p className="doc-hero__kicker">Data and Collections</p>
+<h2>Lists</h2>
+<p>Aggregate, map, filter, sort, and index data with unit-aware operations.</p>
 </div>
 
-## What you can ship with this
+## Why this matters
 
-Use this guide to move from isolated formulas to production-grade lists behavior in real SmartPad sheets.
+Lists let SmartPad behave like a mini analytics notebook without heavy tooling.
 
-## Live playground
+## Use it when
 
-<ExamplePlayground title={"Lists quick win"} description={"Copy, run, and adapt this baseline to your own sheet."} code={"xs = 10, 20, 30\nys = xs[2..2]\nys =>20\ncount(ys) => 1"} />
+- You model repeated values or time windows quickly.
+- You need aggregates and filtering without exporting to another tool.
+- You want the sheet to stay editable while logic grows.
 
-<ExamplePlayground title={"Lists guardrail check"} description={"Use this to understand expected behavior around edge conditions."} code={"x = 20\ncount(x) => ⚠️ Expected list"} />
+## Try it in SmartPad
 
-## Design notes
+<ExamplePlayground title={"Lists: quick win"} description={"Run this interactive example and tweak values immediately."} code={"xs = 10, 20, 30\nys = xs[2..2]\nys =>20\ncount(ys) => 1"} />
 
-- Keep formulas legible by splitting intent into named lines before collapsing math.
-- Prefer explicit conversions and target units instead of inferring context from nearby lines.
-- Validate expected output with at least one positive and one guardrail-oriented example.
+<ExamplePlayground title={"Lists: edge behavior"} description={"Use this to understand guardrails and failure modes."} code={"x = 20\ncount(x) => ⚠️ Expected list"} />
 
-## Common pitfalls
-
-- Display strings are not always canonical values; verify the target unit/currency explicitly.
-- Keep context (unit, locale, currency) explicit when composing lines across domains.
-
-## Capability map
+## What this feature guarantees
 
 - Overview: what a “list” is and why it matters
 - What counts as a list
@@ -45,10 +39,10 @@ Use this guide to move from isolated formulas to production-grade lists behavior
 - Indexing and slicing
 - Sorting and ordering
 - Filtering
-- Mapping (element-wise transforms)
-- Pairwise operations (zip behavior)
 
-## Deep reference
+## Common mistakes
 
-- Canonical behavior contract: [Lists.spec.md](https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/Lists.spec.md)
-- Regenerate docs after spec edits: `npm run docs:docusaurus:generate`
+- Treat formatted display as presentation, not implicit conversion logic.
+- Keep context explicit (units, currencies, locale) when composing formulas.
+
+<p className="doc-footnote">Authoritative spec: <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/Lists.spec.md">docs/Specs/Lists.spec.md</a></p>

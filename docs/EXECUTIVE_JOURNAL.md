@@ -1043,3 +1043,30 @@
     *   Playwright check passed for embed presence + forced theme (`spatial-dark`/`neon-syntax`).
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-14-25
+
+*   Timestamp: 2026-02-14 07:09:13 CET / 2026-02-14 06:09:13 UTC
+*   Summary:
+    *   User requested a complete, non-incremental unification of docs visual language and content structure.
+    *   Assistant performed a full generator + theme reset in one pass: removed disconnected section patterns, unified page composition, and enforced one Spatial-Neon system across nav, cards, typography, examples, and embedded previews.
+    *   Ran Playwright screenshot loop on core pages and iterated once more to remove remaining seams/separators and clean spec-section labels.
+*   Decisions:
+    *   Replace “Capability map / Deep reference” style sections with integrated product-style flow: Why this matters, Use it when, Try it in SmartPad, What this feature guarantees, Common mistakes, and a minimal footnote spec anchor.
+    *   Remove mixed accent directions and enforce a single palette/shape language for all docs surfaces.
+*   Artifacts:
+    *   `scripts/generate-docusaurus-docs.js` (full content structure rewrite)
+    *   `website/src/css/custom.css` (single visual system across docs)
+    *   `website/docs/intro.md` (aligned to new language)
+    *   `website/docs/specs/*.md`, `website/docs/guides/*.md` (regenerated)
+    *   `public/docs/*` (regenerated build assets/pages)
+    *   `docs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   `npm run docs:docusaurus:publish-local` passed.
+    *   `npm run build` passed.
+    *   Playwright screenshot loop completed for `/docs/index.html`, `/docs/specs/index.html`, `/docs/guides/examples-gallery/index.html`, `/docs/specs/currency-and-fx/index.html`.
+    *   `npm run docs:map` passed.
+    *   `npm run docs:drift` passed.
+    *   `npm run spec:test` passed.
+*   Risks/blockers:
+    *   None.

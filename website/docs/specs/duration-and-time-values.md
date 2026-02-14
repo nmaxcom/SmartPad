@@ -1,47 +1,43 @@
 ---
 title: "Duration and Time Values"
-description: "Defines duration literals, time-of-day values, datetime arithmetic, and parsing disambiguation rules."
+description: "Work with durations, time-of-day values, and datetime arithmetic safely."
 ---
 
 import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
-<div className="spotlight-panel">
-<h3>Duration and Time Values</h3>
-<p><strong>What this unlocks:</strong> Defines duration literals, time-of-day values, datetime arithmetic, and parsing disambiguation rules.</p>
-<p><strong>Why teams care:</strong> Handle schedules, lead times, and elapsed calculations with reliable unit math.</p>
-<p><strong>Source spec:</strong> <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/duration.spec.md">docs/Specs/duration.spec.md</a></p>
+<div className="doc-hero">
+<p className="doc-hero__kicker">Math and Units</p>
+<h2>Duration and Time Values</h2>
+<p>Work with durations, time-of-day values, and datetime arithmetic safely.</p>
 </div>
 
-## What you can ship with this
+## Why this matters
 
-Use this guide to move from isolated formulas to production-grade duration and time values behavior in real SmartPad sheets.
+Time math breaks quickly unless syntax and precedence are consistent.
 
-## Live playground
+## Use it when
 
-Examples for this feature are being backfilled. Add examples to the source spec and regenerate docs.
+- You want faster iteration without switching contexts.
+- You need readable formulas that teammates can follow.
+- You want reliable behavior under real user inputs.
 
-## Design notes
+## Try it in SmartPad
 
-- Keep formulas legible by splitting intent into named lines before collapsing math.
-- Prefer explicit conversions and target units instead of inferring context from nearby lines.
-- Validate expected output with at least one positive and one guardrail-oriented example.
+Examples for this feature are being backfilled. Add examples in the source spec and regenerate docs.
 
-## Common pitfalls
+## What this feature guarantees
 
-- Use the documented syntax exactly; SmartPad avoids ambiguous shorthand on purpose.
-- Keep context (unit, locale, currency) explicit when composing lines across domains.
+- New concept: `Duration` is a first-class value (not just “unit math”)
+- Time-of-day values: support `Time` as distinct from `DateTime`
+- Conversions: `to` should work for Duration and Time
+- DateTime + Duration parsing: accept “duration phrases” without punctuation
+- Disambiguation + safety rules (stuff that will bite you later)
+- Concrete expected outputs for your 3 failing lines
+- Extra examples you probably want tests for (high value)
 
-## Capability map
+## Common mistakes
 
-- 1) New concept: `Duration` is a first-class value (not just “unit math”)
-- 2) Time-of-day values: support `Time` as distinct from `DateTime`
-- 3) Conversions: `to` should work for Duration and Time
-- 4) DateTime + Duration parsing: accept “duration phrases” without punctuation
-- 5) Disambiguation + safety rules (stuff that will bite you later)
-- 6) Concrete expected outputs for your 3 failing lines
-- 7) Extra examples you probably want tests for (high value)
+- Use exact SmartPad syntax first, then optimize for brevity.
+- Keep context explicit (units, currencies, locale) when composing formulas.
 
-## Deep reference
-
-- Canonical behavior contract: [duration.spec.md](https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/duration.spec.md)
-- Regenerate docs after spec edits: `npm run docs:docusaurus:generate`
+<p className="doc-footnote">Authoritative spec: <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/duration.spec.md">docs/Specs/duration.spec.md</a></p>

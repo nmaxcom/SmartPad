@@ -14,8 +14,8 @@ const SPEC_CATALOG = [
     title: "Live Results",
     category: "Core Experience",
     summary:
-      "Show evaluable results while typing, keep => behavior unchanged, and suppress noisy/error-prone previews.",
-    why: "Keep cognitive flow intact by seeing outcomes the moment an expression becomes valid.",
+      "See valid results while typing and keep the editing flow uninterrupted.",
+    why: "Live feedback is the core reason SmartPad feels faster than spreadsheets.",
   },
   {
     fileName: "ResultChipsAndValueGraph.spec.md",
@@ -23,8 +23,8 @@ const SPEC_CATALOG = [
     title: "Result Chips and References",
     category: "Core Experience",
     summary:
-      "Defines chip interactions, hidden references, dependency behavior, and result-lane UX in the editor.",
-    why: "Turn lines into reusable building blocks without losing readability.",
+      "Reuse computed values safely with chips, hidden references, and dependency awareness.",
+    why: "Turn one-off lines into composable building blocks without losing readability.",
   },
   {
     fileName: "Plotting.spec.md",
@@ -32,8 +32,8 @@ const SPEC_CATALOG = [
     title: "Plotting and Dependency Views",
     category: "Core Experience",
     summary:
-      "Specifies exploratory plotting, detached views, and dependency-driven visualization flows.",
-    why: "Move from raw values to visual intuition with near-zero setup.",
+      "Visualize behavior from expressions, dependencies, and exploratory model changes.",
+    why: "Great docs should help users jump from numbers to insight immediately.",
   },
   {
     fileName: "Currency.spec.md",
@@ -41,8 +41,8 @@ const SPEC_CATALOG = [
     title: "Currency and FX",
     category: "Math and Units",
     summary:
-      "Covers currency units, FX conversion, manual overrides, and formatting rules for money calculations.",
-    why: "Model global pricing and planning in one sheet without brittle conversion hacks.",
+      "Model money with robust unit behavior, conversion syntax, and FX source rules.",
+    why: "Global planning only works when conversion behavior is explicit and trustworthy.",
   },
   {
     fileName: "duration.spec.md",
@@ -50,8 +50,8 @@ const SPEC_CATALOG = [
     title: "Duration and Time Values",
     category: "Math and Units",
     summary:
-      "Defines duration literals, time-of-day values, datetime arithmetic, and parsing disambiguation rules.",
-    why: "Handle schedules, lead times, and elapsed calculations with reliable unit math.",
+      "Work with durations, time-of-day values, and datetime arithmetic safely.",
+    why: "Time math breaks quickly unless syntax and precedence are consistent.",
   },
   {
     fileName: "Lists.spec.md",
@@ -59,8 +59,8 @@ const SPEC_CATALOG = [
     title: "Lists",
     category: "Data and Collections",
     summary:
-      "Defines list creation, aggregations, filtering, mapping, sorting, indexing, and unit-safe list operations.",
-    why: "Treat line-based notes like structured datasets when you need analysis depth.",
+      "Aggregate, map, filter, sort, and index data with unit-aware operations.",
+    why: "Lists let SmartPad behave like a mini analytics notebook without heavy tooling.",
   },
   {
     fileName: "Ranges.spec.md",
@@ -68,8 +68,8 @@ const SPEC_CATALOG = [
     title: "Ranges",
     category: "Data and Collections",
     summary:
-      "Defines numeric and date/time range generation, step rules, guardrails, and list interoperability.",
-    why: "Generate planning horizons, projections, and schedules without manual fill operations.",
+      "Generate numeric and date ranges for plans, projections, and schedules.",
+    why: "Range generation removes repetitive manual input and keeps models editable.",
   },
   {
     fileName: "Locale.spec.md",
@@ -77,8 +77,8 @@ const SPEC_CATALOG = [
     title: "Locale Date and Time",
     category: "Data and Collections",
     summary:
-      "Defines locale-aware date parsing, date/time ranges, output formatting, and error normalization.",
-    why: "Collaborate across regions while keeping date/time behavior deterministic.",
+      "Parse and format dates predictably across locale-specific inputs and outputs.",
+    why: "Cross-region workflows fail unless date interpretation is deterministic.",
   },
   {
     fileName: "FileManagement.spec.md",
@@ -86,8 +86,8 @@ const SPEC_CATALOG = [
     title: "File Management",
     category: "Workspace",
     summary:
-      "Defines sheet storage, autosave, import/export behavior, trash lifecycle, and multi-tab synchronization.",
-    why: "Protect user trust with durable persistence and predictable recovery behavior.",
+      "Ensure durable sheets with autosave, import/export, trash, and tab sync behavior.",
+    why: "Data durability is part of product trust, not a secondary concern.",
   },
 ];
 
@@ -100,12 +100,11 @@ const ensureDir = (dirPath) => {
 };
 
 const escapeYaml = (value) => value.replace(/"/g, '\\"');
-
 const readSpecContent = (fileName) => fs.readFileSync(path.join(specsDir, fileName), "utf8");
 
 const extractSections = (content) => {
   const matches = [...content.matchAll(/^##\s+(.+)$/gm)];
-  return matches.slice(0, 12).map((match) => match[1].trim());
+  return matches.slice(0, 10).map((match) => match[1].trim());
 };
 
 const extractCodeBlocks = (content) => {
@@ -127,52 +126,85 @@ const pickExamples = (blocks) => {
 };
 
 const sectionKey = (title) => title.toLowerCase();
+const cleanSectionTitle = (value) =>
+  value
+    .replace(/^\s*[\divxlcdm]+[\)\.\-:]\s*/i, "")
+    .replace(/^\s*\d+[\)\.\-:]\s*/, "")
+    .trim();
 
 const inferPitfalls = (entry, sections) => {
-  const items = [];
   const has = (pattern) => sections.some((section) => pattern.test(sectionKey(section)));
+  const items = [];
 
   if (has(/syntax|parsing/)) {
-    items.push("Use the documented syntax exactly; SmartPad avoids ambiguous shorthand on purpose.");
+    items.push("Use exact SmartPad syntax first, then optimize for brevity.");
   }
   if (has(/edge|guardrail|error/)) {
-    items.push("Check guardrails before assuming spreadsheet-style coercion rules.");
+    items.push("Check edge and guardrail behavior before scaling your sheet.");
   }
   if (has(/format|display|locale/)) {
-    items.push("Display strings are not always canonical values; verify the target unit/currency explicitly.");
+    items.push("Treat formatted display as presentation, not implicit conversion logic.");
   }
   if (/currency|duration|locale|ranges|lists/.test(entry.slug)) {
-    items.push("Keep context (unit, locale, currency) explicit when composing lines across domains.");
+    items.push("Keep context explicit (units, currencies, locale) when composing formulas.");
   }
   if (!items.length) {
-    items.push("Build from small named steps first, then collapse into concise formulas.");
+    items.push("Build complex formulas from named intermediate lines for reliability.");
   }
 
   return items.slice(0, 3);
 };
 
+const inferUseCases = (entry) => {
+  if (entry.slug === "currency-and-fx") {
+    return [
+      "You plan across currencies and need conversion rules that users can trust.",
+      "You compare scenarios with manual rates versus live FX behavior.",
+      "You want readable outputs without losing unit correctness.",
+    ];
+  }
+  if (entry.slug.includes("list") || entry.slug.includes("range")) {
+    return [
+      "You model repeated values or time windows quickly.",
+      "You need aggregates and filtering without exporting to another tool.",
+      "You want the sheet to stay editable while logic grows.",
+    ];
+  }
+  if (entry.slug.includes("file")) {
+    return [
+      "You need confidence that work is saved and recoverable.",
+      "You collaborate across tabs or import/export workflows.",
+      "You want predictable behavior for trash and restoration.",
+    ];
+  }
+  return [
+    "You want faster iteration without switching contexts.",
+    "You need readable formulas that teammates can follow.",
+    "You want reliable behavior under real user inputs.",
+  ];
+};
+
 const mdxStringProp = (value) => `{${JSON.stringify(value)}}`;
 
-const renderPlayground = ({ title, description, code }) => {
-  return `<ExamplePlayground title=${mdxStringProp(title)} description=${mdxStringProp(description)} code=${mdxStringProp(code)} />`;
-};
+const renderPlayground = ({ title, description, code }) =>
+  `<ExamplePlayground title=${mdxStringProp(title)} description=${mdxStringProp(description)} code=${mdxStringProp(code)} />`;
 
 const renderExamples = (entry, examples) => {
   if (!examples.positive && !examples.edgeCase) {
     return [
-      "## Live playground",
+      "## Try it in SmartPad",
       "",
-      "Examples for this feature are being backfilled. Add examples to the source spec and regenerate docs.",
+      "Examples for this feature are being backfilled. Add examples in the source spec and regenerate docs.",
       "",
     ].join("\n");
   }
 
   const lines = [
-    "## Live playground",
+    "## Try it in SmartPad",
     "",
     renderPlayground({
-      title: `${entry.title} quick win`,
-      description: "Copy, run, and adapt this baseline to your own sheet.",
+      title: `${entry.title}: quick win`,
+      description: "Run this interactive example and tweak values immediately.",
       code: examples.positive || examples.edgeCase,
     }),
     "",
@@ -181,8 +213,8 @@ const renderExamples = (entry, examples) => {
   if (examples.edgeCase && examples.edgeCase !== examples.positive) {
     lines.push(
       renderPlayground({
-        title: `${entry.title} guardrail check`,
-        description: "Use this to understand expected behavior around edge conditions.",
+        title: `${entry.title}: edge behavior`,
+        description: "Use this to understand guardrails and failure modes.",
         code: examples.edgeCase,
       }),
     );
@@ -192,22 +224,11 @@ const renderExamples = (entry, examples) => {
   return lines.join("\n");
 };
 
-const renderCoverageSection = (sections) => {
-  if (!sections.length) {
-    return "## Capability map\n\nCoverage list is being refined.\n";
-  }
-  const lines = ["## Capability map", ""];
-  sections.forEach((section) => lines.push(`- ${section}`));
-  lines.push("");
-  return lines.join("\n");
-};
-
 const renderDocPage = (entry, content) => {
   const sections = extractSections(content);
   const examples = pickExamples(extractCodeBlocks(content));
   const pitfalls = inferPitfalls(entry, sections);
-
-  const isCurrency = entry.slug === "currency-and-fx";
+  const useCases = inferUseCases(entry);
 
   const chunks = [
     "---",
@@ -217,41 +238,31 @@ const renderDocPage = (entry, content) => {
     "",
     'import ExamplePlayground from "@site/src/components/ExamplePlayground";',
     "",
-    '<div className="spotlight-panel">',
-    `<h3>${entry.title}</h3>`,
-    `<p><strong>What this unlocks:</strong> ${entry.summary}</p>`,
-    `<p><strong>Why teams care:</strong> ${entry.why}</p>`,
-    `<p><strong>Source spec:</strong> <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/${entry.fileName}">docs/Specs/${entry.fileName}</a></p>`,
+    '<div className="doc-hero">',
+    `<p className="doc-hero__kicker">${entry.category}</p>`,
+    `<h2>${entry.title}</h2>`,
+    `<p>${entry.summary}</p>`,
     "</div>",
     "",
-    "## What you can ship with this",
+    "## Why this matters",
     "",
-    `Use this guide to move from isolated formulas to production-grade ${entry.title.toLowerCase()} behavior in real SmartPad sheets.`,
+    entry.why,
+    "",
+    "## Use it when",
+    "",
+    ...useCases.map((item) => `- ${item}`),
     "",
     renderExamples(entry, examples).trimEnd(),
     "",
-    isCurrency ? "## Currency + FX blueprint" : "## Design notes",
+    "## What this feature guarantees",
     "",
-    isCurrency
-      ? "- Run local budgeting in USD while instantly projecting totals to EUR/GBP for planning and approvals."
-      : "- Keep formulas legible by splitting intent into named lines before collapsing math.",
-    isCurrency
-      ? "- Keep manual rates for scenario planning, but preserve live-rate behavior for day-to-day usage."
-      : "- Prefer explicit conversions and target units instead of inferring context from nearby lines.",
-    isCurrency
-      ? "- Treat conversion syntax (`to` / `in`) as part of the model contract, not just display formatting."
-      : "- Validate expected output with at least one positive and one guardrail-oriented example.",
+    ...sections.map((section) => `- ${cleanSectionTitle(section)}`),
     "",
-    "## Common pitfalls",
+    "## Common mistakes",
     "",
     ...pitfalls.map((pitfall) => `- ${pitfall}`),
     "",
-    renderCoverageSection(sections).trimEnd(),
-    "",
-    "## Deep reference",
-    "",
-    `- Canonical behavior contract: [${entry.fileName}](https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/${entry.fileName})`,
-    "- Regenerate docs after spec edits: `npm run docs:docusaurus:generate`",
+    `<p className="doc-footnote">Authoritative spec: <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/${entry.fileName}">docs/Specs/${entry.fileName}</a></p>`,
     "",
   ];
 
@@ -265,20 +276,19 @@ const renderIndexPage = (recordsByCategory) => {
     "title: Feature Guides",
     "---",
     "",
-    '<div className="cinema-hero">',
-    '<p className="cinema-kicker">SmartPad Docs</p>',
-    "<h2>From plain text to decision-ready models</h2>",
-    "<p>Explore examples, run them in one click, and build sheets that are readable and mathematically reliable.</p>",
-    '<div className="cinema-tags"><span>Live math</span><span>Units + FX</span><span>Lists + ranges</span><span>Workspace safe</span></div>',
+    '<div className="doc-hero doc-hero--wide">',
+    '<p className="doc-hero__kicker">SmartPad Docs</p>',
+    "<h2>One language for ideas, math, and decisions</h2>",
+    "<p>Explore guided features with live interactive examples and clear behavior contracts.</p>",
     "</div>",
     "",
-    "## Explore by journey",
+    "## Explore by path",
     "",
     '<div className="journey-grid">',
-    '<a className="journey-card" href="/docs/guides/getting-started"><strong>Getting Started</strong><span>First value in under a minute.</span></a>',
-    '<a className="journey-card" href="/docs/guides/syntax-playbook"><strong>Syntax Playbook</strong><span>Patterns that keep sheets clean and scalable.</span></a>',
-    '<a className="journey-card" href="/docs/guides/examples-gallery"><strong>Examples Gallery</strong><span>Copy-ready workflows you can run instantly.</span></a>',
-    '<a className="journey-card" href="/docs/guides/troubleshooting"><strong>Troubleshooting</strong><span>Fast fixes for parsing and conversion surprises.</span></a>',
+    '<a className="journey-card" href="/docs/guides/getting-started"><strong>Start Fast</strong><span>From blank sheet to meaningful output in minutes.</span></a>',
+    '<a className="journey-card" href="/docs/guides/syntax-playbook"><strong>Master Syntax</strong><span>Write formulas that stay readable as complexity grows.</span></a>',
+    '<a className="journey-card" href="/docs/guides/examples-gallery"><strong>Real Examples</strong><span>Use production-style snippets you can run immediately.</span></a>',
+    '<a className="journey-card" href="/docs/guides/troubleshooting"><strong>Fix Fast</strong><span>Diagnose and resolve common issues quickly.</span></a>',
     "</div>",
     "",
   ];
@@ -299,146 +309,142 @@ const renderIndexPage = (recordsByCategory) => {
     lines.push("");
   });
 
-  lines.push("Regenerate this section after spec updates:");
-  lines.push("");
-  lines.push("```bash");
-  lines.push("npm run docs:docusaurus:generate");
-  lines.push("```");
-  lines.push("");
-
   return `${lines.join("\n")}\n`;
 };
 
 const renderGuidePages = (recordsByCategory) => {
-  const docs = [];
   const allRecords = [...recordsByCategory.values()].flat();
 
-  docs.push({
-    file: "getting-started.md",
-    body: [
-      "---",
-      "title: Getting Started",
-      "sidebar_position: 1",
-      "---",
-      "",
-      'import ExamplePlayground from "@site/src/components/ExamplePlayground";',
-      "",
-      "# Getting Started With SmartPad",
-      "",
-      "<div className=\"spotlight-panel\">",
-      "<p><strong>Goal:</strong> go from blank page to a live, explainable model in under 60 seconds.</p>",
-      "</div>",
-      "",
-      "<ExamplePlayground title=\"60-second first win\" description=\"Open this directly in SmartPad and tweak values.\" code={`hours = 38\\nrate = $95/hour\\nweekly pay = hours * rate => $3,610\\n\\nfx = weekly pay in EUR => EUR 3,340`} />",
-      "",
-      "## What to learn next",
-      "",
-      "- [Syntax Playbook](/docs/guides/syntax-playbook)",
-      "- [Examples Gallery](/docs/guides/examples-gallery)",
-      "- [Feature Guides](/docs/specs)",
-      "",
-    ].join("\n"),
-  });
-
-  docs.push({
-    file: "syntax-playbook.md",
-    body: [
-      "---",
-      "title: Syntax Playbook",
-      "sidebar_position: 2",
-      "---",
-      "",
-      'import ExamplePlayground from "@site/src/components/ExamplePlayground";',
-      "",
-      "# Syntax Playbook",
-      "",
-      "Use these patterns to keep sheets expressive and predictable.",
-      "",
-      "<ExamplePlayground title=\"Core expression patterns\" description=\"A compact pattern set used across most SmartPad workflows.\" code={`subtotal = $128\\ntax = 8.5%\\ntotal = subtotal + (subtotal * tax) => $138.88\\n\\ndistance = 42 km\\ndistance in mi => 26.1 mi\\n\\nplan = [120, 140, 155, 170]\\navg(plan) => 146.25`} />",
-      "",
-      "## Rules of thumb",
-      "",
-      "- Use `to` / `in` for conversions.",
-      "- Keep units and currencies on values, not comments.",
-      "- Name intermediate values so downstream lines stay readable.",
-      "",
-    ].join("\n"),
-  });
-
-  docs.push({
-    file: "examples-gallery.md",
-    body: [
-      "---",
-      "title: Examples Gallery",
-      "sidebar_position: 3",
-      "---",
-      "",
-      'import ExamplePlayground from "@site/src/components/ExamplePlayground";',
-      "",
-      "# Examples Gallery",
-      "",
-      "Feature-packed examples you can paste and adapt.",
-      "",
-      "<ExamplePlayground title=\"Budget + FX\" description=\"Local budget totals projected into a second currency.\" code={`rent = USD 1950\\nutilities = USD 240\\ntotal usd = rent + utilities => $2,190\\ntotal eur = total usd in EUR => EUR 2,025`} />",
-      "",
-      "<ExamplePlayground title=\"Unit-aware planning\" description=\"Travel-style estimate with unit conversion.\" code={`speed = 62 mi/h\\ntime = 45 min\\ndistance = speed * time => 46.5 mi\\ndistance in km => 74.83 km`} />",
-      "",
-      "<ExamplePlayground title=\"List analysis\" description=\"Fast analysis of a compact numeric list.\" code={`scores = [71, 77, 84, 90, 94]\\ntop3 = take(sort(scores, desc), 3)\\navg(top3) => 89.33`} />",
-      "",
-    ].join("\n"),
-  });
-
-  docs.push({
-    file: "troubleshooting.md",
-    body: [
-      "---",
-      "title: Troubleshooting",
-      "sidebar_position: 4",
-      "---",
-      "",
-      "# Troubleshooting Quick Fixes",
-      "",
-      "## If conversions fail",
-      "",
-      "- Verify the target unit/currency is valid.",
-      "- Prefer `value in TARGET` over free-form arrows.",
-      "- Check manual FX overrides before blaming live rates.",
-      "",
-      "## If results look wrong",
-      "",
-      "- Break formulas into named steps.",
-      "- Confirm list/range boundaries and step size.",
-      "- Inspect locale-sensitive dates and decimal separators.",
-      "",
-      "## If behavior differs from expectation",
-      "",
-      "Use the per-feature guide and then open the canonical spec for authoritative rules.",
-      "",
-      "- Feature guide index: [/docs/specs](/docs/specs)",
-      "",
-    ].join("\n"),
-  });
-
-  docs.push({
-    file: "feature-map.md",
-    body: [
-      "---",
-      "title: Feature Map",
-      "sidebar_position: 5",
-      "---",
-      "",
-      "# Feature Map",
-      "",
-      `SmartPad currently publishes **${allRecords.length}** core feature guides grouped by workflow area.`,
-      "",
-      ...CATEGORY_ORDER.flatMap((category) => {
-        const records = recordsByCategory.get(category) || [];
-        return [`## ${category}`, "", ...records.map((record) => `- [${record.title}](/docs/specs/${record.slug})`), ""];
-      }),
-    ].join("\n"),
-  });
-
-  return docs;
+  return [
+    {
+      file: "getting-started.md",
+      body: [
+        "---",
+        "title: Getting Started",
+        "sidebar_position: 1",
+        "---",
+        "",
+        'import ExamplePlayground from "@site/src/components/ExamplePlayground";',
+        "",
+        "# Getting Started",
+        "",
+        "<div className=\"doc-hero\">",
+        "<p className=\"doc-hero__kicker\">First Session</p>",
+        "<h2>Make your first useful model in under a minute</h2>",
+        "<p>Use this as your baseline workflow and branch into deeper guides from there.</p>",
+        "</div>",
+        "",
+        "<ExamplePlayground title=\"60-second first win\" description=\"A compact workflow that proves the SmartPad loop instantly.\" code={`hours = 38\\nrate = $95/hour\\nweekly pay = hours * rate => $3,610\\n\\nfx = weekly pay in EUR => EUR 3,340`} />",
+        "",
+        "## Next stops",
+        "",
+        "- [Syntax Playbook](/docs/guides/syntax-playbook)",
+        "- [Examples Gallery](/docs/guides/examples-gallery)",
+        "- [Feature Guides](/docs/specs)",
+        "",
+      ].join("\n"),
+    },
+    {
+      file: "syntax-playbook.md",
+      body: [
+        "---",
+        "title: Syntax Playbook",
+        "sidebar_position: 2",
+        "---",
+        "",
+        'import ExamplePlayground from "@site/src/components/ExamplePlayground";',
+        "",
+        "# Syntax Playbook",
+        "",
+        "<div className=\"doc-hero\">",
+        "<p className=\"doc-hero__kicker\">Writing Style</p>",
+        "<h2>Write formulas that scale with your thinking</h2>",
+        "<p>These patterns keep your sheets understandable even as models grow.</p>",
+        "</div>",
+        "",
+        "<ExamplePlayground title=\"Core syntax patterns\" description=\"Reliable defaults for day-to-day SmartPad work.\" code={`subtotal = $128\\ntax = 8.5%\\ntotal = subtotal + (subtotal * tax) => $138.88\\n\\ndistance = 42 km\\ndistance in mi => 26.1 mi\\n\\nplan = [120, 140, 155, 170]\\navg(plan) => 146.25`} />",
+        "",
+        "## Rules that prevent surprises",
+        "",
+        "- Prefer explicit conversions with `to` / `in`.",
+        "- Keep units and currencies attached to actual values.",
+        "- Use named intermediate lines before compacting formulas.",
+        "",
+      ].join("\n"),
+    },
+    {
+      file: "examples-gallery.md",
+      body: [
+        "---",
+        "title: Examples Gallery",
+        "sidebar_position: 3",
+        "---",
+        "",
+        'import ExamplePlayground from "@site/src/components/ExamplePlayground";',
+        "",
+        "# Examples Gallery",
+        "",
+        "<div className=\"doc-hero\">",
+        "<p className=\"doc-hero__kicker\">Production Patterns</p>",
+        "<h2>Copy, run, and adapt these real workflows</h2>",
+        "<p>Each example is interactive and opens directly into SmartPad.</p>",
+        "</div>",
+        "",
+        "<ExamplePlayground title=\"Budget + FX\" description=\"Project local totals into another currency.\" code={`rent = USD 1950\\nutilities = USD 240\\ntotal usd = rent + utilities => $2,190\\ntotal eur = total usd in EUR => EUR 2,025`} />",
+        "",
+        "<ExamplePlayground title=\"Unit-aware planning\" description=\"Estimate travel-like scenarios with conversion safety.\" code={`speed = 62 mi/h\\ntime = 45 min\\ndistance = speed * time => 46.5 mi\\ndistance in km => 74.83 km`} />",
+        "",
+        "<ExamplePlayground title=\"List analysis\" description=\"Extract signal from a compact list quickly.\" code={`scores = [71, 77, 84, 90, 94]\\ntop3 = take(sort(scores, desc), 3)\\navg(top3) => 89.33`} />",
+        "",
+      ].join("\n"),
+    },
+    {
+      file: "troubleshooting.md",
+      body: [
+        "---",
+        "title: Troubleshooting",
+        "sidebar_position: 4",
+        "---",
+        "",
+        "# Troubleshooting",
+        "",
+        "## If conversions fail",
+        "",
+        "- Verify the target unit/currency exists and is spelled correctly.",
+        "- Use explicit `value in TARGET` syntax instead of custom arrows.",
+        "- Check manual FX overrides before expecting live provider values.",
+        "",
+        "## If outputs look wrong",
+        "",
+        "- Split formulas into named steps and evaluate line-by-line.",
+        "- Validate list/range boundaries and step definitions.",
+        "- Review locale-sensitive date and decimal parsing assumptions.",
+        "",
+        "## If behavior still feels off",
+        "",
+        "- Go to [Feature Guides](/docs/specs) and open the relevant contract page.",
+        "",
+      ].join("\n"),
+    },
+    {
+      file: "feature-map.md",
+      body: [
+        "---",
+        "title: Feature Map",
+        "sidebar_position: 5",
+        "---",
+        "",
+        "# Feature Map",
+        "",
+        `SmartPad currently ships **${allRecords.length}** primary feature guides across four workflow areas.`,
+        "",
+        ...CATEGORY_ORDER.flatMap((category) => {
+          const records = recordsByCategory.get(category) || [];
+          return [`## ${category}`, "", ...records.map((record) => `- [${record.title}](/docs/specs/${record.slug})`), ""];
+        }),
+      ].join("\n"),
+    },
+  ];
 };
 
 const writeSidebar = (recordsByCategory) => {

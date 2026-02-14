@@ -1,51 +1,45 @@
 ---
 title: "Live Results"
-description: "Show evaluable results while typing, keep => behavior unchanged, and suppress noisy/error-prone previews."
+description: "See valid results while typing and keep the editing flow uninterrupted."
 ---
 
 import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
-<div className="spotlight-panel">
-<h3>Live Results</h3>
-<p><strong>What this unlocks:</strong> Show evaluable results while typing, keep => behavior unchanged, and suppress noisy/error-prone previews.</p>
-<p><strong>Why teams care:</strong> Keep cognitive flow intact by seeing outcomes the moment an expression becomes valid.</p>
-<p><strong>Source spec:</strong> <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/LiveResult.spec.md">docs/Specs/LiveResult.spec.md</a></p>
+<div className="doc-hero">
+<p className="doc-hero__kicker">Core Experience</p>
+<h2>Live Results</h2>
+<p>See valid results while typing and keep the editing flow uninterrupted.</p>
 </div>
 
-## What you can ship with this
+## Why this matters
 
-Use this guide to move from isolated formulas to production-grade live results behavior in real SmartPad sheets.
+Live feedback is the core reason SmartPad feels faster than spreadsheets.
 
-## Live playground
+## Use it when
 
-Examples for this feature are being backfilled. Add examples to the source spec and regenerate docs.
+- You want faster iteration without switching contexts.
+- You need readable formulas that teammates can follow.
+- You want reliable behavior under real user inputs.
 
-## Design notes
+## Try it in SmartPad
 
-- Keep formulas legible by splitting intent into named lines before collapsing math.
-- Prefer explicit conversions and target units instead of inferring context from nearby lines.
-- Validate expected output with at least one positive and one guardrail-oriented example.
+Examples for this feature are being backfilled. Add examples in the source spec and regenerate docs.
 
-## Common pitfalls
+## What this feature guarantees
 
-- Build from small named steps first, then collapse into concise formulas.
+- Goals
+- Setting
+- Core Behavior
+- Line Eligibility (What Live Result Should Ignore)
+- State and Side-Effect Safety
+- Debounce and Timing
+- Visual Treatment
+- Unknown Variables and Incomplete Input
+- Counters / Observability
+- Acceptance Criteria
 
-## Capability map
+## Common mistakes
 
-- 0) Goals
-- 1) Setting
-- 2) Core Behavior
-- 3) Line Eligibility (What Live Result Should Ignore)
-- 4) State and Side-Effect Safety
-- 5) Debounce and Timing
-- 6) Visual Treatment
-- 7) Unknown Variables and Incomplete Input
-- 8) Counters / Observability
-- 9) Acceptance Criteria
-- 10) Test Plan
-- 11) Out of Scope (V1)
+- Build complex formulas from named intermediate lines for reliability.
 
-## Deep reference
-
-- Canonical behavior contract: [LiveResult.spec.md](https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/LiveResult.spec.md)
-- Regenerate docs after spec edits: `npm run docs:docusaurus:generate`
+<p className="doc-footnote">Authoritative spec: <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/LiveResult.spec.md">docs/Specs/LiveResult.spec.md</a></p>

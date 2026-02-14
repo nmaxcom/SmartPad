@@ -1,40 +1,33 @@
 ---
 title: "Ranges"
-description: "Defines numeric and date/time range generation, step rules, guardrails, and list interoperability."
+description: "Generate numeric and date ranges for plans, projections, and schedules."
 ---
 
 import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
-<div className="spotlight-panel">
-<h3>Ranges</h3>
-<p><strong>What this unlocks:</strong> Defines numeric and date/time range generation, step rules, guardrails, and list interoperability.</p>
-<p><strong>Why teams care:</strong> Generate planning horizons, projections, and schedules without manual fill operations.</p>
-<p><strong>Source spec:</strong> <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/Ranges.spec.md">docs/Specs/Ranges.spec.md</a></p>
+<div className="doc-hero">
+<p className="doc-hero__kicker">Data and Collections</p>
+<h2>Ranges</h2>
+<p>Generate numeric and date ranges for plans, projections, and schedules.</p>
 </div>
 
-## What you can ship with this
+## Why this matters
 
-Use this guide to move from isolated formulas to production-grade ranges behavior in real SmartPad sheets.
+Range generation removes repetitive manual input and keeps models editable.
 
-## Live playground
+## Use it when
 
-<ExamplePlayground title={"Ranges quick win"} description={"Copy, run, and adapt this baseline to your own sheet."} code={"<start>..<end>\n<start>..<end> step <step>"} />
+- You model repeated values or time windows quickly.
+- You need aggregates and filtering without exporting to another tool.
+- You want the sheet to stay editable while logic grows.
 
-<ExamplePlayground title={"Ranges guardrail check"} description={"Use this to understand expected behavior around edge conditions."} code={"0..10 step 0 =>⚠️ step cannot be 0"} />
+## Try it in SmartPad
 
-## Design notes
+<ExamplePlayground title={"Ranges: quick win"} description={"Run this interactive example and tweak values immediately."} code={"<start>..<end>\n<start>..<end> step <step>"} />
 
-- Keep formulas legible by splitting intent into named lines before collapsing math.
-- Prefer explicit conversions and target units instead of inferring context from nearby lines.
-- Validate expected output with at least one positive and one guardrail-oriented example.
+<ExamplePlayground title={"Ranges: edge behavior"} description={"Use this to understand guardrails and failure modes."} code={"0..10 step 0 =>⚠️ step cannot be 0"} />
 
-## Common pitfalls
-
-- Use the documented syntax exactly; SmartPad avoids ambiguous shorthand on purpose.
-- Check guardrails before assuming spreadsheet-style coercion rules.
-- Keep context (unit, locale, currency) explicit when composing lines across domains.
-
-## Capability map
+## What this feature guarantees
 
 - Overview: what range-generated lists are and why they matter
 - Design decision: use `..` (not `to`) for range generation
@@ -46,9 +39,11 @@ Use this guide to move from isolated formulas to production-grade ranges behavio
 - Composition with existing features
 - Proposed extension: date and time ranges
 - Minimal test suite summary (Numeric v1 + unit postfix)
-- Notes for implementation order (recommended)
 
-## Deep reference
+## Common mistakes
 
-- Canonical behavior contract: [Ranges.spec.md](https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/Ranges.spec.md)
-- Regenerate docs after spec edits: `npm run docs:docusaurus:generate`
+- Use exact SmartPad syntax first, then optimize for brevity.
+- Check edge and guardrail behavior before scaling your sheet.
+- Keep context explicit (units, currencies, locale) when composing formulas.
+
+<p className="doc-footnote">Authoritative spec: <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/Ranges.spec.md">docs/Specs/Ranges.spec.md</a></p>

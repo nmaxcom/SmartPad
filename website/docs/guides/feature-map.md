@@ -5,7 +5,7 @@ sidebar_position: 5
 
 # Feature Map
 
-SmartPad currently publishes **9** core feature guides grouped by workflow area.
+SmartPad currently ships **9** primary feature guides across four workflow areas.
 
 ## Core Experience
 

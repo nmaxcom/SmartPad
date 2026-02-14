@@ -1,53 +1,47 @@
 ---
 title: "Result Chips and References"
-description: "Defines chip interactions, hidden references, dependency behavior, and result-lane UX in the editor."
+description: "Reuse computed values safely with chips, hidden references, and dependency awareness."
 ---
 
 import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
-<div className="spotlight-panel">
-<h3>Result Chips and References</h3>
-<p><strong>What this unlocks:</strong> Defines chip interactions, hidden references, dependency behavior, and result-lane UX in the editor.</p>
-<p><strong>Why teams care:</strong> Turn lines into reusable building blocks without losing readability.</p>
-<p><strong>Source spec:</strong> <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/ResultChipsAndValueGraph.spec.md">docs/Specs/ResultChipsAndValueGraph.spec.md</a></p>
+<div className="doc-hero">
+<p className="doc-hero__kicker">Core Experience</p>
+<h2>Result Chips and References</h2>
+<p>Reuse computed values safely with chips, hidden references, and dependency awareness.</p>
 </div>
 
-## What you can ship with this
+## Why this matters
 
-Use this guide to move from isolated formulas to production-grade result chips and references behavior in real SmartPad sheets.
+Turn one-off lines into composable building blocks without losing readability.
 
-## Live playground
+## Use it when
 
-<ExamplePlayground title={"Result Chips and References quick win"} description={"Copy, run, and adapt this baseline to your own sheet."} code={"monthly rent = 2500                              [2,500]\nphone bill   = 45                                   [45]\nfood = 50/day * 30 days                          [1,500]\ntotal cost per month                             [4,045]"} />
+- You want faster iteration without switching contexts.
+- You need readable formulas that teammates can follow.
+- You want reliable behavior under real user inputs.
 
-<ExamplePlayground title={"Result Chips and References guardrail check"} description={"Use this to understand expected behavior around edge conditions."} code={"subtotal = 120                                      [120]\ntax = [subtotal] * 0.15                              [18]\n\n# source line later breaks:\nsubtotal = 12 / 0                                    [⚠ Division by zero]\ntax = [subtotal ⚠] * 0.15                            ⚠ source line has error"} />
+## Try it in SmartPad
 
-## Design notes
+<ExamplePlayground title={"Result Chips and References: quick win"} description={"Run this interactive example and tweak values immediately."} code={"monthly rent = 2500                              [2,500]\nphone bill   = 45                                   [45]\nfood = 50/day * 30 days                          [1,500]\ntotal cost per month                             [4,045]"} />
 
-- Keep formulas legible by splitting intent into named lines before collapsing math.
-- Prefer explicit conversions and target units instead of inferring context from nearby lines.
-- Validate expected output with at least one positive and one guardrail-oriented example.
+<ExamplePlayground title={"Result Chips and References: edge behavior"} description={"Use this to understand guardrails and failure modes."} code={"subtotal = 120                                      [120]\ntax = [subtotal] * 0.15                              [18]\n\n# source line later breaks:\nsubtotal = 12 / 0                                    [⚠ Division by zero]\ntax = [subtotal ⚠] * 0.15                            ⚠ source line has error"} />
 
-## Common pitfalls
+## What this feature guarantees
 
-- Check guardrails before assuming spreadsheet-style coercion rules.
+- Product Intent
+- Scope
+- UX Pillars
+- Feature Overview
+- Visual System
+- Interaction Model
+- Broken Dependency UX (Requested "tax" case)
+- Internal Data Model
+- System Integration
+- Interaction Rules and Edge Cases
 
-## Capability map
+## Common mistakes
 
-- 0) Product Intent
-- 1) Scope
-- 2) UX Pillars
-- 3) Feature Overview
-- 4) Visual System
-- 5) Interaction Model
-- 6) Broken Dependency UX (Requested "tax" case)
-- 7) Internal Data Model
-- 8) System Integration
-- 9) Interaction Rules and Edge Cases
-- 10) Accessibility
-- 11) Performance Targets
+- Check edge and guardrail behavior before scaling your sheet.
 
-## Deep reference
-
-- Canonical behavior contract: [ResultChipsAndValueGraph.spec.md](https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/ResultChipsAndValueGraph.spec.md)
-- Regenerate docs after spec edits: `npm run docs:docusaurus:generate`
+<p className="doc-footnote">Authoritative spec: <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/ResultChipsAndValueGraph.spec.md">docs/Specs/ResultChipsAndValueGraph.spec.md</a></p>

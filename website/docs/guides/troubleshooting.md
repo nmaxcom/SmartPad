@@ -3,22 +3,20 @@ title: Troubleshooting
 sidebar_position: 4
 ---
 
-# Troubleshooting Quick Fixes
+# Troubleshooting
 
 ## If conversions fail
 
-- Verify the target unit/currency is valid.
-- Prefer `value in TARGET` over free-form arrows.
-- Check manual FX overrides before blaming live rates.
+- Verify the target unit/currency exists and is spelled correctly.
+- Use explicit `value in TARGET` syntax instead of custom arrows.
+- Check manual FX overrides before expecting live provider values.
 
-## If results look wrong
+## If outputs look wrong
 
-- Break formulas into named steps.
-- Confirm list/range boundaries and step size.
-- Inspect locale-sensitive dates and decimal separators.
+- Split formulas into named steps and evaluate line-by-line.
+- Validate list/range boundaries and step definitions.
+- Review locale-sensitive date and decimal parsing assumptions.
 
-## If behavior differs from expectation
+## If behavior still feels off
 
-Use the per-feature guide and then open the canonical spec for authoritative rules.
-
-- Feature guide index: [/docs/specs](/docs/specs)
+- Go to [Feature Guides](/docs/specs) and open the relevant contract page.
