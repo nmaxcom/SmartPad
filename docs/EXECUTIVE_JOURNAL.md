@@ -458,3 +458,27 @@
     *   Added `T-2026-02-14-01` through `T-2026-02-14-05`.
 *   Risks/blockers:
     *   Without a framework-level docs UI, continued custom CSS iteration may still produce inconsistent documentation UX.
+
+## Entry J-2026-02-14-07
+
+*   Timestamp: 2026-02-14 01:37:56 CET / 2026-02-14 00:37:56 UTC
+*   Summary:
+    *   User requested clearer non-cryptic todos and persistent rule changes so future todos remain explicit.
+    *   Assistant rewrote docs-related backlog tasks with concrete deliverables, verification expectations, and done criteria.
+*   Decisions:
+    *   Add mandatory todo-writing quality rules to AI operating docs.
+    *   Set Docusaurus migration task status to `in_progress` for immediate execution.
+*   User directives:
+    *   Fix todo clarity and edit AI operating system to always write better todos.
+    *   Proceed with Docusaurus migration.
+*   Assistant commitments:
+    *   Begin Docusaurus migration implementation after this backlog/manual update.
+*   Artifacts:
+    *   `docs/TODO_BACKLOG.md` (rewritten task language and status updates)
+    *   `docs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` (new mandatory todo writing standard)
+    *   `AGENTS.md` (todo quality rules added)
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   `T-2026-02-14-04` moved to `in_progress`.
+*   Risks/blockers:
+    *   None at this step.

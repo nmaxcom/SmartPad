@@ -17,6 +17,21 @@ Primary goals:
 6. When asked "what is pending", answer from the journal's Pending Index.
 7. Auto-commit completed logical work by default unless user says to hold commits.
 
+## Todo Writing Standard (Mandatory)
+When creating or editing items in `docs/TODO_BACKLOG.md`, avoid vague wording.
+
+Every todo must be understandable by someone reopening the project weeks later.
+
+Required quality bar:
+1. `scope` must state the concrete outcome, not an abstract intent.
+2. `next` must include:
+   - exact deliverable(s) to produce,
+   - at least one verification step (script/test/check),
+   - clear done criteria in plain language.
+3. Avoid shorthand like "polish", "fix stuff", "improve docs", or "misc".
+4. If a task is broad, split into 2-4 smaller items with explicit artifacts.
+5. If user says a todo is unclear, rewrite it immediately before doing new work.
+
 ## Journal Update Protocol (Every Interaction)
 For each interaction, append one journal entry in `docs/EXECUTIVE_JOURNAL.md`.
 

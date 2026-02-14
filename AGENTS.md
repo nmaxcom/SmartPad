@@ -35,6 +35,12 @@ Track todos in `docs/TODO_BACKLOG.md` with fields:
 - priority
 - next
 
+Todo writing quality rules (mandatory):
+- Write `scope` as a concrete end-state, not a generic intent.
+- Write `next` with explicit deliverables and at least one verification step.
+- Include plain done criteria so future sessions can resume without ambiguity.
+- Split large vague tasks into smaller concrete items before execution.
+
 ## Focus Mode
 Default to one active lane at a time.
 - If not explicitly set, active lane is `feature`.
@@ -84,3 +90,9 @@ Map user commands to executable actions:
 - Never revert unrelated user changes.
 - Ask before destructive actions.
 - Keep commits scoped and readable.
+
+## Command Approval Policy
+- Treat this repository root as pre-approved for normal operations.
+- Do not ask for approval for reads/writes, tests, build commands, or git operations that stay inside this repo.
+- Ask for approval only when a command needs access outside this repo, requires unsandboxed/system-level privileges, or is destructive.
+- Prefer running commands from repo `workdir` instead of path-prefixed variants that can trigger unnecessary approval prompts.
