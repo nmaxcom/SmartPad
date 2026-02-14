@@ -18,6 +18,12 @@ Build:
 npm run docs:docusaurus:build
 ```
 
+Production-path build (`/SmartPad/docs/`):
+
+```bash
+npm run docs:docusaurus:build:prod
+```
+
 ## Content flow
 
 - Source specs: `docs/Specs/*.spec.md`

@@ -623,3 +623,35 @@
     *   Mounted-base Playwright loop: 5/5 passes, 0 console errors, 0 HTTP >=400 responses.
 *   Risks/blockers:
     *   Local dev/preview at root path can misrepresent docs behavior because Docusaurus build expects `/SmartPad/docs/` asset paths.
+
+## Entry J-2026-02-14-12
+
+*   Timestamp: 2026-02-14 02:34:55 CET / 2026-02-14 01:34:55 UTC
+*   Summary:
+    *   User clarified that docs verification must match `npm run dev` usage.
+    *   Assistant fixed local Docusaurus base-path build behavior and aligned docs-link target with Vite dev routing realities.
+*   Decisions:
+    *   Keep Docusaurus local build base URL at `/docs/` and production build base URL at `/SmartPad/docs/` via scripts.
+    *   Keep docs button path as `/docs/index.html` because Vite dev serves `/docs/` as SPA fallback.
+*   User directives:
+    *   "you should always test what i'm using to run smartpad (npm run dev)"
+    *   "dont ask for permission again, you're green lit"
+*   Assistant commitments:
+    *   Prioritize `npm run dev` path in docs verification.
+*   Artifacts:
+    *   `website/docusaurus.config.ts` (env-driven base URL/site URL)
+    *   `package.json` (added `docs:docusaurus:build:prod` and publish scripts)
+    *   `website/README.md` (dev/prod build instructions)
+    *   `src/components/Layout/docsUrl.ts` (re-targeted to `/docs/index.html`)
+    *   `tests/unit/docsUrl.test.ts` (updated expectations)
+    *   `public/docs/` (rebuilt from local-base Docusaurus publish)
+    *   `test-results/docs-loop-dev/*` (dev-mode loop artifacts)
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   None.
+*   Validation:
+    *   `npm run docs:docusaurus:publish-local` passed.
+    *   `npm run test:unit -- --runTestsByPath tests/unit/docsUrl.test.ts tests/unit/generateWebDocs.test.ts` passed.
+    *   Playwright on dev route `/docs/index.html`: banner no longer present, docs navbar renders.
+*   Risks/blockers:
+    *   Docusaurus still emits a recoverable React hydration warning in this embedding mode (`onRecoverableError` #418), though docs render and navigate.

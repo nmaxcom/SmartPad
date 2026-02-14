@@ -1,12 +1,15 @@
 import type { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
 
+const docsBaseUrl = process.env.DOCS_BASE_URL || "/docs/";
+const docsSiteUrl = process.env.DOCS_SITE_URL || "http://localhost:3000";
+
 const config: Config = {
   title: "SmartPad Docs",
   tagline: "Text-first computation docs",
   favicon: "img/logo.svg",
-  url: "https://nmaxcom.github.io",
-  baseUrl: "/SmartPad/docs/",
+  url: docsSiteUrl,
+  baseUrl: docsBaseUrl,
   trailingSlash: true,
   organizationName: "nmaxcom",
   projectName: "SmartPad",
