@@ -786,4 +786,96 @@ test.describe("Result References", () => {
     );
   });
 
+  test("selected reference chip typing ignores accidental echoed chip label prefix", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("PI*10");
+    await waitForUIRenderComplete(page);
+
+    const sourceLine = page.locator(".ProseMirror p").first();
+    const sourceLive = sourceLine.locator(".semantic-live-result-display");
+    await sourceLine.click({ position: { x: 8, y: 8 } });
+    await sourceLive.click();
+    await waitForUIRenderComplete(page);
+
+    const dependent = page.locator(".ProseMirror p").nth(1);
+    const chip = dependent.locator(".semantic-reference-chip").first();
+    await chip.click();
+    await page.keyboard.type("31.42 *2=>");
+    await waitForUIRenderComplete(page);
+
+    await expect(dependent.locator(".semantic-reference-chip")).toHaveCount(1);
+    await expect(dependent).not.toContainText("31.4231.42");
+    await expect(dependent.locator(".semantic-result-display").last()).toHaveAttribute(
+      "data-result",
+      /62\.84/
+    );
+  });
+
+  test("duplicate literal cleanup works even when reference sourceValue and visible label differ", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("PI*10");
+    await waitForUIRenderComplete(page);
+
+    const sourceLive = page.locator(".ProseMirror p").first().locator(".semantic-live-result-display");
+    const line = page.locator(".ProseMirror p").first();
+    await line.click({ position: { x: 8, y: 8 } });
+    await sourceLive.click();
+    await waitForUIRenderComplete(page);
+
+    await page.evaluate(() => {
+      const editorInstance = (window as any).tiptapEditor;
+      if (!editorInstance) return;
+      const paragraph = editorInstance.state.doc.child(1);
+      let refPos = -1;
+      let refNode: any = null;
+      let offset = 1;
+      paragraph.forEach((node: any) => {
+        if (refPos >= 0) {
+          return;
+        }
+        if (node.type?.name === "referenceToken") {
+          refPos = offset;
+          refNode = node;
+        }
+        offset += node.nodeSize;
+      });
+      if (!refNode || refPos < 0) return;
+      const tr = editorInstance.state.tr;
+      const absolutePos = 1 + editorInstance.state.doc.child(0).nodeSize + (refPos - 1);
+      tr.setNodeMarkup(absolutePos, undefined, {
+        ...refNode.attrs,
+        label: "31.42",
+        sourceValue: "31.41592653589793",
+      });
+      const insertAt = absolutePos + refNode.nodeSize;
+      tr.insertText("31.42 ", insertAt, insertAt);
+      editorInstance.view.dispatch(tr);
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    const dependent = page.locator(".ProseMirror p").nth(1);
+    await expect(dependent).not.toContainText("31.4231.42");
+
+    const nodeSummary = await page.evaluate(() => {
+      const editorInstance = (window as any).tiptapEditor;
+      if (!editorInstance) return null;
+      const paragraph = editorInstance.state.doc.child(1);
+      let literalText = "";
+      paragraph.forEach((node: any) => {
+        if (node.isText) {
+          literalText += node.text || "";
+        }
+      });
+      return { literalText };
+    });
+    expect(nodeSummary?.literalText).not.toContain("31.42");
+  });
+
 });

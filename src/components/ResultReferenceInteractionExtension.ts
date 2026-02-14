@@ -72,6 +72,44 @@ const getEventElement = (eventTarget: EventTarget | null): HTMLElement | null =>
   return null;
 };
 
+const uniqueNonEmptyValues = (values: Array<string | null | undefined>): string[] => {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  values.forEach((value) => {
+    const normalized = String(value || "").trim();
+    if (!normalized || seen.has(normalized)) {
+      return;
+    }
+    seen.add(normalized);
+    result.push(normalized);
+  });
+  return result;
+};
+
+const isOperatorPrefix = (value: string): boolean => /^[+\-*/^%=<>!]/.test(value);
+
+const stripEchoedReferencePrefix = (text: string, payload: ReferencePayload | null): string => {
+  const input = String(text || "");
+  if (!payload || !input) {
+    return input;
+  }
+  const candidates = uniqueNonEmptyValues([payload.sourceValue, payload.sourceLabel]).sort(
+    (a, b) => b.length - a.length
+  );
+  for (const candidate of candidates) {
+    if (!input.startsWith(candidate)) {
+      continue;
+    }
+    const remainder = input.slice(candidate.length);
+    const trimmedRemainder = remainder.replace(/^\s+/, "");
+    if (!trimmedRemainder || !isOperatorPrefix(trimmedRemainder)) {
+      continue;
+    }
+    return remainder;
+  }
+  return input;
+};
+
 const createReferenceNode = (state: any, payload: ReferencePayload) => {
   const referenceType = state.schema.nodes.referenceToken;
   if (!referenceType) return null;
@@ -518,9 +556,14 @@ export const ResultReferenceInteractionExtension = Extension.create({
           handleTextInput: (view, _from, _to, text) => {
             const range = getReferenceRangeInSelection(view.state);
             if (!range) return false;
+            const selectedPayload = findSelectedReferencePayload(view.state);
+            const insertText = stripEchoedReferencePrefix(text, selectedPayload);
+            if (!insertText) {
+              return true;
+            }
             const insertPos = range.to;
-            const tr = view.state.tr.insertText(text, insertPos, insertPos);
-            tr.setSelection(TextSelection.create(tr.doc, insertPos + text.length));
+            const tr = view.state.tr.insertText(insertText, insertPos, insertPos);
+            tr.setSelection(TextSelection.create(tr.doc, insertPos + insertText.length));
             view.dispatch(tr);
             return true;
           },

@@ -327,7 +327,20 @@ export const ResultsDecoratorExtension = Extension.create({
               lineNumberById.set(entry.lineId, idx);
             });
 
-            const normalizeValue = (value: string): string => value.replace(/\s+/g, "").trim();
+            const duplicatePrefixesFromReference = (attrs: any): string[] => {
+              const seen = new Set<string>();
+              const values = [String(attrs?.sourceValue || ""), String(attrs?.label || "")]
+                .map((value) => value.trim())
+                .filter((value) => value.length > 0)
+                .sort((a, b) => b.length - a.length);
+              const unique: string[] = [];
+              values.forEach((value) => {
+                if (seen.has(value)) return;
+                seen.add(value);
+                unique.push(value);
+              });
+              return unique;
+            };
             const duplicateLiteralRemovals: Array<{ from: number; to: number }> = [];
             const referenceNodeType = view.state.schema.nodes.referenceToken;
             if (referenceNodeType) {
@@ -342,8 +355,8 @@ export const ResultsDecoratorExtension = Extension.create({
                     childOffset += child.nodeSize;
                     continue;
                   }
-                  const sourceValue = String((child.attrs as any)?.sourceValue || "").trim();
-                  if (!sourceValue) {
+                  const duplicatePrefixes = duplicatePrefixesFromReference(child.attrs);
+                  if (duplicatePrefixes.length === 0) {
                     childOffset += child.nodeSize;
                     continue;
                   }
@@ -354,24 +367,21 @@ export const ResultsDecoratorExtension = Extension.create({
                     childOffset += child.nodeSize;
                     continue;
                   }
-                  const normalizedSource = normalizeValue(sourceValue);
-                  if (!normalizedSource) {
-                    childOffset += child.nodeSize;
-                    continue;
-                  }
-                  if (!trimmedText.startsWith(sourceValue)) {
-                    childOffset += child.nodeSize;
-                    continue;
-                  }
-                  const nextChar = trimmedText[sourceValue.length] || "";
-                  if (nextChar && !/[\s+\-*/^%=),]/.test(nextChar)) {
+                  const matchedPrefix = duplicatePrefixes.find((prefix) => {
+                    if (!trimmedText.startsWith(prefix)) {
+                      return false;
+                    }
+                    const nextChar = trimmedText[prefix.length] || "";
+                    return !nextChar || /[\s+\-*/^%=),]/.test(nextChar);
+                  });
+                  if (!matchedPrefix) {
                     childOffset += child.nodeSize;
                     continue;
                   }
                   const absoluteStart = info.start + childOffset + child.nodeSize + leadingWhitespace;
                   duplicateLiteralRemovals.push({
                     from: absoluteStart,
-                    to: absoluteStart + sourceValue.length,
+                    to: absoluteStart + matchedPrefix.length,
                   });
                   childOffset += child.nodeSize;
                 }

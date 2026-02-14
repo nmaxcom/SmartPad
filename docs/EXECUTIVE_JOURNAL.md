@@ -786,3 +786,34 @@
     *   `npm run build` passed.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-14-16
+
+*   Timestamp: 2026-02-14 03:05:22 CET / 2026-02-14 02:05:22 UTC
+*   Summary:
+    *   User reported an app bug: `PI*10` then click live result, then type `*2=>` produced duplicated literal text (`31.4231.42`) in the dependent line.
+    *   Assistant attempted direct repro with Playwright on the exact sequence and then implemented defensive editor/input hardening plus new regression coverage.
+*   Decisions:
+    *   Harden reference text input handling to strip accidental echoed chip-prefix text when typing into a selected reference flow.
+    *   Expand duplicate-literal cleanup to match either `sourceValue` or visible chip `label` so mismatch/race windows cannot leave duplicated literals in-line.
+*   User directives:
+    *   "let's work on this bug ... Reproduce the error, fix it."
+*   Assistant commitments:
+    *   Keep this sequence covered with dedicated e2e repro tests.
+*   Artifacts:
+    *   `src/components/ResultReferenceInteractionExtension.ts` (input sanitization for selected-reference typing)
+    *   `src/components/ResultsDecoratorExtension.ts` (duplicate literal cleanup strengthened for label/sourceValue divergence)
+    *   `tests/e2e/result-reference.spec.ts` (added selected-chip echoed-prefix regression)
+    *   `tests/e2e/repro-user-pi10-live-click.spec.ts` (added direct user-sequence repro suite + variants)
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   None.
+*   Validation:
+    *   `npx playwright test tests/e2e/result-reference.spec.ts -g "selected reference chip typing ignores accidental echoed chip label prefix|click-inserted reference used in explicit trigger expression keeps a single reference token|completing => after an intermediate '=' does not duplicate chip value text|typing while reference chip is node-selected inserts after chip without flattening" --project=chromium` passed.
+    *   `npx playwright test tests/e2e/repro-user-pi10-live-click.spec.ts --project=chromium` passed.
+    *   `npm run build` passed.
+    *   `npm run docs:map` passed.
+    *   `npm run docs:drift` passed.
+    *   `npm run spec:test` passed.
+*   Risks/blockers:
+    *   Exact visual repro did not reoccur under automated runs; fix targets the class of duplicate-prefix insertion and stale metadata matching that can produce the reported output.
