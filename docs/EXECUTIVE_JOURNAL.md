@@ -482,3 +482,24 @@
     *   `T-2026-02-14-04` moved to `in_progress`.
 *   Risks/blockers:
     *   None at this step.
+
+## Entry J-2026-02-14-08
+
+*   Timestamp: 2026-02-14 01:38:34 CET / 2026-02-14 00:38:34 UTC
+*   Summary:
+    *   User requested that approval prompts be suppressed across all threads for in-repo work.
+    *   Assistant codified a standing command approval policy in repo instructions so future sessions follow it by default.
+*   Decisions:
+    *   Repo-local commands should run without approval prompts.
+    *   Approval prompts are reserved for outside-repo access, unsandboxed/system-level actions, or destructive commands.
+*   User directives:
+    *   "i need this in any thread we have"
+*   Assistant commitments:
+    *   Apply this approval behavior consistently in future SmartPad sessions.
+*   Artifacts:
+    *   `AGENTS.md` (added Command Approval Policy)
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   None.
+*   Risks/blockers:
+    *   Platform-level permission dialogs can still appear for genuinely out-of-repo or elevated operations.
