@@ -1025,3 +1025,21 @@
     *   `npm run docs:map` passed after spec-map update.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-14-24
+
+*   Timestamp: 2026-02-14 06:53:29 CET / 2026-02-14 05:53:29 UTC
+*   Summary:
+    *   User reported visual disharmony in docs example surfaces ("oil vs water" color conflict) and requested a single unified style direction.
+    *   Assistant homogenized the entire example block stack (header, code area, inline preview label, iframe frame, buttons) into one Spatial-Neon-aligned palette and border/shadow system.
+*   Decisions:
+    *   Use one coherent purple/indigo/pink-accent style system for example containers to match embedded Spatial+Neon preview instead of mixed blue/teal overlays.
+*   Artifacts:
+    *   `website/src/css/custom.css` (unified example component visual language)
+    *   `public/docs/*` (regenerated docs assets)
+    *   `docs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   `npm run docs:docusaurus:publish-local` passed.
+    *   Playwright check passed for embed presence + forced theme (`spatial-dark`/`neon-syntax`).
+*   Risks/blockers:
+    *   None.
