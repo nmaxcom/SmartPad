@@ -3,39 +3,34 @@ title: "Currency and FX"
 description: "Covers currency units, FX conversion, manual overrides, and formatting rules for money calculations."
 ---
 
-<div className="guide-masthead">
+import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
-**What this unlocks:** Covers currency units, FX conversion, manual overrides, and formatting rules for money calculations.
-
-**Source spec:** [docs/Specs/Currency.spec.md](https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/Currency.spec.md)
-
+<div className="spotlight-panel">
+<h3>Currency and FX</h3>
+<p><strong>What this unlocks:</strong> Covers currency units, FX conversion, manual overrides, and formatting rules for money calculations.</p>
+<p><strong>Why teams care:</strong> Model global pricing and planning in one sheet without brittle conversion hacks.</p>
+<p><strong>Source spec:</strong> <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/Currency.spec.md">docs/Specs/Currency.spec.md</a></p>
 </div>
 
-## Why this matters
+## What you can ship with this
 
-This guide translates the Currency and FX contract into practical workflow patterns so teams can build confidently in SmartPad.
+Use this guide to move from isolated formulas to production-grade currency and fx behavior in real SmartPad sheets.
 
-## Try it now
+## Live playground
 
-Copy these into a SmartPad sheet and watch live results update as you type.
+<ExamplePlayground title={"Currency and FX quick win"} description={"Copy, run, and adapt this baseline to your own sheet."} code={"price = $19.99\nprice in EUR => EUR 18.42\n\nrate = CAD 120\nrate in USD => $88.35\n\nbtc = BTC 0.015\nbtc in USD => $937.42"} />
 
-### Happy path
-```smartpad
-price = $19.99
-price in EUR => EUR 18.42
+## Currency + FX blueprint
 
-rate = CAD 120
-rate in USD => $88.35
-
-btc = BTC 0.015
-btc in USD => $937.42
-```
+- Run local budgeting in USD while instantly projecting totals to EUR/GBP for planning and approvals.
+- Keep manual rates for scenario planning, but preserve live-rate behavior for day-to-day usage.
+- Treat conversion syntax (`to` / `in`) as part of the model contract, not just display formatting.
 
 ## Common pitfalls
 
-- Use the documented syntax exactly; SmartPad intentionally avoids ambiguous shorthand.
-- Watch edge-case behavior and guardrails before assuming spreadsheet-style coercions.
-- Display formatting can differ from internal values; verify conversion targets explicitly.
+- Use the documented syntax exactly; SmartPad avoids ambiguous shorthand on purpose.
+- Check guardrails before assuming spreadsheet-style coercion rules.
+- Display strings are not always canonical values; verify the target unit/currency explicitly.
 
 ## Capability map
 

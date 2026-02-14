@@ -3,38 +3,36 @@ title: "Ranges"
 description: "Defines numeric and date/time range generation, step rules, guardrails, and list interoperability."
 ---
 
-<div className="guide-masthead">
+import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
-**What this unlocks:** Defines numeric and date/time range generation, step rules, guardrails, and list interoperability.
-
-**Source spec:** [docs/Specs/Ranges.spec.md](https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/Ranges.spec.md)
-
+<div className="spotlight-panel">
+<h3>Ranges</h3>
+<p><strong>What this unlocks:</strong> Defines numeric and date/time range generation, step rules, guardrails, and list interoperability.</p>
+<p><strong>Why teams care:</strong> Generate planning horizons, projections, and schedules without manual fill operations.</p>
+<p><strong>Source spec:</strong> <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/Ranges.spec.md">docs/Specs/Ranges.spec.md</a></p>
 </div>
 
-## Why this matters
+## What you can ship with this
 
-This guide translates the Ranges contract into practical workflow patterns so teams can build confidently in SmartPad.
+Use this guide to move from isolated formulas to production-grade ranges behavior in real SmartPad sheets.
 
-## Try it now
+## Live playground
 
-Copy these into a SmartPad sheet and watch live results update as you type.
+<ExamplePlayground title={"Ranges quick win"} description={"Copy, run, and adapt this baseline to your own sheet."} code={"<start>..<end>\n<start>..<end> step <step>"} />
 
-### Happy path
-```smartpad
-<start>..<end>
-<start>..<end> step <step>
-```
+<ExamplePlayground title={"Ranges guardrail check"} description={"Use this to understand expected behavior around edge conditions."} code={"0..10 step 0 =>⚠️ step cannot be 0"} />
 
-### Edge case
-```smartpad
-0..10 step 0 =>⚠️ step cannot be 0
-```
+## Design notes
+
+- Keep formulas legible by splitting intent into named lines before collapsing math.
+- Prefer explicit conversions and target units instead of inferring context from nearby lines.
+- Validate expected output with at least one positive and one guardrail-oriented example.
 
 ## Common pitfalls
 
-- Use the documented syntax exactly; SmartPad intentionally avoids ambiguous shorthand.
-- Watch edge-case behavior and guardrails before assuming spreadsheet-style coercions.
-- Keep units and locale context explicit when combining values from different domains.
+- Use the documented syntax exactly; SmartPad avoids ambiguous shorthand on purpose.
+- Check guardrails before assuming spreadsheet-style coercion rules.
+- Keep context (unit, locale, currency) explicit when composing lines across domains.
 
 ## Capability map
 

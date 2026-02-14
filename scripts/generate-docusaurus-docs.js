@@ -15,6 +15,7 @@ const SPEC_CATALOG = [
     category: "Core Experience",
     summary:
       "Show evaluable results while typing, keep => behavior unchanged, and suppress noisy/error-prone previews.",
+    why: "Keep cognitive flow intact by seeing outcomes the moment an expression becomes valid.",
   },
   {
     fileName: "ResultChipsAndValueGraph.spec.md",
@@ -23,6 +24,7 @@ const SPEC_CATALOG = [
     category: "Core Experience",
     summary:
       "Defines chip interactions, hidden references, dependency behavior, and result-lane UX in the editor.",
+    why: "Turn lines into reusable building blocks without losing readability.",
   },
   {
     fileName: "Plotting.spec.md",
@@ -31,6 +33,7 @@ const SPEC_CATALOG = [
     category: "Core Experience",
     summary:
       "Specifies exploratory plotting, detached views, and dependency-driven visualization flows.",
+    why: "Move from raw values to visual intuition with near-zero setup.",
   },
   {
     fileName: "Currency.spec.md",
@@ -39,6 +42,7 @@ const SPEC_CATALOG = [
     category: "Math and Units",
     summary:
       "Covers currency units, FX conversion, manual overrides, and formatting rules for money calculations.",
+    why: "Model global pricing and planning in one sheet without brittle conversion hacks.",
   },
   {
     fileName: "duration.spec.md",
@@ -47,6 +51,7 @@ const SPEC_CATALOG = [
     category: "Math and Units",
     summary:
       "Defines duration literals, time-of-day values, datetime arithmetic, and parsing disambiguation rules.",
+    why: "Handle schedules, lead times, and elapsed calculations with reliable unit math.",
   },
   {
     fileName: "Lists.spec.md",
@@ -55,6 +60,7 @@ const SPEC_CATALOG = [
     category: "Data and Collections",
     summary:
       "Defines list creation, aggregations, filtering, mapping, sorting, indexing, and unit-safe list operations.",
+    why: "Treat line-based notes like structured datasets when you need analysis depth.",
   },
   {
     fileName: "Ranges.spec.md",
@@ -63,6 +69,7 @@ const SPEC_CATALOG = [
     category: "Data and Collections",
     summary:
       "Defines numeric and date/time range generation, step rules, guardrails, and list interoperability.",
+    why: "Generate planning horizons, projections, and schedules without manual fill operations.",
   },
   {
     fileName: "Locale.spec.md",
@@ -71,6 +78,7 @@ const SPEC_CATALOG = [
     category: "Data and Collections",
     summary:
       "Defines locale-aware date parsing, date/time ranges, output formatting, and error normalization.",
+    why: "Collaborate across regions while keeping date/time behavior deterministic.",
   },
   {
     fileName: "FileManagement.spec.md",
@@ -79,12 +87,11 @@ const SPEC_CATALOG = [
     category: "Workspace",
     summary:
       "Defines sheet storage, autosave, import/export behavior, trash lifecycle, and multi-tab synchronization.",
+    why: "Protect user trust with durable persistence and predictable recovery behavior.",
   },
 ];
 
 const CATEGORY_ORDER = ["Core Experience", "Math and Units", "Data and Collections", "Workspace"];
-
-const escapeYaml = (value) => value.replace(/"/g, '\\"');
 
 const ensureDir = (dirPath) => {
   if (!fs.existsSync(dirPath)) {
@@ -92,10 +99,9 @@ const ensureDir = (dirPath) => {
   }
 };
 
-const readSpecContent = (fileName) => {
-  const fullPath = path.join(specsDir, fileName);
-  return fs.readFileSync(fullPath, "utf8");
-};
+const escapeYaml = (value) => value.replace(/"/g, '\\"');
+
+const readSpecContent = (fileName) => fs.readFileSync(path.join(specsDir, fileName), "utf8");
 
 const extractSections = (content) => {
   const matches = [...content.matchAll(/^##\s+(.+)$/gm)];
@@ -107,77 +113,79 @@ const extractCodeBlocks = (content) => {
   const regex = /```([a-zA-Z0-9_-]+)?\n([\s\S]*?)```/g;
   let match = regex.exec(content);
   while (match) {
-    const lang = (match[1] || "text").trim();
     const body = match[2].trim();
-    if (body) blocks.push({ lang, body });
+    if (body) blocks.push(body);
     match = regex.exec(content);
   }
   return blocks;
 };
 
 const pickExamples = (blocks) => {
-  const positive =
-    blocks.find((block) => !/⚠️|error|invalid|fail|guardrail/i.test(block.body))?.body || "";
-  const edgeCase =
-    blocks.find((block) => /⚠️|error|invalid|fail|guardrail/i.test(block.body))?.body || "";
+  const positive = blocks.find((block) => !/⚠️|error|invalid|fail|guardrail/i.test(block)) || "";
+  const edgeCase = blocks.find((block) => /⚠️|error|invalid|fail|guardrail/i.test(block)) || "";
   return { positive, edgeCase };
 };
 
 const sectionKey = (title) => title.toLowerCase();
 
-const pickSectionTitles = (sections, matcher) =>
-  sections.filter((section) => matcher(sectionKey(section)));
-
 const inferPitfalls = (entry, sections) => {
   const items = [];
-  if (pickSectionTitles(sections, (key) => key.includes("syntax") || key.includes("parsing")).length) {
-    items.push("Use the documented syntax exactly; SmartPad intentionally avoids ambiguous shorthand.");
+  const has = (pattern) => sections.some((section) => pattern.test(sectionKey(section)));
+
+  if (has(/syntax|parsing/)) {
+    items.push("Use the documented syntax exactly; SmartPad avoids ambiguous shorthand on purpose.");
   }
-  if (pickSectionTitles(sections, (key) => key.includes("edge") || key.includes("guardrail")).length) {
-    items.push("Watch edge-case behavior and guardrails before assuming spreadsheet-style coercions.");
+  if (has(/edge|guardrail|error/)) {
+    items.push("Check guardrails before assuming spreadsheet-style coercion rules.");
   }
-  if (pickSectionTitles(sections, (key) => key.includes("format") || key.includes("display")).length) {
-    items.push("Display formatting can differ from internal values; verify conversion targets explicitly.");
+  if (has(/format|display|locale/)) {
+    items.push("Display strings are not always canonical values; verify the target unit/currency explicitly.");
   }
-  if (/currency|duration|locale|ranges|lists/i.test(entry.slug)) {
-    items.push("Keep units and locale context explicit when combining values from different domains.");
+  if (/currency|duration|locale|ranges|lists/.test(entry.slug)) {
+    items.push("Keep context (unit, locale, currency) explicit when composing lines across domains.");
   }
   if (!items.length) {
-    items.push("Use the quick examples first, then verify behavior against your own sheet data.");
+    items.push("Build from small named steps first, then collapse into concise formulas.");
   }
+
   return items.slice(0, 3);
 };
 
-const renderExampleSection = (examples) => {
+const mdxStringProp = (value) => `{${JSON.stringify(value)}}`;
+
+const renderPlayground = ({ title, description, code }) => {
+  return `<ExamplePlayground title=${mdxStringProp(title)} description=${mdxStringProp(description)} code=${mdxStringProp(code)} />`;
+};
+
+const renderExamples = (entry, examples) => {
   if (!examples.positive && !examples.edgeCase) {
     return [
-      "## Try it now",
+      "## Live playground",
       "",
-      "Examples for this feature are being backfilled. Add examples in the linked spec and regenerate docs.",
+      "Examples for this feature are being backfilled. Add examples to the source spec and regenerate docs.",
       "",
     ].join("\n");
   }
 
   const lines = [
-    "## Try it now",
+    "## Live playground",
     "",
-    "Copy these into a SmartPad sheet and watch live results update as you type.",
+    renderPlayground({
+      title: `${entry.title} quick win`,
+      description: "Copy, run, and adapt this baseline to your own sheet.",
+      code: examples.positive || examples.edgeCase,
+    }),
     "",
   ];
 
-  if (examples.positive) {
-    lines.push("### Happy path");
-    lines.push("```smartpad");
-    lines.push(examples.positive);
-    lines.push("```");
-    lines.push("");
-  }
-
-  if (examples.edgeCase) {
-    lines.push("### Edge case");
-    lines.push("```smartpad");
-    lines.push(examples.edgeCase);
-    lines.push("```");
+  if (examples.edgeCase && examples.edgeCase !== examples.positive) {
+    lines.push(
+      renderPlayground({
+        title: `${entry.title} guardrail check`,
+        description: "Use this to understand expected behavior around edge conditions.",
+        code: examples.edgeCase,
+      }),
+    );
     lines.push("");
   }
 
@@ -188,7 +196,6 @@ const renderCoverageSection = (sections) => {
   if (!sections.length) {
     return "## Capability map\n\nCoverage list is being refined.\n";
   }
-
   const lines = ["## Capability map", ""];
   sections.forEach((section) => lines.push(`- ${section}`));
   lines.push("");
@@ -200,25 +207,40 @@ const renderDocPage = (entry, content) => {
   const examples = pickExamples(extractCodeBlocks(content));
   const pitfalls = inferPitfalls(entry, sections);
 
+  const isCurrency = entry.slug === "currency-and-fx";
+
   const chunks = [
     "---",
     `title: \"${escapeYaml(entry.title)}\"`,
     `description: \"${escapeYaml(entry.summary)}\"`,
     "---",
     "",
-    '<div className="guide-masthead">',
+    'import ExamplePlayground from "@site/src/components/ExamplePlayground";',
     "",
-    `**What this unlocks:** ${entry.summary}`,
-    "",
-    `**Source spec:** [docs/Specs/${entry.fileName}](https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/${entry.fileName})`,
-    "",
+    '<div className="spotlight-panel">',
+    `<h3>${entry.title}</h3>`,
+    `<p><strong>What this unlocks:</strong> ${entry.summary}</p>`,
+    `<p><strong>Why teams care:</strong> ${entry.why}</p>`,
+    `<p><strong>Source spec:</strong> <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/${entry.fileName}">docs/Specs/${entry.fileName}</a></p>`,
     "</div>",
     "",
-    "## Why this matters",
+    "## What you can ship with this",
     "",
-    `This guide translates the ${entry.title} contract into practical workflow patterns so teams can build confidently in SmartPad.`,
+    `Use this guide to move from isolated formulas to production-grade ${entry.title.toLowerCase()} behavior in real SmartPad sheets.`,
     "",
-    renderExampleSection(examples).trimEnd(),
+    renderExamples(entry, examples).trimEnd(),
+    "",
+    isCurrency ? "## Currency + FX blueprint" : "## Design notes",
+    "",
+    isCurrency
+      ? "- Run local budgeting in USD while instantly projecting totals to EUR/GBP for planning and approvals."
+      : "- Keep formulas legible by splitting intent into named lines before collapsing math.",
+    isCurrency
+      ? "- Keep manual rates for scenario planning, but preserve live-rate behavior for day-to-day usage."
+      : "- Prefer explicit conversions and target units instead of inferring context from nearby lines.",
+    isCurrency
+      ? "- Treat conversion syntax (`to` / `in`) as part of the model contract, not just display formatting."
+      : "- Validate expected output with at least one positive and one guardrail-oriented example.",
     "",
     "## Common pitfalls",
     "",
@@ -243,22 +265,19 @@ const renderIndexPage = (recordsByCategory) => {
     "title: Feature Guides",
     "---",
     "",
-    '<div className="hero-panel">',
-    "",
-    "## SmartPad Feature Guides",
-    "",
-    "SmartPad is a text-first workspace with live math, units, lists, ranges, plotting, and workspace automation.",
-    "",
-    "Use this library to jump from idea to working sheet quickly.",
-    "",
+    '<div className="cinema-hero">',
+    '<p className="cinema-kicker">SmartPad Docs</p>',
+    "<h2>From plain text to decision-ready models</h2>",
+    "<p>Explore examples, run them in one click, and build sheets that are readable and mathematically reliable.</p>",
+    '<div className="cinema-tags"><span>Live math</span><span>Units + FX</span><span>Lists + ranges</span><span>Workspace safe</span></div>',
     "</div>",
     "",
     "## Explore by journey",
     "",
     '<div className="journey-grid">',
-    '<a className="journey-card" href="/docs/guides/getting-started"><strong>Getting Started</strong><span>From first line to live result in minutes.</span></a>',
-    '<a className="journey-card" href="/docs/guides/syntax-playbook"><strong>Syntax Playbook</strong><span>Core expression patterns you will use daily.</span></a>',
-    '<a className="journey-card" href="/docs/guides/examples-gallery"><strong>Examples Gallery</strong><span>Real workflows across money, units, and planning.</span></a>',
+    '<a className="journey-card" href="/docs/guides/getting-started"><strong>Getting Started</strong><span>First value in under a minute.</span></a>',
+    '<a className="journey-card" href="/docs/guides/syntax-playbook"><strong>Syntax Playbook</strong><span>Patterns that keep sheets clean and scalable.</span></a>',
+    '<a className="journey-card" href="/docs/guides/examples-gallery"><strong>Examples Gallery</strong><span>Copy-ready workflows you can run instantly.</span></a>',
     '<a className="journey-card" href="/docs/guides/troubleshooting"><strong>Troubleshooting</strong><span>Fast fixes for parsing and conversion surprises.</span></a>',
     "</div>",
     "",
@@ -271,13 +290,11 @@ const renderIndexPage = (recordsByCategory) => {
     lines.push(`## ${category}`);
     lines.push("");
     lines.push('<div className="feature-grid">');
-
     records.forEach((record) => {
       lines.push(
         `<a className="feature-card" href="/docs/specs/${record.slug}"><strong>${record.title}</strong><span>${record.summary}</span></a>`,
       );
     });
-
     lines.push("</div>");
     lines.push("");
   });
@@ -304,19 +321,15 @@ const renderGuidePages = (recordsByCategory) => {
       "sidebar_position: 1",
       "---",
       "",
+      'import ExamplePlayground from "@site/src/components/ExamplePlayground";',
+      "",
       "# Getting Started With SmartPad",
       "",
-      "SmartPad feels like notes, but every line can become a live computation.",
+      "<div className=\"spotlight-panel\">",
+      "<p><strong>Goal:</strong> go from blank page to a live, explainable model in under 60 seconds.</p>",
+      "</div>",
       "",
-      "## 60-second first win",
-      "",
-      "```smartpad",
-      "hours = 38",
-      "rate = $95/hour",
-      "weekly pay = hours * rate => $3,610",
-      "",
-      "fx = weekly pay in EUR => EUR 3,340",
-      "```",
+      "<ExamplePlayground title=\"60-second first win\" description=\"Open this directly in SmartPad and tweak values.\" code={`hours = 38\\nrate = $95/hour\\nweekly pay = hours * rate => $3,610\\n\\nfx = weekly pay in EUR => EUR 3,340`} />",
       "",
       "## What to learn next",
       "",
@@ -335,23 +348,13 @@ const renderGuidePages = (recordsByCategory) => {
       "sidebar_position: 2",
       "---",
       "",
+      'import ExamplePlayground from "@site/src/components/ExamplePlayground";',
+      "",
       "# Syntax Playbook",
       "",
       "Use these patterns to keep sheets expressive and predictable.",
       "",
-      "## Core patterns",
-      "",
-      "```smartpad",
-      "subtotal = $128",
-      "tax = 8.5%",
-      "total = subtotal + (subtotal * tax) => $138.88",
-      "",
-      "distance = 42 km",
-      "distance in mi => 26.1 mi",
-      "",
-      "plan = [120, 140, 155, 170]",
-      "avg(plan) => 146.25",
-      "```",
+      "<ExamplePlayground title=\"Core expression patterns\" description=\"A compact pattern set used across most SmartPad workflows.\" code={`subtotal = $128\\ntax = 8.5%\\ntotal = subtotal + (subtotal * tax) => $138.88\\n\\ndistance = 42 km\\ndistance in mi => 26.1 mi\\n\\nplan = [120, 140, 155, 170]\\navg(plan) => 146.25`} />",
       "",
       "## Rules of thumb",
       "",
@@ -370,35 +373,17 @@ const renderGuidePages = (recordsByCategory) => {
       "sidebar_position: 3",
       "---",
       "",
+      'import ExamplePlayground from "@site/src/components/ExamplePlayground";',
+      "",
       "# Examples Gallery",
       "",
       "Feature-packed examples you can paste and adapt.",
       "",
-      "## Budget + FX",
+      "<ExamplePlayground title=\"Budget + FX\" description=\"Local budget totals projected into a second currency.\" code={`rent = USD 1950\\nutilities = USD 240\\ntotal usd = rent + utilities => $2,190\\ntotal eur = total usd in EUR => EUR 2,025`} />",
       "",
-      "```smartpad",
-      "rent = USD 1950",
-      "utilities = USD 240",
-      "total usd = rent + utilities => $2,190",
-      "total eur = total usd in EUR => EUR 2,025",
-      "```",
+      "<ExamplePlayground title=\"Unit-aware planning\" description=\"Travel-style estimate with unit conversion.\" code={`speed = 62 mi/h\\ntime = 45 min\\ndistance = speed * time => 46.5 mi\\ndistance in km => 74.83 km`} />",
       "",
-      "## Unit-aware planning",
-      "",
-      "```smartpad",
-      "speed = 62 mi/h",
-      "time = 45 min",
-      "distance = speed * time => 46.5 mi",
-      "distance in km => 74.83 km",
-      "```",
-      "",
-      "## List analysis",
-      "",
-      "```smartpad",
-      "scores = [71, 77, 84, 90, 94]",
-      "top3 = take(sort(scores, desc), 3)",
-      "avg(top3) => 89.33",
-      "```",
+      "<ExamplePlayground title=\"List analysis\" description=\"Fast analysis of a compact numeric list.\" code={`scores = [71, 77, 84, 90, 94]\\ntop3 = take(sort(scores, desc), 3)\\navg(top3) => 89.33`} />",
       "",
     ].join("\n"),
   });
@@ -480,16 +465,11 @@ const writeSidebar = (recordsByCategory) => {
   CATEGORY_ORDER.forEach((category) => {
     const records = recordsByCategory.get(category) || [];
     if (!records.length) return;
-
     lines.push("    {");
     lines.push('      type: "category",');
     lines.push(`      label: "${category}",`);
     lines.push("      items: [");
-
-    records.forEach((record) => {
-      lines.push(`        "specs/${record.slug}",`);
-    });
-
+    records.forEach((record) => lines.push(`        "specs/${record.slug}",`));
     lines.push("      ],");
     lines.push("    },");
   });
@@ -530,7 +510,6 @@ const main = () => {
 
   writeSidebar(recordsByCategory);
 
-  // Cleanup old generated index file from previous pipeline shape.
   const legacyIndex = path.join(specsOutDir, "_index.md");
   if (fs.existsSync(legacyIndex)) {
     fs.rmSync(legacyIndex);

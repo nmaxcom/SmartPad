@@ -3,26 +3,33 @@ title: "Duration and Time Values"
 description: "Defines duration literals, time-of-day values, datetime arithmetic, and parsing disambiguation rules."
 ---
 
-<div className="guide-masthead">
+import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
-**What this unlocks:** Defines duration literals, time-of-day values, datetime arithmetic, and parsing disambiguation rules.
-
-**Source spec:** [docs/Specs/duration.spec.md](https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/duration.spec.md)
-
+<div className="spotlight-panel">
+<h3>Duration and Time Values</h3>
+<p><strong>What this unlocks:</strong> Defines duration literals, time-of-day values, datetime arithmetic, and parsing disambiguation rules.</p>
+<p><strong>Why teams care:</strong> Handle schedules, lead times, and elapsed calculations with reliable unit math.</p>
+<p><strong>Source spec:</strong> <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/duration.spec.md">docs/Specs/duration.spec.md</a></p>
 </div>
 
-## Why this matters
+## What you can ship with this
 
-This guide translates the Duration and Time Values contract into practical workflow patterns so teams can build confidently in SmartPad.
+Use this guide to move from isolated formulas to production-grade duration and time values behavior in real SmartPad sheets.
 
-## Try it now
+## Live playground
 
-Examples for this feature are being backfilled. Add examples in the linked spec and regenerate docs.
+Examples for this feature are being backfilled. Add examples to the source spec and regenerate docs.
+
+## Design notes
+
+- Keep formulas legible by splitting intent into named lines before collapsing math.
+- Prefer explicit conversions and target units instead of inferring context from nearby lines.
+- Validate expected output with at least one positive and one guardrail-oriented example.
 
 ## Common pitfalls
 
-- Use the documented syntax exactly; SmartPad intentionally avoids ambiguous shorthand.
-- Keep units and locale context explicit when combining values from different domains.
+- Use the documented syntax exactly; SmartPad avoids ambiguous shorthand on purpose.
+- Keep context (unit, locale, currency) explicit when composing lines across domains.
 
 ## Capability map
 

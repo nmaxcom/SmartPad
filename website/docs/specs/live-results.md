@@ -3,25 +3,32 @@ title: "Live Results"
 description: "Show evaluable results while typing, keep => behavior unchanged, and suppress noisy/error-prone previews."
 ---
 
-<div className="guide-masthead">
+import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
-**What this unlocks:** Show evaluable results while typing, keep => behavior unchanged, and suppress noisy/error-prone previews.
-
-**Source spec:** [docs/Specs/LiveResult.spec.md](https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/LiveResult.spec.md)
-
+<div className="spotlight-panel">
+<h3>Live Results</h3>
+<p><strong>What this unlocks:</strong> Show evaluable results while typing, keep => behavior unchanged, and suppress noisy/error-prone previews.</p>
+<p><strong>Why teams care:</strong> Keep cognitive flow intact by seeing outcomes the moment an expression becomes valid.</p>
+<p><strong>Source spec:</strong> <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/LiveResult.spec.md">docs/Specs/LiveResult.spec.md</a></p>
 </div>
 
-## Why this matters
+## What you can ship with this
 
-This guide translates the Live Results contract into practical workflow patterns so teams can build confidently in SmartPad.
+Use this guide to move from isolated formulas to production-grade live results behavior in real SmartPad sheets.
 
-## Try it now
+## Live playground
 
-Examples for this feature are being backfilled. Add examples in the linked spec and regenerate docs.
+Examples for this feature are being backfilled. Add examples to the source spec and regenerate docs.
+
+## Design notes
+
+- Keep formulas legible by splitting intent into named lines before collapsing math.
+- Prefer explicit conversions and target units instead of inferring context from nearby lines.
+- Validate expected output with at least one positive and one guardrail-oriented example.
 
 ## Common pitfalls
 
-- Use the quick examples first, then verify behavior against your own sheet data.
+- Build from small named steps first, then collapse into concise formulas.
 
 ## Capability map
 

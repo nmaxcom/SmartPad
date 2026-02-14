@@ -3,40 +3,35 @@ title: "Lists"
 description: "Defines list creation, aggregations, filtering, mapping, sorting, indexing, and unit-safe list operations."
 ---
 
-<div className="guide-masthead">
+import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
-**What this unlocks:** Defines list creation, aggregations, filtering, mapping, sorting, indexing, and unit-safe list operations.
-
-**Source spec:** [docs/Specs/Lists.spec.md](https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/Lists.spec.md)
-
+<div className="spotlight-panel">
+<h3>Lists</h3>
+<p><strong>What this unlocks:</strong> Defines list creation, aggregations, filtering, mapping, sorting, indexing, and unit-safe list operations.</p>
+<p><strong>Why teams care:</strong> Treat line-based notes like structured datasets when you need analysis depth.</p>
+<p><strong>Source spec:</strong> <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/Lists.spec.md">docs/Specs/Lists.spec.md</a></p>
 </div>
 
-## Why this matters
+## What you can ship with this
 
-This guide translates the Lists contract into practical workflow patterns so teams can build confidently in SmartPad.
+Use this guide to move from isolated formulas to production-grade lists behavior in real SmartPad sheets.
 
-## Try it now
+## Live playground
 
-Copy these into a SmartPad sheet and watch live results update as you type.
+<ExamplePlayground title={"Lists quick win"} description={"Copy, run, and adapt this baseline to your own sheet."} code={"xs = 10, 20, 30\nys = xs[2..2]\nys =>20\ncount(ys) => 1"} />
 
-### Happy path
-```smartpad
-xs = 10, 20, 30
-ys = xs[2..2]
-ys =>20
-count(ys) => 1
-```
+<ExamplePlayground title={"Lists guardrail check"} description={"Use this to understand expected behavior around edge conditions."} code={"x = 20\ncount(x) => ⚠️ Expected list"} />
 
-### Edge case
-```smartpad
-x = 20
-count(x) => ⚠️ Expected list
-```
+## Design notes
+
+- Keep formulas legible by splitting intent into named lines before collapsing math.
+- Prefer explicit conversions and target units instead of inferring context from nearby lines.
+- Validate expected output with at least one positive and one guardrail-oriented example.
 
 ## Common pitfalls
 
-- Display formatting can differ from internal values; verify conversion targets explicitly.
-- Keep units and locale context explicit when combining values from different domains.
+- Display strings are not always canonical values; verify the target unit/currency explicitly.
+- Keep context (unit, locale, currency) explicit when composing lines across domains.
 
 ## Capability map
 

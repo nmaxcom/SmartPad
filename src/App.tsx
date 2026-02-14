@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useCallback } from "react";
+import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import JSZip from "jszip";
 import Editor, { EditorProvider, useEditorContext } from "./components/Editor";
 import { VariableProvider } from "./state";
@@ -99,6 +99,7 @@ function AppContent() {
         <SheetProvider>
           <EditorProvider>
             <SheetSync />
+            <DocsExampleImporter />
             <AppHeader onSettingsClick={handleOpenSettings} />
             {fxStatus.provider === "offline" && fxStatus.source === "cache" && (
               <div className="fx-status-banner" role="status">
@@ -135,6 +136,60 @@ function AppContent() {
       </VariableProvider>
     </div>
   );
+}
+
+function hashString(input: string): string {
+  let hash = 0;
+  for (let i = 0; i < input.length; i += 1) {
+    hash = (hash << 5) - hash + input.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash).toString(16);
+}
+
+function DocsExampleImporter() {
+  const { createSheetFromContent } = useSheetContext();
+  const importedRef = useRef(false);
+
+  useEffect(() => {
+    if (importedRef.current) return;
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const rawExample = params.get("sp_example");
+    if (!rawExample) return;
+
+    importedRef.current = true;
+    const rawTitle = params.get("sp_title");
+    const decodedContent = decodeURIComponent(rawExample).replace(/\r\n?/g, "\n").trim();
+    const decodedTitle = decodeURIComponent(rawTitle || "Docs Playground");
+    const exampleKey = `smartpad-docs-example-${hashString(`${decodedTitle}:${decodedContent}`)}`;
+
+    const stripParams = () => {
+      params.delete("sp_example");
+      params.delete("sp_title");
+      const next = params.toString();
+      const nextUrl = `${window.location.pathname}${next ? `?${next}` : ""}${window.location.hash}`;
+      window.history.replaceState({}, "", nextUrl);
+    };
+
+    if (!decodedContent) {
+      stripParams();
+      return;
+    }
+
+    try {
+      if (window.sessionStorage.getItem(exampleKey) === "1") {
+        stripParams();
+        return;
+      }
+      createSheetFromContent(decodedContent, decodedTitle, true).catch(() => {});
+      window.sessionStorage.setItem(exampleKey, "1");
+    } finally {
+      stripParams();
+    }
+  }, [createSheetFromContent]);
+
+  return null;
 }
 
 function SheetSidebar() {

@@ -3,22 +3,19 @@ sidebar_position: 6
 title: Feature Guides
 ---
 
-<div className="hero-panel">
-
-## SmartPad Feature Guides
-
-SmartPad is a text-first workspace with live math, units, lists, ranges, plotting, and workspace automation.
-
-Use this library to jump from idea to working sheet quickly.
-
+<div className="cinema-hero">
+<p className="cinema-kicker">SmartPad Docs</p>
+<h2>From plain text to decision-ready models</h2>
+<p>Explore examples, run them in one click, and build sheets that are readable and mathematically reliable.</p>
+<div className="cinema-tags"><span>Live math</span><span>Units + FX</span><span>Lists + ranges</span><span>Workspace safe</span></div>
 </div>
 
 ## Explore by journey
 
 <div className="journey-grid">
-<a className="journey-card" href="/docs/guides/getting-started"><strong>Getting Started</strong><span>From first line to live result in minutes.</span></a>
-<a className="journey-card" href="/docs/guides/syntax-playbook"><strong>Syntax Playbook</strong><span>Core expression patterns you will use daily.</span></a>
-<a className="journey-card" href="/docs/guides/examples-gallery"><strong>Examples Gallery</strong><span>Real workflows across money, units, and planning.</span></a>
+<a className="journey-card" href="/docs/guides/getting-started"><strong>Getting Started</strong><span>First value in under a minute.</span></a>
+<a className="journey-card" href="/docs/guides/syntax-playbook"><strong>Syntax Playbook</strong><span>Patterns that keep sheets clean and scalable.</span></a>
+<a className="journey-card" href="/docs/guides/examples-gallery"><strong>Examples Gallery</strong><span>Copy-ready workflows you can run instantly.</span></a>
 <a className="journey-card" href="/docs/guides/troubleshooting"><strong>Troubleshooting</strong><span>Fast fixes for parsing and conversion surprises.</span></a>
 </div>
 

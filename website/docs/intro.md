@@ -3,26 +3,33 @@ sidebar_position: 1
 slug: /
 ---
 
+import ExamplePlayground from "@site/src/components/ExamplePlayground";
+
 # SmartPad Documentation
 
-SmartPad turns plain text into a live computational workspace for planning, analysis, and decision making.
-
-<div className="hero-panel">
-
-## Why teams use it
-
-- Write formulas in natural, notebook-style lines.
-- Mix numbers, units, dates, ranges, and lists in one flow.
-- Keep results live while editing, not after running a script.
-
+<div className="cinema-hero">
+<p className="cinema-kicker">SmartPad Docs</p>
+<h2>Write plain text. Ship analytical clarity.</h2>
+<p>SmartPad combines note-like writing with live evaluation, unit math, FX conversion, ranges, lists, and plotting so teams can reason faster without spreadsheet drag.</p>
+<div className="cinema-tags"><span>Live evaluation</span><span>Human-readable formulas</span><span>Unit + FX aware</span><span>Built for iteration</span></div>
 </div>
 
-## Start here
+## Try SmartPad in 20 seconds
 
-- Get productive fast: [Getting Started](/docs/guides/getting-started)
-- Learn reusable patterns: [Syntax Playbook](/docs/guides/syntax-playbook)
-- Browse practical workflows: [Examples Gallery](/docs/guides/examples-gallery)
-- Dive into full feature coverage: [Feature Guides](/docs/specs)
+<ExamplePlayground title="Quick wow moment" description="Run this in SmartPad and then tweak values to feel how fast the feedback loop is." code={`team size = 8
+velocity = 27 points/sprint
+capacity = team size * velocity => 216
+
+feature load = [34, 55, 89, 21]
+needed = sum(feature load) => 199
+buffer = capacity - needed => 17`} />
+
+## Pick your path
+
+- New to SmartPad: [Getting Started](/docs/guides/getting-started)
+- Want syntax confidence: [Syntax Playbook](/docs/guides/syntax-playbook)
+- Need practical blueprints: [Examples Gallery](/docs/guides/examples-gallery)
+- Need full behavior contracts: [Feature Guides](/docs/specs)
 
 ## Local docs workflow
 
@@ -43,9 +50,3 @@ npm run docs:docusaurus:publish-local
 ```bash
 npm run dev
 ```
-
-## Source of truth
-
-- Feature contracts: `docs/Specs/*.spec.md`
-- Generated docs pages: `website/docs/specs/`
-- Docs generator: `scripts/generate-docusaurus-docs.js`

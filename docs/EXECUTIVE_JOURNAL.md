@@ -912,3 +912,60 @@
     *   `npm run spec:test` failed for same unrelated changed file/test-sync scope.
 *   Risks/blockers:
     *   Docs drift/spec-test checks are currently blocked by unrelated in-progress editor/result-chip changes in workspace; docs work itself is internally consistent and built successfully.
+
+## Entry J-2026-02-14-20
+
+*   Timestamp: 2026-02-14 05:20:30 CET / 2026-02-14 04:20:30 UTC
+*   Summary:
+    *   User acknowledged improvement but requested a stronger step-up: docs should feel more attractive and jaw-dropping.
+    *   Assistant prepared a higher-ceiling docs experience blueprint focused on visual identity, narrative onboarding, and interactive examples.
+*   Decisions:
+    *   Prioritize product-led docs presentation over spec-led presentation in the next pass.
+*   User directives:
+    *   "Think, what can we do to make docs better, more attractive, more jaw dropping?"
+*   Assistant commitments:
+    *   Propose concrete high-impact upgrades and implementation order.
+*   Artifacts:
+    *   `docs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   `T-2026-02-14-07` remains in progress (content depth and narrative quality pass).
+*   Risks/blockers:
+    *   None.
+
+## Entry J-2026-02-14-21
+
+*   Timestamp: 2026-02-14 06:22:10 CET / 2026-02-14 05:22:10 UTC
+*   Summary:
+    *   User approved a higher-ceiling docs design direction and requested a more jaw-dropping experience.
+    *   Assistant implemented Phase 1 upgrades: cinematic docs landing, interactive example blocks (`Copy` + `Open in SmartPad`), and guide-generation upgrades with richer product-style narrative structure (including Currency + FX blueprint framing).
+    *   Added app-side URL example import handling so docs examples open directly into SmartPad sheets.
+*   Decisions:
+    *   Use a reusable MDX component (`ExamplePlayground`) for interactive examples across intro/guides/spec pages.
+    *   Support docs-to-app handoff via URL params (`sp_example`, `sp_title`) and auto-import into a new active sheet.
+*   User directives:
+    *   Proceed with the premium docs upgrades from the proposed list.
+*   Assistant commitments:
+    *   Continue to Phase 2 (animated hero depth, path-based narratives, guided mini-labs) under new backlog item `T-2026-02-14-09`.
+*   Artifacts:
+    *   `website/src/components/ExamplePlayground.tsx` (new interactive docs example component)
+    *   `src/App.tsx` (new docs example URL import gate into sheets)
+    *   `scripts/generate-docusaurus-docs.js` (rewritten to emit richer narrative pages + interactive playground embeds)
+    *   `website/docs/intro.md` (cinematic landing rewrite with live example component)
+    *   `website/src/css/custom.css` (premium visual system + interactive example styling)
+    *   `website/docs/specs/*.md`, `website/docs/guides/*.md`, `website/sidebars.ts`, `public/docs/*` (regenerated)
+    *   `docs/TODO_BACKLOG.md` (task updates + phase-2 todo)
+    *   `docs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   `T-2026-02-13-02` still in progress (ensure edge-case examples on every feature guide through interactive blocks).
+    *   `T-2026-02-14-05` still in progress (scenario-led backfill with expected outputs across all pages).
+    *   `T-2026-02-14-09` added as next premium docs phase.
+*   Validation:
+    *   `npm run docs:docusaurus:publish-local` passed.
+    *   `npm run build` passed.
+    *   Playwright validation passed across `/docs/index.html`, `/docs/specs/index.html`, `/docs/specs/currency-and-fx/index.html`, `/docs/guides/getting-started/index.html`, `/docs/guides/examples-gallery/index.html`.
+    *   Playwright validation passed for docs `Open in SmartPad` flow, including sheet import verification in app sidebar.
+    *   `npm run docs:map` passed.
+    *   `npm run docs:drift` passed.
+    *   `npm run spec:test` passed.
+*   Risks/blockers:
+    *   None.

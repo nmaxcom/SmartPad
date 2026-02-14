@@ -3,43 +3,34 @@ title: "Result Chips and References"
 description: "Defines chip interactions, hidden references, dependency behavior, and result-lane UX in the editor."
 ---
 
-<div className="guide-masthead">
+import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
-**What this unlocks:** Defines chip interactions, hidden references, dependency behavior, and result-lane UX in the editor.
-
-**Source spec:** [docs/Specs/ResultChipsAndValueGraph.spec.md](https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/ResultChipsAndValueGraph.spec.md)
-
+<div className="spotlight-panel">
+<h3>Result Chips and References</h3>
+<p><strong>What this unlocks:</strong> Defines chip interactions, hidden references, dependency behavior, and result-lane UX in the editor.</p>
+<p><strong>Why teams care:</strong> Turn lines into reusable building blocks without losing readability.</p>
+<p><strong>Source spec:</strong> <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/ResultChipsAndValueGraph.spec.md">docs/Specs/ResultChipsAndValueGraph.spec.md</a></p>
 </div>
 
-## Why this matters
+## What you can ship with this
 
-This guide translates the Result Chips and References contract into practical workflow patterns so teams can build confidently in SmartPad.
+Use this guide to move from isolated formulas to production-grade result chips and references behavior in real SmartPad sheets.
 
-## Try it now
+## Live playground
 
-Copy these into a SmartPad sheet and watch live results update as you type.
+<ExamplePlayground title={"Result Chips and References quick win"} description={"Copy, run, and adapt this baseline to your own sheet."} code={"monthly rent = 2500                              [2,500]\nphone bill   = 45                                   [45]\nfood = 50/day * 30 days                          [1,500]\ntotal cost per month                             [4,045]"} />
 
-### Happy path
-```smartpad
-monthly rent = 2500                              [2,500]
-phone bill   = 45                                   [45]
-food = 50/day * 30 days                          [1,500]
-total cost per month                             [4,045]
-```
+<ExamplePlayground title={"Result Chips and References guardrail check"} description={"Use this to understand expected behavior around edge conditions."} code={"subtotal = 120                                      [120]\ntax = [subtotal] * 0.15                              [18]\n\n# source line later breaks:\nsubtotal = 12 / 0                                    [⚠ Division by zero]\ntax = [subtotal ⚠] * 0.15                            ⚠ source line has error"} />
 
-### Edge case
-```smartpad
-subtotal = 120                                      [120]
-tax = [subtotal] * 0.15                              [18]
+## Design notes
 
-# source line later breaks:
-subtotal = 12 / 0                                    [⚠ Division by zero]
-tax = [subtotal ⚠] * 0.15                            ⚠ source line has error
-```
+- Keep formulas legible by splitting intent into named lines before collapsing math.
+- Prefer explicit conversions and target units instead of inferring context from nearby lines.
+- Validate expected output with at least one positive and one guardrail-oriented example.
 
 ## Common pitfalls
 
-- Watch edge-case behavior and guardrails before assuming spreadsheet-style coercions.
+- Check guardrails before assuming spreadsheet-style coercion rules.
 
 ## Capability map
 

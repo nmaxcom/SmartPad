@@ -3,30 +3,32 @@ title: "Plotting and Dependency Views"
 description: "Specifies exploratory plotting, detached views, and dependency-driven visualization flows."
 ---
 
-<div className="guide-masthead">
+import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
-**What this unlocks:** Specifies exploratory plotting, detached views, and dependency-driven visualization flows.
-
-**Source spec:** [docs/Specs/Plotting.spec.md](https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/Plotting.spec.md)
-
+<div className="spotlight-panel">
+<h3>Plotting and Dependency Views</h3>
+<p><strong>What this unlocks:</strong> Specifies exploratory plotting, detached views, and dependency-driven visualization flows.</p>
+<p><strong>Why teams care:</strong> Move from raw values to visual intuition with near-zero setup.</p>
+<p><strong>Source spec:</strong> <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/Plotting.spec.md">docs/Specs/Plotting.spec.md</a></p>
 </div>
 
-## Why this matters
+## What you can ship with this
 
-This guide translates the Plotting and Dependency Views contract into practical workflow patterns so teams can build confidently in SmartPad.
+Use this guide to move from isolated formulas to production-grade plotting and dependency views behavior in real SmartPad sheets.
 
-## Try it now
+## Live playground
 
-Copy these into a SmartPad sheet and watch live results update as you type.
+<ExamplePlayground title={"Plotting and Dependency Views quick win"} description={"Copy, run, and adapt this baseline to your own sheet."} code={"a + b => 20%"} />
 
-### Happy path
-```smartpad
-a + b => 20%
-```
+## Design notes
+
+- Keep formulas legible by splitting intent into named lines before collapsing math.
+- Prefer explicit conversions and target units instead of inferring context from nearby lines.
+- Validate expected output with at least one positive and one guardrail-oriented example.
 
 ## Common pitfalls
 
-- Use the quick examples first, then verify behavior against your own sheet data.
+- Build from small named steps first, then collapse into concise formulas.
 
 ## Capability map
 
