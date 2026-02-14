@@ -1007,3 +1007,21 @@
     *   `npm run spec:test` pending re-check post-commit range update.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-14-23
+
+*   Timestamp: 2026-02-14 06:42:30 CET / 2026-02-14 05:42:30 UTC
+*   Summary:
+    *   Finalized the inline-interactive embed fix with commit `2d72a36c`.
+    *   Post-commit validation found a spec-map coverage gap for newly touched files (`src/App.css`, `src/utils/runtimeMode.ts`), then resolved by updating `docs/spec-map.json`.
+*   Decisions:
+    *   Map runtime embed helpers and app-level embed styling under `UI Panels And Settings` to keep docs/spec/test sync checks strict and accurate.
+*   Artifacts:
+    *   `docs/spec-map.json` (added `src/App.css`, `src/utils/runtimeMode.ts` in `UI Panels And Settings` spec prefixes)
+    *   `docs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   `npm run spec:test` passed.
+    *   `npm run docs:drift` passed.
+    *   `npm run docs:map` passed after spec-map update.
+*   Risks/blockers:
+    *   None.

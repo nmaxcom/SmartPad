@@ -96,8 +96,10 @@
         "src/components/Layout/",
         "src/state/settingsStore.ts",
         "src/state/SettingsContext.tsx",
+        "src/App.css",
         "src/styles/",
-        "src/App.tsx"
+        "src/App.tsx",
+        "src/utils/runtimeMode.ts"
       ],
       "docPrefixes": ["docs/ABOUT.md", "docs/notes.md", "public/docs/"],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
