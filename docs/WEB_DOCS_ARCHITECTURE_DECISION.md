@@ -38,6 +38,16 @@ If triggered:
 3. Move generated content into versioned docs pages.
 4. Update app docs link to hosted docs route.
 
+## Status Update (2026-02-14)
+
+Migration work has started:
+- Added `website/` Docusaurus scaffold in-repo.
+- Added spec-to-Docusaurus content generator: `scripts/generate-docusaurus-docs.js`.
+- Generated initial pages in `website/docs/specs/`.
+
+Current blocker:
+- This environment cannot reach npm registry (`ENOTFOUND registry.npmjs.org`), so Docusaurus dependency install/build could not be validated yet.
+
 ## Constraints and guardrails
 
 - Specs are source of truth. Do not manually patch generated sections in `public/docs/index.html`.

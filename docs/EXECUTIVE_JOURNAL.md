@@ -503,3 +503,42 @@
     *   None.
 *   Risks/blockers:
     *   Platform-level permission dialogs can still appear for genuinely out-of-repo or elevated operations.
+
+## Entry J-2026-02-14-08
+
+*   Timestamp: 2026-02-14 01:43:48 CET / 2026-02-14 00:43:48 UTC
+*   Summary:
+    *   User requested clearer todos plus concrete move to Docusaurus.
+    *   Assistant rewrote todo items for explicit deliverables and started Docusaurus migration with in-repo scaffold + generated docs pages.
+*   Decisions:
+    *   Add mandatory todo quality rules in both manual and AGENTS guidance.
+    *   Proceed with manual Docusaurus scaffold because `create-docusaurus` could not access npm registry in this environment.
+*   User directives:
+    *   Make todos less cryptic and enforce this standard in operating docs.
+    *   Move docs to Docusaurus.
+*   Assistant commitments:
+    *   Continue migration by installing website dependencies and validating Docusaurus build when network access is available.
+*   Artifacts:
+    *   `AGENTS.md` (todo quality rules)
+    *   `docs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` (mandatory todo writing standard)
+    *   `docs/TODO_BACKLOG.md` (rewritten explicit tasks)
+    *   `scripts/generate-docusaurus-docs.js` (new)
+    *   `website/` scaffold (`docusaurus.config.ts`, `sidebars.ts`, docs, css, static assets, package.json)
+    *   `website/docs/specs/*.md` (generated)
+    *   `website/README.md` (setup/run instructions)
+    *   `src/components/Layout/docsUrl.ts` + `src/components/Layout/AppHeader.tsx` (supports explicit docs URL override for future Docusaurus route)
+    *   `tests/unit/docsUrl.test.ts` (expanded coverage)
+    *   `docs/WEB_DOCS_ARCHITECTURE_DECISION.md` (status update)
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   `T-2026-02-14-04` remains `in_progress` until Docusaurus dependencies install and build are validated.
+*   Validation:
+    *   `npm run docs:docusaurus:generate` passed.
+    *   `npm run test:unit -- --runTestsByPath tests/unit/docsUrl.test.ts tests/unit/generateWebDocs.test.ts` passed.
+    *   `npm run docs:map` passed.
+    *   `npm run docs:drift` passed.
+    *   `npm run spec:test` passed.
+    *   `npm run build` passed.
+    *   `npm run docs:docusaurus:build` failed: `docusaurus: command not found` (website deps not installed).
+*   Risks/blockers:
+    *   Network to npm registry unavailable here (`ENOTFOUND registry.npmjs.org`), blocking dependency installation and full Docusaurus runtime validation.

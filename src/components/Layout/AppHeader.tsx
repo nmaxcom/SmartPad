@@ -8,7 +8,7 @@ interface AppHeaderProps {
 }
 
 const BUG_REPORT_URL = "https://github.com/nmaxcom/SmartPad/issues/new?template=bug_report.yml";
-const DOCS_URL = buildDocsUrl(import.meta.env.BASE_URL || "/");
+const DOCS_URL = buildDocsUrl(import.meta.env.BASE_URL || "/", import.meta.env.VITE_DOCS_URL);
 
 type PanelToggleKey = "showVariablePanel" | "showTemplatePanel" | "showSettingsPanel";
 
