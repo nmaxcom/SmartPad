@@ -542,3 +542,58 @@
     *   `npm run docs:docusaurus:build` failed: `docusaurus: command not found` (website deps not installed).
 *   Risks/blockers:
     *   Network to npm registry unavailable here (`ENOTFOUND registry.npmjs.org`), blocking dependency installation and full Docusaurus runtime validation.
+
+## Entry J-2026-02-14-09
+
+*   Timestamp: 2026-02-14 01:52:20 CET / 2026-02-14 00:52:20 UTC
+*   Summary:
+    *   User requested explicit approval asks whenever install/setup work hits problems.
+*   Decisions:
+    *   On dependency install failures or blocked setup commands, immediately issue an approval request instead of waiting.
+*   User directives:
+    *   "just ask for my approval if you get problems installing stuff"
+*   Assistant commitments:
+    *   Request approval promptly for blocked install/setup actions.
+*   Artifacts:
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   None.
+*   Risks/blockers:
+    *   None.
+
+## Entry J-2026-02-14-10
+
+*   Timestamp: 2026-02-14 02:01:34 CET / 2026-02-14 01:01:34 UTC
+*   Summary:
+    *   Continued Docusaurus migration per user directive.
+    *   Installed `website/` dependencies, fixed Docusaurus config/linking issues, and made Docusaurus output the source for `public/docs/`.
+*   Decisions:
+    *   Keep docs deployment path unchanged (`public/docs/`) but populate it from Docusaurus build output.
+    *   Add a one-command local publish workflow for docs (`docs:docusaurus:publish-local`).
+*   User directives:
+    *   "continue then"
+*   Assistant commitments:
+    *   Continue professional UI and IA improvements on top of Docusaurus baseline.
+*   Artifacts:
+    *   `scripts/sync-docusaurus-build.js` (new sync step)
+    *   `package.json` (added docs docusaurus sync/publish scripts)
+    *   `public/docs/` (now Docusaurus build output)
+    *   `website/docusaurus.config.ts` (routing/link config fixes)
+    *   `website/docs/intro.md` (set docs home slug)
+    *   `.gitignore` (ignore website generated build artifacts)
+    *   `docs/TODO_BACKLOG.md` (migration status updates)
+    *   `docs/WEB_DOCS_ARCHITECTURE_DECISION.md` (decision/state updated)
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   `T-2026-02-14-04` marked `done`.
+    *   `T-2026-02-14-01` moved to `in_progress` with Docusaurus baseline live.
+*   Validation:
+    *   `npm run docs:docusaurus:publish-local` passed.
+    *   `npm run docs:docusaurus:build` passed.
+    *   `npm run test:unit -- --runTestsByPath tests/unit/docsUrl.test.ts tests/unit/generateWebDocs.test.ts` passed.
+    *   `npm run docs:map` passed.
+    *   `npm run spec:test` passed.
+    *   `npm run build` passed.
+    *   `npm run docs:drift` previously failed against prior commit range; needs rerun after this commit.
+*   Risks/blockers:
+    *   Remaining quality work is now mostly content IA/visual polish, not platform setup.

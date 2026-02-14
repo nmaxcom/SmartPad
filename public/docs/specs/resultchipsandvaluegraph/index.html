@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-specs/resultchipsandvaluegraph" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.9.2">
+<title data-rh="true">SmartPad Result Chips + Value Graph Spec (V2) | SmartPad Docs</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://nmaxcom.github.io/SmartPad/docs/img/logo.svg"><meta data-rh="true" name="twitter:image" content="https://nmaxcom.github.io/SmartPad/docs/img/logo.svg"><meta data-rh="true" property="og:url" content="https://nmaxcom.github.io/SmartPad/docs/specs/resultchipsandvaluegraph/"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="SmartPad Result Chips + Value Graph Spec (V2) | SmartPad Docs"><meta data-rh="true" name="description" content="This spec extends Live Result into a full interaction model where results are:"><meta data-rh="true" property="og:description" content="This spec extends Live Result into a full interaction model where results are:"><link data-rh="true" rel="icon" href="/SmartPad/docs/img/logo.svg"><link data-rh="true" rel="canonical" href="https://nmaxcom.github.io/SmartPad/docs/specs/resultchipsandvaluegraph/"><link data-rh="true" rel="alternate" href="https://nmaxcom.github.io/SmartPad/docs/specs/resultchipsandvaluegraph/" hreflang="en"><link data-rh="true" rel="alternate" href="https://nmaxcom.github.io/SmartPad/docs/specs/resultchipsandvaluegraph/" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"SmartPad Result Chips + Value Graph Spec (V2)","item":"https://nmaxcom.github.io/SmartPad/docs/specs/resultchipsandvaluegraph"}]}</script><link rel="stylesheet" href="/SmartPad/docs/assets/css/styles.95fa99d2.css">
+<script src="/SmartPad/docs/assets/js/runtime~main.a5189fce.js" defer="defer"></script>
+<script src="/SmartPad/docs/assets/js/main.c8bf95db.js" defer="defer"></script>
+</head>
+<body class="navigation-with-keyboard">
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||"light"),document.documentElement.setAttribute("data-theme-choice",t||"light")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/SmartPad/docs/"><b class="navbar__title text--truncate">SmartPad Docs</b></a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/SmartPad/docs/">Docs</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href="https://github.com/nmaxcom/SmartPad" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/SmartPad/docs/"><span title="SmartPad Documentation" class="linkLabel_WmDU">SmartPad Documentation</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role="button" aria-expanded="true" href="/SmartPad/docs/specs/currency/"><span title="Specs" class="categoryLinkLabel_W154">Specs</span></a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/SmartPad/docs/specs/currency/"><span title="SmartPad Currency + FX Spec" class="linkLabel_WmDU">SmartPad Currency + FX Spec</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/SmartPad/docs/specs/duration/"><span title="duration" class="linkLabel_WmDU">duration</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/SmartPad/docs/specs/filemanagement/"><span title="FileManagement" class="linkLabel_WmDU">FileManagement</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/SmartPad/docs/specs/lists/"><span title="Lists in Smartpad — single comprehensive document (markdown)" class="linkLabel_WmDU">Lists in Smartpad — single comprehensive document (markdown)</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/SmartPad/docs/specs/liveresult/"><span title="SmartPad Live Result Spec" class="linkLabel_WmDU">SmartPad Live Result Spec</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/SmartPad/docs/specs/locale/"><span title="SmartPad Date/Time Ranges &amp; Display Spec (Locale-aware, Opinionated, With Tests)" class="linkLabel_WmDU">SmartPad Date/Time Ranges &amp; Display Spec (Locale-aware, Opinionated, With Tests)</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/SmartPad/docs/specs/plotting/"><span title="Smartpad — Interactive Dependency Views (Plotting &amp; Exploration)" class="linkLabel_WmDU">Smartpad — Interactive Dependency Views (Plotting &amp; Exploration)</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/SmartPad/docs/specs/ranges/"><span title="Range List Generation in Smartpad (Updated Spec — Rudimentary v1 + Extensions)" class="linkLabel_WmDU">Range List Generation in Smartpad (Updated Spec — Rudimentary v1 + Extensions)</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/SmartPad/docs/specs/resultchipsandvaluegraph/"><span title="SmartPad Result Chips + Value Graph Spec (V2)" class="linkLabel_WmDU">SmartPad Result Chips + Value Graph Spec (V2)</span></a></li></ul></li></ul></nav></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col docItemCol_VOVn"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/SmartPad/docs/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><span class="breadcrumbs__link">Specs</span></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">SmartPad Result Chips + Value Graph Spec (V2)</span></li></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><div class="theme-doc-markdown markdown"><header><h1>SmartPad Result Chips + Value Graph Spec (V2)</h1></header><blockquote>
+<p>Source: <code>docs/Specs/ResultChipsAndValueGraph.spec.md</code></p>
+</blockquote>
+<p>This spec extends Live Result into a full interaction model where results are:</p>
+<ol>
+<li class="">always readable and aligned,</li>
+<li class="">directly manipulable in the editor,</li>
+<li class="">reusable as dependencies without exposing raw reference syntax to end users.</li>
+</ol>
+<p>Core principle:
+Result chips are first-class computational objects, not second-class preview badges.</p>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="0-product-intent">0) Product Intent<a href="#0-product-intent" class="hash-link" aria-label="Direct link to 0) Product Intent" title="Direct link to 0) Product Intent" translate="no">​</a></h2>
+<p>SmartPad should feel like a playable simulation of math, not a static text editor.</p>
+<p>Users should be able to:</p>
+<ol>
+<li class="">read sheets quickly (clear alignment),</li>
+<li class="">build formulas by touching values directly (click/drag/paste chips),</li>
+<li class="">trust dependency behavior when source values change or break.</li>
+</ol>
+<p>Plain explanation:
+Instead of typing abstract references like <code>@L12</code>, people work with visible chips. SmartPad handles hidden linking internally.</p>
+<p>Technical explanation:
+References are stored as structured inline reference nodes tied to stable source line IDs and evaluated via dependency graph edges.</p>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-scope">1) Scope<a href="#1-scope" class="hash-link" aria-label="Direct link to 1) Scope" title="Direct link to 1) Scope" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="in-scope">In scope<a href="#in-scope" class="hash-link" aria-label="Direct link to In scope" title="Direct link to In scope" translate="no">​</a></h3>
+<ol>
+<li class="">Result lane alignment and spacing system.</li>
+<li class="">Chip interaction model (click insert, drag/drop, copy/paste as reference).</li>
+<li class="">Hidden internal references (no visible <code>@L12</code> in SmartPad UI).</li>
+<li class="">Broken-source states and dependency error UX.</li>
+<li class="">Parser/evaluator/dependency graph integration for reference nodes.</li>
+<li class="">Export/import strategy for preserving references.</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="out-of-scope-this-version">Out of scope (this version)<a href="#out-of-scope-this-version" class="hash-link" aria-label="Direct link to Out of scope (this version)" title="Direct link to Out of scope (this version)" translate="no">​</a></h3>
+<ol>
+<li class="">Multiplayer conflict-resolution UX polish.</li>
+<li class="">Formula debugger timeline/replay UI.</li>
+<li class="">AI-assisted formula suggestions.</li>
+</ol>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="2-ux-pillars">2) UX Pillars<a href="#2-ux-pillars" class="hash-link" aria-label="Direct link to 2) UX Pillars" title="Direct link to 2) UX Pillars" translate="no">​</a></h2>
+<ol>
+<li class="">Legibility at speed.</li>
+<li class="">Direct manipulation over symbolic syntax.</li>
+<li class="">Safe failure states with clear recovery.</li>
+<li class="">Equal visual weight for live and explicit results.</li>
+</ol>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="3-feature-overview">3) Feature Overview<a href="#3-feature-overview" class="hash-link" aria-label="Direct link to 3) Feature Overview" title="Direct link to 3) Feature Overview" translate="no">​</a></h2>
+<table><thead><tr><th>Feature</th><th>Plain explanation</th><th>Technical explanation</th></tr></thead><tbody><tr><td>Result Lane</td><td>Results line up in one clean vertical lane, so scanning is instant.</td><td>Desktop editor computes a lane anchor and positions result widgets at a shared x-offset; narrow viewports collapse to inline mode.</td></tr><tr><td>Chip as Value</td><td>You can click/drag/copy a chip into another expression to reuse it.</td><td>Interaction inserts a <code>resultReference</code> inline node with <code>sourceLineId</code>/<code>sourceResultId</code> attrs, not plain text.</td></tr><tr><td>Hidden References</td><td>Users never see raw <code>@L12</code> tokens while editing.</td><td>Internal serialization can use reference keys, but runtime editor view renders only chip nodes.</td></tr><tr><td>Broken Source UX</td><td>If source value breaks, dependent chips show clear &quot;broken link&quot; state.</td><td>Resolver marks reference unresolved with cause code (<code>source_error</code>, <code>missing_source</code>, <code>type_mismatch</code>), and decorator renders stateful chip + inline warning.</td></tr><tr><td>Type-Safe Chaining</td><td>Units/currency/list/number semantics propagate through references.</td><td>Evaluator resolves referenced semantic value before expression evaluation; no lossy string interpolation.</td></tr></tbody></table>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="4-visual-system">4) Visual System<a href="#4-visual-system" class="hash-link" aria-label="Direct link to 4) Visual System" title="Direct link to 4) Visual System" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="41-result-lane-desktop">4.1 Result Lane (Desktop)<a href="#41-result-lane-desktop" class="hash-link" aria-label="Direct link to 4.1 Result Lane (Desktop)" title="Direct link to 4.1 Result Lane (Desktop)" translate="no">​</a></h3>
+<p>Rules:</p>
+<ol>
+<li class="">Input content flows naturally on the left.</li>
+<li class="">Results align to a fixed lane on the right (same x for each line).</li>
+<li class="">If a line is too long, expression wraps before colliding with lane.</li>
+<li class="">Live and explicit outputs render in the same lane style.</li>
+</ol>
+<p>ASCII mock:</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token plain">monthly rent = 2500                              [2,500]</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">phone bill   = 45                                   [45]</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">food = 50/day * 30 days                          [1,500]</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">total cost per month                             [4,045]</span><br></span></code></pre></div></div>
+<p>Spacing/alignment targets:</p>
+<ol>
+<li class="">4px baseline rhythm.</li>
+<li class="">Chip height fixed per typography size.</li>
+<li class="">Minimum 12px gutter between expression end and first chip edge.</li>
+<li class="">Vertical optical alignment anchored to expression baseline midpoint.</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="42-responsive-behavior">4.2 Responsive Behavior<a href="#42-responsive-behavior" class="hash-link" aria-label="Direct link to 4.2 Responsive Behavior" title="Direct link to 4.2 Responsive Behavior" translate="no">​</a></h3>
+<p>On narrow widths, result lane collapses to inline mode:</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token plain">food = 50/day * 30 days [1,500]</span><br></span></code></pre></div></div>
+<p>No behavior change, layout only.</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="43-chip-states-game-feel-inspired">4.3 Chip States (Game-feel inspired)<a href="#43-chip-states-game-feel-inspired" class="hash-link" aria-label="Direct link to 4.3 Chip States (Game-feel inspired)" title="Direct link to 4.3 Chip States (Game-feel inspired)" translate="no">​</a></h3>
+<ol>
+<li class="">Idle: normal chip.</li>
+<li class="">Hover: subtle glow/elevation.</li>
+<li class="">Grabbed: chip follows pointer with ghost origin.</li>
+<li class="">Valid drop target: caret highlight.</li>
+<li class="">Invalid drop target: shake + reject pulse.</li>
+<li class="">Broken reference: warning border + warning icon.</li>
+</ol>
+<p>Plain explanation:
+These micro-states make the feature feel intentional and tactile.</p>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="5-interaction-model">5) Interaction Model<a href="#5-interaction-model" class="hash-link" aria-label="Direct link to 5) Interaction Model" title="Direct link to 5) Interaction Model" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="51-click-to-insert-reference">5.1 Click to insert reference<a href="#51-click-to-insert-reference" class="hash-link" aria-label="Direct link to 5.1 Click to insert reference" title="Direct link to 5.1 Click to insert reference" translate="no">​</a></h3>
+<p>Flow:</p>
+<ol>
+<li class="">User places caret in expression.</li>
+<li class="">User clicks a source result chip.</li>
+<li class="">SmartPad inserts a reference chip token at caret.</li>
+<li class="">If caret is on the same source line as the clicked live result, SmartPad creates a new line and inserts the chip there (prevents self-reference loops).</li>
+</ol>
+<p>User sees:</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token plain">tax = [monthly rent] * 0.15</span><br></span></code></pre></div></div>
+<p>User does not see:</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token plain">tax = @L12 * 0.15</span><br></span></code></pre></div></div>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="52-drag-chip-into-expression">5.2 Drag chip into expression<a href="#52-drag-chip-into-expression" class="hash-link" aria-label="Direct link to 5.2 Drag chip into expression" title="Direct link to 5.2 Drag chip into expression" translate="no">​</a></h3>
+<p>Flow:</p>
+<ol>
+<li class="">Drag source result chip.</li>
+<li class="">Drop into target line.</li>
+<li class="">Reference token inserted at drop position.</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="53-copypaste-chip-as-reference">5.3 Copy/paste chip as reference<a href="#53-copypaste-chip-as-reference" class="hash-link" aria-label="Direct link to 5.3 Copy/paste chip as reference" title="Direct link to 5.3 Copy/paste chip as reference" translate="no">​</a></h3>
+<p>Flow:</p>
+<ol>
+<li class="">Copy selected chip.</li>
+<li class="">Paste into expression.</li>
+<li class="">Insert linked chip reference (not literal text) when destination supports rich format.</li>
+<li class="">For SmartPad text round-trip, serialize as SmartPad reference token (not literal value).</li>
+<li class="">For external plain-text export, behavior follows <code>referenceTextExportMode</code>.</li>
+</ol>
+<p>Guardrails:</p>
+<ol>
+<li class="">Copy interception must apply only when a reference chip node itself is selected.</li>
+<li class="">Normal line/multi-line copy must keep native editor behavior (no single-chip clipboard hijack).</li>
+<li class="">Pasting rich SmartPad content with chips should preserve chips and linked behavior.</li>
+</ol>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="6-broken-dependency-ux-requested-tax-case">6) Broken Dependency UX (Requested &quot;tax&quot; case)<a href="#6-broken-dependency-ux-requested-tax-case" class="hash-link" aria-label="Direct link to 6) Broken Dependency UX (Requested &quot;tax&quot; case)" title="Direct link to 6) Broken Dependency UX (Requested &quot;tax&quot; case)" translate="no">​</a></h2>
+<p>Desired appearance:</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token plain">subtotal = 120                                      [120]</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">tax = [subtotal] * 0.15                              [18]</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain"># source line later breaks:</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">subtotal = 12 / 0                                    [⚠ Division by zero]</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">tax = [subtotal ⚠] * 0.15                            ⚠ source line has error</span><br></span></code></pre></div></div>
+<p>Behavior:</p>
+<ol>
+<li class="">Reference chip turns warning state immediately.</li>
+<li class="">Line result suppression follows current live policy (no noisy cascading stack traces by default).</li>
+<li class="">Inline helper appears: <code>source line has error</code>.</li>
+<li class="">Clicking warning chip jumps to source line.</li>
+</ol>
+<p>Plain explanation:
+If an upstream value breaks, downstream formulas tell you exactly why and where.</p>
+<p>Technical explanation:
+Dependency graph propagates invalidation status with source node metadata; renderer maps it to reference-chip state and contextual message.</p>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="7-internal-data-model">7) Internal Data Model<a href="#7-internal-data-model" class="hash-link" aria-label="Direct link to 7) Internal Data Model" title="Direct link to 7) Internal Data Model" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="71-stable-ids">7.1 Stable IDs<a href="#71-stable-ids" class="hash-link" aria-label="Direct link to 7.1 Stable IDs" title="Direct link to 7.1 Stable IDs" translate="no">​</a></h3>
+<p>Each line has stable <code>lineId</code> (UUID-like) independent of visual line number.</p>
+<p>Why:</p>
+<ol>
+<li class="">Reordering lines must not break references.</li>
+<li class="">Insertions/deletions should preserve links.</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="72-reference-node">7.2 Reference Node<a href="#72-reference-node" class="hash-link" aria-label="Direct link to 7.2 Reference Node" title="Direct link to 7.2 Reference Node" translate="no">​</a></h3>
+<p>New inline AST/editor node:</p>
+<div class="language-ts codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-ts codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token keyword" style="font-style:italic">type</span><span class="token plain"> </span><span class="token class-name" style="color:rgb(255, 203, 107)">ResultReferenceNode</span><span class="token plain"> </span><span class="token operator" style="color:rgb(137, 221, 255)">=</span><span class="token plain"> </span><span class="token punctuation" style="color:rgb(199, 146, 234)">{</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  type</span><span class="token operator" style="color:rgb(137, 221, 255)">:</span><span class="token plain"> </span><span class="token string" style="color:rgb(195, 232, 141)">&quot;resultReference&quot;</span><span class="token punctuation" style="color:rgb(199, 146, 234)">;</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  sourceLineId</span><span class="token operator" style="color:rgb(137, 221, 255)">:</span><span class="token plain"> </span><span class="token builtin" style="color:rgb(130, 170, 255)">string</span><span class="token punctuation" style="color:rgb(199, 146, 234)">;</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  sourceResultSlot</span><span class="token operator" style="color:rgb(137, 221, 255)">:</span><span class="token plain"> </span><span class="token string" style="color:rgb(195, 232, 141)">&quot;primary&quot;</span><span class="token punctuation" style="color:rgb(199, 146, 234)">;</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  fallbackLiteral</span><span class="token operator" style="color:rgb(137, 221, 255)">?</span><span class="token operator" style="color:rgb(137, 221, 255)">:</span><span class="token plain"> </span><span class="token builtin" style="color:rgb(130, 170, 255)">string</span><span class="token punctuation" style="color:rgb(199, 146, 234)">;</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  displayLabel</span><span class="token operator" style="color:rgb(137, 221, 255)">?</span><span class="token operator" style="color:rgb(137, 221, 255)">:</span><span class="token plain"> </span><span class="token builtin" style="color:rgb(130, 170, 255)">string</span><span class="token punctuation" style="color:rgb(199, 146, 234)">;</span><span class="token plain"> </span><span class="token comment" style="color:rgb(105, 112, 152);font-style:italic">// user-facing chip label</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain"></span><span class="token punctuation" style="color:rgb(199, 146, 234)">}</span><span class="token punctuation" style="color:rgb(199, 146, 234)">;</span><br></span></code></pre></div></div>
+<p><code>displayLabel</code> is rendered UI text. <code>sourceLineId</code> is the authority.</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="73-serialization">7.3 Serialization<a href="#73-serialization" class="hash-link" aria-label="Direct link to 7.3 Serialization" title="Direct link to 7.3 Serialization" translate="no">​</a></h3>
+<ol>
+<li class="">SmartPad JSON (save/load): preserve structured node attributes.</li>
+<li class="">Clipboard rich format (SmartPad-aware destinations): preserve structured node.</li>
+<li class="">Text serialization for SmartPad round-trip: preserve references in a SmartPad-readable token syntax.</li>
+<li class="">External plain-text export: user-selectable mode:<!-- -->
+<ul>
+<li class=""><code>preserve</code> (emit SmartPad-readable reference tokens)</li>
+<li class=""><code>readable</code> (emit flattened visible values)</li>
+</ul>
+</li>
+</ol>
+<p>Note:
+Raw symbolic refs are for export/debug tooling, not normal SmartPad editing UI.</p>
+<p>Plain explanation:
+When you save or copy inside SmartPad, links should stay links.<br>
+<!-- -->When you export for humans outside SmartPad, you can choose readable text instead.</p>
+<p>Reference token format policy:</p>
+<ol>
+<li class="">Authority is stable source identity (<code>lineId</code>/result slot) only.</li>
+<li class="">Relative-position syntax (e.g. <code>line-4</code>) is not used as reference authority.</li>
+</ol>
+<p>Example:</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token plain">@ref[lineId=line_mlfrrlf1_a6j5m3;slot=primary]</span><br></span></code></pre></div></div>
+<p>Meaning:</p>
+<ul>
+<li class=""><code>lineId</code> is what SmartPad trusts.</li>
+<li class="">References remain stable across insert/delete/reorder because identity is line-based, not position-based.</li>
+</ul>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="8-system-integration">8) System Integration<a href="#8-system-integration" class="hash-link" aria-label="Direct link to 8) System Integration" title="Direct link to 8) System Integration" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="81-parser--ast">8.1 Parser / AST<a href="#81-parser--ast" class="hash-link" aria-label="Direct link to 8.1 Parser / AST" title="Direct link to 8.1 Parser / AST" translate="no">​</a></h3>
+<ol>
+<li class="">Parse reference tokens as <code>resultReference</code> components.</li>
+<li class="">Keep existing expression parsing semantics unchanged for non-reference content.</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="82-evaluator">8.2 Evaluator<a href="#82-evaluator" class="hash-link" aria-label="Direct link to 8.2 Evaluator" title="Direct link to 8.2 Evaluator" translate="no">​</a></h3>
+<ol>
+<li class="">Resolve each <code>resultReference</code> to semantic value from source line result cache.</li>
+<li class="">Preserve value type (number/unit/currency/date/list/etc).</li>
+<li class="">If source unresolved, emit typed dependency error reason.</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="83-dependency-graph">8.3 Dependency Graph<a href="#83-dependency-graph" class="hash-link" aria-label="Direct link to 8.3 Dependency Graph" title="Direct link to 8.3 Dependency Graph" translate="no">​</a></h3>
+<ol>
+<li class="">Add/maintain reference dependency awareness so target lines re-evaluate when source lines change.</li>
+<li class="">On source failure, propagate invalidation metadata.</li>
+<li class="">Formal explicit edge graph + strict subgraph scheduling are planned for scale stage (see Section 11 policy).</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="84-decorator--rendering">8.4 Decorator / Rendering<a href="#84-decorator--rendering" class="hash-link" aria-label="Direct link to 8.4 Decorator / Rendering" title="Direct link to 8.4 Decorator / Rendering" translate="no">​</a></h3>
+<ol>
+<li class="">Render line result chips in lane or inline mode.</li>
+<li class="">Render inserted reference nodes as inline chips in expression text flow.</li>
+<li class="">Render warning state and helper text for broken references.</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="85-undoredo">8.5 Undo/Redo<a href="#85-undoredo" class="hash-link" aria-label="Direct link to 8.5 Undo/Redo" title="Direct link to 8.5 Undo/Redo" translate="no">​</a></h3>
+<p>Reference insertion/removal must be atomic editor transactions.</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="86-settings">8.6 Settings<a href="#86-settings" class="hash-link" aria-label="Direct link to 8.6 Settings" title="Direct link to 8.6 Settings" translate="no">​</a></h3>
+<p>Add:</p>
+<ol>
+<li class=""><code>resultLaneEnabled</code> (default: true desktop, auto-collapse on narrow widths).</li>
+<li class=""><code>chipInsertMode</code> (default: click inserts reference).</li>
+<li class=""><code>referenceTextExportMode</code> with values:<!-- -->
+<ul>
+<li class=""><code>preserve</code> (default): keep SmartPad stable-ID reference tokens in text copy/export.</li>
+<li class=""><code>readable</code>: flatten references to current visible values.</li>
+</ul>
+</li>
+</ol>
+<p>Plain explanation:
+By default SmartPad keeps references alive when copying/exporting text, so pasted content can come back as real chips later.</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="87-live-result-expansion-rules">8.7 Live Result Expansion Rules<a href="#87-live-result-expansion-rules" class="hash-link" aria-label="Direct link to 8.7 Live Result Expansion Rules" title="Direct link to 8.7 Live Result Expansion Rules" translate="no">​</a></h3>
+<ol>
+<li class="">Live result should render for non-trivial assignment RHS values even without <code>=&gt;</code>.</li>
+<li class="">Non-trivial means: includes math operators, conversion keywords, percentage phrase operators (<code>of/on/off/as/is/per</code>), known variables, or function calls.</li>
+<li class="">Simple literal assignments (e.g. <code>x = 42</code>, <code>tax = 8%</code>, <code>price = $120</code>) do not render live chips by default.</li>
+<li class="">While user is in incomplete comparator/trigger states (e.g. trailing <code>=</code> before typing <code>&gt;</code>), live result is suppressed to avoid placeholder gibberish/noise.</li>
+<li class="">Phrase-based percentage expressions (e.g. <code>discount off base price</code>, <code>tax on final price</code>) bypass unresolved-identifier pre-check and are evaluated directly.</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="88-current-smartpad-touchpoints-implementation-map">8.8 Current SmartPad Touchpoints (Implementation map)<a href="#88-current-smartpad-touchpoints-implementation-map" class="hash-link" aria-label="Direct link to 8.8 Current SmartPad Touchpoints (Implementation map)" title="Direct link to 8.8 Current SmartPad Touchpoints (Implementation map)" translate="no">​</a></h3>
+<p>Expected primary touchpoints in current codebase:</p>
+<ol>
+<li class=""><code>src/components/Editor.tsx</code>
+Evaluates lines, builds render nodes, dispatches <code>evaluationDone</code>.</li>
+<li class=""><code>src/components/ResultsDecoratorExtension.ts</code>
+Renders result widgets and warning/broken states; candidate home for lane placement logic.</li>
+<li class=""><code>src/eval/renderNodes.ts</code>
+Extend render node contracts for reference metadata and broken-reference hints.</li>
+<li class=""><code>src/parsing/*</code> and AST component types
+Add <code>resultReference</code> component parsing/serialization.</li>
+<li class=""><code>src/state/dependencyGraph.ts</code>
+Add explicit edges for reference-node dependencies.</li>
+<li class=""><code>src/state/settingsStore.ts</code> + <code>src/state/types.ts</code>
+Add lane/reference interaction settings.</li>
+<li class="">Export/import pipeline (sheet serialization and clipboard handlers)
+Preserve structured reference nodes in rich format and deterministic fallback in plain text.</li>
+</ol>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="9-interaction-rules-and-edge-cases">9) Interaction Rules and Edge Cases<a href="#9-interaction-rules-and-edge-cases" class="hash-link" aria-label="Direct link to 9) Interaction Rules and Edge Cases" title="Direct link to 9) Interaction Rules and Edge Cases" translate="no">​</a></h2>
+<ol>
+<li class="">Dragging chip into comments/plain text inserts literal text, not reference node.</li>
+<li class="">Dropping onto invalid syntax position shows reject animation and no insert.</li>
+<li class="">Deleting source line marks dependent refs as missing source.</li>
+<li class="">Copying sheet section with both source and dependents should remap links within pasted block when possible.</li>
+<li class="">If remap impossible, keep external link or downgrade to literal based on paste option.</li>
+<li class="">Cycles are detected and shown as cycle errors on participating lines.</li>
+<li class="">Typing intermediate trigger text (e.g. <code>=</code> while building <code>=&gt;</code>) must never surface internal reference placeholders in live UI output.</li>
+</ol>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="10-accessibility">10) Accessibility<a href="#10-accessibility" class="hash-link" aria-label="Direct link to 10) Accessibility" title="Direct link to 10) Accessibility" translate="no">​</a></h2>
+<ol>
+<li class="">Keyboard command for &quot;insert last result reference&quot; at caret.</li>
+<li class="">Reference chips are focusable and announce source label/value.</li>
+<li class="">Broken chips announce error cause and provide keyboard jump-to-source action.</li>
+</ol>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="11-performance-targets">11) Performance Targets<a href="#11-performance-targets" class="hash-link" aria-label="Direct link to 11) Performance Targets" title="Direct link to 11) Performance Targets" translate="no">​</a></h2>
+<p>Current delivery policy:</p>
+<ol>
+<li class="">Maintain acceptable typing responsiveness and correctness for current sheet sizes.</li>
+<li class="">Allow broader reevaluation paths while feature behavior stabilizes.</li>
+<li class="">Defer strict subgraph-only scheduling and hard P95 budgets to scale stage.</li>
+</ol>
+<p>Scale-stage targets (activated when scale signals appear):</p>
+<ol>
+<li class="">Incremental re-eval only for changed line + dependent subgraph.</li>
+<li class="">No full-document re-evaluation on each keypress.</li>
+<li class="">P95 extra UI latency from chip rendering under 8ms for 500-line sheets.</li>
+</ol>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="12-telemetry--product-success-metrics">12) Telemetry / Product Success Metrics<a href="#12-telemetry--product-success-metrics" class="hash-link" aria-label="Direct link to 12) Telemetry / Product Success Metrics" title="Direct link to 12) Telemetry / Product Success Metrics" translate="no">​</a></h2>
+<p>Current delivery policy:</p>
+<ol>
+<li class="">Telemetry wiring is optional during stabilization.</li>
+<li class="">Functional correctness and UX clarity are prioritized first.</li>
+</ol>
+<p>Scale-stage telemetry package:</p>
+<ol>
+<li class=""><code>result_lane_enabled_rate</code></li>
+<li class=""><code>chip_reference_insert_total</code></li>
+<li class=""><code>chip_reference_drag_total</code></li>
+<li class=""><code>chip_reference_paste_total</code></li>
+<li class=""><code>dependency_broken_total</code></li>
+<li class=""><code>broken_ref_recovery_click_total</code></li>
+<li class=""><code>avg_formula_build_time_ms</code> (session-level derived)</li>
+</ol>
+<p>Interpretation goals:</p>
+<ol>
+<li class="">Higher chip insert/drag usage = direct-manipulation adoption.</li>
+<li class="">Lower manual retyping events = less friction.</li>
+<li class="">Faster formula build time = real productivity gain.</li>
+</ol>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="13-rollout-plan">13) Rollout Plan<a href="#13-rollout-plan" class="hash-link" aria-label="Direct link to 13) Rollout Plan" title="Direct link to 13) Rollout Plan" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="phase-1-visual-foundation">Phase 1: Visual foundation<a href="#phase-1-visual-foundation" class="hash-link" aria-label="Direct link to Phase 1: Visual foundation" title="Direct link to Phase 1: Visual foundation" translate="no">​</a></h3>
+<ol>
+<li class="">Result lane + spacing/alignment system.</li>
+<li class="">Unified chip prominence for live and explicit results.</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="phase-2-reference-insertion">Phase 2: Reference insertion<a href="#phase-2-reference-insertion" class="hash-link" aria-label="Direct link to Phase 2: Reference insertion" title="Direct link to Phase 2: Reference insertion" translate="no">​</a></h3>
+<ol>
+<li class="">Click/drag/paste creates hidden reference nodes.</li>
+<li class="">Basic dependency graph links.</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="phase-3-broken-link-resilience">Phase 3: Broken-link resilience<a href="#phase-3-broken-link-resilience" class="hash-link" aria-label="Direct link to Phase 3: Broken-link resilience" title="Direct link to Phase 3: Broken-link resilience" translate="no">​</a></h3>
+<ol>
+<li class="">Broken reference states.</li>
+<li class="">Jump-to-source and recovery actions.</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="phase-4-exportinterop-polish">Phase 4: Export/interop polish<a href="#phase-4-exportinterop-polish" class="hash-link" aria-label="Direct link to Phase 4: Export/interop polish" title="Direct link to Phase 4: Export/interop polish" translate="no">​</a></h3>
+<ol>
+<li class="">Rich clipboard round-trip.</li>
+<li class="">Export mode options (readable vs symbolic).</li>
+</ol>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="14-acceptance-criteria">14) Acceptance Criteria<a href="#14-acceptance-criteria" class="hash-link" aria-label="Direct link to 14) Acceptance Criteria" title="Direct link to 14) Acceptance Criteria" translate="no">​</a></h2>
+<ol>
+<li class="">Users never see raw <code>@Lxx</code> syntax while editing in SmartPad.</li>
+<li class="">Clicking a result chip at a valid caret inserts a reference chip node.</li>
+<li class="">Drag/drop and copy/paste chip references work in rich editor mode.</li>
+<li class="">Reordering lines does not break existing references.</li>
+<li class="">Source error produces broken-state reference chips and clear helper message on dependents.</li>
+<li class="">Result lane aligns chips consistently across long sheets on desktop.</li>
+<li class="">Narrow layout auto-collapses gracefully to inline chips.</li>
+<li class="">Unit/currency references preserve semantic types in downstream calculations.</li>
+<li class="">Undo/redo correctly replays chip insertion/removal.</li>
+<li class="">Performance targets are met on representative large sheets.</li>
+</ol>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="15-example-end-to-end-sheet">15) Example End-to-End Sheet<a href="#15-example-end-to-end-sheet" class="hash-link" aria-label="Direct link to 15) Example End-to-End Sheet" title="Direct link to 15) Example End-to-End Sheet" translate="no">​</a></h2>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token plain">monthly rent = 2500                               [2,500]</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">phone bill = 45                                      [45]</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">food/day = 50                                         [50]</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">food total = [food/day] * 30                       [1,500]</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">monthly total = [monthly rent] + [phone bill] + [food total]    [4,045]</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain"># later, source breaks:</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">food/day = unknownVar + 2                            [⚠ unresolved]</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">food total = [food/day ⚠] * 30                       ⚠ source line has error</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">monthly total = [monthly rent] + [phone bill] + [food total ⚠]  ⚠ source line has error</span><br></span></code></pre></div></div>
+<p>This is the intended &quot;it just makes sense&quot; behavior:</p>
+<ol>
+<li class="">readable,</li>
+<li class="">composable,</li>
+<li class="">resilient.</li>
+</ol></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href="https://github.com/nmaxcom/SmartPad/tree/main/website/docs/specs/resultchipsandvaluegraph.md" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_Z9Sw" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/SmartPad/docs/specs/ranges/"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Range List Generation in Smartpad (Updated Spec — Rudimentary v1 + Extensions)</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#0-product-intent" class="table-of-contents__link toc-highlight">0) Product Intent</a></li><li><a href="#1-scope" class="table-of-contents__link toc-highlight">1) Scope</a><ul><li><a href="#in-scope" class="table-of-contents__link toc-highlight">In scope</a></li><li><a href="#out-of-scope-this-version" class="table-of-contents__link toc-highlight">Out of scope (this version)</a></li></ul></li><li><a href="#2-ux-pillars" class="table-of-contents__link toc-highlight">2) UX Pillars</a></li><li><a href="#3-feature-overview" class="table-of-contents__link toc-highlight">3) Feature Overview</a></li><li><a href="#4-visual-system" class="table-of-contents__link toc-highlight">4) Visual System</a><ul><li><a href="#41-result-lane-desktop" class="table-of-contents__link toc-highlight">4.1 Result Lane (Desktop)</a></li><li><a href="#42-responsive-behavior" class="table-of-contents__link toc-highlight">4.2 Responsive Behavior</a></li><li><a href="#43-chip-states-game-feel-inspired" class="table-of-contents__link toc-highlight">4.3 Chip States (Game-feel inspired)</a></li></ul></li><li><a href="#5-interaction-model" class="table-of-contents__link toc-highlight">5) Interaction Model</a><ul><li><a href="#51-click-to-insert-reference" class="table-of-contents__link toc-highlight">5.1 Click to insert reference</a></li><li><a href="#52-drag-chip-into-expression" class="table-of-contents__link toc-highlight">5.2 Drag chip into expression</a></li><li><a href="#53-copypaste-chip-as-reference" class="table-of-contents__link toc-highlight">5.3 Copy/paste chip as reference</a></li></ul></li><li><a href="#6-broken-dependency-ux-requested-tax-case" class="table-of-contents__link toc-highlight">6) Broken Dependency UX (Requested &quot;tax&quot; case)</a></li><li><a href="#7-internal-data-model" class="table-of-contents__link toc-highlight">7) Internal Data Model</a><ul><li><a href="#71-stable-ids" class="table-of-contents__link toc-highlight">7.1 Stable IDs</a></li><li><a href="#72-reference-node" class="table-of-contents__link toc-highlight">7.2 Reference Node</a></li><li><a href="#73-serialization" class="table-of-contents__link toc-highlight">7.3 Serialization</a></li></ul></li><li><a href="#8-system-integration" class="table-of-contents__link toc-highlight">8) System Integration</a><ul><li><a href="#81-parser--ast" class="table-of-contents__link toc-highlight">8.1 Parser / AST</a></li><li><a href="#82-evaluator" class="table-of-contents__link toc-highlight">8.2 Evaluator</a></li><li><a href="#83-dependency-graph" class="table-of-contents__link toc-highlight">8.3 Dependency Graph</a></li><li><a href="#84-decorator--rendering" class="table-of-contents__link toc-highlight">8.4 Decorator / Rendering</a></li><li><a href="#85-undoredo" class="table-of-contents__link toc-highlight">8.5 Undo/Redo</a></li><li><a href="#86-settings" class="table-of-contents__link toc-highlight">8.6 Settings</a></li><li><a href="#87-live-result-expansion-rules" class="table-of-contents__link toc-highlight">8.7 Live Result Expansion Rules</a></li><li><a href="#88-current-smartpad-touchpoints-implementation-map" class="table-of-contents__link toc-highlight">8.8 Current SmartPad Touchpoints (Implementation map)</a></li></ul></li><li><a href="#9-interaction-rules-and-edge-cases" class="table-of-contents__link toc-highlight">9) Interaction Rules and Edge Cases</a></li><li><a href="#10-accessibility" class="table-of-contents__link toc-highlight">10) Accessibility</a></li><li><a href="#11-performance-targets" class="table-of-contents__link toc-highlight">11) Performance Targets</a></li><li><a href="#12-telemetry--product-success-metrics" class="table-of-contents__link toc-highlight">12) Telemetry / Product Success Metrics</a></li><li><a href="#13-rollout-plan" class="table-of-contents__link toc-highlight">13) Rollout Plan</a><ul><li><a href="#phase-1-visual-foundation" class="table-of-contents__link toc-highlight">Phase 1: Visual foundation</a></li><li><a href="#phase-2-reference-insertion" class="table-of-contents__link toc-highlight">Phase 2: Reference insertion</a></li><li><a href="#phase-3-broken-link-resilience" class="table-of-contents__link toc-highlight">Phase 3: Broken-link resilience</a></li><li><a href="#phase-4-exportinterop-polish" class="table-of-contents__link toc-highlight">Phase 4: Export/interop polish</a></li></ul></li><li><a href="#14-acceptance-criteria" class="table-of-contents__link toc-highlight">14) Acceptance Criteria</a></li><li><a href="#15-example-end-to-end-sheet" class="table-of-contents__link toc-highlight">15) Example End-to-End Sheet</a></li></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Docs</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/SmartPad/docs/">Overview</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Project</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://nmaxcom.github.io/SmartPad/" target="_blank" rel="noopener noreferrer" class="footer__link-item">SmartPad App<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Copyright 2026 SmartPad</div></div></div></footer></div>
+</body>
+</html>

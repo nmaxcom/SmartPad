@@ -5,48 +5,35 @@ Decision ID: DOCS-ARCH-2026-02-14
 
 ## Decision
 
-Use a generated static docs site in `public/docs/` as the current production path.
+Use Docusaurus as the docs UI framework, generated from SmartPad specs.
 
 Specifically:
 - source of truth remains `docs/Specs/*.spec.md`
-- build step `npm run docs:web:build` generates `public/docs/index.html`
-- app header docs link continues to point to `${BASE_URL}docs/`
+- build step `npm run docs:docusaurus:publish-local` generates docs pages and syncs them into `public/docs/`
+- app header docs link continues to point to `${BASE_URL}docs/index.html` (now Docusaurus output)
 
-## Why not Docusaurus now
+## Why we moved now
 
-- Docusaurus introduces new framework/tooling weight and content migration overhead.
-- Current highest risk is docs drift, not docs framework capability.
-- We already ship via Vite static assets; generated `public/docs/` keeps deploy path simple.
-- This path is compatible with current docs/spec/test sync checks.
+- Docs quality and UI consistency became the top user pain point.
+- Docusaurus gives production-grade docs UI, navigation, and layout defaults.
+- We can still keep specs as source-of-truth by generating Docusaurus pages from spec markdown.
+- We can deploy docs through the existing app pipeline by syncing Docusaurus build output into `public/docs/`.
 
-## Why this works now
+## Migration status
 
-- Docs become reproducible from specs instead of manually edited HTML.
-- New specs automatically appear on the public docs page after generation.
-- Per-spec sections and examples are pulled directly from spec source.
+Completed:
+1. Created `/website` Docusaurus scaffold.
+2. Added generator `scripts/generate-docusaurus-docs.js` from specs to `website/docs/specs/`.
+3. Added sync script `scripts/sync-docusaurus-build.js` to copy Docusaurus build into `public/docs/`.
+4. Added root commands for generate/build/sync workflow.
 
-## Migration path to Docusaurus (if needed)
-
-Trigger migration only if one or more become true:
-- we need versioned docs, full-text search, or docs plugin ecosystem
-- we need multi-page IA and richer authoring than generated single-page docs
-- docs contribution workflow requires MDX components
-
-If triggered:
-1. Stand up `/website` Docusaurus scaffold.
-2. Keep spec-derived JSON/markdown generation script as ingestion source.
-3. Move generated content into versioned docs pages.
-4. Update app docs link to hosted docs route.
+Remaining:
+1. Expand docs IA beyond raw spec pages into user-focused guides.
+2. Backfill missing runnable examples and edge cases.
 
 ## Status Update (2026-02-14)
 
-Migration work has started:
-- Added `website/` Docusaurus scaffold in-repo.
-- Added spec-to-Docusaurus content generator: `scripts/generate-docusaurus-docs.js`.
-- Generated initial pages in `website/docs/specs/`.
-
-Current blocker:
-- This environment cannot reach npm registry (`ENOTFOUND registry.npmjs.org`), so Docusaurus dependency install/build could not be validated yet.
+Docusaurus install/build has been validated and local sync to `public/docs/` is working.
 
 ## Constraints and guardrails
 

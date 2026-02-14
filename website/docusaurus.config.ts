@@ -7,10 +7,15 @@ const config: Config = {
   favicon: "img/logo.svg",
   url: "https://nmaxcom.github.io",
   baseUrl: "/SmartPad/docs/",
+  trailingSlash: true,
   organizationName: "nmaxcom",
   projectName: "SmartPad",
   onBrokenLinks: "throw",
-  onBrokenMarkdownLinks: "warn",
+  markdown: {
+    hooks: {
+      onBrokenMarkdownLinks: "warn",
+    },
+  },
   i18n: {
     defaultLocale: "en",
     locales: ["en"],

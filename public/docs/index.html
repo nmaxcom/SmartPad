@@ -1,273 +1,35 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SmartPad Docs</title>
-    <link rel="stylesheet" href="./styles.css" />
-  </head>
-  <body>
-    <header class="hero">
-      <div class="hero-inner">
-        <p class="eyebrow">SmartPad Documentation</p>
-        <h1>Web docs generated from source specs</h1>
-        <p class="subtitle">
-          This page is generated from <code>docs/Specs/*.spec.md</code> so site docs stay aligned with implementation contracts.
-        </p>
-        <p class="subtitle">Generated: 2026-02-14T00:03:41.986Z</p>
-        <div class="hero-actions">
-          <a href="../" class="btn btn-primary">Open SmartPad App</a>
-          <a href="https://github.com/nmaxcom/SmartPad/issues/new?template=bug_report.yml" class="btn btn-secondary" target="_blank" rel="noreferrer">Report a bug</a>
-        </div>
-      </div>
-    </header>
-
-    <main class="content">
-      <nav class="toc">
-        <a href="#overview">Overview</a>
-        <a href="#spec-currency">Currency + FX</a>
-<a href="#spec-duration">Duration</a>
-<a href="#spec-filemanagement">File Management</a>
-<a href="#spec-lists">Lists in Smartpad — single comprehensive document (markdown)</a>
-<a href="#spec-liveresult">Live Result</a>
-<a href="#spec-locale">Date/Time Ranges &amp; Display Spec (Locale-aware, Opinionated, With Tests)</a>
-<a href="#spec-plotting">Interactive Dependency Views (Plotting &amp; Exploration)</a>
-<a href="#spec-ranges">Range List Generation in Smartpad (Updated Spec — Rudimentary v1 + Extensions)</a>
-<a href="#spec-resultchipsandvaluegraph">Result Chips + Value Graph Spec (V2)</a>
-      </nav>
-
-      <section id="overview" class="card">
-        <h2>Overview</h2>
-        <p>
-          This public docs surface is generated, not hand-written. Update specs first, then run
-          <code>npm run docs:web:build</code> to refresh this site content.
-        </p>
-        <p>
-          Total specs included: <strong>9</strong>
-        </p>
-      </section>
-
-      
-      <section id="spec-currency" class="card spec-card">
-        <h2>SmartPad Currency + FX Spec</h2>
-        <p>This spec defines currency as a first-class unit, how FX conversion works, and how manual rate overrides interact with live data. It is written to fit SmartPad&#39;s existing unit math and `to`/`in` conversion rules.</p>
-        <p>
-          <a href="../../docs/Specs/Currency.spec.md">Open source spec</a>
-        </p>
-        <h3>Coverage</h3>
-        <ul><li>0) Goals</li>
-<li>1) Currency units and symbols</li>
-<li>2) Conversion syntax (must use `to` / `in`)</li>
-<li>3) FX conversion behavior</li>
-<li>4) Manual FX overrides (take precedence)</li>
-<li>5) Currency with units (rates)</li>
-<li>6) Formatting and display</li>
-<li>7) Settings indicator (status + provider)</li>
-<li>8) Regular user examples (syntax)</li>
-<li>9) Edge cases and guardrails</li>
-<li>10) Implementation notes (fit with current code)</li></ul>
-        <div class="examples">
-          <h4>Positive example</h4><pre><code>price = $19.99
-price in EUR =&gt; EUR 18.42
-
-rate = CAD 120
-rate in USD =&gt; $88.35
-
-btc = BTC 0.015
-btc in USD =&gt; $937.42</code></pre>
-          <h4>Edge-case example</h4><p>Edge-case example not yet present in source spec.</p>
-        </div>
-      </section>
-
-      <section id="spec-duration" class="card spec-card">
-        <h2>Duration</h2>
-        <p>A `Duration` is a signed sum of component parts (hours/minutes/seconds/etc).</p>
-        <p>
-          <a href="../../docs/Specs/duration.spec.md">Open source spec</a>
-        </p>
-        <h3>Coverage</h3>
-        <ul><li>1) New concept: `Duration` is a first-class value (not just “unit math”)</li>
-<li>2) Time-of-day values: support `Time` as distinct from `DateTime`</li>
-<li>3) Conversions: `to` should work for Duration and Time</li>
-<li>4) DateTime + Duration parsing: accept “duration phrases” without punctuation</li>
-<li>5) Disambiguation + safety rules (stuff that will bite you later)</li>
-<li>6) Concrete expected outputs for your 3 failing lines</li>
-<li>7) Extra examples you probably want tests for (high value)</li></ul>
-        <div class="examples">
-          <h4>Positive example</h4><p>Example not yet added in source spec.</p>
-          <h4>Edge-case example</h4><p>Edge-case example not yet present in source spec.</p>
-        </div>
-      </section>
-
-      <section id="spec-filemanagement" class="card spec-card">
-        <h2>File Management</h2>
-        <p>Build a robust, markdown-based file management system using **IndexedDB** for persistence. It must support multiple sheets, sidebar navigation, and effortless import/export functionality while maintaining a &quot;scratchpad&quot; aesthetic.</p>
-        <p>
-          <a href="../../docs/Specs/FileManagement.spec.md">Open source spec</a>
-        </p>
-        <h3>Coverage</h3>
-        <ul><li>1. Objective</li>
-<li>2. Technical Architecture</li>
-<li>3. User Experience &amp; UI Flow</li>
-<li>4. Functional Requirements</li></ul>
-        <div class="examples">
-          <h4>Positive example</h4><p>Example not yet added in source spec.</p>
-          <h4>Edge-case example</h4><p>Edge-case example not yet present in source spec.</p>
-        </div>
-      </section>
-
-      <section id="spec-lists" class="card spec-card">
-        <h2>Lists in Smartpad — single comprehensive document (markdown)</h2>
-        <p>A **list** is a single value that contains **many values** of the same semantic kind (numbers, currency amounts, lengths, durations, etc.). Lists let users do in one line what they’d otherwise do with:</p>
-        <p>
-          <a href="../../docs/Specs/Lists.spec.md">Open source spec</a>
-        </p>
-        <h3>Coverage</h3>
-        <ul><li>Overview: what a “list” is and why it matters</li>
-<li>What counts as a list</li>
-<li>Limits</li>
-<li>Creating lists</li>
-<li>Display, formatting, and ambiguity rules</li>
-<li>Applying units/currency to whole lists</li>
-<li>Aggregations (reduce list → scalar)</li>
-<li>Indexing and slicing</li>
-<li>Sorting and ordering</li>
-<li>Filtering</li>
-<li>Mapping (element-wise transforms)</li>
-<li>Pairwise operations (zip behavior)</li></ul>
-        <div class="examples">
-          <h4>Positive example</h4><pre><code>xs = 10, 20, 30
-ys = xs[2..2]
-ys =&gt;20
-count(ys) =&gt; 1</code></pre>
-          <h4>Edge-case example</h4><pre><code>x = 20
-count(x) =&gt; ⚠️ Expected list</code></pre>
-        </div>
-      </section>
-
-      <section id="spec-liveresult" class="card spec-card">
-        <h2>SmartPad Live Result Spec</h2>
-        <p>This spec defines `Live result`, a mode where evaluable lines show their result while the user types, without requiring `=&gt;`.</p>
-        <p>
-          <a href="../../docs/Specs/LiveResult.spec.md">Open source spec</a>
-        </p>
-        <h3>Coverage</h3>
-        <ul><li>0) Goals</li>
-<li>1) Setting</li>
-<li>2) Core Behavior</li>
-<li>3) Line Eligibility (What Live Result Should Ignore)</li>
-<li>4) State and Side-Effect Safety</li>
-<li>5) Debounce and Timing</li>
-<li>6) Visual Treatment</li>
-<li>7) Unknown Variables and Incomplete Input</li>
-<li>8) Counters / Observability</li>
-<li>9) Acceptance Criteria</li>
-<li>10) Test Plan</li>
-<li>11) Out of Scope (V1)</li></ul>
-        <div class="examples">
-          <h4>Positive example</h4><p>Example not yet added in source spec.</p>
-          <h4>Edge-case example</h4><p>Edge-case example not yet present in source spec.</p>
-        </div>
-      </section>
-
-      <section id="spec-locale" class="card spec-card">
-        <h2>SmartPad Date/Time Ranges &amp; Display Spec (Locale-aware, Opinionated, With Tests)</h2>
-        <p>This spec resolves current failures and confusion around:</p>
-        <p>
-          <a href="../../docs/Specs/Locale.spec.md">Open source spec</a>
-        </p>
-        <h3>Coverage</h3>
-        <ul><li>1) Range Expression Routing (must happen before date-math and solver)</li>
-<li>2) Range Grammar (natural “step” suffix, not named args)</li>
-<li>3) Locale-Aware Date/Datetime Input Parsing (es-ES)</li>
-<li>4) Date/Time/Datetime Range Semantics</li>
-<li>5) Guardrails (must be a user setting)</li>
-<li>6) Error Normalization (no raw parser leaks for `..`)</li>
-<li>7) Output Formatting (Timezone label + compact display)</li>
-<li>8) Reference Test Set (focused on the reported failures)</li></ul>
-        <div class="examples">
-          <h4>Positive example</h4><pre><code>slots = 01-02-2023 09:00..14-02-2023 11:00 step 64 min =&gt;</code></pre>
-          <h4>Edge-case example</h4><pre><code>period = 2026-01-01..2026-01-05 =&gt;⚠️ Date/time ranges require a duration step (e.g., step 1 day)</code></pre>
-        </div>
-      </section>
-
-      <section id="spec-plotting" class="card spec-card">
-        <h2>Smartpad — Interactive Dependency Views (Plotting &amp; Exploration)</h2>
-        <p>This feature enables **direct, playful exploration of quantitative relationships** inside Smartpad documents.</p>
-        <p>
-          <a href="../../docs/Specs/Plotting.spec.md">Open source spec</a>
-        </p>
-        <h3>Coverage</h3>
-        <ul><li>0. Purpose</li>
-<li>1. Core Philosophy &amp; Non-Negotiables</li>
-<li>2. Mental Model</li>
-<li>3. High-Level UX Flow</li>
-<li>4. Persistent Views (Detached Views)</li>
-<li>5. Mini-Grammar for `@view`</li>
-<li>6. Binding Rules</li>
-<li>7. View Lifecycle States</li>
-<li>8. Domain Inference Rules</li>
-<li>9. Pan &amp; Zoom</li>
-<li>10. Chart Size</li>
-<li>11. Multiple Series &amp; Lists</li></ul>
-        <div class="examples">
-          <h4>Positive example</h4><pre><code>a + b =&gt; 20%</code></pre>
-          <h4>Edge-case example</h4><p>Edge-case example not yet present in source spec.</p>
-        </div>
-      </section>
-
-      <section id="spec-ranges" class="card spec-card">
-        <h2>Range List Generation in Smartpad (Updated Spec — Rudimentary v1 + Extensions)</h2>
-        <p>This spec defines **range-generated lists** (e.g., `1..5`) as an incremental feature to implement before the full list spec, while adding two key unit-related behaviors and a forward-looking plan for date/time ranges.</p>
-        <p>
-          <a href="../../docs/Specs/Ranges.spec.md">Open source spec</a>
-        </p>
-        <h3>Coverage</h3>
-        <ul><li>Overview: what range-generated lists are and why they matter</li>
-<li>Design decision: use `..` (not `to`) for range generation</li>
-<li>Scope</li>
-<li>Syntax</li>
-<li>Semantics &amp; rules (Numeric ranges)</li>
-<li>Postfix `to` on lists (Unit annotation vs conversion)</li>
-<li>Maximum list size guardrail (Setting)</li>
-<li>Composition with existing features</li>
-<li>Proposed extension: date and time ranges</li>
-<li>Minimal test suite summary (Numeric v1 + unit postfix)</li>
-<li>Notes for implementation order (recommended)</li></ul>
-        <div class="examples">
-          <h4>Positive example</h4><pre><code>&lt;start&gt;..&lt;end&gt;
-&lt;start&gt;..&lt;end&gt; step &lt;step&gt;</code></pre>
-          <h4>Edge-case example</h4><pre><code>0..10 step 0 =&gt;⚠️ step cannot be 0</code></pre>
-        </div>
-      </section>
-
-      <section id="spec-resultchipsandvaluegraph" class="card spec-card">
-        <h2>SmartPad Result Chips + Value Graph Spec (V2)</h2>
-        <p>This spec extends Live Result into a full interaction model where results are:</p>
-        <p>
-          <a href="../../docs/Specs/ResultChipsAndValueGraph.spec.md">Open source spec</a>
-        </p>
-        <h3>Coverage</h3>
-        <ul><li>0) Product Intent</li>
-<li>1) Scope</li>
-<li>2) UX Pillars</li>
-<li>3) Feature Overview</li>
-<li>4) Visual System</li>
-<li>5) Interaction Model</li>
-<li>6) Broken Dependency UX (Requested &quot;tax&quot; case)</li>
-<li>7) Internal Data Model</li>
-<li>8) System Integration</li>
-<li>9) Interaction Rules and Edge Cases</li>
-<li>10) Accessibility</li>
-<li>11) Performance Targets</li></ul>
-        <div class="examples">
-          <h4>Positive example</h4><pre><code>monthly rent = 2500                              [2,500]
-phone bill   = 45                                   [45]
-food = 50/day * 30 days                          [1,500]
-total cost per month                             [4,045]</code></pre>
-          <h4>Edge-case example</h4><p>Edge-case example not yet present in source spec.</p>
-        </div>
-      </section>
-    </main>
-  </body>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-intro" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.9.2">
+<title data-rh="true">SmartPad Documentation | SmartPad Docs</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://nmaxcom.github.io/SmartPad/docs/img/logo.svg"><meta data-rh="true" name="twitter:image" content="https://nmaxcom.github.io/SmartPad/docs/img/logo.svg"><meta data-rh="true" property="og:url" content="https://nmaxcom.github.io/SmartPad/docs/"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="SmartPad Documentation | SmartPad Docs"><meta data-rh="true" name="description" content="This docs site is powered by Docusaurus and generated from SmartPad specs."><meta data-rh="true" property="og:description" content="This docs site is powered by Docusaurus and generated from SmartPad specs."><link data-rh="true" rel="icon" href="/SmartPad/docs/img/logo.svg"><link data-rh="true" rel="canonical" href="https://nmaxcom.github.io/SmartPad/docs/"><link data-rh="true" rel="alternate" href="https://nmaxcom.github.io/SmartPad/docs/" hreflang="en"><link data-rh="true" rel="alternate" href="https://nmaxcom.github.io/SmartPad/docs/" hreflang="x-default"><script data-rh="true">function insertBanner(){var n=document.createElement("div");n.id="__docusaurus-base-url-issue-banner-container";n.innerHTML='\n<div id="__docusaurus-base-url-issue-banner" style="border: thick solid red; background-color: rgb(255, 230, 179); margin: 20px; padding: 20px; font-size: 20px;">\n   <p style="font-weight: bold; font-size: 30px;">Your Docusaurus site did not load properly.</p>\n   <p>A very common reason is a wrong site <a href="https://docusaurus.io/docs/docusaurus.config.js/#baseUrl" style="font-weight: bold;">baseUrl configuration</a>.</p>\n   <p>Current configured baseUrl = <span style="font-weight: bold; color: red;">/SmartPad/docs/</span> </p>\n   <p>We suggest trying baseUrl = <span id="__docusaurus-base-url-issue-banner-suggestion-container" style="font-weight: bold; color: green;"></span></p>\n</div>\n',document.body.prepend(n);var e=document.getElementById("__docusaurus-base-url-issue-banner-suggestion-container"),s=window.location.pathname,o="/"===s.substr(-1)?s:s+"/";e.innerHTML=o}document.addEventListener("DOMContentLoaded",function(){void 0===window.docusaurus&&insertBanner()})</script><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"SmartPad Documentation","item":"https://nmaxcom.github.io/SmartPad/docs/"}]}</script><link rel="stylesheet" href="/SmartPad/docs/assets/css/styles.95fa99d2.css">
+<script src="/SmartPad/docs/assets/js/runtime~main.a5189fce.js" defer="defer"></script>
+<script src="/SmartPad/docs/assets/js/main.c8bf95db.js" defer="defer"></script>
+</head>
+<body class="navigation-with-keyboard">
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||"light"),document.documentElement.setAttribute("data-theme-choice",t||"light")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/SmartPad/docs/"><b class="navbar__title text--truncate">SmartPad Docs</b></a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/SmartPad/docs/">Docs</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href="https://github.com/nmaxcom/SmartPad" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" href="/SmartPad/docs/"><span title="SmartPad Documentation" class="linkLabel_WmDU">SmartPad Documentation</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/SmartPad/docs/specs/currency/"><span title="Specs" class="categoryLinkLabel_W154">Specs</span></a></div></li></ul></nav></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col docItemCol_VOVn"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/SmartPad/docs/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">SmartPad Documentation</span></li></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><div class="theme-doc-markdown markdown"><header><h1>SmartPad Documentation</h1></header>
+<p>This docs site is powered by Docusaurus and generated from SmartPad specs.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="local-workflow">Local workflow<a href="#local-workflow" class="hash-link" aria-label="Direct link to Local workflow" title="Direct link to Local workflow" translate="no">​</a></h2>
+<ol>
+<li class="">Generate docs pages from specs:</li>
+</ol>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token plain">npm run docs:docusaurus:generate</span><br></span></code></pre></div></div>
+<ol start="2">
+<li class="">Install docs dependencies:</li>
+</ol>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token plain">npm --prefix website install</span><br></span></code></pre></div></div>
+<ol start="3">
+<li class="">Run docs site:</li>
+</ol>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token plain">npm run docs:docusaurus:dev</span><br></span></code></pre></div></div>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="source-of-truth">Source of truth<a href="#source-of-truth" class="hash-link" aria-label="Direct link to Source of truth" title="Direct link to Source of truth" translate="no">​</a></h2>
+<ul>
+<li class="">Feature contracts live in <code>docs/Specs/*.spec.md</code>.</li>
+<li class="">Docusaurus pages in <code>website/docs/specs/</code> are generated from those specs.</li>
+</ul></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href="https://github.com/nmaxcom/SmartPad/tree/main/website/docs/intro.md" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_Z9Sw" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--next" href="/SmartPad/docs/specs/currency/"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">SmartPad Currency + FX Spec</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#local-workflow" class="table-of-contents__link toc-highlight">Local workflow</a></li><li><a href="#source-of-truth" class="table-of-contents__link toc-highlight">Source of truth</a></li></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Docs</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/SmartPad/docs/">Overview</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Project</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://nmaxcom.github.io/SmartPad/" target="_blank" rel="noopener noreferrer" class="footer__link-item">SmartPad App<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Copyright 2026 SmartPad</div></div></div></footer></div>
+</body>
 </html>

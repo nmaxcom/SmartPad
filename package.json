@@ -20,6 +20,8 @@
     "docs:docusaurus:generate": "node scripts/generate-docusaurus-docs.js",
     "docs:docusaurus:dev": "npm --prefix website run start",
     "docs:docusaurus:build": "npm --prefix website run build",
+    "docs:docusaurus:sync": "node scripts/sync-docusaurus-build.js",
+    "docs:docusaurus:publish-local": "npm run docs:docusaurus:generate && npm run docs:docusaurus:build && npm run docs:docusaurus:sync",
     "docs:review": "node scripts/docs-review.js",
     "docs:drift": "node scripts/docs-drift-check.js",
     "docs:map": "node scripts/spec-map-coverage-check.js",

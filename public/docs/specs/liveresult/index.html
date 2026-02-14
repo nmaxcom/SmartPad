@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-specs/liveresult" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.9.2">
+<title data-rh="true">SmartPad Live Result Spec | SmartPad Docs</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://nmaxcom.github.io/SmartPad/docs/img/logo.svg"><meta data-rh="true" name="twitter:image" content="https://nmaxcom.github.io/SmartPad/docs/img/logo.svg"><meta data-rh="true" property="og:url" content="https://nmaxcom.github.io/SmartPad/docs/specs/liveresult/"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="SmartPad Live Result Spec | SmartPad Docs"><meta data-rh="true" name="description" content="This spec defines `Live result`, a mode where evaluable lines show their result while the user types, without requiring `=&gt;`."><meta data-rh="true" property="og:description" content="This spec defines `Live result`, a mode where evaluable lines show their result while the user types, without requiring `=&gt;`."><link data-rh="true" rel="icon" href="/SmartPad/docs/img/logo.svg"><link data-rh="true" rel="canonical" href="https://nmaxcom.github.io/SmartPad/docs/specs/liveresult/"><link data-rh="true" rel="alternate" href="https://nmaxcom.github.io/SmartPad/docs/specs/liveresult/" hreflang="en"><link data-rh="true" rel="alternate" href="https://nmaxcom.github.io/SmartPad/docs/specs/liveresult/" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"SmartPad Live Result Spec","item":"https://nmaxcom.github.io/SmartPad/docs/specs/liveresult"}]}</script><link rel="stylesheet" href="/SmartPad/docs/assets/css/styles.95fa99d2.css">
+<script src="/SmartPad/docs/assets/js/runtime~main.a5189fce.js" defer="defer"></script>
+<script src="/SmartPad/docs/assets/js/main.c8bf95db.js" defer="defer"></script>
+</head>
+<body class="navigation-with-keyboard">
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||"light"),document.documentElement.setAttribute("data-theme-choice",t||"light")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/SmartPad/docs/"><b class="navbar__title text--truncate">SmartPad Docs</b></a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/SmartPad/docs/">Docs</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href="https://github.com/nmaxcom/SmartPad" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/SmartPad/docs/"><span title="SmartPad Documentation" class="linkLabel_WmDU">SmartPad Documentation</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role="button" aria-expanded="true" href="/SmartPad/docs/specs/currency/"><span title="Specs" class="categoryLinkLabel_W154">Specs</span></a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/SmartPad/docs/specs/currency/"><span title="SmartPad Currency + FX Spec" class="linkLabel_WmDU">SmartPad Currency + FX Spec</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/SmartPad/docs/specs/duration/"><span title="duration" class="linkLabel_WmDU">duration</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/SmartPad/docs/specs/filemanagement/"><span title="FileManagement" class="linkLabel_WmDU">FileManagement</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/SmartPad/docs/specs/lists/"><span title="Lists in Smartpad — single comprehensive document (markdown)" class="linkLabel_WmDU">Lists in Smartpad — single comprehensive document (markdown)</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/SmartPad/docs/specs/liveresult/"><span title="SmartPad Live Result Spec" class="linkLabel_WmDU">SmartPad Live Result Spec</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/SmartPad/docs/specs/locale/"><span title="SmartPad Date/Time Ranges &amp; Display Spec (Locale-aware, Opinionated, With Tests)" class="linkLabel_WmDU">SmartPad Date/Time Ranges &amp; Display Spec (Locale-aware, Opinionated, With Tests)</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/SmartPad/docs/specs/plotting/"><span title="Smartpad — Interactive Dependency Views (Plotting &amp; Exploration)" class="linkLabel_WmDU">Smartpad — Interactive Dependency Views (Plotting &amp; Exploration)</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/SmartPad/docs/specs/ranges/"><span title="Range List Generation in Smartpad (Updated Spec — Rudimentary v1 + Extensions)" class="linkLabel_WmDU">Range List Generation in Smartpad (Updated Spec — Rudimentary v1 + Extensions)</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/SmartPad/docs/specs/resultchipsandvaluegraph/"><span title="SmartPad Result Chips + Value Graph Spec (V2)" class="linkLabel_WmDU">SmartPad Result Chips + Value Graph Spec (V2)</span></a></li></ul></li></ul></nav></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col docItemCol_VOVn"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/SmartPad/docs/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><span class="breadcrumbs__link">Specs</span></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">SmartPad Live Result Spec</span></li></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><div class="theme-doc-markdown markdown"><header><h1>SmartPad Live Result Spec</h1></header><blockquote>
+<p>Source: <code>docs/Specs/LiveResult.spec.md</code></p>
+</blockquote>
+<p>This spec defines <code>Live result</code>, a mode where evaluable lines show their result while the user types, without requiring <code>=&gt;</code>.</p>
+<p>The intent is to reduce repetitive <code>=&gt;</code> usage for common calculations while preserving explicit-trigger behavior for workflows that rely on <code>=&gt;</code> (for example, explicit error surfacing and solve/equation flows).</p>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="0-goals">0) Goals<a href="#0-goals" class="hash-link" aria-label="Direct link to 0) Goals" title="Direct link to 0) Goals" translate="no">​</a></h2>
+<ol>
+<li class="">Show results for common evaluable lines without needing <code>=&gt;</code>.</li>
+<li class="">Keep <code>=&gt;</code> behavior fully intact and authoritative.</li>
+<li class="">Avoid noisy UX while typing by suppressing live errors.</li>
+<li class="">Keep performance and rendering stable by reusing existing debounce behavior.</li>
+<li class="">Add counters so we can observe how often Live result helps vs gets suppressed.</li>
+</ol>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-setting">1) Setting<a href="#1-setting" class="hash-link" aria-label="Direct link to 1) Setting" title="Direct link to 1) Setting" translate="no">​</a></h2>
+<ul>
+<li class="">Add a boolean setting: <code>liveResultEnabled</code>.</li>
+<li class="">Default: <code>true</code>.</li>
+<li class="">Scope: user/app setting (same level as other evaluation display settings).</li>
+</ul>
+<p>Plain meaning:</p>
+<ul>
+<li class="">Users get Live result out of the box.</li>
+<li class="">If they prefer current behavior, they can turn it off.</li>
+</ul>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="2-core-behavior">2) Core Behavior<a href="#2-core-behavior" class="hash-link" aria-label="Direct link to 2) Core Behavior" title="Direct link to 2) Core Behavior" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="21-trigger-rule">2.1 Trigger rule<a href="#21-trigger-rule" class="hash-link" aria-label="Direct link to 2.1 Trigger rule" title="Direct link to 2.1 Trigger rule" translate="no">​</a></h3>
+<p>Technical:</p>
+<ul>
+<li class="">Live result is considered only for lines <strong>without</strong> <code>=&gt;</code>.</li>
+</ul>
+<p>Plain:</p>
+<ul>
+<li class="">If the user already typed <code>=&gt;</code>, that line is handled the normal way only.</li>
+</ul>
+<p>Example:</p>
+<ul>
+<li class=""><code>3*4</code> -&gt; Live result can show <code>12</code>.</li>
+<li class=""><code>3*4 =&gt;</code> -&gt; only explicit result is shown.</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="22-success-only-rendering">2.2 Success-only rendering<a href="#22-success-only-rendering" class="hash-link" aria-label="Direct link to 2.2 Success-only rendering" title="Direct link to 2.2 Success-only rendering" translate="no">​</a></h3>
+<p>Technical:</p>
+<ul>
+<li class="">Render live output only when evaluation returns a concrete successful result.</li>
+<li class="">Do not render live output for parse/runtime/unresolved/incomplete states.</li>
+</ul>
+<p>Plain:</p>
+<ul>
+<li class="">Show answers, hide problems while typing.</li>
+</ul>
+<p>Examples:</p>
+<ul>
+<li class=""><code>4lb to kg</code> -&gt; show converted result.</li>
+<li class=""><code>4lb to</code> -&gt; show nothing (not yet complete).</li>
+<li class=""><code>unknownVar + 2</code> -&gt; show nothing (not resolvable yet).</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="23-keep-explicit--semantics">2.3 Keep explicit <code>=&gt;</code> semantics<a href="#23-keep-explicit--semantics" class="hash-link" aria-label="Direct link to 23-keep-explicit--semantics" title="Direct link to 23-keep-explicit--semantics" translate="no">​</a></h3>
+<p>Technical:</p>
+<ul>
+<li class="">Explicit trigger path remains unchanged (including current error/solve behaviors).</li>
+</ul>
+<p>Plain:</p>
+<ul>
+<li class=""><code>=&gt;</code> still behaves exactly like today and still shows errors when explicitly requested.</li>
+</ul>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="3-line-eligibility-what-live-result-should-ignore">3) Line Eligibility (What Live Result Should Ignore)<a href="#3-line-eligibility-what-live-result-should-ignore" class="hash-link" aria-label="Direct link to 3) Line Eligibility (What Live Result Should Ignore)" title="Direct link to 3) Line Eligibility (What Live Result Should Ignore)" translate="no">​</a></h2>
+<p>Technical:</p>
+<ul>
+<li class="">Exclude lines that are clearly non-expression content (plain text/comments/directives).</li>
+<li class="">Exclude lines where adding live output would create duplicate rendering on the same line.</li>
+</ul>
+<p>Plain:</p>
+<ul>
+<li class="">Do not compute notes.</li>
+<li class="">Do not show two answers on one line.</li>
+</ul>
+<p>Examples:</p>
+<ul>
+<li class=""><code>buy milk</code> -&gt; no live result.</li>
+<li class=""><code># todo</code> -&gt; no live result.</li>
+<li class=""><code>2+2 =&gt;</code> -&gt; no extra live result layered on top.</li>
+</ul>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="4-state-and-side-effect-safety">4) State and Side-Effect Safety<a href="#4-state-and-side-effect-safety" class="hash-link" aria-label="Direct link to 4) State and Side-Effect Safety" title="Direct link to 4) State and Side-Effect Safety" translate="no">​</a></h2>
+<p>Technical:</p>
+<ul>
+<li class="">Live result evaluation must not introduce new state mutations outside existing behavior.</li>
+<li class="">Preserve current assignment semantics exactly; do not change write timing because of live preview.</li>
+</ul>
+<p>Plain:</p>
+<ul>
+<li class="">Live result is for display, not for secretly changing app data.</li>
+<li class="">If assignment behavior already exists in current pipeline, keep it as-is; Live result must not make it earlier/later/different.</li>
+</ul>
+<p>Examples:</p>
+<ul>
+<li class="">Typing <code>2+3</code> should only show <code>5</code>, not create/update variables.</li>
+<li class="">If current non-<code>=&gt;</code> assignment flow already stores <code>x = 5</code>, keep that behavior; Live result must not alter that contract.</li>
+</ul>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="5-debounce-and-timing">5) Debounce and Timing<a href="#5-debounce-and-timing" class="hash-link" aria-label="Direct link to 5) Debounce and Timing" title="Direct link to 5) Debounce and Timing" translate="no">​</a></h2>
+<p>Technical:</p>
+<ul>
+<li class="">Reuse the same debounce mechanism and timing used by current result updates during typing.</li>
+</ul>
+<p>Plain:</p>
+<ul>
+<li class="">Live result should feel like existing edit-to-result responsiveness users already know.</li>
+</ul>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="6-visual-treatment">6) Visual Treatment<a href="#6-visual-treatment" class="hash-link" aria-label="Direct link to 6) Visual Treatment" title="Direct link to 6) Visual Treatment" translate="no">​</a></h2>
+<p>Technical:</p>
+<ul>
+<li class="">Live result uses a distinct color token from explicit result output.</li>
+<li class="">No extra badge/label in V1.</li>
+</ul>
+<p>Plain:</p>
+<ul>
+<li class="">Same answer area, slightly different color so users can tell &quot;preview while typing&quot; from explicit <code>=&gt;</code>.</li>
+</ul>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="7-unknown-variables-and-incomplete-input">7) Unknown Variables and Incomplete Input<a href="#7-unknown-variables-and-incomplete-input" class="hash-link" aria-label="Direct link to 7) Unknown Variables and Incomplete Input" title="Direct link to 7) Unknown Variables and Incomplete Input" translate="no">​</a></h2>
+<p>Technical:</p>
+<ul>
+<li class="">Unknown/unresolved identifiers in live mode should suppress output (not show error).</li>
+<li class="">Incomplete syntax should suppress output.</li>
+</ul>
+<p>Plain:</p>
+<ul>
+<li class="">If the line is unfinished or missing definitions, stay quiet until it becomes valid.</li>
+</ul>
+<p>Examples:</p>
+<ul>
+<li class=""><code>a+b</code> when <code>a</code> is undefined -&gt; no live result.</li>
+<li class=""><code>(3+</code> -&gt; no live result.</li>
+<li class=""><code>9L/min * 18 min</code> -&gt; show <code>162 L</code> when complete.</li>
+</ul>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="8-counters--observability">8) Counters / Observability<a href="#8-counters--observability" class="hash-link" aria-label="Direct link to 8) Counters / Observability" title="Direct link to 8) Counters / Observability" translate="no">​</a></h2>
+<p>Add counters for behavior and tuning:</p>
+<ol>
+<li class=""><code>live_result_evaluated_total</code></li>
+<li class=""><code>live_result_rendered_total</code></li>
+<li class=""><code>live_result_suppressed_plaintext_total</code></li>
+<li class=""><code>live_result_suppressed_incomplete_total</code></li>
+<li class=""><code>live_result_suppressed_error_total</code></li>
+<li class=""><code>live_result_suppressed_unresolved_total</code></li>
+<li class=""><code>live_result_eval_ms</code> (timer/histogram/avg)</li>
+</ol>
+<p>Plain:</p>
+<ul>
+<li class="">These tell us if the feature is helpful, too strict, noisy, or slow.</li>
+</ul>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="9-acceptance-criteria">9) Acceptance Criteria<a href="#9-acceptance-criteria" class="hash-link" aria-label="Direct link to 9) Acceptance Criteria" title="Direct link to 9) Acceptance Criteria" translate="no">​</a></h2>
+<ol>
+<li class="">With <code>liveResultEnabled = true</code>, <code>3</code> shows a live result <code>3</code>.</li>
+<li class="">With <code>liveResultEnabled = true</code>, <code>3*4</code> shows <code>12</code> without <code>=&gt;</code>.</li>
+<li class="">With <code>liveResultEnabled = true</code>, <code>4lb to kg</code> shows live converted value.</li>
+<li class=""><code>3*</code> shows no live output and no live error.</li>
+<li class=""><code>unknownVar + 1</code> shows no live output and no live error.</li>
+<li class=""><code>2+2 =&gt;</code> shows only explicit result style/output (no double render).</li>
+<li class="">Turning setting off disables all live previews.</li>
+<li class="">Live result color differs from explicit result color.</li>
+<li class="">Debounce behavior matches existing typing/result cadence.</li>
+<li class="">Counters increment on expected paths (rendered vs suppression reasons).</li>
+</ol>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="10-test-plan">10) Test Plan<a href="#10-test-plan" class="hash-link" aria-label="Direct link to 10) Test Plan" title="Direct link to 10) Test Plan" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="101-unit-tests">10.1 Unit tests<a href="#101-unit-tests" class="hash-link" aria-label="Direct link to 10.1 Unit tests" title="Direct link to 10.1 Unit tests" translate="no">​</a></h3>
+<ol>
+<li class="">Eligibility classification (expression vs plaintext/comment/directive).</li>
+<li class="">Suppression reasons:<!-- -->
+<ul>
+<li class="">incomplete input</li>
+<li class="">unresolved identifier</li>
+<li class="">evaluation error</li>
+</ul>
+</li>
+<li class="">Success-path rendering for plain math and unit conversion expressions.</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="102-integration-tests">10.2 Integration tests<a href="#102-integration-tests" class="hash-link" aria-label="Direct link to 10.2 Integration tests" title="Direct link to 10.2 Integration tests" translate="no">​</a></h3>
+<ol>
+<li class="">End-to-end typing flow with debounce.</li>
+<li class="">No double-render on lines with explicit <code>=&gt;</code>.</li>
+<li class="">Toggle on/off behavior.</li>
+<li class="">Visual token application for live-result color.</li>
+<li class="">Counter increments for render and suppression reasons.</li>
+</ol>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="11-out-of-scope-v1">11) Out of Scope (V1)<a href="#11-out-of-scope-v1" class="hash-link" aria-label="Direct link to 11) Out of Scope (V1)" title="Direct link to 11) Out of Scope (V1)" translate="no">​</a></h2>
+<ol>
+<li class="">Live error visualization.</li>
+<li class="">Additional preview badges/tooltips.</li>
+<li class="">Changes to explicit <code>=&gt;</code> semantics.</li>
+<li class="">Behavior changes to assignment persistence model.</li>
+</ol></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href="https://github.com/nmaxcom/SmartPad/tree/main/website/docs/specs/liveresult.md" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_Z9Sw" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/SmartPad/docs/specs/lists/"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Lists in Smartpad — single comprehensive document (markdown)</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/SmartPad/docs/specs/locale/"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">SmartPad Date/Time Ranges &amp; Display Spec (Locale-aware, Opinionated, With Tests)</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#0-goals" class="table-of-contents__link toc-highlight">0) Goals</a></li><li><a href="#1-setting" class="table-of-contents__link toc-highlight">1) Setting</a></li><li><a href="#2-core-behavior" class="table-of-contents__link toc-highlight">2) Core Behavior</a><ul><li><a href="#21-trigger-rule" class="table-of-contents__link toc-highlight">2.1 Trigger rule</a></li><li><a href="#22-success-only-rendering" class="table-of-contents__link toc-highlight">2.2 Success-only rendering</a></li><li><a href="#23-keep-explicit--semantics" class="table-of-contents__link toc-highlight">2.3 Keep explicit <code>=&gt;</code> semantics</a></li></ul></li><li><a href="#3-line-eligibility-what-live-result-should-ignore" class="table-of-contents__link toc-highlight">3) Line Eligibility (What Live Result Should Ignore)</a></li><li><a href="#4-state-and-side-effect-safety" class="table-of-contents__link toc-highlight">4) State and Side-Effect Safety</a></li><li><a href="#5-debounce-and-timing" class="table-of-contents__link toc-highlight">5) Debounce and Timing</a></li><li><a href="#6-visual-treatment" class="table-of-contents__link toc-highlight">6) Visual Treatment</a></li><li><a href="#7-unknown-variables-and-incomplete-input" class="table-of-contents__link toc-highlight">7) Unknown Variables and Incomplete Input</a></li><li><a href="#8-counters--observability" class="table-of-contents__link toc-highlight">8) Counters / Observability</a></li><li><a href="#9-acceptance-criteria" class="table-of-contents__link toc-highlight">9) Acceptance Criteria</a></li><li><a href="#10-test-plan" class="table-of-contents__link toc-highlight">10) Test Plan</a><ul><li><a href="#101-unit-tests" class="table-of-contents__link toc-highlight">10.1 Unit tests</a></li><li><a href="#102-integration-tests" class="table-of-contents__link toc-highlight">10.2 Integration tests</a></li></ul></li><li><a href="#11-out-of-scope-v1" class="table-of-contents__link toc-highlight">11) Out of Scope (V1)</a></li></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Docs</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/SmartPad/docs/">Overview</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Project</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://nmaxcom.github.io/SmartPad/" target="_blank" rel="noopener noreferrer" class="footer__link-item">SmartPad App<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Copyright 2026 SmartPad</div></div></div></footer></div>
+</body>
+</html>
