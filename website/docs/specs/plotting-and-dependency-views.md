@@ -12,7 +12,7 @@ Specifies exploratory plotting, detached views, and dependency-driven visualizat
 ## Quick examples
 
 ### Happy path
-```text
+```smartpad
 a + b => 20%
 ```
 

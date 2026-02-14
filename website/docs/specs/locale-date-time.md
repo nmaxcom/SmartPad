@@ -12,12 +12,12 @@ Defines locale-aware date parsing, date/time ranges, output formatting, and erro
 ## Quick examples
 
 ### Happy path
-```text
+```smartpad
 slots = 01-02-2023 09:00..14-02-2023 11:00 step 64 min =>
 ```
 
 ### Edge case
-```text
+```smartpad
 period = 2026-01-01..2026-01-05 =>⚠️ Date/time ranges require a duration step (e.g., step 1 day)
 ```
 

@@ -16,6 +16,7 @@ Primary goals:
 5. If execution can proceed safely, implement first and report results.
 6. When asked "what is pending", answer from the journal's Pending Index.
 7. Auto-commit completed logical work by default unless user says to hold commits.
+8. Commit only assistant-authored changes for the current task; do not include unrelated dirty files unless user explicitly requests it.
 
 ## Todo Writing Standard (Mandatory)
 When creating or editing items in `docs/TODO_BACKLOG.md`, avoid vague wording.

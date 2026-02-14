@@ -141,14 +141,14 @@ const renderExampleSection = (examples) => {
   const lines = ["## Quick examples", ""];
   if (examples.positive) {
     lines.push("### Happy path");
-    lines.push("```text");
+    lines.push("```smartpad");
     lines.push(examples.positive);
     lines.push("```");
     lines.push("");
   }
   if (examples.edgeCase) {
     lines.push("### Edge case");
-    lines.push("```text");
+    lines.push("```smartpad");
     lines.push(examples.edgeCase);
     lines.push("```");
     lines.push("");

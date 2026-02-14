@@ -78,6 +78,7 @@ Do this automatically; user should not have to request it.
 - Commit by default after each meaningful completed unit of work.
 - Use scoped commit messages that describe intent.
 - If unrelated dirty changes are present, commit only touched files for the current task.
+- Never include files the assistant did not modify in the current task unless the user explicitly asks.
 - Skip auto-commit only when user explicitly asks to review first or hold commits.
 
 ## Docs Triggers

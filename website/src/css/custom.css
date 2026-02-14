@@ -18,3 +18,39 @@
 .theme-doc-markdown h3 {
   letter-spacing: -0.01em;
 }
+
+.language-smartpad .token.variable {
+  color: #25dbc7;
+  font-weight: 700;
+}
+
+.language-smartpad .token.result {
+  color: #ffd166;
+  font-weight: 700;
+}
+
+.language-smartpad .token.operator {
+  color: #ffe082;
+}
+
+.language-smartpad .token.keyword {
+  color: #ffb36b;
+  font-weight: 600;
+}
+
+.language-smartpad .token.currency {
+  color: #90f2b1;
+}
+
+.language-smartpad .token.number {
+  color: #c7a6ff;
+}
+
+.language-smartpad .token.unit {
+  color: #7db6ff;
+}
+
+.language-smartpad .token.warning {
+  color: #ff8b8b;
+  font-weight: 700;
+}

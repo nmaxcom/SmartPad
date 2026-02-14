@@ -12,13 +12,13 @@ Defines numeric and date/time range generation, step rules, guardrails, and list
 ## Quick examples
 
 ### Happy path
-```text
+```smartpad
 <start>..<end>
 <start>..<end> step <step>
 ```
 
 ### Edge case
-```text
+```smartpad
 0..10 step 0 =>⚠️ step cannot be 0
 ```
 

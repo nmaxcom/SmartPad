@@ -12,7 +12,7 @@ Defines chip interactions, hidden references, dependency behavior, and result-la
 ## Quick examples
 
 ### Happy path
-```text
+```smartpad
 monthly rent = 2500                              [2,500]
 phone bill   = 45                                   [45]
 food = 50/day * 30 days                          [1,500]

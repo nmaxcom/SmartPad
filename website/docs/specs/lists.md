@@ -12,7 +12,7 @@ Defines list creation, aggregations, filtering, mapping, sorting, indexing, and 
 ## Quick examples
 
 ### Happy path
-```text
+```smartpad
 xs = 10, 20, 30
 ys = xs[2..2]
 ys =>20
@@ -20,7 +20,7 @@ count(ys) => 1
 ```
 
 ### Edge case
-```text
+```smartpad
 x = 20
 count(x) => ⚠️ Expected list
 ```

@@ -752,3 +752,37 @@
     *   Added `T-2026-02-14-07`.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-14-15
+
+*   Timestamp: 2026-02-14 03:03:16 CET / 2026-02-14 02:03:16 UTC
+*   Summary:
+    *   User requested implementation of docs example highlighting.
+    *   Assistant implemented syntax-aware highlighting using a custom Prism language for `smartpad` code blocks and regenerated docs output.
+    *   User requested strict commit scoping to assistant-authored files only; operating docs were updated accordingly.
+*   Decisions:
+    *   Use Prism language extension (`smartpad`) instead of raw HTML token injection to keep MDX generation safe.
+    *   Treat assistant-only file inclusion in commits as mandatory default behavior.
+*   User directives:
+    *   "implement the highlighting"
+    *   "only commit the changes that you make. modify the AI OS to keep that preference"
+*   Assistant commitments:
+    *   Keep commit scopes limited to assistant-authored files unless user explicitly says otherwise.
+*   Artifacts:
+    *   `scripts/generate-docusaurus-docs.js` (examples emitted as `smartpad` fenced code)
+    *   `website/src/theme/prism-include-languages.js` (new Prism language)
+    *   `website/src/css/custom.css` (token styling for smartpad examples)
+    *   `website/docs/specs/*.md` and `public/docs/*` (regenerated docs output)
+    *   `docs/TODO_BACKLOG.md` (`T-2026-02-14-06` marked done)
+    *   `AGENTS.md` and `docs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` (assistant-only commit rule)
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   `T-2026-02-14-06` marked `done`.
+*   Validation:
+    *   `npm run docs:docusaurus:publish-local` passed.
+    *   `npm run docs:map` passed.
+    *   `npm run docs:drift` passed.
+    *   `npm run spec:test` passed.
+    *   `npm run build` passed.
+*   Risks/blockers:
+    *   None.

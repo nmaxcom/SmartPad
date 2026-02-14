@@ -12,7 +12,7 @@ Covers currency units, FX conversion, manual overrides, and formatting rules for
 ## Quick examples
 
 ### Happy path
-```text
+```smartpad
 price = $19.99
 price in EUR => EUR 18.42
 
