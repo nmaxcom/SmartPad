@@ -474,6 +474,12 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
               !shouldBypassUnresolvedLiveGuard(trimmedRawExpression)
             ) {
               recordLiveResultSuppressed("unresolved");
+              setLineResultState(index + 1, lineId, {
+                value: null,
+                display: "",
+                hasError: true,
+                errorMessage: "unresolved identifier",
+              });
               recordEquationFromNode(node, equationStore);
               continue;
             }
@@ -492,6 +498,16 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
               recordLiveResultRendered();
             } else {
               recordLiveResultSuppressed("error");
+              const errorReason =
+                (renderNode as any)?.error ||
+                (renderNode as any)?.displayText ||
+                "evaluation failed";
+              setLineResultState(index + 1, lineId, {
+                value: null,
+                display: "",
+                hasError: true,
+                errorMessage: String(errorReason),
+              });
             }
 
             recordEquationFromNode(node, equationStore);
@@ -600,7 +616,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
                   value: null,
                   display: "",
                   hasError: true,
-                  errorMessage: "evaluation failed",
+                  errorMessage: "unresolved identifier",
                 });
               } else {
                 const liveStart = performance.now();
@@ -634,11 +650,15 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
                   if (settings.liveResultEnabled) {
                     recordLiveResultSuppressed("error");
                   }
+                  const errorReason =
+                    (liveRenderNode as any)?.error ||
+                    (liveRenderNode as any)?.displayText ||
+                    "evaluation failed";
                   setLineResultState(index + 1, lineId, {
                     value: null,
                     display: "",
                     hasError: true,
-                    errorMessage: "evaluation failed",
+                    errorMessage: String(errorReason),
                   });
                 }
               }

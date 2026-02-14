@@ -128,7 +128,6 @@ function AppContent() {
           <EditorProvider>
             <SheetSync />
             <DocsExampleImporter runtimeParams={runtimeParams} />
-            {runtimeParams.embed && <EmbedPreviewStatusReporter />}
             {!runtimeParams.embed && <AppHeader onSettingsClick={handleOpenSettings} />}
             {!runtimeParams.embed && fxStatus.provider === "offline" && fxStatus.source === "cache" && (
               <div className="fx-status-banner" role="status">
@@ -218,42 +217,6 @@ function DocsExampleImporter({ runtimeParams }: { runtimeParams: RuntimeModePara
       stripParams();
     }
   }, [createSheetFromContent, runtimeParams.embed, runtimeParams.shouldImportExample]);
-
-  return null;
-}
-
-function EmbedPreviewStatusReporter() {
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const computeStatus = () => {
-      const errors = Array.from(document.querySelectorAll(".semantic-error-result"));
-      const results = document.querySelectorAll(".semantic-result-display").length;
-      const firstError = errors[0];
-      const errorReason =
-        firstError?.getAttribute("data-result")?.trim() ||
-        firstError?.textContent?.trim() ||
-        null;
-      window.parent?.postMessage(
-        {
-          type: "smartpad-embed-status",
-          payload: {
-            hasErrors: errors.length > 0,
-            errorCount: errors.length,
-            resultCount: results,
-            errorReason,
-          },
-        },
-        "*",
-      );
-    };
-
-    computeStatus();
-    const observer = new MutationObserver(() => computeStatus());
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true, characterData: true });
-
-    return () => observer.disconnect();
-  }, []);
 
   return null;
 }

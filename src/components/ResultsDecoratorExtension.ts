@@ -145,6 +145,9 @@ export const ResultsDecoratorExtension = Extension.create({
                 if (info.text.includes("=>")) continue;
 
                 const lineNodes = renderMap.get(i) || [];
+                const lineStatus = info.lineId
+                  ? lineResultStatusById.get(info.lineId)
+                  : undefined;
                 const liveNode = lineNodes.find(
                   (node: any) =>
                     !!node.livePreview &&
@@ -207,52 +210,84 @@ export const ResultsDecoratorExtension = Extension.create({
                 }
 
                 const assignment = parseVariableAssignment(info.text);
-                if (!assignment.isValid || !assignment.rawValue) continue;
-
-                const renderNode = lineNodes.find((node) => node.type === "error");
-                const isError = renderNode?.type === "error";
-                if (!isError) continue;
-
-                let resultText = assignment.rawValue.trim();
-                if (renderNode) {
-                  const rn: any = renderNode;
-                  if (rn.type === "error" && rn.displayText) {
-                    const displayText = String(rn.displayText || "");
-                    if (displayText.includes("=>")) {
-                      resultText = displayText.replace(/^.*=>\s*/, "");
-                    } else if (displayText.includes("⚠️")) {
-                      resultText = displayText.substring(displayText.indexOf("⚠️")).trim();
-                    } else {
-                      resultText = displayText.trim();
+                if (assignment.isValid && assignment.rawValue) {
+                  const renderNode = lineNodes.find((node) => node.type === "error");
+                  const isError = renderNode?.type === "error";
+                  if (isError) {
+                    let resultText = assignment.rawValue.trim();
+                    if (renderNode) {
+                      const rn: any = renderNode;
+                      if (rn.type === "error" && rn.displayText) {
+                        const displayText = String(rn.displayText || "");
+                        if (displayText.includes("=>")) {
+                          resultText = displayText.replace(/^.*=>\s*/, "");
+                        } else if (displayText.includes("⚠️")) {
+                          resultText = displayText.substring(displayText.indexOf("⚠️")).trim();
+                        } else {
+                          resultText = displayText.trim();
+                        }
+                      }
                     }
+
+                    const anchor = info.start + info.text.length;
+                    const widget = Decoration.widget(
+                      anchor,
+                      () => {
+                        const wrapper = document.createElement("span");
+                        wrapper.className =
+                          "semantic-wrapper semantic-lane-result-wrapper semantic-error-result-wrapper";
+                        wrapper.setAttribute("contenteditable", "false");
+                        const container = document.createElement("span");
+                        container.className = "semantic-result-container";
+                        container.setAttribute("contenteditable", "false");
+                        const span = document.createElement("span");
+                        span.className = "semantic-error-result";
+                        span.setAttribute("contenteditable", "false");
+                        span.setAttribute("data-result", resultText);
+                        span.setAttribute("title", resultText);
+                        span.setAttribute("aria-label", resultText);
+                        span.textContent = resultText;
+                        container.appendChild(span);
+                        wrapper.appendChild(container);
+                        return wrapper;
+                      },
+                      { side: 1 }
+                    );
+                    decorations.push(widget);
+                    continue;
                   }
                 }
 
+                if (!lineStatus?.hasError) continue;
+                const blockedReason = String(
+                  lineStatus.errorMessage || lineStatus.display || "Live result unavailable"
+                ).trim();
                 const anchor = info.start + info.text.length;
-                const widget = Decoration.widget(
-                  anchor,
-                  () => {
-                    const wrapper = document.createElement("span");
-                    wrapper.className =
-                      "semantic-wrapper semantic-lane-result-wrapper semantic-error-result-wrapper";
-                    wrapper.setAttribute("contenteditable", "false");
-                    const container = document.createElement("span");
-                    container.className = "semantic-result-container";
-                    container.setAttribute("contenteditable", "false");
-                    const span = document.createElement("span");
-                    span.className = "semantic-error-result";
-                    span.setAttribute("contenteditable", "false");
-                    span.setAttribute("data-result", resultText);
-                    span.setAttribute("title", resultText);
-                    span.setAttribute("aria-label", resultText);
-                    span.textContent = resultText;
-                    container.appendChild(span);
-                    wrapper.appendChild(container);
-                    return wrapper;
-                  },
-                  { side: 1 }
+                decorations.push(
+                  Decoration.widget(
+                    anchor,
+                    () => {
+                      const wrapper = document.createElement("span");
+                      wrapper.className =
+                        "semantic-wrapper semantic-lane-result-wrapper semantic-live-blocked-wrapper";
+                      wrapper.setAttribute("contenteditable", "false");
+                      const container = document.createElement("span");
+                      container.className = "semantic-result-container";
+                      container.setAttribute("contenteditable", "false");
+                      const span = document.createElement("span");
+                      span.className = "semantic-live-blocked-display";
+                      span.setAttribute("contenteditable", "false");
+                      span.setAttribute("data-result", blockedReason);
+                      span.setAttribute("title", blockedReason);
+                      span.setAttribute("aria-label", blockedReason);
+                      span.textContent = "...";
+                      container.appendChild(span);
+                      wrapper.appendChild(container);
+                      return wrapper;
+                    },
+                    { side: 1 }
+                  )
                 );
-                decorations.push(widget);
               }
 
               for (let i = 1; i < paragraphIndex.length; i++) {

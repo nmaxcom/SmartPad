@@ -1158,6 +1158,42 @@
 *   Risks/blockers:
     *   `docs:map` gate currently blocked by unrelated existing local change outside this fix scope.
 
+## Entry J-2026-02-14-27
+
+*   Timestamp: 2026-02-15 00:48:16 CET / 2026-02-14 23:48:16 UTC
+*   Summary:
+    *   User reported direct docs deep links (for example `/docs/guides/getting-started/`) loading the SmartPad app shell instead of docs content.
+    *   User requested rollback of docs-side embed status pills and clarified the desired behavior: surface blocked live-result state inside SmartPad itself.
+    *   Assistant implemented deep-link redirect handling, removed docs-side status channel/UI, and added a native blocked-live fallback chip with hover reason in the SmartPad result lane.
+*   Decisions:
+    *   Keep docs embed UI clean and put error-state visibility in the product surface (editor result lane), not in external docs wrapper chrome.
+    *   For `/docs/*` paths without file extensions, redirect to `/index.html` variant before React app mount.
+*   User directives:
+    *   Stop asking for permission for in-repo work.
+    *   Validate using the same runtime path as user (`npm run dev` server).
+*   Artifacts:
+    *   `src/main.tsx` (docs deep-link redirect to `/docs/.../index.html`)
+    *   `src/App.tsx` (removed `EmbedPreviewStatusReporter`)
+    *   `website/src/components/ExamplePlayground.tsx` (removed docs-side status pills/reason UI)
+    *   `website/src/css/custom.css` (removed status-pill styles)
+    *   `src/components/Editor.tsx` (propagate live-block reasons into line state)
+    *   `src/components/ResultsDecoratorExtension.ts` (render fallback blocked-live chip when no live result can be produced)
+    *   `src/components/Editor.css` (styles for `.semantic-live-blocked-display`)
+    *   `docs/TODO_BACKLOG.md` (updated `T-2026-02-14-11` wording to native SmartPad behavior)
+    *   `artifacts/playwright/docs-deeplink-getting-started.png`
+    *   `artifacts/playwright/docs-examples-no-status-overlay.png`
+    *   `artifacts/playwright/smartpad-live-blocked-chip.png`
+*   Validation:
+    *   `npm run build` passed.
+    *   `npm run test:unit -- tests/unit/appRuntimeMode.test.ts` passed.
+    *   `npm run docs:docusaurus:publish-local` passed.
+    *   Playwright runtime checks passed against existing `npm run dev` server:
+      * direct docs deep-link resolved to `/docs/guides/getting-started/index.html` with docs shell visible and app header absent,
+      * docs pages no longer render `.example-playground__status`,
+      * embed preview shows `.semantic-live-blocked-display` with hover reason (`title`).
+*   Risks/blockers:
+    *   None.
+
 ## Entry J-2026-02-14-21
 
 *   Timestamp: 2026-02-15 00:48:15 CET / 2026-02-14 23:48:15 UTC

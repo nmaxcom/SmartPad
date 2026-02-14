@@ -330,6 +330,18 @@ body.number-scrubbing * {
   cursor: pointer;
 }
 
+.semantic-live-blocked-display {
+  margin-left: 1ch;
+  color: var(--syntax-error);
+  background-color: var(--syntax-error-bg);
+  border: 1px solid var(--syntax-error-border);
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: help;
+}
+
 .semantic-result-container.semantic-live-result-container {
   margin-left: 0;
 }
@@ -463,6 +475,7 @@ body.number-scrubbing * {
 .semantic-result,
 .semantic-result-display,
 .semantic-live-result-display,
+.semantic-live-blocked-display,
 .semantic-assignment-display,
 .semantic-reference-chip,
 .semantic-error,
@@ -475,6 +488,7 @@ body.number-scrubbing * {
 .semantic-result-container,
 .semantic-result-display,
 .semantic-live-result-display,
+.semantic-live-blocked-display,
 .semantic-assignment-display,
 .semantic-reference-chip,
 .semantic-error-result {
@@ -547,11 +561,13 @@ body.number-scrubbing * {
   background-color: transparent;
 }
 
+.errors-borders-off .semantic-live-blocked-display,
 .errors-borders-off .semantic-error-result,
 .errors-borders-off .semantic-error {
   border-color: transparent;
 }
 
+.errors-bg-off .semantic-live-blocked-display,
 .errors-bg-off .semantic-error-result,
 .errors-bg-off .semantic-error {
   background-color: transparent;

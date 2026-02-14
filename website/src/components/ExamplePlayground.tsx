@@ -1,16 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 
 type ExamplePlaygroundProps = {
   title: string;
   description?: string;
   code: string;
-};
-
-type EmbedStatus = {
-  hasErrors: boolean;
-  errorCount: number;
-  resultCount: number;
-  errorReason: string | null;
 };
 
 function buildOpenInAppUrl(code: string, title: string) {
@@ -34,26 +27,8 @@ function buildInlinePreviewUrl(code: string, title: string, nonce: number) {
 export default function ExamplePlayground({ title, description, code }: ExamplePlaygroundProps) {
   const [copied, setCopied] = useState(false);
   const [inlineReloadKey, setInlineReloadKey] = useState(0);
-  const [status, setStatus] = useState<EmbedStatus | null>(null);
-  const [showReason, setShowReason] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const openUrl = useMemo(() => buildOpenInAppUrl(code, title), [code, title]);
   const inlineUrl = useMemo(() => buildInlinePreviewUrl(code, title, inlineReloadKey), [code, title, inlineReloadKey]);
-
-  useEffect(() => {
-    setStatus(null);
-    setShowReason(false);
-  }, [inlineReloadKey, code, title]);
-
-  useEffect(() => {
-    const onMessage = (event: MessageEvent) => {
-      if (event.data?.type !== "smartpad-embed-status") return;
-      if (!iframeRef.current || event.source !== iframeRef.current.contentWindow) return;
-      setStatus(event.data.payload as EmbedStatus);
-    };
-    window.addEventListener("message", onMessage);
-    return () => window.removeEventListener("message", onMessage);
-  }, []);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(code);
@@ -85,35 +60,7 @@ export default function ExamplePlayground({ title, description, code }: ExampleP
       </pre>
       <div className="example-playground__inline">
         <div className="example-playground__inline-label">Live SmartPad Preview (interactive)</div>
-        <div className="example-playground__status" role="status">
-          {!status ? (
-            <span className="example-playground__status-pill is-pending">Evaluating...</span>
-          ) : status.hasErrors ? (
-            <>
-              <span className="example-playground__status-pill is-error">Blocked by {status.errorCount} error(s)</span>
-              <button
-                type="button"
-                className="example-playground__status-link"
-                onClick={() => setShowReason((value) => !value)}
-              >
-                {showReason ? "Hide reason" : "Why?"}
-              </button>
-              {showReason && (
-                <span className="example-playground__status-detail">
-                  {status.errorReason || "A source expression failed, so dependent results are unavailable."}
-                </span>
-              )}
-            </>
-          ) : status.resultCount === 0 ? (
-            <span className="example-playground__status-pill is-idle">
-              No live result yet (expression may be incomplete)
-            </span>
-          ) : (
-            <span className="example-playground__status-pill is-ready">Live results active</span>
-          )}
-        </div>
         <iframe
-          ref={iframeRef}
           key={inlineUrl}
           src={inlineUrl}
           title={`${title} live preview`}
