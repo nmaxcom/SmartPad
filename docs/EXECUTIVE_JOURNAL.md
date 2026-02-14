@@ -655,3 +655,57 @@
     *   Playwright on dev route `/docs/index.html`: banner no longer present, docs navbar renders.
 *   Risks/blockers:
     *   Docusaurus still emits a recoverable React hydration warning in this embedding mode (`onRecoverableError` #418), though docs render and navigate.
+
+## Entry J-2026-02-14-13
+
+*   Timestamp: 2026-02-14 02:40:44 CET / 2026-02-14 01:40:44 UTC
+*   Summary:
+    *   User asked how to turn messy raw specs into clean, ordered docs.
+    *   Assistant implemented an ordered docs-generation pipeline with curated taxonomy, cleaner page titles, grouped sidebar IA, and generated feature-guide index.
+*   Decisions:
+    *   Move from filename/alphabetical doc generation to catalog-driven generation with explicit feature order and categories.
+    *   Generate digest-style guide pages (summary, examples, coverage list) before full spec content.
+*   User directives:
+    *   "how do we create a nice, ordered docs out of the spec?"
+*   Assistant commitments:
+    *   Continue polishing visual hierarchy and backfilling missing example blocks where specs lack concrete fenced examples.
+*   Artifacts:
+    *   `scripts/generate-docusaurus-docs.js` (rewritten to catalog + structured page generation)
+    *   `website/sidebars.ts` (generated grouped nav: Core Experience, Math and Units, Data and Collections, Workspace)
+    *   `website/docs/specs/index.md` (generated feature guide hub)
+    *   `website/docs/specs/*.md` (new slugged guide pages with cleaned names)
+    *   `website/docs/intro.md` (start-here path)
+    *   `public/docs/` (rebuilt/synced ordered Docusaurus output)
+    *   `docs/TODO_BACKLOG.md` (T-2026-02-14-02 marked done)
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   `T-2026-02-14-02` marked `done`.
+*   Validation:
+    *   `npm run docs:docusaurus:generate` passed.
+    *   `npm run docs:docusaurus:build` passed.
+    *   `npm run docs:docusaurus:sync` passed.
+    *   `npm run docs:map` passed.
+    *   `npm run docs:drift` passed.
+    *   `npm run spec:test` passed.
+    *   `npm run build` passed.
+*   Risks/blockers:
+    *   Some pages still surface placeholder example sections when source specs do not include edge-case code blocks.
+
+## Entry J-2026-02-14-14
+
+*   Timestamp: 2026-02-14 02:41:04 CET / 2026-02-14 01:41:04 UTC
+*   Summary:
+    *   User asked what the team should work on next.
+    *   Assistant reviewed assistant manual, docs operations guide, todo system, active backlog lane, and pending items.
+*   Decisions:
+    *   Prioritize open `project` lane items because `docs/TODO_BACKLOG.md` currently sets Active Lane to `project`.
+*   User directives:
+    *   "what should we work on"
+*   Assistant commitments:
+    *   Provide a ranked next-work recommendation from active lane first, then optional cross-lane work.
+*   Artifacts:
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   None.
+*   Risks/blockers:
+    *   Active-lane default policy (`feature`) and backlog active-lane setting (`project`) differ; this can cause prioritization ambiguity unless explicitly switched.
