@@ -1070,3 +1070,23 @@
     *   `npm run spec:test` passed.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-14-19
+
+*   Timestamp: 2026-02-14 16:11:52 CET / 2026-02-14 15:11:52 UTC
+*   Summary:
+    *   User provided extended trace dumps from their environment after tracing instrumentation rollout.
+    *   Assistant analysis: click-insert path is functioning (`resultMouseDown` + `insertReferenceAt`), and submitted runs show expected line structure with one `referenceToken` plus trailing text/result token; no duplicate-literal event appears in the captured sequences.
+*   Decisions:
+    *   Treat this as "failure not yet captured in trace" rather than insertion-path defect.
+    *   Request a trace dump from an actual visibly broken frame (line text containing duplicated literal) to isolate the divergent transition.
+*   User directives:
+    *   Provide logs to analyze failing behavior on user side.
+*   Assistant commitments:
+    *   Continue diagnosis once a failing trace (with visible duplication) is captured.
+*   Artifacts:
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   None.
+*   Risks/blockers:
+    *   Current traces do not include the defective state; root-cause event cannot be proven from non-failing runs.
