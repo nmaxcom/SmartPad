@@ -1,7 +1,7 @@
 # SmartPad Todo Backlog
 
 ## Active Lane
-`project`
+`feature`
 
 ## Items
 | id | lane | scope | owner | status | priority | due | next |
@@ -20,3 +20,6 @@
 | T-2026-02-14-03 | project | Add docs release quality gate so UI/UX regressions are caught before merge | Assistant | todo | p1 | 2026-02-16 | Enforce checks for broken links, mobile layout sanity, accessibility basics, and docs build success in CI + local workflow |
 | T-2026-02-14-04 | project | Migrate docs delivery from hand-styled static page to Docusaurus | Assistant | done | p0 | 2026-02-15 | Implemented `website/` Docusaurus app + spec generator + build sync to `public/docs/`; docs button target now resolves Docusaurus output |
 | T-2026-02-14-05 | project | Complete docs content backfill so every public page has practical examples | Assistant | in_progress | p0 | 2026-02-16 | For every docs page, include at least one copy-paste-ready happy-path example and one edge-case/error example with expected output |
+| T-2026-02-14-06 | feature | Restore result-click plotting while preserving click-to-insert-reference behavior behind explicit mode/gesture separation | Assistant | todo | p0 | 2026-02-17 | Deliver a conflict-safe interaction model where default result click inserts references and plotting is available via explicit alternate gesture/control, with updated editor UX hints; add unit tests for interaction routing and e2e coverage for both flows; done when users can reliably perform both actions in the same session without accidental cross-triggering |
+| T-2026-02-14-07 | maintenance | Emit specific broken-reference cause codes (`source_error`, `missing_source`, `type_mismatch`) and surface actionable UI messaging | Assistant | todo | p1 | 2026-02-18 | Add structured cause-code propagation from evaluator/reference graph to chip rendering, map each cause to clear user-facing copy, and add regression tests covering each code path; done when each failure scenario renders the correct code/message and tests pass |
+| T-2026-02-14-08 | maintenance | Add keyboard-accessible result-chip workflow (focus, insert, jump-to-source) with ARIA-complete semantics | Assistant | todo | p1 | 2026-02-19 | Implement tab/focus order, keyboard insertion and source-jump commands, ARIA labels/roles, and visible focus styles for chips; verify with targeted unit tests plus Playwright keyboard e2e scenarios; done when full chip workflow is operable without pointer input |

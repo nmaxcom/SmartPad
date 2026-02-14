@@ -709,3 +709,26 @@
     *   None.
 *   Risks/blockers:
     *   Active-lane default policy (`feature`) and backlog active-lane setting (`project`) differ; this can cause prioritization ambiguity unless explicitly switched.
+
+## Entry J-2026-02-14-15
+
+*   Timestamp: 2026-02-14 02:43:26 CET / 2026-02-14 01:43:26 UTC
+*   Summary:
+    *   User requested to focus on app work (features/bugs) instead of docs tasks.
+    *   Assistant converted backlog focus to app-facing lane and added concrete product tasks with verification-based next steps.
+*   Decisions:
+    *   Switch active lane to `feature` for immediate prioritization.
+    *   Prioritize result interaction conflict resolution (reference insertion vs plotting) as first app task.
+*   User directives:
+    *   "i want something on the app itself, features, bugs whatever"
+*   Assistant commitments:
+    *   Execute app lane work first and keep docs tasks secondary unless asked.
+*   Artifacts:
+    *   `docs/TODO_BACKLOG.md` (active lane switched to `feature`; added T-2026-02-14-06, T-2026-02-14-07, T-2026-02-14-08)
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   `T-2026-02-14-06` created (`todo`, p0, due 2026-02-17)
+    *   `T-2026-02-14-07` created (`todo`, p1, due 2026-02-18)
+    *   `T-2026-02-14-08` created (`todo`, p1, due 2026-02-19)
+*   Risks/blockers:
+    *   Existing interaction expectations for result clicks may vary between users; UX choice should keep existing default behavior stable.
