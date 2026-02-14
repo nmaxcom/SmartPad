@@ -437,3 +437,24 @@
     *   None.
 *   Risks/blockers:
     *   If docs complexity grows (versioning/search/multi-page IA), delaying Docusaurus too long would create migration debt.
+
+## Entry J-2026-02-14-06
+
+*   Timestamp: 2026-02-14 01:28:15 CET / 2026-02-14 00:28:15 UTC
+*   Summary:
+    *   User requested explicit todo coverage for docs backfill and any important remaining work.
+    *   User asked for practical solutions because current docs UI quality is not professional.
+*   Decisions:
+    *   Add explicit project-lane tasks for docs visual quality, IA, quality gates, framework migration spike, and example backfill.
+*   User directives:
+    *   "add as todo the backfilling and whatever else is important not to forget"
+    *   Request ready-made solution path for docs UI quality issues.
+*   Assistant commitments:
+    *   Provide concrete framework options and a recommended execution path.
+*   Artifacts:
+    *   `docs/TODO_BACKLOG.md` (updated)
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   Added `T-2026-02-14-01` through `T-2026-02-14-05`.
+*   Risks/blockers:
+    *   Without a framework-level docs UI, continued custom CSS iteration may still produce inconsistent documentation UX.
