@@ -597,3 +597,29 @@
     *   `npm run docs:drift` previously failed against prior commit range; needs rerun after this commit.
 *   Risks/blockers:
     *   Remaining quality work is now mostly content IA/visual polish, not platform setup.
+
+## Entry J-2026-02-14-11
+
+*   Timestamp: 2026-02-14 02:19:09 CET / 2026-02-14 01:19:09 UTC
+*   Summary:
+    *   User requested Playwright loop verification to ensure docs render without issues.
+    *   Assistant executed repeated browser passes and captured artifacts.
+*   Decisions:
+    *   Validate docs under production-like `/SmartPad/docs/` base-path hosting, not only root dev routes.
+*   User directives:
+    *   "use playwright in a loop to make sure the docs show up correctly without issues or mistakes"
+*   Assistant commitments:
+    *   Keep this loop pattern for future docs release checks.
+*   Artifacts:
+    *   `test-results/docs-loop/report.json` (failed dev-route run; app shell served for `/docs/`)
+    *   `test-results/docs-loop/docs-loop-*-error.png` (failure screenshots)
+    *   `test-results/docs-loop-preview/report.json` (failed root-preview base-path run with 404 assets)
+    *   `test-results/docs-loop-mounted/report.json` (passing production-base simulation run)
+    *   `test-results/docs-loop-mounted/mounted-loop-*.png` (passing screenshots)
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   None.
+*   Validation:
+    *   Mounted-base Playwright loop: 5/5 passes, 0 console errors, 0 HTTP >=400 responses.
+*   Risks/blockers:
+    *   Local dev/preview at root path can misrepresent docs behavior because Docusaurus build expects `/SmartPad/docs/` asset paths.
