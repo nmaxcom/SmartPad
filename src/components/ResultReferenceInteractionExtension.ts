@@ -172,6 +172,54 @@ const stripEchoedReferencePrefix = (text: string, payload: ReferencePayload | nu
   return input;
 };
 
+const snapshotSelectionLine = (view: any): Record<string, any> => {
+  try {
+    const { state } = view;
+    const { $from } = state.selection;
+    let textblockDepth = $from.depth;
+    while (textblockDepth > 0 && !$from.node(textblockDepth).isTextblock) {
+      textblockDepth -= 1;
+    }
+    if (textblockDepth <= 0 || !$from.node(textblockDepth).isTextblock) {
+      return {
+        selectionFrom: state.selection.from,
+        selectionTo: state.selection.to,
+        hasTextblock: false,
+      };
+    }
+    const lineNode = $from.node(textblockDepth);
+    const lineId = String((lineNode as any).attrs?.lineId || "");
+    const pieces: Array<Record<string, any>> = [];
+    let plainText = "";
+    lineNode.forEach((child: any) => {
+      if (child.type?.name === "referenceToken") {
+        pieces.push({
+          type: "referenceToken",
+          label: String(child.attrs?.label || ""),
+          sourceValue: String(child.attrs?.sourceValue || ""),
+          sourceLineId: String(child.attrs?.sourceLineId || ""),
+        });
+      } else if (child.isText) {
+        const text = String(child.text || "");
+        plainText += text;
+        pieces.push({ type: "text", text });
+      } else {
+        pieces.push({ type: String(child.type?.name || "unknown") });
+      }
+    });
+    return {
+      selectionFrom: state.selection.from,
+      selectionTo: state.selection.to,
+      lineId,
+      lineText: plainText,
+      normalizedLineText: plainText.replace(/\s+/g, ""),
+      pieces,
+    };
+  } catch {
+    return { snapshotError: true };
+  }
+};
+
 const createReferenceNode = (state: any, payload: ReferencePayload) => {
   const referenceType = state.schema.nodes.referenceToken;
   if (!referenceType) return null;
@@ -633,7 +681,14 @@ export const ResultReferenceInteractionExtension = Extension.create({
           },
           handleTextInput: (view, _from, _to, text) => {
             const range = getReferenceRangeInSelection(view.state);
-            if (!range) return false;
+            if (!range) {
+              appendRefTrace("handleTextInputPassthrough", {
+                text,
+                reason: "noReferenceRange",
+                ...snapshotSelectionLine(view),
+              });
+              return false;
+            }
             const selectedPayload = findSelectedReferencePayload(view.state);
             const insertText = stripEchoedReferencePrefix(text, selectedPayload);
             appendRefTrace("handleTextInputOverReference", {
@@ -645,6 +700,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
               sourceLineId: selectedPayload?.sourceLineId || "",
               sourceValue: selectedPayload?.sourceValue || "",
               sourceLabel: selectedPayload?.sourceLabel || "",
+              ...snapshotSelectionLine(view),
             });
             if (!insertText) {
               return true;
@@ -739,6 +795,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 sourceLineId: payload?.sourceLineId || "",
                 sourceLine: payload?.sourceLine || 0,
                 sourceValue: payload?.sourceValue || "",
+                ...snapshotSelectionLine(view),
               });
               if (!payload) {
                 return true;
@@ -843,7 +900,40 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 consumeResultClick = false;
               }
               view.focus();
+              appendRefTrace("resultClickHandled", {
+                ...snapshotSelectionLine(view),
+              });
               return true;
+            },
+            keydown: (view, event) => {
+              appendRefTrace("domKeydown", {
+                key: String((event as KeyboardEvent).key || ""),
+                code: String((event as KeyboardEvent).code || ""),
+                metaKey: Boolean((event as KeyboardEvent).metaKey),
+                ctrlKey: Boolean((event as KeyboardEvent).ctrlKey),
+                altKey: Boolean((event as KeyboardEvent).altKey),
+                shiftKey: Boolean((event as KeyboardEvent).shiftKey),
+                ...snapshotSelectionLine(view),
+              });
+              return false;
+            },
+            beforeinput: (view, event) => {
+              const inputEvt = event as InputEvent;
+              appendRefTrace("domBeforeInput", {
+                inputType: String(inputEvt.inputType || ""),
+                data: String(inputEvt.data || ""),
+                ...snapshotSelectionLine(view),
+              });
+              return false;
+            },
+            input: (view, event) => {
+              const inputEvt = event as InputEvent;
+              appendRefTrace("domInput", {
+                inputType: String(inputEvt.inputType || ""),
+                data: String(inputEvt.data || ""),
+                ...snapshotSelectionLine(view),
+              });
+              return false;
             },
             dragstart: (_view, event) => {
               const target = getEventElement(event.target);

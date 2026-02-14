@@ -848,3 +848,30 @@
     *   `npm run docs:drift` currently reports failure when run pre-commit against default `HEAD~1...HEAD` because that range points to prior commit only; expected to pass once this commit (code+docs together) is in range.
 *   Risks/blockers:
     *   None. Remaining diagnosis depends on user-side trace capture from the failing run.
+
+## Entry J-2026-02-14-18
+
+*   Timestamp: 2026-02-14 04:14:28 CET / 2026-02-14 03:14:28 UTC
+*   Summary:
+    *   User provided initial trace logs showing result-click insertion events only.
+    *   Assistant analyzed logs and determined insertion path is healthy; failure likely occurs in subsequent typing/input path.
+    *   Added deeper DOM/input/selection snapshots to runtime tracing for field diagnosis.
+*   Decisions:
+    *   Instrument `keydown`, `beforeinput`, `input`, and handleTextInput passthrough events with line+selection snapshots.
+*   User directives:
+    *   Provide tracing/logging to analyze failure on user's machine.
+*   Assistant commitments:
+    *   Use next user-provided trace dump to isolate exact failing transition.
+*   Artifacts:
+    *   `src/components/ResultReferenceInteractionExtension.ts` (extended trace events + selection-line snapshots)
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   None.
+*   Validation:
+    *   `npx playwright test tests/e2e/repro-user-pi10-live-click.spec.ts -g "trace api captures result-click and reference text-input events" --project=chromium` passed.
+    *   `npm run build` passed.
+    *   `npm run docs:map` passed.
+    *   `npm run docs:drift` passed.
+    *   `npm run spec:test` passed.
+*   Risks/blockers:
+    *   None.
