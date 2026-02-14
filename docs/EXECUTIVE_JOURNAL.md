@@ -384,3 +384,37 @@
     *   `npm run build` passed (existing Vite large-chunk warning remains).
 *   Risks/blockers:
     *   Several specs still lack fenced runnable examples; generated page currently shows placeholders for those cases.
+
+## Entry J-2026-02-14-04
+
+*   Timestamp: 2026-02-14 01:03:53 CET / 2026-02-14 00:03:53 UTC
+*   Summary:
+    *   User asked to ensure web docs are created and actually load from the UI Docs button.
+    *   Assistant regenerated web docs and implemented explicit, normalized docs URL resolution for local and deployed base paths.
+*   Decisions:
+    *   Use explicit docs file target `docs/index.html` instead of directory-only path.
+    *   Centralize docs-link URL normalization in a small helper with unit tests.
+*   User directives:
+    *   "create those web docs" and "make sure they load when clicking the UI button"
+*   Assistant commitments:
+    *   Keep docs regeneration executable via `npm run docs:web:build`.
+    *   Keep docs-link parity stable via tested base-path URL normalization.
+*   Artifacts:
+    *   `src/components/Layout/docsUrl.ts` (new helper)
+    *   `src/components/Layout/AppHeader.tsx` (uses normalized docs URL)
+    *   `tests/unit/docsUrl.test.ts` (new tests)
+    *   `public/docs/index.html` (regenerated)
+    *   `docs/TODO_BACKLOG.md` (updated task status)
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   `T-2026-02-13-06` marked `done`.
+    *   `T-2026-02-13-02` remains `in_progress` (example backfill).
+*   Validation:
+    *   `npm run test:unit -- --runTestsByPath tests/unit/docsUrl.test.ts tests/unit/generateWebDocs.test.ts` passed.
+    *   `npm run docs:web:build` passed.
+    *   `npm run docs:map` passed.
+    *   `npm run docs:drift` passed.
+    *   `npm run spec:test` passed.
+    *   `npm run build` passed (existing Vite chunk-size warning remains).
+*   Risks/blockers:
+    *   Generated docs still contain placeholder example blocks for specs lacking fenced examples in source markdown.

@@ -1,5 +1,6 @@
 import React from "react";
 import { useSettingsContext } from "../../state/SettingsContext";
+import { buildDocsUrl } from "./docsUrl";
 import "./AppHeader.css";
 
 interface AppHeaderProps {
@@ -7,7 +8,7 @@ interface AppHeaderProps {
 }
 
 const BUG_REPORT_URL = "https://github.com/nmaxcom/SmartPad/issues/new?template=bug_report.yml";
-const DOCS_URL = `${import.meta.env.BASE_URL}docs/`;
+const DOCS_URL = buildDocsUrl(import.meta.env.BASE_URL || "/");
 
 type PanelToggleKey = "showVariablePanel" | "showTemplatePanel" | "showSettingsPanel";
 
