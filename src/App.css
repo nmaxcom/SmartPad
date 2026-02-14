@@ -11,6 +11,11 @@
   overflow: hidden;
 }
 
+.app.app--embed {
+  height: 100%;
+  min-height: 100%;
+}
+
 .fx-status-banner {
   background: var(--ui-warning-banner-bg);
   color: var(--ui-warning-banner-text);
@@ -30,6 +35,10 @@
 
 .app-layout.has-right-panel {
   grid-template-columns: 240px minmax(0, 1fr) 380px;
+}
+
+.app-layout.app-layout--embed {
+  display: block;
 }
 
 .left-sidebar {
@@ -226,6 +235,23 @@
   overflow: hidden;
   min-height: 0;
   overflow-x: hidden;
+}
+
+.app--embed .editor-pane {
+  min-height: 100%;
+}
+
+.app--embed .editor-card-container {
+  border-radius: 0;
+  padding: 0.75rem 1rem;
+}
+
+.app--embed .editor-card-container::before {
+  top: -360px;
+  left: 52%;
+  width: 860px;
+  height: 860px;
+  opacity: 0.95;
 }
 
 /* 

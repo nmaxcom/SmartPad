@@ -969,3 +969,41 @@
     *   `npm run spec:test` passed.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-14-22
+
+*   Timestamp: 2026-02-14 06:40:47 CET / 2026-02-14 05:40:47 UTC
+*   Summary:
+    *   User reported the new docs examples were still not truly interactive in-page and did not reflect expected Spatial Neon styling.
+    *   Assistant implemented embedded SmartPad previews directly inside docs example blocks (iframe-based mini app), plus forced embed theme mode (`spatial-dark` UI + `neon-syntax`) for the inline previews.
+    *   Added app runtime-mode parsing helper and unit tests for embed/theme query handling.
+*   Decisions:
+    *   Keep `Open in SmartPad` opening full app context, while inline docs previews run in chrome-less embed mode.
+    *   Force embed preview theme via URL flags (`sp_embed=1`, `sp_theme=spatial-neon`) to guarantee consistent docs visual identity.
+*   User directives:
+    *   Provide real interactive docs (embedded app-like behavior), not just action buttons.
+    *   Ensure examples show the Spatial Neon feel.
+*   Assistant commitments:
+    *   Continue phase-2 docs polish (animated hero + narrative pathways + mini-labs) after this embed correction.
+*   Artifacts:
+    *   `website/src/components/ExamplePlayground.tsx` (inline interactive iframe preview + reset action)
+    *   `src/App.tsx` (embed runtime mode: hide app chrome in preview, force theme when requested)
+    *   `src/App.css` (embed-mode layout + glow tweaks)
+    *   `src/utils/runtimeMode.ts` (runtime query parser)
+    *   `tests/unit/appRuntimeMode.test.ts` (runtime mode regression tests)
+    *   `website/src/css/custom.css` (Spatial Neon embed frame styling)
+    *   `public/docs/*` (regenerated docs assets/pages)
+    *   `docs/TODO_BACKLOG.md` (`T-2026-02-14-09` moved to in_progress)
+    *   `docs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   `T-2026-02-14-09` remains in progress for broader phase-2 narrative/motion work.
+*   Validation:
+    *   `npm run docs:docusaurus:publish-local` passed.
+    *   `npm run build` passed.
+    *   Playwright inline embed verification passed (iframe present, embed params present, `.editor-pane` visible, no left sidebar, root theme confirmed `spatial-dark` + `neon-syntax`).
+    *   `npx jest tests/unit/appRuntimeMode.test.ts` passed.
+    *   `npm run docs:map` passed.
+    *   `npm run docs:drift` passed.
+    *   `npm run spec:test` pending re-check post-commit range update.
+*   Risks/blockers:
+    *   None.

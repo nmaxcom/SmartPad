@@ -16,6 +16,7 @@ import { initFxRates } from "./services/fxRates";
 import { useFxStatus } from "./hooks/useFxStatus";
 import { getSmartPadText } from "./components/editorText";
 import { sanitizeReferencePlaceholdersForDisplay } from "./references/referenceIds";
+import { parseRuntimeModeParams, RuntimeModeParams } from "./utils/runtimeMode";
 
 const SHEET_DRAG_TYPE = "application/x-smartpad-sheet";
 
@@ -65,6 +66,12 @@ function AppContent() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { settings } = useSettingsContext();
   const fxStatus = useFxStatus();
+  const runtimeParams = useMemo(() => {
+    if (typeof window === "undefined") {
+      return { embed: false, forceSpatialNeon: false };
+    }
+    return parseRuntimeModeParams(window.location.search);
+  }, []);
 
   const handleOpenSettings = () => setIsSettingsOpen(true);
   const handleCloseSettings = () => setIsSettingsOpen(false);
@@ -74,16 +81,27 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
+    if (runtimeParams.forceSpatialNeon) {
+      document.documentElement.dataset.uiTheme = "spatial-dark";
+      document.documentElement.dataset.syntaxTheme = "neon-syntax";
+      return;
+    }
     document.documentElement.dataset.uiTheme = settings.uiTheme;
     document.documentElement.dataset.syntaxTheme = settings.syntaxTheme;
-  }, [settings.uiTheme, settings.syntaxTheme]);
+  }, [runtimeParams.forceSpatialNeon, settings.uiTheme, settings.syntaxTheme]);
 
   // Show sidebar only if at least one panel is enabled
   const showSidebar =
-    settings.showVariablePanel || settings.showTemplatePanel || settings.showSettingsPanel;
-  const layoutClassName = showSidebar ? "app-layout has-right-panel" : "app-layout";
+    !runtimeParams.embed &&
+    (settings.showVariablePanel || settings.showTemplatePanel || settings.showSettingsPanel);
+  const layoutClassName = runtimeParams.embed
+    ? "app-layout app-layout--embed"
+    : showSidebar
+      ? "app-layout has-right-panel"
+      : "app-layout";
   const appClassName = [
     "app",
+    runtimeParams.embed ? "app--embed" : "",
     settings.showResultPulse ? "results-pulse-on" : "results-pulse-off",
     settings.showResultDelta ? "results-delta-on" : "results-delta-off",
     settings.showResultBorders ? "results-borders-on" : "results-borders-off",
@@ -100,8 +118,8 @@ function AppContent() {
           <EditorProvider>
             <SheetSync />
             <DocsExampleImporter />
-            <AppHeader onSettingsClick={handleOpenSettings} />
-            {fxStatus.provider === "offline" && fxStatus.source === "cache" && (
+            {!runtimeParams.embed && <AppHeader onSettingsClick={handleOpenSettings} />}
+            {!runtimeParams.embed && fxStatus.provider === "offline" && fxStatus.source === "cache" && (
               <div className="fx-status-banner" role="status">
                 FX offline - using cached rates from{" "}
                 {fxStatus.updatedAt
@@ -110,13 +128,13 @@ function AppContent() {
               </div>
             )}
             <main className={layoutClassName}>
-              <SheetSidebar />
+              {!runtimeParams.embed && <SheetSidebar />}
               <section className="editor-pane">
                 <div className="editor-card-container">
                   <Editor />
                 </div>
               </section>
-              {showSidebar && (
+              {!runtimeParams.embed && showSidebar && (
                 <aside className="right-panel">
                   <div className="sidebar-container">
                   {settings.showVariablePanel && (
@@ -130,7 +148,7 @@ function AppContent() {
                 </aside>
               )}
             </main>
-            <SettingsModal isOpen={isSettingsOpen} onClose={handleCloseSettings} />
+            {!runtimeParams.embed && <SettingsModal isOpen={isSettingsOpen} onClose={handleCloseSettings} />}
           </EditorProvider>
         </SheetProvider>
       </VariableProvider>

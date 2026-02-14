@@ -15,7 +15,12 @@ function buildSmartPadUrl(code: string, title: string) {
 
 export default function ExamplePlayground({ title, description, code }: ExamplePlaygroundProps) {
   const [copied, setCopied] = useState(false);
+  const [inlineReloadKey, setInlineReloadKey] = useState(0);
   const openUrl = useMemo(() => buildSmartPadUrl(code, title), [code, title]);
+  const inlineUrl = useMemo(
+    () => `${openUrl}&sp_embed=1&sp_theme=spatial-neon&_r=${inlineReloadKey}`,
+    [openUrl, inlineReloadKey],
+  );
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(code);
@@ -34,6 +39,9 @@ export default function ExamplePlayground({ title, description, code }: ExampleP
           <button type="button" onClick={handleCopy}>
             {copied ? "Copied" : "Copy"}
           </button>
+          <button type="button" onClick={() => setInlineReloadKey((value) => value + 1)}>
+            Reset
+          </button>
           <a href={openUrl} target="_blank" rel="noreferrer">
             Open in SmartPad
           </a>
@@ -42,6 +50,16 @@ export default function ExamplePlayground({ title, description, code }: ExampleP
       <pre>
         <code className="language-smartpad">{code}</code>
       </pre>
+      <div className="example-playground__inline">
+        <div className="example-playground__inline-label">Live SmartPad Preview (interactive)</div>
+        <iframe
+          key={inlineUrl}
+          src={inlineUrl}
+          title={`${title} live preview`}
+          loading="lazy"
+          className="example-playground__iframe"
+        />
+      </div>
     </section>
   );
 }
