@@ -42,7 +42,9 @@ const hasIdentifierBoundaryMatch = (input: string, identifier: string): boolean 
   return pattern.test(input);
 };
 
-const LIVE_WORD_OPERATOR_REGEX = /\b(of|off|on|to|in|as|is|per)\b/i;
+// Word-level operators/modifiers that should keep live-preview evaluation enabled
+// and bypass unresolved-identifier pre-guards for DSL phrases.
+const LIVE_WORD_OPERATOR_REGEX = /\b(of|off|on|to|in|as|is|per|where|asc|desc)\b/i;
 
 export const isLikelyLiveExpression = (
   line: string,

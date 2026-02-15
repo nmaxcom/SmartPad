@@ -1194,6 +1194,29 @@
 *   Risks/blockers:
     *   None.
 
+## Entry J-2026-02-14-28
+
+*   Timestamp: 2026-02-15 01:12:39 CET / 2026-02-15 00:12:39 UTC
+*   Summary:
+    *   User reported false blocked-live chips (`...`) for valid list expressions without trigger:
+      * `sort(costs, desc)`
+      * `costs where > $10`
+    *   Assistant traced the issue to unresolved-identifier guard logic treating DSL keywords (`desc`, `where`) as unresolved variables.
+    *   Implemented keyword bypass extension and verified with Playwright using the user-provided examples.
+*   Decisions:
+    *   Keep unresolved guard, but extend bypass keywords to include list/filter DSL words so valid expressions are not suppressed.
+*   Artifacts:
+    *   `src/eval/liveResultPreview.ts` (extended `LIVE_WORD_OPERATOR_REGEX` with `where|asc|desc`)
+    *   `tests/unit/liveResultPreview.test.ts` (regression assertions for `sort(costs, desc)` and `costs where > $10`)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/liveResultPreview.test.ts` passed.
+    *   `npm run build` passed.
+    *   Playwright repro passed against `npm run dev` runtime:
+      * `.semantic-live-blocked-display` count = `0`
+      * live chips include `$15, $12, $9` and `$12, $15, $100`.
+*   Risks/blockers:
+    *   None.
+
 ## Entry J-2026-02-14-21
 
 *   Timestamp: 2026-02-15 00:48:15 CET / 2026-02-14 23:48:15 UTC

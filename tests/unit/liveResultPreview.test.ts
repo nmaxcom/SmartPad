@@ -65,6 +65,8 @@ describe("shouldShowLiveForAssignmentValue", () => {
     expect(shouldBypassUnresolvedLiveGuard("60mph to km")).toBe(true);
     expect(shouldBypassUnresolvedLiveGuard("distance in mi")).toBe(true);
     expect(shouldBypassUnresolvedLiveGuard("120 per h")).toBe(true);
+    expect(shouldBypassUnresolvedLiveGuard("sort(costs, desc)")).toBe(true);
+    expect(shouldBypassUnresolvedLiveGuard("costs where > $10")).toBe(true);
     expect(shouldBypassUnresolvedLiveGuard("alpha + beta")).toBe(false);
   });
 
