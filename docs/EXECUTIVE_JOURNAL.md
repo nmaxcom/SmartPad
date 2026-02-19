@@ -1371,3 +1371,44 @@
     *   `npm run spec:test` passed.
 *   Risks/blockers:
     *   Existing e2e failures in error/semantic-highlighting suites remain unresolved and may reduce confidence in nearby UI regressions.
+
+## Entry J-2026-02-19-04
+
+*   Timestamp: 2026-02-19 03:53:13 CET / 2026-02-19 02:53:13 UTC
+*   Summary:
+    *   User requested blocked live-result chips to show the error directly instead of `...`.
+    *   Assistant updated result decoration rendering so `.semantic-live-blocked-display` now prints the blocked reason inline.
+    *   Added e2e regression coverage and synced spec/docs wording for blocked-chip behavior.
+*   Decisions:
+    *   Keep blocked reason in both visible text and `title`/`aria-label` attributes for fast scanning plus accessibility.
+    *   Scope test assertion to "not ellipsis + non-empty reason" to avoid brittleness from evaluator-specific wording.
+*   User directives:
+    *   "show the error instead of ..."
+*   Assistant commitments:
+    *   Ship this UX behavior as default.
+    *   Keep commit scoped to this task's files only.
+*   Artifacts:
+    *   `src/components/ResultsDecoratorExtension.ts` (blocked chip now renders `blockedReason` text content)
+    *   `tests/e2e/live-result.spec.ts` (new test: blocked reason text inline instead of ellipsis)
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md` (behavior note for inline blocked reason text)
+    *   `website/docs/specs/resultchipsandvaluegraph.md` (user-doc mirror update)
+    *   `docs/TODO_BACKLOG.md` (done-item wording updated to reflect inline reason text behavior)
+    *   `docs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   `P-2026-02-19-01` - Improve blocked/error reason reveal UX for `.semantic-live-blocked-display`.
+        *   Owner: Assistant
+        *   Due: TBD
+        *   Status: done
+        *   Next: none (implemented by rendering blocked reason text inline).
+*   Validation:
+    *   `npx playwright test tests/e2e/live-result.spec.ts -g "shows blocked reason text inline instead of ellipsis" --project=chromium --workers=1` passed.
+    *   `npx playwright test tests/e2e/live-result.spec.ts --project=chromium --workers=1` failed (multiple existing suite assumptions around empty editor baseline and global chip counts; unrelated to this targeted text swap).
+    *   `npm run test:unit -- tests/unit/liveResultPreview.test.ts` passed.
+    *   `npm run build` passed.
+    *   `npm run docs:map` passed.
+    *   `npm run docs:drift` failed for default range (`HEAD~1...HEAD`) due previous commit-only diff context.
+    *   `npm run docs:drift -- HEAD` passed for current working tree.
+    *   `npm run spec:test` failed for default range (`HEAD~1...HEAD`) due previous commit-only diff context.
+    *   `npm run spec:test -- HEAD` passed for current working tree.
+*   Risks/blockers:
+    *   `tests/e2e/live-result.spec.ts` contains broad baseline-dependent failures that reduce confidence in full-suite live-result regressions until stabilized.

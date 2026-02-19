@@ -173,6 +173,21 @@ test.describe("Live Result", () => {
     await expect(page.locator(".semantic-error-result")).toHaveCount(0);
   });
 
+  test("shows blocked reason text inline instead of ellipsis", async ({ page }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.press("Control+a");
+    await page.keyboard.press("Delete");
+    await page.keyboard.type("unknownVar + 1");
+
+    await waitForUIRenderComplete(page);
+    const blockedChip = page.locator(".semantic-live-blocked-display").first();
+    await expect(blockedChip).toHaveCount(1);
+    await expect(blockedChip).not.toHaveText("...");
+    await expect(blockedChip).toHaveAttribute("data-result", /.+/);
+    await expect(blockedChip).toHaveText(/.+/);
+  });
+
   test("can be turned off in settings", async ({ page }) => {
     await page.getByLabel("Open settings").click();
     const liveToggle = page.getByLabel("Live Result");

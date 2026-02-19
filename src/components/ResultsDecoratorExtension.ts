@@ -280,7 +280,7 @@ export const ResultsDecoratorExtension = Extension.create({
                       span.setAttribute("data-result", blockedReason);
                       span.setAttribute("title", blockedReason);
                       span.setAttribute("aria-label", blockedReason);
-                      span.textContent = "...";
+                      span.textContent = blockedReason;
                       container.appendChild(span);
                       wrapper.appendChild(container);
                       return wrapper;

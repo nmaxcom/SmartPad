@@ -193,6 +193,7 @@ Behavior:
 2. Line result suppression follows current live policy (no noisy cascading stack traces by default).
 3. Inline helper appears: `source line has error`.
 4. Clicking warning chip jumps to source line.
+5. When live preview is blocked on a source line, the result-lane blocked chip renders the reason text inline (not `...` with hover-only tooltip).
 
 Plain explanation:
 If an upstream value breaks, downstream formulas tell you exactly why and where.
