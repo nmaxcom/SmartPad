@@ -194,6 +194,7 @@ Behavior:
 3. Inline helper appears: `source line has error`.
 4. Clicking warning chip jumps to source line.
 5. When live preview is blocked on a source line, the result-lane blocked chip renders the reason text inline (not `...` with hover-only tooltip).
+6. Blocked chips use the same error typography treatment as inline error results (15px size, normal weight, pink error text).
 
 Plain explanation:
 If an upstream value breaks, downstream formulas tell you exactly why and where.

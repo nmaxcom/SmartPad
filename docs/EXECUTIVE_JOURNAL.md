@@ -1412,3 +1412,34 @@
     *   `npm run spec:test -- HEAD` passed for current working tree.
 *   Risks/blockers:
     *   `tests/e2e/live-result.spec.ts` contains broad baseline-dependent failures that reduce confidence in full-suite live-result regressions until stabilized.
+
+## Entry J-2026-02-19-05
+
+*   Timestamp: 2026-02-19 03:56:22 CET / 2026-02-19 02:56:22 UTC
+*   Summary:
+    *   User requested that the newly inline blocked error chips use the same typography/color treatment as recent `.semantic-error-result` changes.
+    *   Assistant updated `.semantic-live-blocked-display` styles to match (`#ff8fb6`, `15px`, `normal` weight).
+    *   Added targeted e2e style assertions and synced spec/docs wording.
+*   Decisions:
+    *   Keep blocked-chip spacing/background/border unchanged; only align typography/color with `.semantic-error-result`.
+*   User directives:
+    *   "on these errors, apply the same changes in font weight and others we just did"
+*   Assistant commitments:
+    *   Keep this as a scoped visual consistency change across blocked error chips.
+*   Artifacts:
+    *   `src/components/Editor.css` (`.semantic-live-blocked-display` typography/color update)
+    *   `tests/e2e/live-result.spec.ts` (assert blocked chip style color/size/weight)
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md` (blocked chip typography note)
+    *   `website/docs/specs/resultchipsandvaluegraph.md` (user-doc mirror note)
+    *   `docs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   None.
+*   Validation:
+    *   `npx playwright test tests/e2e/live-result.spec.ts -g "shows blocked reason text inline instead of ellipsis" --project=chromium --workers=1` passed.
+    *   `npm run test:unit -- tests/unit/liveResultPreview.test.ts` passed.
+    *   `npm run build` passed.
+    *   `npm run docs:map` passed.
+    *   `npm run docs:drift -- HEAD` passed.
+    *   `npm run spec:test -- HEAD` passed.
+*   Risks/blockers:
+    *   None for this scoped style update.

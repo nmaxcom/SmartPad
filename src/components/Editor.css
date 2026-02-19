@@ -332,12 +332,13 @@ body.number-scrubbing * {
 
 .semantic-live-blocked-display {
   margin-left: 1ch;
-  color: var(--syntax-error);
+  color: #ff8fb6;
   background-color: var(--syntax-error-bg);
   border: 1px solid var(--syntax-error-border);
   border-radius: 6px;
   padding: 1px 6px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: normal;
   line-height: 1;
   cursor: help;
 }

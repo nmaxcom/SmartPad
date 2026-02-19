@@ -186,6 +186,18 @@ test.describe("Live Result", () => {
     await expect(blockedChip).not.toHaveText("...");
     await expect(blockedChip).toHaveAttribute("data-result", /.+/);
     await expect(blockedChip).toHaveText(/.+/);
+
+    const blockedStyles = await blockedChip.evaluate((node) => {
+      const style = window.getComputedStyle(node as HTMLElement);
+      return {
+        color: style.color,
+        fontSize: style.fontSize,
+        fontWeight: style.fontWeight,
+      };
+    });
+    expect(blockedStyles.color).toBe("rgb(255, 143, 182)");
+    expect(blockedStyles.fontSize).toBe("15px");
+    expect(Number.parseInt(blockedStyles.fontWeight, 10)).toBeLessThanOrEqual(400);
   });
 
   test("can be turned off in settings", async ({ page }) => {
