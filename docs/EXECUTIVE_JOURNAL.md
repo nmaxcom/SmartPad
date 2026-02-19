@@ -1273,9 +1273,9 @@
     *   `npm run test:unit -- tests/unit/templateTriggerNormalization.test.ts` passed.
     *   `npx playwright test tests/e2e/live-result-template-visual.spec.ts --project=chromium --workers=1` passed.
     *   `npm run docs:map` passed.
-    *   `npm run docs:drift` failed for previous commit range (`HEAD~1...HEAD`) due pre-existing mapped change (`src/eval/liveResultPreview.ts`) without docs update.
-    *   `npm run docs:drift -- HEAD` passed for current working tree.
+    *   `npm run docs:drift -- HEAD` passed for current working tree before commit.
     *   `npm run spec:test` passed.
     *   `npm run build` passed.
+    *   `npm run docs:drift` passed after commit (`HEAD~1...HEAD` now scoped to this task commit).
 *   Risks/blockers:
-    *   Default `docs:drift` script range depends on last commit and can fail due prior unrelated commit state.
+    *   None.
