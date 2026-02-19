@@ -93,6 +93,14 @@ test.describe("User Issues Fixed", () => {
   });
 
   test("phrase variables containing 'of' work in expressions", async ({ page }) => {
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      if (!editor) return;
+      editor.commands.setContent("<p></p>");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
     const pm = page.locator(".ProseMirror");
     await pm.click();
     await pm.type("pizza total cost = 18.99");
@@ -168,6 +176,48 @@ test.describe("User Issues Fixed", () => {
     await expect(lines.nth(3).locator(".semantic-live-result-display")).toHaveCount(1);
     await expect(lines.nth(4).locator(".semantic-live-result-display")).toHaveCount(0);
     await expect(lines.nth(5).locator(".semantic-live-result-display")).toHaveCount(1);
+  });
+
+  test("live result shows for phrase-variable division assignment without =>", async ({
+    page,
+  }) => {
+    await page.evaluate(() => {
+      const key = "smartpad-settings";
+      const existing = JSON.parse(localStorage.getItem(key) || "{}");
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          ...existing,
+          liveResultEnabled: true,
+        })
+      );
+    });
+    await page.reload();
+    await waitForEditorReady(page);
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      if (!editor) return;
+      editor.commands.setContent("<p></p>");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    const pm = page.locator(".ProseMirror");
+    await pm.click();
+
+    await pm.type("number of friends = 6");
+    await page.keyboard.press("Enter");
+    await pm.type("pizza total cost = $18.99");
+    await page.keyboard.press("Enter");
+    await pm.type("cost per friend = pizza total cost / number of friends");
+    await waitForUIRenderComplete(page);
+
+    const targetLine = page.locator(".ProseMirror p").nth(2);
+    await expect(targetLine.locator(".semantic-live-result-display")).toHaveCount(1);
+    await expect(targetLine.locator(".semantic-live-result-display")).toHaveAttribute(
+      "data-result",
+      /3\.16/
+    );
   });
 
   test("math functions and parentheses evaluate correctly", async ({ page }) => {

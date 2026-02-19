@@ -1282,6 +1282,41 @@
 
 ## Entry J-2026-02-19-02
 
+*   Timestamp: 2026-02-19 03:34:54 CET / 2026-02-19 02:34:54 UTC
+*   Summary:
+    *   User reported missing Live Result on phrase-variable assignment line: `cost per friend = pizza total cost / number of friends`.
+    *   Assistant fixed assignment-line live-chip fallback to render from the already computed variable value when preview parsing cannot materialize a math render node.
+    *   Added regression tests and clarified Live Result docs/spec wording for computed-output behavior.
+*   Decisions:
+    *   Keep unresolved guard improvements and add robust fallback in assignment preview path to prevent dropping valid computed assignment outputs.
+    *   Stabilize related e2e phrase-variable tests by forcing a clean editor document before assertions.
+*   User directives:
+    *   Explain pending snapshot wording, explicit error-surfacing syntax, and where Live Result computed-output behavior is documented.
+*   Assistant commitments:
+    *   Provide exact references to current behavior/spec language in final response.
+*   Artifacts:
+    *   `src/components/Editor.tsx` (assignment live-preview fallback now formats and renders computed semantic value)
+    *   `src/eval/liveResultPreview.ts` (added known-variable-reference helper for unresolved guard decisions)
+    *   `tests/unit/liveResultPreview.test.ts` (coverage for known phrase variable references)
+    *   `tests/e2e/user-issues-fixed.spec.ts` (new phrase-variable assignment live-result regression test + stabilization for phrase-variable expression test setup)
+    *   `docs/Specs/LiveResult.spec.md` (added phrase-variable assignment success example)
+    *   `docs/notes.md` (Live Result computed-output notes)
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   None.
+*   Validation:
+    *   `npm run test:unit -- tests/unit/liveResultPreview.test.ts` passed.
+    *   `npx playwright test tests/e2e/user-issues-fixed.spec.ts -g "live result shows for phrase-variable division assignment without =>" --project=chromium --workers=1` passed.
+    *   `npm run docs:map` passed.
+    *   `npm run docs:drift -- HEAD` passed.
+    *   `npm run docs:drift` passed.
+    *   `npm run spec:test` passed.
+    *   `npm run build` passed.
+*   Risks/blockers:
+    *   One existing targeted e2e (`phrase variables containing 'of' work in expressions`) remained flaky/timed out in isolated run; test setup was hardened to clear the editor first, but full-suite confirmation was not run in this interaction.
+
+## Entry J-2026-02-19-02
+
 *   Timestamp: 2026-02-19 03:24:16 CET / 2026-02-19 02:24:16 UTC
 *   Summary:
     *   User asked for faster visibility into blocked/error reasons instead of waiting for the small native hover tooltip on the `...` chip.

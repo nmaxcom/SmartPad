@@ -1,4 +1,5 @@
 import {
+  hasKnownVariableReference,
   isLikelyLiveExpression,
   shouldBypassUnresolvedLiveGuard,
   shouldShowLiveForAssignmentValue,
@@ -79,5 +80,19 @@ describe("shouldShowLiveForAssignmentValue", () => {
     expect(shouldShowLiveForAssignmentValue("distance in km", variableContext, functionStore)).toBe(
       true
     );
+  });
+
+  test("recognizes known phrase variable references in math expressions", () => {
+    const variableContext = new Map<string, Variable>([
+      ["pizza total cost", buildVariable("pizza total cost")],
+      ["number of friends", buildVariable("number of friends")],
+    ]);
+    expect(
+      hasKnownVariableReference("pizza total cost / number of friends", variableContext)
+    ).toBe(true);
+    expect(hasKnownVariableReference("unknown thing / number of friends", variableContext)).toBe(
+      true
+    );
+    expect(hasKnownVariableReference("unknown thing / unknown two", variableContext)).toBe(false);
   });
 });

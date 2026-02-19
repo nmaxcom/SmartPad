@@ -8,6 +8,10 @@ https://dribbble.com/shots/24984990-Deposit-Calculator-UI-Kit-Widgets
 # TODO
 - finalizar [spec implementation](./Specs/ResultChipsAndValueGraph.implementation-gaps.md)
 - 
+# Live Result notes
+- Live Result should show computed outputs (numbers/units/currency/list values), not echo raw unevaluated expression text.
+- Phrase-variable math assignments like `cost per friend = pizza total cost / number of friends` should render live once referenced variables exist.
+
 # nuevas ideas
 Instead of just solve, allow a user to right-click a result and say "Make this result 1000 by changing [variable]." The app then writes the solve syntax for them at the bottom of the document.
 mostrar ventanita/prediccion al empezar a escribir variable name

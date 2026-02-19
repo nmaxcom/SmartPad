@@ -106,6 +106,14 @@ export const shouldShowLiveForAssignmentValue = (
 export const shouldBypassUnresolvedLiveGuard = (expression: string): boolean =>
   LIVE_WORD_OPERATOR_REGEX.test(expression);
 
+export const hasKnownVariableReference = (
+  expression: string,
+  variableContext: Map<string, Variable>
+): boolean =>
+  Array.from(variableContext.keys()).some((name) =>
+    hasIdentifierBoundaryMatch(expression, name)
+  );
+
 const collectVariableNames = (components: ExpressionComponent[]): Set<string> => {
   const names = new Set<string>();
   const visit = (items: ExpressionComponent[]) => {

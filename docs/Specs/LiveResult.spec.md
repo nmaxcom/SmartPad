@@ -53,6 +53,7 @@ Plain:
 
 Examples:
 - `4lb to kg` -> show converted result.
+- `cost per friend = pizza total cost / number of friends` -> show computed result on that line when referenced variables are already defined.
 - `4lb to` -> show nothing (not yet complete).
 - `unknownVar + 2` -> show nothing (not resolvable yet).
 
@@ -195,4 +196,3 @@ Plain:
 2. Additional preview badges/tooltips.
 3. Changes to explicit `=>` semantics.
 4. Behavior changes to assignment persistence model.
-

@@ -44,6 +44,7 @@ import type { EvaluationContext } from "../eval";
 import {
   getLiveResultMetrics,
   hasUnresolvedLiveIdentifiers,
+  hasKnownVariableReference,
   isLikelyLiveExpression,
   recordLiveResultEvaluation,
   recordLiveResultRendered,
@@ -607,7 +608,8 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
                 });
               } else if (
                 hasUnresolvedLiveIdentifiers(candidateNode.components, currentVariableContext) &&
-                !shouldBypassUnresolvedLiveGuard(rawLine)
+                !shouldBypassUnresolvedLiveGuard(rawLine) &&
+                !hasKnownVariableReference(rawLine, currentVariableContext)
               ) {
                 if (settings.liveResultEnabled) {
                   recordLiveResultSuppressed("unresolved");
@@ -676,7 +678,8 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
                 recordLiveResultSuppressed("incomplete");
               } else if (
                 hasUnresolvedLiveIdentifiers(candidateNode.components, currentVariableContext) &&
-                !shouldBypassUnresolvedLiveGuard(rawValue)
+                !shouldBypassUnresolvedLiveGuard(rawValue) &&
+                !hasKnownVariableReference(rawValue, currentVariableContext)
               ) {
                 recordLiveResultSuppressed("unresolved");
               } else {
@@ -696,7 +699,44 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
                   } as RenderNode);
                   recordLiveResultRendered();
                 } else {
-                  recordLiveResultSuppressed("error");
+                  const variableName = String((node as any).variableName || "");
+                  const assignedVariable = variableName
+                    ? reactiveStore.getVariable(variableName)
+                    : null;
+                  if (
+                    assignedVariable?.value &&
+                    !SemanticValueTypes.isError(assignedVariable.value as any)
+                  ) {
+                    const fallbackResult =
+                      typeof assignedVariable.value?.toString === "function"
+                        ? assignedVariable.value.toString({
+                            precision: settings.decimalPlaces,
+                            scientificUpperThreshold: Math.pow(
+                              10,
+                              settings.scientificUpperExponent
+                            ),
+                            scientificLowerThreshold: Math.pow(
+                              10,
+                              settings.scientificLowerExponent
+                            ),
+                            scientificTrimTrailingZeros: settings.scientificTrimTrailingZeros,
+                            dateFormat: settings.dateDisplayFormat,
+                            groupThousands: settings.groupThousands,
+                          })
+                        : String(assignedVariable.value);
+                    collectedRenderNodes.push({
+                      type: "mathResult",
+                      line: index + 1,
+                      originalRaw: lines[index] ?? node.raw ?? "",
+                      expression: rawValue,
+                      result: fallbackResult,
+                      displayText: `${rawValue} => ${fallbackResult}`,
+                      livePreview: true,
+                    } as RenderNode);
+                    recordLiveResultRendered();
+                  } else {
+                    recordLiveResultSuppressed("error");
+                  }
                 }
               }
             } else {
