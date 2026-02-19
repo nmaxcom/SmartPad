@@ -391,11 +391,12 @@ body.number-scrubbing * {
 /* Result text is inserted as real text nodes in the widget for selection/copy */
 
 .semantic-error-result {
-  color: var(--syntax-error);
+  color: #ff8fb6;
   background-color: var(--syntax-error-bg);
   padding: 1px 5px;
   border-radius: 6px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: normal;
   user-select: text !important;
   display: inline-block;
   border: 1px solid var(--syntax-error-border);
