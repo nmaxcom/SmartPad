@@ -1,5 +1,5 @@
 export const QUICK_TOUR_TEMPLATE = `# Quick Tour: a guided walkthrough
-# Core idea: write a line and add "=>" to evaluate
+# Core idea: write a line to evaluate live (add "=>" only when you need explicit trigger behavior)
 
 2 + 3 =>
 sqrt(16) + 2.5 =>

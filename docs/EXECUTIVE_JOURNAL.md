@@ -1245,3 +1245,37 @@
     *   `npm run spec:test` passed.
 *   Risks/blockers:
     *   Repository currently contains many unrelated local changes; this work remains scoped to touched files only.
+
+## Entry J-2026-02-19-01
+
+*   Timestamp: 2026-02-19 02:44:53 CET / 2026-02-19 01:44:53 UTC
+*   Summary:
+    *   User requested removing template-panel `=>` triggers now that Live Result is working, except where explicit trigger is truly required.
+    *   Implemented trigger normalization on template insert so optional `=>` (and inline expected-output text) are stripped automatically.
+    *   Preserved explicit triggers only for required cases: explicit error surfacing, `solve` flows, unresolved-variable explicit demo, and result-chip seed line.
+*   Decisions:
+    *   Keep template source mostly intact and enforce trigger cleanup at insertion time to avoid manual drift across many templates.
+    *   Keep explicit trigger examples in Live Result playground limited to required cases (`unknownVar + 1 =>`, `solve ... =>`).
+*   User directives:
+    *   "now that we have live result working, remove all triggers from the template panel, except in those cases where the trigger is needed"
+*   Assistant commitments:
+    *   Add regression coverage for trigger normalization logic.
+    *   Keep commit scope limited to this task's files.
+*   Artifacts:
+    *   `src/components/VariablePanel/TemplatePanel.tsx` (template insertion now normalizes triggers; Live Result template explicit section tightened)
+    *   `src/components/VariablePanel/templateTriggerNormalization.ts` (new normalization rules + required-trigger exceptions)
+    *   `src/templates/quickTourTemplate.ts` (quick-tour guidance text updated for live evaluation default)
+    *   `tests/unit/templateTriggerNormalization.test.ts` (new regression coverage)
+    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   None.
+*   Validation:
+    *   `npm run test:unit -- tests/unit/templateTriggerNormalization.test.ts` passed.
+    *   `npx playwright test tests/e2e/live-result-template-visual.spec.ts --project=chromium --workers=1` passed.
+    *   `npm run docs:map` passed.
+    *   `npm run docs:drift` failed for previous commit range (`HEAD~1...HEAD`) due pre-existing mapped change (`src/eval/liveResultPreview.ts`) without docs update.
+    *   `npm run docs:drift -- HEAD` passed for current working tree.
+    *   `npm run spec:test` passed.
+    *   `npm run build` passed.
+*   Risks/blockers:
+    *   Default `docs:drift` script range depends on last commit and can fail due prior unrelated commit state.

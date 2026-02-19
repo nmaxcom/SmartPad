@@ -1,6 +1,7 @@
 import React from "react";
 import { useEditorContext } from "../Editor";
 import { QUICK_TOUR_TEMPLATE } from "../../templates/quickTourTemplate";
+import { normalizeTemplateTriggers } from "./templateTriggerNormalization";
 import "./TemplatePanel.css";
 
 // Template data with modern variable names (spaces and phrases)
@@ -723,10 +724,9 @@ unknownVar + 1
 4lb to
 solve x + 2 = 5
 
-# Explicit trigger still works and remains authoritative:
+# Explicit trigger still works and remains authoritative (for explicit errors/solve):
 unknownVar + 1 =>
-3*4 =>
-4lb to kg =>
+solve x + 2 = 5 =>
 `,
   },
   {
@@ -749,7 +749,7 @@ function TemplatePanel() {
   const { setSmartPadContent } = useEditorContext();
 
   const handleTemplateClick = (template: (typeof templates)[0]) => {
-    setSmartPadContent(template.content);
+    setSmartPadContent(normalizeTemplateTriggers(template.id, template.content));
     // Ensure evaluation runs after insertion
     try {
       window.dispatchEvent(new Event('forceEvaluation'));
