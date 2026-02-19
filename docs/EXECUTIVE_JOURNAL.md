@@ -1279,3 +1279,29 @@
     *   `npm run docs:drift` passed after commit (`HEAD~1...HEAD` now scoped to this task commit).
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-19-02
+
+*   Timestamp: 2026-02-19 03:24:16 CET / 2026-02-19 02:24:16 UTC
+*   Summary:
+    *   User asked for faster visibility into blocked/error reasons instead of waiting for the small native hover tooltip on the `...` chip.
+    *   Assistant traced current behavior to `title`-attribute tooltips on `.semantic-live-blocked-display` in result decorations.
+    *   Assistant prepared implementation-ready UX options prioritized for speed and readability.
+*   Decisions:
+    *   Treat the current `title` tooltip behavior as suboptimal for quick diagnostics in-editor.
+    *   Prefer an interaction that is immediate (click/focus/keyboard) and does not depend on browser tooltip delay.
+*   User directives:
+    *   "i think the ... error should be faster to get to read whats going on than hovering and having to wait for that tiny tooltip to show up. Ideas?"
+*   Assistant commitments:
+    *   Provide concrete options and recommend a default implementation path.
+    *   Implement the selected interaction pattern once user confirms direction.
+*   Artifacts:
+    *   `docs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   `P-2026-02-19-01` - Improve blocked/error reason reveal UX for `.semantic-live-blocked-display`.
+        *   Owner: Assistant
+        *   Due: TBD
+        *   Status: todo
+        *   Next: implement chosen interaction (recommended: click-to-expand inline reason), add regression/e2e coverage, run target tests + build.
+*   Risks/blockers:
+    *   None.
