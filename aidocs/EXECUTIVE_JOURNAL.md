@@ -1547,3 +1547,54 @@
     *   None.
 *   Risks/blockers:
     *   Existing docs/spec entropy and historical drift mean this requires iterative cleanup, not a one-shot file move.
+
+## Entry J-2026-02-20-05
+
+*   Timestamp: 2026-02-20 03:07:13 CET / 2026-02-20 02:07:13 UTC
+*   Summary:
+    *   User approved autonomous implementation of trusted spec alignment and requested that it be integrated into the AI operating system.
+    *   Assistant implemented a non-breaking canonical split (`docs/Specs/implemented` vs `docs/Specs/proposed`) with a machine-enforced trust registry and CI gate.
+*   Decisions:
+    *   Keep existing detailed source specs in `docs/Specs/` during migration to avoid breaking generators and historical links.
+    *   Use `docs/spec-trust.json` + canonical cards in `docs/Specs/` as the trust layer.
+    *   Classify plotting as `proposed` until dedicated plotting-focused trace tests are added.
+*   User directives:
+    *   "yes. don't forget to add it to the AI system"
+*   Assistant commitments:
+    *   Enforce trust checks in local/CI gates and keep AI manuals aligned with the new process.
+*   Artifacts:
+    *   `docs/spec-trust.json` (new trust registry, one entry per `docs/Specs/*.spec.md`)
+    *   `scripts/spec-trust-check.js` (new trust validation gate)
+    *   `docs/Specs/README.md` (canonical trust layout)
+    *   `docs/Specs/implemented/index.md`
+    *   `docs/Specs/proposed/index.md`
+    *   `docs/Specs/implemented/live-results.md`
+    *   `docs/Specs/implemented/result-chips-and-references.md`
+    *   `docs/Specs/implemented/currency-and-fx.md`
+    *   `docs/Specs/implemented/lists.md`
+    *   `docs/Specs/implemented/ranges.md`
+    *   `docs/Specs/implemented/locale-date-time.md`
+    *   `docs/Specs/implemented/duration-and-time-values.md`
+    *   `docs/Specs/implemented/file-management.md`
+    *   `docs/Specs/proposed/plotting-and-dependency-views.md`
+    *   `package.json` (`spec:trust` script)
+    *   `scripts/verify-changed.js` (now includes `spec:trust`)
+    *   `AGENTS.md` (spec trust policy + command trigger updates)
+    *   `aidocs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` (spec trust workflow integrated)
+    *   `aidocs/AI_DOCS_OPERATIONS.md` (spec trust in default workflows/source-of-truth)
+    *   `aidocs/AI_RELIABILITY_SYSTEM.md` (spec trust gate and implemented/proposed model)
+    *   `aidocs/TODO_BACKLOG.md` (completed task `T-2026-02-20-02`)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   None.
+*   Validation:
+    *   `npm run spec:trust` passed.
+    *   `npm run verify:changed -- HEAD` passed.
+    *   Sub-checks executed and passed through `verify:changed`:
+        *   `npm run docs:map -- HEAD`
+        *   `npm run docs:drift -- HEAD`
+        *   `npm run spec:test -- HEAD`
+        *   `npm run spec:trust`
+        *   `npm run build`
+*   Risks/blockers:
+    *   Trust is now structurally enforced, but some domains (notably plotting) remain intentionally classified as non-implemented until dedicated trace coverage is added.

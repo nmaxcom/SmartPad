@@ -63,15 +63,23 @@ If tests fail, do not present work as complete. Provide failure summary and next
 ## Spec-First Sync Policy
 Specs are source-of-truth for behavior.
 
+Trusted spec structure:
+- implemented specs: `docs/Specs/implemented/`
+- proposed/partial specs: `docs/Specs/proposed/`
+- trust registry: `docs/spec-trust.json`
+
 When implementation behavior changes in `src/`:
 1. check whether linked spec pages in `docs/Specs/` need updates
 2. update specs when behavior changed or rules were clarified
 3. update user docs when spec or behavior changed
 4. update `docs/spec-map.json` when new feature areas/files are introduced or mapping changes
-5. run `npm run docs:map`
-6. run `npm run docs:drift`
-7. run `npm run spec:test`
-8. mention spec/docs/spec-map/test updates in the final report
+5. update `docs/spec-trust.json` and canonical cards in `docs/Specs/implemented/` or `docs/Specs/proposed/` when status/coverage changed
+6. run `npm run docs:map`
+7. run `npm run docs:drift`
+8. run `npm run spec:test`
+9. run `npm run spec:trust`
+10. run `npm run verify:changed`
+11. mention spec/docs/spec-map/spec-trust/test updates in the final report
 
 Do this automatically; user should not have to request it.
 
@@ -87,6 +95,7 @@ Map user commands to executable actions:
 - "Run docs review now" -> `npm run docs:review`
 - "Run docs drift check" -> `npm run docs:drift`
 - "Refresh docs from spec" -> follow `aidocs/AI_DOCS_OPERATIONS.md`
+- "Run spec trust check" -> `npm run spec:trust`
 - "Run verify changed" -> `npm run verify:changed`
 
 ## Safety

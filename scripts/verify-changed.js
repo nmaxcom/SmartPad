@@ -166,6 +166,7 @@ const main = () => {
   checks.push(runCheck("Spec map coverage", `npm run docs:map -- ${quoteArg(range)}`));
   checks.push(runCheck("Docs drift", `npm run docs:drift -- ${quoteArg(range)}`));
   checks.push(runCheck("Spec-test sync", `npm run spec:test -- ${quoteArg(range)}`));
+  checks.push(runCheck("Spec trust", "npm run spec:trust"));
 
   if (relatedSources.length > 0) {
     const quotedSources = relatedSources.map((file) => quoteArg(file)).join(" ");

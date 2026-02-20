@@ -7,6 +7,7 @@ Keep SmartPad documentation continuously accurate using AI-only maintenance (no 
 - "Run docs review now"
 - "Run docs drift check"
 - "Refresh docs from spec"
+- "Run spec trust check"
 - "Run verify changed"
 - "Prepare docs update plan"
 - "What docs are pending?"
@@ -22,13 +23,17 @@ Steps:
 1. Identify impacted feature groups from `docs/spec-map.json`.
 2. Update `docs/spec-map.json` if new files/areas are introduced or mapping changed.
 3. Update `docs/Specs/` when behavior/rules changed.
-4. Update user docs for changed feature behavior.
-5. Run `npm run verify:changed` (primary gate).
-6. If verify fails, use sub-checks for diagnosis:
+4. Update trust registry and canonical status cards:
+   - `docs/spec-trust.json`
+   - `docs/Specs/implemented/` or `docs/Specs/proposed/`
+5. Update user docs for changed feature behavior.
+6. Run `npm run verify:changed` (primary gate).
+7. If verify fails, use sub-checks for diagnosis:
    - `npm run docs:map`
    - `npm run docs:drift`
    - `npm run spec:test`
-7. Record updates in `aidocs/EXECUTIVE_JOURNAL.md`.
+   - `npm run spec:trust`
+8. Record updates in `aidocs/EXECUTIVE_JOURNAL.md`.
 
 ### 1) Verify Changed Workflow (new default CI-compatible gate)
 Use when asked to validate a change set end-to-end.
@@ -78,6 +83,8 @@ Steps:
 
 ## Source of Truth
 - Spec mapping file: `docs/spec-map.json`
+- Spec trust registry: `docs/spec-trust.json`
+- Canonical spec status folders: `docs/Specs/implemented/`, `docs/Specs/proposed/`
 - Executive memory and pending tasks: `aidocs/EXECUTIVE_JOURNAL.md`
 - Assistant operating rules: `aidocs/AI_EXECUTIVE_ASSISTANT_MANUAL.md`
 - Reliability enforcement workflow: `aidocs/AI_RELIABILITY_SYSTEM.md`
