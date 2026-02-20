@@ -29,13 +29,12 @@ describe("Units Reference System", () => {
       expect(categories).toContain("energy");
       expect(categories).toContain("power");
       expect(categories).toContain("electric");
-      expect(categories).toContain("computer");
     });
 
     test("should have correct total unit count", () => {
       const totalCount = getTotalUnitCount();
-      expect(totalCount).toBeGreaterThan(40);
-      expect(totalCount).toBeLessThan(50);
+      expect(totalCount).toBeGreaterThan(35); // Should have around 38 units
+      expect(totalCount).toBeLessThan(40);
     });
 
     test("should have length units", () => {
@@ -120,18 +119,6 @@ describe("Units Reference System", () => {
       expect(symbols).toContain("A");   // ampere
       expect(symbols).toContain("V");   // volt
       expect(symbols).toContain("Ω");   // ohm
-    });
-
-    test("should have comprehensive computer units", () => {
-      const computerUnits = getUnitsByCategory("computer");
-      const symbols = computerUnits.map(unit => unit.symbol);
-
-      expect(symbols).toContain("bit");
-      expect(symbols).toContain("byte");
-      expect(symbols).toContain("KB");
-      expect(symbols).toContain("MB");
-      expect(symbols).toContain("GB");
-      expect(symbols).toContain("TB");
     });
 
     test("should have comprehensive energy units", () => {

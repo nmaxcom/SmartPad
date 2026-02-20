@@ -19,14 +19,12 @@
       "name": "Units And Conversions",
       "specPrefixes": [
         "src/units/",
-        "src/syntax/registry.ts",
         "docs/Specs/duration.spec.md",
         "docs/Specs/proposed/unit-aliases-and-ratio.md"
       ],
       "docPrefixes": [
         "docs/Specs/proposed/unit-aliases-and-ratio.md",
         "docs/Specs/proposed/unit-decision-forks.md",
-        "website/docs/",
         "public/docs/"
       ],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]

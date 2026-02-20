@@ -242,22 +242,6 @@ $500 / ($0.15/h) => 3333.33 h
 
 No “currencyUnit” special cases.
 
-### 6.1 Computer/data units in core registry
-
-Web docs and syntax references must include computer/data units as first-class built-ins:
-
-* `bit`, `byte`
-* `KB`, `MB`, `GB`, `TB`
-
-These units participate in the same ratio algebra and conversion pipeline as other dimensions.
-Example behavior that must remain valid:
-
-```text
-download = 18 GB
-speed = 120 MB/s
-download / speed => 153.6 s
-```
-
 ---
 
 ## 7. Conversion (`to` / `in`) Rules
