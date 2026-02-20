@@ -4,7 +4,7 @@
 Keep todos organized by level without mixing contexts.
 
 ## Single Backlog, Multiple Lanes
-Use one registry file: `docs/TODO_BACKLOG.md`.
+Use one registry file: `aidocs/TODO_BACKLOG.md`.
 Each item belongs to one lane:
 - `feature`: current major implementation and validation
 - `project`: docs, website, community, release operations

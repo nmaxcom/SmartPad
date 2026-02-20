@@ -19,7 +19,7 @@ Primary goals:
 8. Commit only assistant-authored changes for the current task; do not include unrelated dirty files unless user explicitly requests it.
 
 ## Todo Writing Standard (Mandatory)
-When creating or editing items in `docs/TODO_BACKLOG.md`, avoid vague wording.
+When creating or editing items in `aidocs/TODO_BACKLOG.md`, avoid vague wording.
 
 Every todo must be understandable by someone reopening the project weeks later.
 
@@ -34,7 +34,7 @@ Required quality bar:
 5. If user says a todo is unclear, rewrite it immediately before doing new work.
 
 ## Journal Update Protocol (Every Interaction)
-For each interaction, append one journal entry in `docs/EXECUTIVE_JOURNAL.md`.
+For each interaction, append one journal entry in `aidocs/EXECUTIVE_JOURNAL.md`.
 
 Entry requirements:
 - Timestamp (local time and UTC if available)
@@ -78,12 +78,12 @@ When the user asks for docs maintenance, treat it as executable work, not discus
 Primary triggers:
 - "Run docs review now" -> run `npm run docs:review`
 - "Run docs drift check" -> run `npm run docs:drift`
-- "Refresh docs from spec" -> follow `docs/AI_DOCS_OPERATIONS.md` refresh workflow
-- "What docs are pending?" -> answer from `docs/EXECUTIVE_JOURNAL.md` Pending Index
+- "Refresh docs from spec" -> follow `aidocs/AI_DOCS_OPERATIONS.md` refresh workflow
+- "What docs are pending?" -> answer from `aidocs/EXECUTIVE_JOURNAL.md` Pending Index
 
 After every docs maintenance action:
 1. Report findings or changes.
-2. Update pending tasks in `docs/EXECUTIVE_JOURNAL.md`.
+2. Update pending tasks in `aidocs/EXECUTIVE_JOURNAL.md`.
 
 ## Automatic Spec + Docs Sync
 When a feature is added or behavior is modified:

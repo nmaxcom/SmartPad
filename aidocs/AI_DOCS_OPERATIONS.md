@@ -10,7 +10,7 @@ Keep SmartPad documentation continuously accurate using AI-only maintenance (no 
 - "Prepare docs update plan"
 - "What docs are pending?"
 
-When these commands are used, the assistant should execute the matching workflow below and update `docs/EXECUTIVE_JOURNAL.md`.
+When these commands are used, the assistant should execute the matching workflow below and update `aidocs/EXECUTIVE_JOURNAL.md`.
 
 ## Workflows
 
@@ -25,7 +25,7 @@ Steps:
 5. Run `npm run docs:map`.
 6. Run `npm run docs:drift`.
 7. Run `npm run spec:test`.
-8. Record updates in `docs/EXECUTIVE_JOURNAL.md`.
+8. Record updates in `aidocs/EXECUTIVE_JOURNAL.md`.
 
 ### 1) Docs Review Workflow
 Use when asked to review current docs health.
@@ -66,8 +66,8 @@ Steps:
 
 ## Source of Truth
 - Spec mapping file: `docs/spec-map.json`
-- Executive memory and pending tasks: `docs/EXECUTIVE_JOURNAL.md`
-- Assistant operating rules: `docs/AI_EXECUTIVE_ASSISTANT_MANUAL.md`
+- Executive memory and pending tasks: `aidocs/EXECUTIVE_JOURNAL.md`
+- Assistant operating rules: `aidocs/AI_EXECUTIVE_ASSISTANT_MANUAL.md`
 
 ## Standards for Every Docs Update
 - Use exact feature names used in the app.

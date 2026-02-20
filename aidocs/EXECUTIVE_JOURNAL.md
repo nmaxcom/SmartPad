@@ -38,8 +38,8 @@
     *   Create manual and journal now.
     *   Maintain journal updates in future interactions for this project context.
 *   Artifacts:
-    *   `docs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` (created)
-    *   `docs/EXECUTIVE_JOURNAL.md` (created)
+    *   `aidocs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` (created)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (created)
 *   Pending updates:
     *   `P-2026-02-11-01` created and started.
     *   `P-2026-02-11-02` added from prior bug-reporting discussion.
@@ -62,8 +62,8 @@
     *   Keep journaling active on future interactions.
     *   Maintain bug intake through GitHub issues flow.
 *   Artifacts:
-    *   `docs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` (new)
-    *   `docs/EXECUTIVE_JOURNAL.md` (new and updated)
+    *   `aidocs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` (new)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (new and updated)
     *   `.github/ISSUE_TEMPLATE/bug_report.yml` (new issue form)
     *   `.github/ISSUE_TEMPLATE/config.yml` (new template config)
     *   `src/components/Layout/AppHeader.tsx` (added report button)
@@ -90,7 +90,7 @@
 *   Assistant commitments:
     *   Provide phased plan with tooling, IA, ownership, and automation.
 *   Artifacts:
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   `P-2026-02-11-03` marked `done`.
     *   `P-2026-02-11-04` and `P-2026-02-11-05` created and started.
@@ -111,11 +111,11 @@
 *   Assistant commitments:
     *   Keep using these workflows when user invokes trigger phrases.
 *   Artifacts:
-    *   `docs/AI_DOCS_OPERATIONS.md` (new)
+    *   `aidocs/AI_DOCS_OPERATIONS.md` (new)
     *   `docs/spec-map.json` (new)
     *   `scripts/docs-review.js` (new)
     *   `scripts/docs-drift-check.js` (new)
-    *   `docs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` (updated with trigger rules)
+    *   `aidocs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` (updated with trigger rules)
     *   `package.json` (added `docs:review` and `docs:drift` scripts)
 *   Pending updates:
     *   `P-2026-02-11-04` marked `done`.
@@ -140,8 +140,8 @@
     *   Provide concrete anti-regression testing recommendations.
 *   Artifacts:
     *   `AGENTS.md` (created)
-    *   `docs/TODO_SYSTEM.md` (created)
-    *   `docs/TODO_BACKLOG.md` (created)
+    *   `aidocs/TODO_SYSTEM.md` (created)
+    *   `aidocs/TODO_BACKLOG.md` (created)
 *   Pending updates:
     *   `P-2026-02-12-01` marked `done`.
     *   `P-2026-02-12-02` marked `done`.
@@ -199,8 +199,8 @@
     *   Automatically check and update specs/docs/tests for feature or behavior changes.
 *   Artifacts:
     *   `AGENTS.md` (updated)
-    *   `docs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` (updated)
-    *   `docs/AI_DOCS_OPERATIONS.md` (updated)
+    *   `aidocs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` (updated)
+    *   `aidocs/AI_DOCS_OPERATIONS.md` (updated)
 *   Pending updates:
     *   `P-2026-02-12-03` marked `done`.
     *   `P-2026-02-12-04` marked `done`.
@@ -220,7 +220,7 @@
 *   Assistant commitments:
     *   Prioritize enforcement and reliability gaps before cosmetic docs work.
 *   Artifacts:
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   `P-2026-02-12-05` created and started.
 *   Risks/blockers:
@@ -242,8 +242,8 @@
     *   Keep docs/spec/test sync checks in default workflow.
 *   Artifacts:
     *   `AGENTS.md` (updated)
-    *   `docs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` (updated)
-    *   `docs/AI_DOCS_OPERATIONS.md` (updated)
+    *   `aidocs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` (updated)
+    *   `aidocs/AI_DOCS_OPERATIONS.md` (updated)
     *   `docs/spec-map.json` (expanded coverage + test mappings)
     *   `scripts/spec-map-coverage-check.js` (new)
     *   `scripts/spec-test-sync-check.js` (new)
@@ -275,8 +275,8 @@
 *   Assistant commitments:
     *   Return the next steps in priority order from the updated lane.
 *   Artifacts:
-    *   `docs/TODO_BACKLOG.md` (updated lane, statuses, and next tasks)
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/TODO_BACKLOG.md` (updated lane, statuses, and next tasks)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   `P-2026-02-13-01` marked `done`.
     *   `P-2026-02-13-02` marked `done`.
@@ -296,8 +296,8 @@
 *   Assistant commitments:
     *   Add tracked tasks now and explain current docs-link behavior.
 *   Artifacts:
-    *   `docs/TODO_BACKLOG.md` (updated with T-2026-02-13-04/05/06)
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/TODO_BACKLOG.md` (updated with T-2026-02-13-04/05/06)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   `P-2026-02-13-03` marked `done`.
     *   `P-2026-02-13-04` marked `done`.
@@ -322,7 +322,7 @@
     *   `src/components/ResultReferenceInteractionExtension.ts` (updated behavior)
     *   `tests/e2e/result-reference.spec.ts` (new/updated regression test)
     *   `docs/Specs/ResultChipsAndValueGraph.spec.md` (updated click-flow rule)
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   None.
 *   Risks/blockers:
@@ -341,7 +341,7 @@
 *   Assistant commitments:
     *   Provide lane-focused pending list with priorities and due dates.
 *   Artifacts:
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   None.
 *   Risks/blockers:
@@ -368,7 +368,7 @@
     *   `tests/unit/generateWebDocs.test.ts` (new regression tests for generator helpers)
     *   `package.json` (added `docs:web:build`)
     *   `docs/WEB_DOCS_ARCHITECTURE_DECISION.md` (new decision memo)
-    *   `docs/TODO_BACKLOG.md` (status updates)
+    *   `aidocs/TODO_BACKLOG.md` (status updates)
 *   Pending updates:
     *   `T-2026-02-13-04` marked `done`.
     *   `T-2026-02-13-05` marked `done`.
@@ -404,8 +404,8 @@
     *   `src/components/Layout/AppHeader.tsx` (uses normalized docs URL)
     *   `tests/unit/docsUrl.test.ts` (new tests)
     *   `public/docs/index.html` (regenerated)
-    *   `docs/TODO_BACKLOG.md` (updated task status)
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/TODO_BACKLOG.md` (updated task status)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   `T-2026-02-13-06` marked `done`.
     *   `T-2026-02-13-02` remains `in_progress` (example backfill).
@@ -432,7 +432,7 @@
 *   Assistant commitments:
     *   Keep the decision framed as timing/scope tradeoff, not anti-Docusaurus.
 *   Artifacts:
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   None.
 *   Risks/blockers:
@@ -452,8 +452,8 @@
 *   Assistant commitments:
     *   Provide concrete framework options and a recommended execution path.
 *   Artifacts:
-    *   `docs/TODO_BACKLOG.md` (updated)
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/TODO_BACKLOG.md` (updated)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   Added `T-2026-02-14-01` through `T-2026-02-14-05`.
 *   Risks/blockers:
@@ -474,10 +474,10 @@
 *   Assistant commitments:
     *   Begin Docusaurus migration implementation after this backlog/manual update.
 *   Artifacts:
-    *   `docs/TODO_BACKLOG.md` (rewritten task language and status updates)
-    *   `docs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` (new mandatory todo writing standard)
+    *   `aidocs/TODO_BACKLOG.md` (rewritten task language and status updates)
+    *   `aidocs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` (new mandatory todo writing standard)
     *   `AGENTS.md` (todo quality rules added)
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   `T-2026-02-14-04` moved to `in_progress`.
 *   Risks/blockers:
@@ -498,7 +498,7 @@
     *   Apply this approval behavior consistently in future SmartPad sessions.
 *   Artifacts:
     *   `AGENTS.md` (added Command Approval Policy)
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   None.
 *   Risks/blockers:
@@ -520,8 +520,8 @@
     *   Continue migration by installing website dependencies and validating Docusaurus build when network access is available.
 *   Artifacts:
     *   `AGENTS.md` (todo quality rules)
-    *   `docs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` (mandatory todo writing standard)
-    *   `docs/TODO_BACKLOG.md` (rewritten explicit tasks)
+    *   `aidocs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` (mandatory todo writing standard)
+    *   `aidocs/TODO_BACKLOG.md` (rewritten explicit tasks)
     *   `scripts/generate-docusaurus-docs.js` (new)
     *   `website/` scaffold (`docusaurus.config.ts`, `sidebars.ts`, docs, css, static assets, package.json)
     *   `website/docs/specs/*.md` (generated)
@@ -529,7 +529,7 @@
     *   `src/components/Layout/docsUrl.ts` + `src/components/Layout/AppHeader.tsx` (supports explicit docs URL override for future Docusaurus route)
     *   `tests/unit/docsUrl.test.ts` (expanded coverage)
     *   `docs/WEB_DOCS_ARCHITECTURE_DECISION.md` (status update)
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   `T-2026-02-14-04` remains `in_progress` until Docusaurus dependencies install and build are validated.
 *   Validation:
@@ -555,7 +555,7 @@
 *   Assistant commitments:
     *   Request approval promptly for blocked install/setup actions.
 *   Artifacts:
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   None.
 *   Risks/blockers:
@@ -581,9 +581,9 @@
     *   `website/docusaurus.config.ts` (routing/link config fixes)
     *   `website/docs/intro.md` (set docs home slug)
     *   `.gitignore` (ignore website generated build artifacts)
-    *   `docs/TODO_BACKLOG.md` (migration status updates)
+    *   `aidocs/TODO_BACKLOG.md` (migration status updates)
     *   `docs/WEB_DOCS_ARCHITECTURE_DECISION.md` (decision/state updated)
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   `T-2026-02-14-04` marked `done`.
     *   `T-2026-02-14-01` moved to `in_progress` with Docusaurus baseline live.
@@ -616,7 +616,7 @@
     *   `test-results/docs-loop-preview/report.json` (failed root-preview base-path run with 404 assets)
     *   `test-results/docs-loop-mounted/report.json` (passing production-base simulation run)
     *   `test-results/docs-loop-mounted/mounted-loop-*.png` (passing screenshots)
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   None.
 *   Validation:
@@ -646,7 +646,7 @@
     *   `tests/unit/docsUrl.test.ts` (updated expectations)
     *   `public/docs/` (rebuilt from local-base Docusaurus publish)
     *   `test-results/docs-loop-dev/*` (dev-mode loop artifacts)
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   None.
 *   Validation:
@@ -676,8 +676,8 @@
     *   `website/docs/specs/*.md` (new slugged guide pages with cleaned names)
     *   `website/docs/intro.md` (start-here path)
     *   `public/docs/` (rebuilt/synced ordered Docusaurus output)
-    *   `docs/TODO_BACKLOG.md` (T-2026-02-14-02 marked done)
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/TODO_BACKLOG.md` (T-2026-02-14-02 marked done)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   `T-2026-02-14-02` marked `done`.
 *   Validation:
@@ -698,13 +698,13 @@
     *   User asked what the team should work on next.
     *   Assistant reviewed assistant manual, docs operations guide, todo system, active backlog lane, and pending items.
 *   Decisions:
-    *   Prioritize open `project` lane items because `docs/TODO_BACKLOG.md` currently sets Active Lane to `project`.
+    *   Prioritize open `project` lane items because `aidocs/TODO_BACKLOG.md` currently sets Active Lane to `project`.
 *   User directives:
     *   "what should we work on"
 *   Assistant commitments:
     *   Provide a ranked next-work recommendation from active lane first, then optional cross-lane work.
 *   Artifacts:
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   None.
 *   Risks/blockers:
@@ -724,8 +724,8 @@
 *   Assistant commitments:
     *   Execute app lane work first and keep docs tasks secondary unless asked.
 *   Artifacts:
-    *   `docs/TODO_BACKLOG.md` (active lane switched to `feature`; added T-2026-02-14-06, T-2026-02-14-07, T-2026-02-14-08)
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/TODO_BACKLOG.md` (active lane switched to `feature`; added T-2026-02-14-06, T-2026-02-14-07, T-2026-02-14-08)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   `T-2026-02-14-06` created (`todo`, p0, due 2026-02-17)
     *   `T-2026-02-14-07` created (`todo`, p1, due 2026-02-18)
@@ -745,8 +745,8 @@
 *   Assistant commitments:
     *   Execute highlighting and explanation rewrite tasks next in the docs lane.
 *   Artifacts:
-    *   `docs/TODO_BACKLOG.md` (added T-2026-02-14-06 and T-2026-02-14-07)
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/TODO_BACKLOG.md` (added T-2026-02-14-06 and T-2026-02-14-07)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   Added `T-2026-02-14-06`.
     *   Added `T-2026-02-14-07`.
@@ -773,9 +773,9 @@
     *   `website/src/theme/prism-include-languages.js` (new Prism language)
     *   `website/src/css/custom.css` (token styling for smartpad examples)
     *   `website/docs/specs/*.md` and `public/docs/*` (regenerated docs output)
-    *   `docs/TODO_BACKLOG.md` (`T-2026-02-14-06` marked done)
-    *   `AGENTS.md` and `docs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` (assistant-only commit rule)
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/TODO_BACKLOG.md` (`T-2026-02-14-06` marked done)
+    *   `AGENTS.md` and `aidocs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` (assistant-only commit rule)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   `T-2026-02-14-06` marked `done`.
 *   Validation:
@@ -805,7 +805,7 @@
     *   `src/components/ResultsDecoratorExtension.ts` (duplicate literal cleanup strengthened for label/sourceValue divergence)
     *   `tests/e2e/result-reference.spec.ts` (added selected-chip echoed-prefix regression)
     *   `tests/e2e/repro-user-pi10-live-click.spec.ts` (added direct user-sequence repro suite + variants)
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   None.
 *   Validation:
@@ -836,7 +836,7 @@
     *   `src/components/ResultsDecoratorExtension.ts` (trace hooks for duplicate cleanup and reference attr updates)
     *   `tests/e2e/repro-user-pi10-live-click.spec.ts` (trace API capture test)
     *   `docs/Specs/ResultChipsAndValueGraph.spec.md` (new runtime trace diagnostics section)
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   None.
 *   Validation:
@@ -864,7 +864,7 @@
     *   Use next user-provided trace dump to isolate exact failing transition.
 *   Artifacts:
     *   `src/components/ResultReferenceInteractionExtension.ts` (extended trace events + selection-line snapshots)
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   None.
 *   Validation:
@@ -899,8 +899,8 @@
     *   `website/docs/intro.md` (rewritten landing page)
     *   `website/docs/guides/*.md` (new generated Start Here docs)
     *   `website/docs/specs/*.md`, `website/sidebars.ts`, `public/docs/*` (regenerated outputs)
-    *   `docs/TODO_BACKLOG.md` (docs overhaul statuses updated)
-    *   `docs/EXECUTIVE_JOURNAL.md` (this entry)
+    *   `aidocs/TODO_BACKLOG.md` (docs overhaul statuses updated)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
 *   Pending updates:
     *   `T-2026-02-14-07` remains `in_progress` for deeper narrative/edge-case content pass.
 *   Validation:
@@ -926,7 +926,7 @@
 *   Assistant commitments:
     *   Propose concrete high-impact upgrades and implementation order.
 *   Artifacts:
-    *   `docs/EXECUTIVE_JOURNAL.md` (this entry)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
 *   Pending updates:
     *   `T-2026-02-14-07` remains in progress (content depth and narrative quality pass).
 *   Risks/blockers:
@@ -953,8 +953,8 @@
     *   `website/docs/intro.md` (cinematic landing rewrite with live example component)
     *   `website/src/css/custom.css` (premium visual system + interactive example styling)
     *   `website/docs/specs/*.md`, `website/docs/guides/*.md`, `website/sidebars.ts`, `public/docs/*` (regenerated)
-    *   `docs/TODO_BACKLOG.md` (task updates + phase-2 todo)
-    *   `docs/EXECUTIVE_JOURNAL.md` (this entry)
+    *   `aidocs/TODO_BACKLOG.md` (task updates + phase-2 todo)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
 *   Pending updates:
     *   `T-2026-02-13-02` still in progress (ensure edge-case examples on every feature guide through interactive blocks).
     *   `T-2026-02-14-05` still in progress (scenario-led backfill with expected outputs across all pages).
@@ -993,8 +993,8 @@
     *   `tests/unit/appRuntimeMode.test.ts` (runtime mode regression tests)
     *   `website/src/css/custom.css` (Spatial Neon embed frame styling)
     *   `public/docs/*` (regenerated docs assets/pages)
-    *   `docs/TODO_BACKLOG.md` (`T-2026-02-14-09` moved to in_progress)
-    *   `docs/EXECUTIVE_JOURNAL.md` (this entry)
+    *   `aidocs/TODO_BACKLOG.md` (`T-2026-02-14-09` moved to in_progress)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
 *   Pending updates:
     *   `T-2026-02-14-09` remains in progress for broader phase-2 narrative/motion work.
 *   Validation:
@@ -1018,7 +1018,7 @@
     *   Map runtime embed helpers and app-level embed styling under `UI Panels And Settings` to keep docs/spec/test sync checks strict and accurate.
 *   Artifacts:
     *   `docs/spec-map.json` (added `src/App.css`, `src/utils/runtimeMode.ts` in `UI Panels And Settings` spec prefixes)
-    *   `docs/EXECUTIVE_JOURNAL.md` (this entry)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
 *   Validation:
     *   `npm run spec:test` passed.
     *   `npm run docs:drift` passed.
@@ -1037,7 +1037,7 @@
 *   Artifacts:
     *   `website/src/css/custom.css` (unified example component visual language)
     *   `public/docs/*` (regenerated docs assets)
-    *   `docs/EXECUTIVE_JOURNAL.md` (this entry)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
 *   Validation:
     *   `npm run docs:docusaurus:publish-local` passed.
     *   Playwright check passed for embed presence + forced theme (`spatial-dark`/`neon-syntax`).
@@ -1060,7 +1060,7 @@
     *   `website/docs/intro.md` (aligned to new language)
     *   `website/docs/specs/*.md`, `website/docs/guides/*.md` (regenerated)
     *   `public/docs/*` (regenerated build assets/pages)
-    *   `docs/EXECUTIVE_JOURNAL.md` (this entry)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
 *   Validation:
     *   `npm run docs:docusaurus:publish-local` passed.
     *   `npm run build` passed.
@@ -1085,7 +1085,7 @@
 *   Assistant commitments:
     *   Continue diagnosis once a failing trace (with visible duplication) is captured.
 *   Artifacts:
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   None.
 *   Risks/blockers:
@@ -1104,7 +1104,7 @@
 *   User directives:
     *   Add todos for the three issues and work in a loop until solved and proven with Playwright.
 *   Artifacts:
-    *   `docs/TODO_BACKLOG.md` (added and completed `T-2026-02-14-10/11/12`)
+    *   `aidocs/TODO_BACKLOG.md` (added and completed `T-2026-02-14-10/11/12`)
     *   `src/utils/runtimeMode.ts` (added import/preview param parsing)
     *   `src/App.tsx` (import gating, embed status reporter, embed class handling)
     *   `src/state/SheetContext.tsx` (ephemeral embed preview mode with no persistent writes)
@@ -1113,7 +1113,7 @@
     *   `website/src/css/custom.css` (status component styling)
     *   `tests/unit/appRuntimeMode.test.ts` (runtime parsing coverage)
     *   `public/docs/*` (regenerated docs output)
-    *   `docs/EXECUTIVE_JOURNAL.md` (this entry)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
 *   Validation:
     *   `npx jest tests/unit/appRuntimeMode.test.ts` passed.
     *   `npm run docs:docusaurus:publish-local` passed.
@@ -1146,7 +1146,7 @@
     *   `src/components/Editor.css` (removed generic error `::after` content rule)
     *   `src/components/SemanticHighlightExtension.ts` (reference-safe parsing and decoration range exclusion)
     *   `tests/e2e/result-reference.spec.ts` (new regression: chip should not get duplicate via `::after` or `semantic-error`)
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   None.
 *   Validation:
@@ -1179,7 +1179,7 @@
     *   `src/components/Editor.tsx` (propagate live-block reasons into line state)
     *   `src/components/ResultsDecoratorExtension.ts` (render fallback blocked-live chip when no live result can be produced)
     *   `src/components/Editor.css` (styles for `.semantic-live-blocked-display`)
-    *   `docs/TODO_BACKLOG.md` (updated `T-2026-02-14-11` wording to native SmartPad behavior)
+    *   `aidocs/TODO_BACKLOG.md` (updated `T-2026-02-14-11` wording to native SmartPad behavior)
     *   `artifacts/playwright/docs-deeplink-getting-started.png`
     *   `artifacts/playwright/docs-examples-no-status-overlay.png`
     *   `artifacts/playwright/smartpad-live-blocked-chip.png`
@@ -1234,7 +1234,7 @@
     *   `src/components/SemanticHighlightExtension.ts` (identifier-query highlight rule + range tokenization support)
     *   `tests/e2e/semantic-highlighting.spec.ts` (added range-index and standalone variable-query highlight coverage)
     *   `docs/spec-map.json` (mapped semantic highlight/editor css paths for coverage gate)
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   None.
 *   Validation:
@@ -1266,7 +1266,7 @@
     *   `src/components/VariablePanel/templateTriggerNormalization.ts` (new normalization rules + required-trigger exceptions)
     *   `src/templates/quickTourTemplate.ts` (quick-tour guidance text updated for live evaluation default)
     *   `tests/unit/templateTriggerNormalization.test.ts` (new regression coverage)
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   None.
 *   Validation:
@@ -1301,7 +1301,7 @@
     *   `tests/e2e/user-issues-fixed.spec.ts` (new phrase-variable assignment live-result regression test + stabilization for phrase-variable expression test setup)
     *   `docs/Specs/LiveResult.spec.md` (added phrase-variable assignment success example)
     *   `docs/notes.md` (Live Result computed-output notes)
-    *   `docs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
 *   Pending updates:
     *   None.
 *   Validation:
@@ -1331,7 +1331,7 @@
     *   Provide concrete options and recommend a default implementation path.
     *   Implement the selected interaction pattern once user confirms direction.
 *   Artifacts:
-    *   `docs/EXECUTIVE_JOURNAL.md` (this entry)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
 *   Pending updates:
     *   `P-2026-02-19-01` - Improve blocked/error reason reveal UX for `.semantic-live-blocked-display`.
         *   Owner: Assistant
@@ -1359,7 +1359,7 @@
     *   Run validation checks and report exact pass/fail outcomes.
 *   Artifacts:
     *   `src/components/Editor.css` (`.semantic-error-result` typography/color updates)
-    *   `docs/EXECUTIVE_JOURNAL.md` (this entry)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
 *   Pending updates:
     *   None.
 *   Validation:
@@ -1392,8 +1392,8 @@
     *   `tests/e2e/live-result.spec.ts` (new test: blocked reason text inline instead of ellipsis)
     *   `docs/Specs/ResultChipsAndValueGraph.spec.md` (behavior note for inline blocked reason text)
     *   `website/docs/specs/resultchipsandvaluegraph.md` (user-doc mirror update)
-    *   `docs/TODO_BACKLOG.md` (done-item wording updated to reflect inline reason text behavior)
-    *   `docs/EXECUTIVE_JOURNAL.md` (this entry)
+    *   `aidocs/TODO_BACKLOG.md` (done-item wording updated to reflect inline reason text behavior)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
 *   Pending updates:
     *   `P-2026-02-19-01` - Improve blocked/error reason reveal UX for `.semantic-live-blocked-display`.
         *   Owner: Assistant
@@ -1431,7 +1431,7 @@
     *   `tests/e2e/live-result.spec.ts` (assert blocked chip style color/size/weight)
     *   `docs/Specs/ResultChipsAndValueGraph.spec.md` (blocked chip typography note)
     *   `website/docs/specs/resultchipsandvaluegraph.md` (user-doc mirror note)
-    *   `docs/EXECUTIVE_JOURNAL.md` (this entry)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
 *   Pending updates:
     *   None.
 *   Validation:
@@ -1443,3 +1443,31 @@
     *   `npm run spec:test -- HEAD` passed.
 *   Risks/blockers:
     *   None for this scoped style update.
+
+## Entry J-2026-02-20-01
+
+*   Timestamp: 2026-02-20 02:22:03 CET / 2026-02-20 01:22:03 UTC
+*   Summary:
+    *   User requested moving AI-system docs out of `docs/` into `aidocs/` (excluding `AGENTS.md`) and preserving references.
+    *   Assistant moved AI governance/ops files and rewrote in-repo path references to the new `aidocs/` locations.
+*   Decisions:
+    *   Keep product/spec docs under `docs/`; move only AI assistant system docs (`AI_*`, todo system/backlog, executive journal) to `aidocs/`.
+    *   Update historical path mentions in journal/manual text to keep links resolvable after the move.
+*   User directives:
+    *   "let's move all the docs related to the AI system to aidocs/ (except agents.md of course). Make sure not to break any references."
+*   Assistant commitments:
+    *   Provide follow-up proposals to make development faster, safer, and more reliable.
+*   Artifacts:
+    *   `aidocs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` (moved from `docs/`)
+    *   `aidocs/AI_DOCS_OPERATIONS.md` (moved from `docs/`)
+    *   `aidocs/TODO_SYSTEM.md` (moved from `docs/`)
+    *   `aidocs/TODO_BACKLOG.md` (moved from `docs/`)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (moved from `docs/`, updated)
+    *   `AGENTS.md` (path references updated to `aidocs/...`)
+*   Pending updates:
+    *   None.
+*   Validation:
+    *   Verified old-path references are removed for moved files via repository grep check:
+      * no matches for `docs/(AI_EXECUTIVE_ASSISTANT_MANUAL.md|AI_DOCS_OPERATIONS.md|TODO_SYSTEM.md|TODO_BACKLOG.md|EXECUTIVE_JOURNAL.md)` outside `aidocs/` path text.
+*   Risks/blockers:
+    *   None.

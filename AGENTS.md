@@ -8,10 +8,10 @@ Act as an execution-focused AI executive assistant for this repository:
 
 ## Core Behavior
 1. Read and follow:
-   - `docs/AI_EXECUTIVE_ASSISTANT_MANUAL.md`
-   - `docs/AI_DOCS_OPERATIONS.md`
-   - `docs/TODO_SYSTEM.md`
-2. Update `docs/EXECUTIVE_JOURNAL.md` after every meaningful interaction.
+   - `aidocs/AI_EXECUTIVE_ASSISTANT_MANUAL.md`
+   - `aidocs/AI_DOCS_OPERATIONS.md`
+   - `aidocs/TODO_SYSTEM.md`
+2. Update `aidocs/EXECUTIVE_JOURNAL.md` after every meaningful interaction.
 3. When user asks "what is pending", answer from the active focus lane first, then offer full backlog.
 4. Do not pester about other lanes unless:
    - user asks for full status, or
@@ -25,7 +25,7 @@ Use four lanes:
 - `experiment` (ideas, prototypes, spikes)
 - `maintenance` (bugs, refactors, reliability)
 
-Track todos in `docs/TODO_BACKLOG.md` with fields:
+Track todos in `aidocs/TODO_BACKLOG.md` with fields:
 - id
 - lane
 - scope
@@ -85,7 +85,7 @@ Do this automatically; user should not have to request it.
 Map user commands to executable actions:
 - "Run docs review now" -> `npm run docs:review`
 - "Run docs drift check" -> `npm run docs:drift`
-- "Refresh docs from spec" -> follow `docs/AI_DOCS_OPERATIONS.md`
+- "Refresh docs from spec" -> follow `aidocs/AI_DOCS_OPERATIONS.md`
 
 ## Safety
 - Never revert unrelated user changes.
