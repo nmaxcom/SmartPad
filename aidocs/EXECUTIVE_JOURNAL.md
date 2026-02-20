@@ -1799,3 +1799,25 @@
     *   `npm run test:unit -- tests/unit/unitAliasExamples.test.ts` passed (26/26 tests).
 *   Risks/blockers:
     *   Simplification currently targets simple `numerator/denominator` rate patterns by design; complex multi-factor denominators remain handled by generic unit algebra/conversion paths.
+
+## Entry J-2026-02-20-12
+
+*   Timestamp: 2026-02-20 23:53:20 CET / 2026-02-20 22:53:20 UTC
+*   Summary:
+    *   User requested adding explicit coverage for `6Mbit/s * 2 h`.
+    *   Assistant added regression test asserting the converted total in megabits.
+*   Decisions:
+    *   Keep assertion deterministic by converting output to `Mb` in the test expression.
+*   User directives:
+    *   "also add 6Mbit/s * 2 h"
+*   Assistant commitments:
+    *   Add test and run touched suite.
+*   Artifacts:
+    *   `tests/unit/unitAliasExamples.test.ts` (added `6Mbit/s * 2 h to Mb => 43200 Mb` test)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Validation:
+    *   `npm run test:unit -- tests/unit/unitAliasExamples.test.ts` passed (27/27 tests).
+*   Risks/blockers:
+    *   None for this test-only update.

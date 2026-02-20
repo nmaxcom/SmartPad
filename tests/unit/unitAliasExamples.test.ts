@@ -294,6 +294,12 @@ describe("Unit alias examples", () => {
     expect(result).toMatch(/43,?200\s*MB/);
   });
 
+  test("bit-rate multiplied by time simplifies to total megabits", () => {
+    const context = createContext();
+    const result = expectMathResult(evaluateLine("6Mbit/s * 2 h to Mb =>", context, 1));
+    expect(result).toMatch(/43,?200\s*Mb/);
+  });
+
   test("chemical mixing example keeps concentration units", () => {
     const context = createContext();
     evaluateLine("solution = 250 mL", context, 1);
