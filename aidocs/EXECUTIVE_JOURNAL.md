@@ -1635,3 +1635,51 @@
         *   `npm run spec:trust`
 *   Risks/blockers:
     *   The proposal docs are now cleanly separated and trustworthy in process terms; content-level truth still depends on continued feature-by-feature validation and promotion discipline.
+
+## Entry J-2026-02-20-07
+
+*   Timestamp: 2026-02-20 03:50:31 CET / 2026-02-20 02:50:31 UTC
+*   Summary:
+    *   User requested an aggressive docs de-clutter: remove floating legacy spec-like files from `docs/`, preserve only non-canonical feature details under `docs/Specs/proposed/`, and keep trust checks intact.
+    *   Assistant audited legacy files (`DATE_MATH`, `MATH_CAPABILITIES`, `TestSyntaxGuide`, `FEATURE_VISION`, `Unit.spec`, `UnitDecisionForks`, `notes`) against current source specs and migrated only uncovered/high-signal deltas into canonical proposed cards.
+*   Decisions:
+    *   Delete legacy root spec-like files after extracting unspecced deltas into proposed cards.
+    *   Keep canonical roadmap/spec idea docs only under `docs/Specs/proposed/`.
+    *   Use `Spec Governance` map prefix for `docs/Specs/proposed/` to allow proposal curation without false spec-test failures.
+*   User directives:
+    *   "carefully read all those files that contain specs one by one (including date_math and math_capabilities)"
+    *   "features that are already in the spec: delete"
+    *   "those that are not: save them in proposed/"
+*   Assistant commitments:
+    *   Preserve non-overlapping feature details in proposed cards and remove legacy files from `docs/`.
+*   Artifacts:
+    *   Added:
+        *   `docs/Specs/proposed/date-keywords-timezones-business-days.md`
+        *   `docs/Specs/proposed/solve-symbolic-capabilities.md`
+        *   `docs/Specs/proposed/ux-feature-ideas-backlog.md`
+    *   Updated:
+        *   `docs/Specs/proposed/index.md`
+        *   `docs/Specs/README.md`
+        *   `docs/spec-trust.json`
+        *   `docs/spec-map.json`
+        *   `README.md`
+        *   `aidocs/EXECUTIVE_JOURNAL.md`
+    *   Deleted:
+        *   `docs/DATE_MATH.md`
+        *   `docs/MATH_CAPABILITIES.md`
+        *   `docs/TestSyntaxGuide.md`
+        *   `docs/FEATURE_VISION.md`
+        *   `docs/Unit.spec.md`
+        *   `docs/UnitDecisionForks.md`
+        *   `docs/notes.md`
+*   Pending updates:
+    *   None.
+*   Validation:
+    *   `npm run verify:changed -- HEAD` passed.
+    *   Sub-checks executed and passed through `verify:changed`:
+        *   `npm run docs:map -- HEAD`
+        *   `npm run docs:drift -- HEAD`
+        *   `npm run spec:test -- HEAD`
+        *   `npm run spec:trust`
+*   Risks/blockers:
+    *   Proposed cards now explicitly contain ideas and unspecced deltas; they are not yet implemented contracts until promoted with tests.

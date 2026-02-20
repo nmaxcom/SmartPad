@@ -896,7 +896,7 @@ SmartPad is actively being developed. Planned features include:
 - 🎲 **Statistics** - Descriptive stats and distributions
 - 🔄 **Scenarios** - Compare different calculation scenarios
 
-See [docs/FEATURE_VISION.md](docs/FEATURE_VISION.md) for the complete feature roadmap.
+See [docs/Specs/proposed/feature-vision.md](docs/Specs/proposed/feature-vision.md) for the complete feature roadmap.
 
 ---
 

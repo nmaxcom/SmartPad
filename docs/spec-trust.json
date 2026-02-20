@@ -97,6 +97,30 @@
       "canonicalSpec": "docs/Specs/proposed/unit-decision-forks.md",
       "mappedGroups": ["Units And Conversions"],
       "testRefs": []
+    },
+    {
+      "id": "date-keywords-timezones-business-days",
+      "status": "proposed",
+      "sourceSpec": "docs/Specs/proposed/date-keywords-timezones-business-days.md",
+      "canonicalSpec": "docs/Specs/proposed/date-keywords-timezones-business-days.md",
+      "mappedGroups": ["Date Time And Duration"],
+      "testRefs": []
+    },
+    {
+      "id": "solve-symbolic-capabilities",
+      "status": "proposed",
+      "sourceSpec": "docs/Specs/proposed/solve-symbolic-capabilities.md",
+      "canonicalSpec": "docs/Specs/proposed/solve-symbolic-capabilities.md",
+      "mappedGroups": ["Solve And Symbolic Math"],
+      "testRefs": []
+    },
+    {
+      "id": "ux-feature-ideas-backlog",
+      "status": "proposed",
+      "sourceSpec": "docs/Specs/proposed/ux-feature-ideas-backlog.md",
+      "canonicalSpec": "docs/Specs/proposed/ux-feature-ideas-backlog.md",
+      "mappedGroups": ["UI Panels And Settings"],
+      "testRefs": []
     }
   ]
 }

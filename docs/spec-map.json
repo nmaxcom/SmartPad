@@ -10,9 +10,7 @@
         "docs/Specs/LiveResult.spec.md"
       ],
       "docPrefixes": [
-        "docs/TestSyntaxGuide.md",
-        "docs/MATH_CAPABILITIES.md",
-        "docs/notes.md",
+        "docs/Specs/proposed/solve-symbolic-capabilities.md",
         "public/docs/"
       ],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
@@ -26,8 +24,7 @@
       ],
       "docPrefixes": [
         "docs/Specs/proposed/unit-aliases-and-ratio.md",
-        "docs/MATH_CAPABILITIES.md",
-        "docs/UnitDecisionForks.md",
+        "docs/Specs/proposed/unit-decision-forks.md",
         "public/docs/"
       ],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
@@ -39,7 +36,7 @@
         "src/utils/currencyFx.ts",
         "docs/Specs/Currency.spec.md"
       ],
-      "docPrefixes": ["docs/MATH_CAPABILITIES.md", "docs/notes.md", "public/docs/"],
+      "docPrefixes": ["public/docs/"],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
     },
     {
@@ -51,25 +48,31 @@
         "docs/Specs/Lists.spec.md",
         "docs/Specs/Ranges.spec.md"
       ],
-      "docPrefixes": ["docs/TestSyntaxGuide.md", "docs/MATH_CAPABILITIES.md", "public/docs/"],
+      "docPrefixes": ["public/docs/"],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
     },
     {
       "name": "Date Time And Duration",
-      "specPrefixes": ["src/date/", "src/utils/localeDateNormalization.ts", "docs/DATE_MATH.md"],
-      "docPrefixes": ["docs/DATE_MATH.md", "docs/TestSyntaxGuide.md", "public/docs/"],
+      "specPrefixes": ["src/date/", "src/utils/localeDateNormalization.ts"],
+      "docPrefixes": [
+        "docs/Specs/proposed/date-keywords-timezones-business-days.md",
+        "public/docs/"
+      ],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
     },
     {
       "name": "Solve And Symbolic Math",
-      "specPrefixes": ["src/solve/", "src/types/SymbolicValue.ts", "docs/notes.md"],
-      "docPrefixes": ["docs/MATH_CAPABILITIES.md", "docs/notes.md", "public/docs/"],
+      "specPrefixes": ["src/solve/", "src/types/SymbolicValue.ts"],
+      "docPrefixes": [
+        "docs/Specs/proposed/solve-symbolic-capabilities.md",
+        "public/docs/"
+      ],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
     },
     {
       "name": "Plotting And Visualization",
       "specPrefixes": ["src/plotting/", "docs/Specs/Plotting.spec.md"],
-      "docPrefixes": ["docs/Specs/Plotting.spec.md", "docs/notes.md", "public/docs/"],
+      "docPrefixes": ["docs/Specs/Plotting.spec.md", "public/docs/"],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
     },
     {
@@ -82,7 +85,7 @@
         "src/components/Reference",
         "docs/Specs/ResultChipsAndValueGraph.spec.md"
       ],
-      "docPrefixes": ["docs/Specs/ResultChipsAndValueGraph.spec.md", "docs/notes.md", "public/docs/"],
+      "docPrefixes": ["docs/Specs/ResultChipsAndValueGraph.spec.md", "public/docs/"],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
     },
     {
@@ -103,24 +106,31 @@
         "src/App.tsx",
         "src/utils/runtimeMode.ts"
       ],
-      "docPrefixes": ["docs/ABOUT.md", "docs/notes.md", "public/docs/"],
+      "docPrefixes": [
+        "docs/ABOUT.md",
+        "docs/Specs/proposed/ux-feature-ideas-backlog.md",
+        "public/docs/"
+      ],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
     },
     {
       "name": "Spec Governance",
       "specPrefixes": [
         "docs/Specs/README.md",
-        "docs/Specs/proposed/index.md",
+        "docs/Specs/proposed/",
+        "docs/spec-trust.json",
         "docs/Unit.spec.md"
       ],
       "docPrefixes": [
         "docs/Specs/README.md",
-        "docs/Specs/proposed/index.md",
-        "docs/spec-trust.json"
+        "docs/Specs/proposed/",
+        "docs/spec-trust.json",
+        "docs/Unit.spec.md"
       ],
       "testPrefixes": [
         "docs/Specs/README.md",
-        "docs/Specs/proposed/index.md",
+        "docs/Specs/proposed/",
+        "docs/spec-trust.json",
         "docs/Unit.spec.md"
       ]
     }
