@@ -1873,3 +1873,37 @@
     *   File restoration verified by content readback.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-21-09
+
+*   Timestamp: 2026-02-21 00:32:58 CET / 2026-02-20 23:32:58 UTC
+*   Summary:
+    *   User requested planning/executing “show units” with clarification that rates are compound expressions (e.g., `Mbit/s`) and currencies should be treated as units in docs.
+    *   Assistant updated docs generation to render units/rates/currency guidance from canonical runtime sources and republished local webdocs.
+*   Decisions:
+    *   Keep source-of-truth in code: derive unit families from `SUPPORTED_UNITS` and currency symbols from `CURRENCY_INFO` instead of hand-maintained docs lists.
+    *   Document rate semantics as unit algebra (`unit/time`) rather than introducing separate rate-only unit types.
+*   User directives:
+    *   "let's work on show units. tell me how to plan on doing it"
+    *   "units like Mbit/s are actually a rate, not a unit... Don't forget the currencies we support"
+*   Assistant commitments:
+    *   Implement generator updates, regenerate/sync docs output, run reliability checks, and report what changed.
+*   Artifacts:
+    *   `scripts/generate-docusaurus-docs.js` (added runtime extraction helpers and generated units/rates/currency sections)
+    *   `website/docs/guides/syntax-playbook.md` (generated section updates)
+    *   `public/docs/guides/syntax-playbook/index.html` (published output includes all new sections)
+    *   `aidocs/TODO_BACKLOG.md` (marked `T-2026-02-20-05` done)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   `T-2026-02-20-03` (online webdocs availability) remains `todo`.
+*   Validation:
+    *   `npm run docs:docusaurus:generate` passed.
+    *   `npm run docs:docusaurus:publish-local` passed.
+    *   Spot checks passed via `rg` on generated markdown/html for `Units and rates model`, `Compound units and rate patterns`, and `Currency as units`.
+    *   `npm run docs:map -- HEAD` passed.
+    *   `npm run docs:drift -- HEAD` passed.
+    *   `npm run spec:test -- HEAD` passed.
+    *   `npm run spec:trust` passed.
+    *   `npm run verify:changed` passed.
+*   Risks/blockers:
+    *   No blockers for this task. Hosted-prod docs correctness (`T-2026-02-20-03`) is still pending separate deployment-path verification.

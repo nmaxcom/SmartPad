@@ -99,6 +99,111 @@ const ensureDir = (dirPath) => {
   }
 };
 
+const extractObjectLiteral = (source, marker) => {
+  const start = source.indexOf(marker);
+  if (start === -1) {
+    throw new Error(`Marker not found: ${marker}`);
+  }
+  const openBrace = source.indexOf("{", start);
+  if (openBrace === -1) {
+    throw new Error(`Opening brace not found for: ${marker}`);
+  }
+  let depth = 0;
+  let closeBrace = -1;
+  for (let i = openBrace; i < source.length; i += 1) {
+    const ch = source[i];
+    if (ch === "{") depth += 1;
+    if (ch === "}") depth -= 1;
+    if (depth === 0) {
+      closeBrace = i;
+      break;
+    }
+  }
+  if (closeBrace === -1) {
+    throw new Error(`Closing brace not found for: ${marker}`);
+  }
+  return source.slice(openBrace, closeBrace + 1);
+};
+
+const loadSupportedUnits = () => {
+  const registryPath = path.join(repoRoot, "src", "syntax", "registry.ts");
+  const source = fs.readFileSync(registryPath, "utf8");
+  const literal = extractObjectLiteral(source, "export const SUPPORTED_UNITS =");
+  return Function(`"use strict"; return (${literal});`)();
+};
+
+const loadSupportedCurrencySymbols = () => {
+  const currencyPath = path.join(repoRoot, "src", "types", "CurrencyValue.ts");
+  const source = fs.readFileSync(currencyPath, "utf8");
+  const literal = extractObjectLiteral(source, "const CURRENCY_INFO");
+  const regex = /'([^']+)'\s*:/g;
+  const symbols = [];
+  let match = regex.exec(literal);
+  while (match) {
+    symbols.push(match[1]);
+    match = regex.exec(literal);
+  }
+  return symbols;
+};
+
+const renderUnitsPlaybookSection = () => {
+  const units = loadSupportedUnits();
+  const currencies = loadSupportedCurrencySymbols();
+  const categories = Object.values(units);
+  const baseCategories = categories.filter((category) => category.name !== "Information Rate");
+  const baseCount = baseCategories.reduce((count, category) => count + category.units.length, 0);
+  const currencyList = currencies.map((symbol) => `\`${symbol}\``).join(", ");
+  const lines = [
+    "## Units and rates model",
+    "",
+    "- SmartPad treats canonical units as first-class symbols and supports compound expressions with `*`, `/`, and exponents.",
+    "- Rate expressions like `Mbit/s` are compounds (`Mbit` divided by `s`), not special one-off unit types.",
+    "- Any compatible unit can be expressed as `/s`, `/day`, `/month`, `/year`, etc.",
+    "",
+    "## Base unit families",
+    "",
+    `Total canonical symbols documented: **${baseCount}**`,
+    "",
+  ];
+
+  baseCategories.forEach((category) => {
+    lines.push(`### ${category.name}`);
+    lines.push("");
+    lines.push("| Symbol | Name | Aliases |");
+    lines.push("| --- | --- | --- |");
+    category.units.forEach((unit) => {
+      lines.push(`| \`${unit.symbol}\` | ${unit.name} | ${unit.aliases.join(", ")} |`);
+    });
+    lines.push("");
+  });
+
+  lines.push("## Compound units and rate patterns");
+  lines.push("");
+  lines.push("```smartpad");
+  lines.push("download = 6 Mbit/s * 2 h =>");
+  lines.push("download to MB =>");
+  lines.push("throughput = 250 unit/day");
+  lines.push("throughput to unit/month =>");
+  lines.push("```");
+  lines.push("");
+  lines.push("## Currency as units");
+  lines.push("");
+  lines.push("SmartPad supports currency symbols/codes as unit-like value types and rate compounds.");
+  lines.push("");
+  lines.push(`Supported symbols/codes: ${currencyList}`);
+  lines.push("");
+  lines.push("```smartpad");
+  lines.push("plan = $95/hour");
+  lines.push("monthly = plan * 160 h =>");
+  lines.push("egress = $0.09/GB");
+  lines.push("traffic = 12 TB/month");
+  lines.push("cost = egress * (traffic in GB/month) =>");
+  lines.push("```");
+  lines.push("");
+
+  return lines.join("\n");
+};
+
 const escapeYaml = (value) => value.replace(/"/g, '\\"');
 const readSpecContent = (fileName) => fs.readFileSync(path.join(specsDir, fileName), "utf8");
 
@@ -314,6 +419,7 @@ const renderIndexPage = (recordsByCategory) => {
 
 const renderGuidePages = (recordsByCategory) => {
   const allRecords = [...recordsByCategory.values()].flat();
+  const unitsPlaybookSection = renderUnitsPlaybookSection();
 
   return [
     {
@@ -369,6 +475,8 @@ const renderGuidePages = (recordsByCategory) => {
         "- Prefer explicit conversions with `to` / `in`.",
         "- Keep units and currencies attached to actual values.",
         "- Use named intermediate lines before compacting formulas.",
+        "",
+        unitsPlaybookSection,
         "",
       ].join("\n"),
     },
