@@ -1851,3 +1851,25 @@
     *   `npm run spec:trust` passed.
 *   Risks/blockers:
     *   Guardrail is intentionally strict for count-only custom units converting into information units; this protects typo safety but may require explicit unit definitions when users truly intend information semantics.
+
+## Entry J-2026-02-21-08
+
+*   Timestamp: 2026-02-21 00:10:35 CET / 2026-02-20 23:10:35 UTC
+*   Summary:
+    *   User requested restoring `notes.md` after prior docs cleanup.
+    *   Assistant restored `docs/notes.md` from historical commit `b5aa72b9` without changing any other files.
+*   Decisions:
+    *   Restore only the requested file as-is (no content edits).
+*   User directives:
+    *   "restore notes.md"
+*   Assistant commitments:
+    *   Keep restore scoped and commit immediately.
+*   Artifacts:
+    *   `docs/notes.md` (restored)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   None.
+*   Validation:
+    *   File restoration verified by content readback.
+*   Risks/blockers:
+    *   None.
