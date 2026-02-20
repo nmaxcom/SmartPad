@@ -1683,3 +1683,30 @@
         *   `npm run spec:trust`
 *   Risks/blockers:
     *   Proposed cards now explicitly contain ideas and unspecced deltas; they are not yet implemented contracts until promoted with tests.
+
+## Entry J-2026-02-20-08
+
+*   Timestamp: 2026-02-20 23:01:34 CET / 2026-02-20 22:01:34 UTC
+*   Summary:
+    *   User clarified prior request was todo-only and asked to undo all implementation work.
+    *   Assistant reverted the implementation commit and added exactly three todo items for the requested topics.
+*   Decisions:
+    *   Revert prior implementation commit fully, then keep only backlog/journal updates.
+    *   Track the three requests as separate concrete project-lane todos for independent execution.
+*   User directives:
+    *   "undo all that. i meant to just add as todos the 3 things"
+    *   "fix online webdocs, add computer related units and show all units in webdocs"
+*   Assistant commitments:
+    *   Leave code/docs behavior unchanged after revert.
+    *   Keep only todo entries for the three requested tasks.
+*   Artifacts:
+    *   Git revert commit: `39303b61` (reverted prior implementation commit)
+    *   `aidocs/TODO_BACKLOG.md` (added todo items `T-2026-02-20-03`, `T-2026-02-20-04`, `T-2026-02-20-05`)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (ongoing journal maintenance).
+*   Validation:
+    *   Verified clean worktree after revert before todo-only edits.
+    *   No product-code tests run because this interaction intentionally reverted product changes and only added backlog/journal metadata.
+*   Risks/blockers:
+    *   None for this todo-only update.
