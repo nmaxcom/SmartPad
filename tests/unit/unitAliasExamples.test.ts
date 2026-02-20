@@ -262,6 +262,22 @@ describe("Unit alias examples", () => {
     expect(mbpsAlias).toMatch(/3\s*MB\/s/);
   });
 
+  test("throughput multiplied by time yields equivalent total data forms", () => {
+    const context = createContext();
+
+    const megabits = expectMathResult(evaluateLine("6 Mb/s * 1.7 h to Mb =>", context, 1));
+    expect(megabits).toMatch(/36,?720\s*Mb/);
+
+    const gigabits = expectMathResult(evaluateLine("6 Mb/s * 1.7 h to Gb =>", context, 2));
+    expect(gigabits).toMatch(/36\.72\s*Gb/);
+
+    const megabytes = expectMathResult(evaluateLine("6 Mb/s * 1.7 h to MB =>", context, 3));
+    expect(megabytes).toMatch(/4,?590\s*MB/);
+
+    const gigabytes = expectMathResult(evaluateLine("6 Mb/s * 1.7 h to GB =>", context, 4));
+    expect(gigabytes).toMatch(/4\.59\s*GB/);
+  });
+
   test("download-time problems evaluate with information rates", () => {
     const context = createContext();
 

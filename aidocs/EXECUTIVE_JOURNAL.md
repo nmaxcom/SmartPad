@@ -1754,3 +1754,25 @@
 *   Risks/blockers:
     *   Full `verify:changed` remains environment-sensitive due watchman permissions in this sandbox.
     *   Some broad related-test failures appear unrelated to this feature slice and require separate triage.
+
+## Entry J-2026-02-20-10
+
+*   Timestamp: 2026-02-20 23:47:18 CET / 2026-02-20 22:47:18 UTC
+*   Summary:
+    *   User requested adding a dedicated test for `6 Mb/s * 1.7 h` expectations.
+    *   Assistant added coverage asserting equivalent results in `Mb`, `Gb`, `MB`, and `GB` forms.
+*   Decisions:
+    *   Keep this as a regression test in `unitAliasExamples` where other information/throughput scenarios already live.
+*   User directives:
+    *   "add as test"
+*   Assistant commitments:
+    *   Add the test and run the touched test suite.
+*   Artifacts:
+    *   `tests/unit/unitAliasExamples.test.ts` (added throughput*time equivalence test)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Validation:
+    *   `npm run test:unit -- tests/unit/unitAliasExamples.test.ts` passed (25/25 tests).
+*   Risks/blockers:
+    *   None for this test-only addition.
