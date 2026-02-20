@@ -99,6 +99,65 @@ const ensureDir = (dirPath) => {
   }
 };
 
+const loadSupportedUnits = () => {
+  const registryPath = path.join(repoRoot, "src", "syntax", "registry.ts");
+  const source = fs.readFileSync(registryPath, "utf8");
+  const marker = "export const SUPPORTED_UNITS =";
+  const start = source.indexOf(marker);
+  if (start === -1) {
+    throw new Error("SUPPORTED_UNITS declaration not found in syntax registry.");
+  }
+
+  const openBrace = source.indexOf("{", start);
+  if (openBrace === -1) {
+    throw new Error("SUPPORTED_UNITS object opening brace not found.");
+  }
+
+  let depth = 0;
+  let closeBrace = -1;
+  for (let i = openBrace; i < source.length; i += 1) {
+    const ch = source[i];
+    if (ch === "{") depth += 1;
+    if (ch === "}") depth -= 1;
+    if (depth === 0) {
+      closeBrace = i;
+      break;
+    }
+  }
+
+  if (closeBrace === -1) {
+    throw new Error("SUPPORTED_UNITS object closing brace not found.");
+  }
+
+  const objectLiteral = source.slice(openBrace, closeBrace + 1);
+  return Function(`"use strict"; return (${objectLiteral});`)();
+};
+
+const renderUnitsReferenceSection = () => {
+  const units = loadSupportedUnits();
+  const categories = Object.values(units);
+  const totalUnits = categories.reduce((count, category) => count + category.units.length, 0);
+  const lines = [
+    "## Supported units reference",
+    "",
+    `Total supported units: **${totalUnits}**`,
+    "",
+  ];
+
+  categories.forEach((category) => {
+    lines.push(`### ${category.name}`);
+    lines.push("");
+    lines.push("| Symbol | Name | Aliases |");
+    lines.push("| --- | --- | --- |");
+    category.units.forEach((unit) => {
+      lines.push(`| \`${unit.symbol}\` | ${unit.name} | ${unit.aliases.join(", ")} |`);
+    });
+    lines.push("");
+  });
+
+  return lines.join("\n");
+};
+
 const escapeYaml = (value) => value.replace(/"/g, '\\"');
 const readSpecContent = (fileName) => fs.readFileSync(path.join(specsDir, fileName), "utf8");
 
@@ -314,6 +373,7 @@ const renderIndexPage = (recordsByCategory) => {
 
 const renderGuidePages = (recordsByCategory) => {
   const allRecords = [...recordsByCategory.values()].flat();
+  const unitsReferenceSection = renderUnitsReferenceSection();
 
   return [
     {
@@ -369,6 +429,8 @@ const renderGuidePages = (recordsByCategory) => {
         "- Prefer explicit conversions with `to` / `in`.",
         "- Keep units and currencies attached to actual values.",
         "- Use named intermediate lines before compacting formulas.",
+        "",
+        unitsReferenceSection,
         "",
       ].join("\n"),
     },

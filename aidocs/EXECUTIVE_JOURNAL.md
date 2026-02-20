@@ -1683,3 +1683,44 @@
         *   `npm run spec:trust`
 *   Risks/blockers:
     *   Proposed cards now explicitly contain ideas and unspecced deltas; they are not yet implemented contracts until promoted with tests.
+
+## Entry J-2026-02-20-08
+
+*   Timestamp: 2026-02-20 22:35:43 CET / 2026-02-20 21:35:43 UTC
+*   Summary:
+    *   User requested: add a todo for fixing online webdocs units, add computer-related units, and show all units in webdocs.
+    *   Assistant implemented unit catalog expansion + docs generation changes and regenerated webdocs output.
+*   Decisions:
+    *   Add a concrete backlog item first, then execute immediately and close it in the same interaction.
+    *   Use `src/syntax/registry.ts` as the source of truth and make docs generation pull `SUPPORTED_UNITS` directly from that file so webdocs always reflect the full unit list.
+*   User directives:
+    *   "add todo fix online webdocs, add computer related units and show all units in webdocs"
+*   Assistant commitments:
+    *   Add `computer` unit coverage.
+    *   Surface complete units reference in webdocs.
+    *   Validate with tests and docs/spec checks.
+*   Artifacts:
+    *   `aidocs/TODO_BACKLOG.md` (added and then completed `T-2026-02-20-03`)
+    *   `src/syntax/registry.ts` (added `computer` unit category: bit/byte/KB/MB/GB/TB)
+    *   `tests/unit/syntax-reference/units.test.ts` (coverage for `computer` category and updated total-count bounds)
+    *   `scripts/generate-docusaurus-docs.js` (unit-registry extraction + generated “Supported units reference” section)
+    *   `website/docs/guides/syntax-playbook.md` (regenerated with full units table)
+    *   `public/docs/guides/syntax-playbook/index.html` and synced `public/docs/assets/*` (published local docs output)
+    *   `docs/spec-map.json` (mapped `src/syntax/registry.ts` and `website/docs/` in Units And Conversions)
+    *   `docs/Specs/proposed/unit-aliases-and-ratio.md` (added computer/data units note and example)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (ongoing journal maintenance).
+*   Validation:
+    *   `npm run test:unit -- tests/unit/syntax-reference/units.test.ts` passed.
+    *   `npm run docs:docusaurus:generate` passed.
+    *   `npm run docs:docusaurus:publish-local` passed (generate + build + sync).
+    *   `npm run docs:map` passed.
+    *   `npm run docs:drift` passed.
+    *   `npm run spec:test` passed.
+    *   `npm run spec:trust` passed.
+    *   `npm run verify:changed -- HEAD` failed due watchman permission error in its internal related-test subprocess (`npx jest --findRelatedTests ...`).
+    *   Equivalent related-tests command succeeded with explicit no-watchman flag: `npx jest --findRelatedTests src/syntax/registry.ts --passWithNoTests --watchman=false`.
+    *   Build check passed during verify:changed execution (`npm run build`).
+*   Risks/blockers:
+    *   `verify:changed` currently has environment sensitivity to watchman permissions in this sandbox; behavior checks themselves passed when watchman was disabled for Jest.

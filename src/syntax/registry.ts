@@ -266,6 +266,17 @@ export const SUPPORTED_UNITS = {
       { symbol: "V", name: "volt", aliases: ["volt", "volts"] },
       { symbol: "Ω", name: "ohm", aliases: ["ohm", "ohms"] }
     ]
+  },
+  computer: {
+    name: "Computer",
+    units: [
+      { symbol: "bit", name: "bit", aliases: ["bit", "bits"] },
+      { symbol: "byte", name: "byte", aliases: ["byte", "bytes"] },
+      { symbol: "KB", name: "kilobyte", aliases: ["kilobyte", "kilobytes"] },
+      { symbol: "MB", name: "megabyte", aliases: ["megabyte", "megabytes"] },
+      { symbol: "GB", name: "gigabyte", aliases: ["gigabyte", "gigabytes"] },
+      { symbol: "TB", name: "terabyte", aliases: ["terabyte", "terabytes"] }
+    ]
   }
 };
 
