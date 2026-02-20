@@ -7,6 +7,7 @@ Keep SmartPad documentation continuously accurate using AI-only maintenance (no 
 - "Run docs review now"
 - "Run docs drift check"
 - "Refresh docs from spec"
+- "Run verify changed"
 - "Prepare docs update plan"
 - "What docs are pending?"
 
@@ -22,12 +23,23 @@ Steps:
 2. Update `docs/spec-map.json` if new files/areas are introduced or mapping changed.
 3. Update `docs/Specs/` when behavior/rules changed.
 4. Update user docs for changed feature behavior.
-5. Run `npm run docs:map`.
-6. Run `npm run docs:drift`.
-7. Run `npm run spec:test`.
-8. Record updates in `aidocs/EXECUTIVE_JOURNAL.md`.
+5. Run `npm run verify:changed` (primary gate).
+6. If verify fails, use sub-checks for diagnosis:
+   - `npm run docs:map`
+   - `npm run docs:drift`
+   - `npm run spec:test`
+7. Record updates in `aidocs/EXECUTIVE_JOURNAL.md`.
 
-### 1) Docs Review Workflow
+### 1) Verify Changed Workflow (new default CI-compatible gate)
+Use when asked to validate a change set end-to-end.
+
+Steps:
+1. Run `npm run verify:changed -- <diff-range>` when a range is known, or `npm run verify:changed` locally.
+2. Review impacted groups and missing artifact hints from the summary.
+3. Fix missing docs/spec/tests/build issues and rerun until passing.
+4. In CI, ensure the PR summary/comment output is clean (no failed checks).
+
+### 2) Docs Review Workflow
 Use when asked to review current docs health.
 
 Steps:
@@ -39,7 +51,7 @@ Steps:
 3. Propose concrete doc edits.
 4. Update pending tasks in the executive journal.
 
-### 2) Docs Drift Check Workflow
+### 3) Docs Drift Check Workflow
 Use when asked to verify spec-doc alignment.
 
 Steps:
@@ -51,7 +63,7 @@ Steps:
    - report no critical drift detected
 4. Record result in the executive journal.
 
-### 3) Refresh Docs from Spec Workflow
+### 4) Refresh Docs from Spec Workflow
 Use when asked to perform an actual docs update.
 
 Steps:
@@ -68,6 +80,7 @@ Steps:
 - Spec mapping file: `docs/spec-map.json`
 - Executive memory and pending tasks: `aidocs/EXECUTIVE_JOURNAL.md`
 - Assistant operating rules: `aidocs/AI_EXECUTIVE_ASSISTANT_MANUAL.md`
+- Reliability enforcement workflow: `aidocs/AI_RELIABILITY_SYSTEM.md`
 
 ## Standards for Every Docs Update
 - Use exact feature names used in the app.

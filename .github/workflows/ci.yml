@@ -6,10 +6,13 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  verify-changed:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     env:
-      DIFF_RANGE: ${{ github.event.pull_request.base.sha }}...${{ github.sha }}
+      DIFF_RANGE: ${{ github.event_name == 'pull_request' && format('{0}...{1}', github.event.pull_request.base.sha, github.sha) || 'HEAD~1...HEAD' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -19,7 +22,62 @@ jobs:
           node-version: "20"
           cache: "npm"
       - run: npm ci
-      - run: npm run test:unit
-      - run: npm run docs:map -- "$DIFF_RANGE"
-      - run: npm run docs:drift -- "$DIFF_RANGE"
-      - run: npm run spec:test -- "$DIFF_RANGE"
+      - name: Verify changed
+        id: verify
+        continue-on-error: true
+        run: |
+          set +e
+          npm run verify:changed -- "$DIFF_RANGE" --summary-file .artifacts/verify-changed-summary.md --json-file .artifacts/verify-changed.json
+          status=$?
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Publish job summary
+        if: always()
+        run: |
+          if [ -f .artifacts/verify-changed-summary.md ]; then
+            cat .artifacts/verify-changed-summary.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## Verify Changed Summary" >> "$GITHUB_STEP_SUMMARY"
+            echo "- No summary file generated." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upsert PR comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const path = '.artifacts/verify-changed-summary.md';
+            const marker = '<!-- verify-changed-summary -->';
+            const fallback = `${marker}\n## Verify Changed Summary\n- No summary generated.`;
+            const body = fs.existsSync(path) ? `${marker}\n${fs.readFileSync(path, 'utf8')}` : fallback;
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }
+      - name: Enforce verify result
+        if: always()
+        run: |
+          if [ "${{ steps.verify.outputs.exit_code }}" != "0" ]; then
+            echo "verify:changed failed"
+            exit 1
+          fi

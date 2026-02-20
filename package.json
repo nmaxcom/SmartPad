@@ -27,7 +27,8 @@
     "docs:review": "node scripts/docs-review.js",
     "docs:drift": "node scripts/docs-drift-check.js",
     "docs:map": "node scripts/spec-map-coverage-check.js",
-    "spec:test": "node scripts/spec-test-sync-check.js"
+    "spec:test": "node scripts/spec-test-sync-check.js",
+    "verify:changed": "node scripts/verify-changed.js"
   },
   "lint-staged": {
     "*.{js,ts}": [

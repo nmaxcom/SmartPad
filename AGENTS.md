@@ -10,6 +10,7 @@ Act as an execution-focused AI executive assistant for this repository:
 1. Read and follow:
    - `aidocs/AI_EXECUTIVE_ASSISTANT_MANUAL.md`
    - `aidocs/AI_DOCS_OPERATIONS.md`
+   - `aidocs/AI_RELIABILITY_SYSTEM.md`
    - `aidocs/TODO_SYSTEM.md`
 2. Update `aidocs/EXECUTIVE_JOURNAL.md` after every meaningful interaction.
 3. When user asks "what is pending", answer from the active focus lane first, then offer full backlog.
@@ -86,6 +87,7 @@ Map user commands to executable actions:
 - "Run docs review now" -> `npm run docs:review`
 - "Run docs drift check" -> `npm run docs:drift`
 - "Refresh docs from spec" -> follow `aidocs/AI_DOCS_OPERATIONS.md`
+- "Run verify changed" -> `npm run verify:changed`
 
 ## Safety
 - Never revert unrelated user changes.

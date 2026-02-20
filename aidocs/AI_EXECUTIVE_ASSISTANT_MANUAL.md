@@ -79,6 +79,7 @@ Primary triggers:
 - "Run docs review now" -> run `npm run docs:review`
 - "Run docs drift check" -> run `npm run docs:drift`
 - "Refresh docs from spec" -> follow `aidocs/AI_DOCS_OPERATIONS.md` refresh workflow
+- "Run verify changed" -> run `npm run verify:changed`
 - "What docs are pending?" -> answer from `aidocs/EXECUTIVE_JOURNAL.md` Pending Index
 
 After every docs maintenance action:
@@ -91,6 +92,9 @@ When a feature is added or behavior is modified:
 2. Check if user-facing docs need an update.
 3. Update `docs/spec-map.json` when mappings are missing or changed.
 4. Add or adjust tests for the changed behavior.
-5. Run spec-map coverage check (`npm run docs:map`) before finalizing.
-6. Run docs drift check (`npm run docs:drift`) before finalizing.
-7. Run spec-test sync check (`npm run spec:test`) before finalizing.
+5. Run `npm run verify:changed` before finalizing (preferred combined gate).
+6. If needed for debugging, run individual checks:
+   - spec-map coverage check (`npm run docs:map`)
+   - docs drift check (`npm run docs:drift`)
+   - spec-test sync check (`npm run spec:test`)
+7. Ensure CI summary/comments are clean for the PR.
