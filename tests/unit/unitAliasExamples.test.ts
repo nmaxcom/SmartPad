@@ -300,6 +300,21 @@ describe("Unit alias examples", () => {
     expect(result).toMatch(/43,?200\s*Mb/);
   });
 
+  test("custom typo units can compose arithmetically but cannot convert to information units", () => {
+    const context = createContext();
+
+    const raw = expectMathResult(evaluateLine("6dsbidt/s * 2 h =>", context, 1));
+    expect(raw).toMatch(/43,?200\s*dsbidt/);
+
+    const toMb = evaluateLine("6dsbidt/s * 2 h to MB =>", context, 2);
+    expect(toMb?.type).toBe("error");
+    expect((toMb as any).displayText).toMatch(/Cannot convert custom count units to information units/i);
+
+    const toBits = evaluateLine("6dsbidt/s * 2 h to bit =>", context, 3);
+    expect(toBits?.type).toBe("error");
+    expect((toBits as any).displayText).toMatch(/Cannot convert custom count units to information units/i);
+  });
+
   test("chemical mixing example keeps concentration units", () => {
     const context = createContext();
     evaluateLine("solution = 250 mL", context, 1);

@@ -1821,3 +1821,33 @@
     *   `npm run test:unit -- tests/unit/unitAliasExamples.test.ts` passed (27/27 tests).
 *   Risks/blockers:
     *   None for this test-only update.
+
+## Entry J-2026-02-20-13
+
+*   Timestamp: 2026-02-21 00:10:10 CET / 2026-02-20 23:10:10 UTC
+*   Summary:
+    *   User reported typo-unit conversion bug: `6dsbidt/s * 2 h to MB` incorrectly produced a valid information conversion.
+    *   Assistant implemented conversion guardrails so custom count units cannot be converted to information units, while preserving arithmetic composition.
+*   Decisions:
+    *   Keep `customUnit/time * time` arithmetic valid (`43200 dsbidt`), but block conversions from custom count-based units to information-family units (`bit`, `B`, `MB`, etc.).
+*   User directives:
+    *   Fix behavior and add tests that prevent nonsense conversions.
+*   Assistant commitments:
+    *   Add deterministic regression tests for both allowed arithmetic and forbidden conversions.
+*   Artifacts:
+    *   `src/units/quantity.ts` (added count-vs-information conversion guard in `convertToUnit`)
+    *   `tests/unit/unitAliasExamples.test.ts` (added typo-unit guardrail test cases)
+    *   `docs/Specs/proposed/unit-aliases-and-ratio.md` (documented new guardrail behavior)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Validation:
+    *   `npm run test:unit -- tests/unit/unitAliasExamples.test.ts` passed (28/28 tests).
+    *   `npm run test:unit -- tests/unit/quantity.test.ts` passed.
+    *   `npm run build` passed.
+    *   `npm run docs:map -- HEAD` passed.
+    *   `npm run docs:drift -- HEAD` passed.
+    *   `npm run spec:test -- HEAD` passed.
+    *   `npm run spec:trust` passed.
+*   Risks/blockers:
+    *   Guardrail is intentionally strict for count-only custom units converting into information units; this protects typo safety but may require explicit unit definitions when users truly intend information semantics.

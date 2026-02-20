@@ -260,6 +260,11 @@ Examples:
 1 MiB to B => 1048576 B
 ```
 
+Guardrail:
+
+* Unknown/custom count units can still participate in internal arithmetic, but they do **not** auto-convert to information units.
+* Example: `6dsbidt/s * 2 h => 43200 dsbidt` is allowed, but `... to MB` must fail with conversion error.
+
 ---
 
 ## 7. Conversion (`to` / `in`) Rules

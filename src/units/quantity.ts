@@ -18,6 +18,25 @@ import {
 } from "./definitions";
 import { formatUnitLabel } from "./unitDisplay";
 
+const isInformationCategory = (category: string): boolean =>
+  category === "information" || category === "informationRate";
+
+const hasInformationComponent = (unit: CompositeUnit): boolean =>
+  unit.components.some((component) => isInformationCategory(component.unit.category));
+
+const hasCountComponent = (unit: CompositeUnit): boolean =>
+  unit.components.some((component) => component.unit.category === "count");
+
+const isCountOnlyDimension = (dimension: Dimension): boolean =>
+  dimension.length === 0 &&
+  dimension.mass === 0 &&
+  dimension.time === 0 &&
+  dimension.current === 0 &&
+  dimension.temperature === 0 &&
+  dimension.amount === 0 &&
+  dimension.luminosity === 0 &&
+  dimension.count !== 0;
+
 /**
  * A component of a composite unit (e.g., "m" with power 2 for "m^2")
  */
@@ -404,6 +423,17 @@ export class Quantity {
       const thisDim = formatDimension(this.unit.getDimension());
       const targetDim = formatDimension(targetUnit.getDimension());
       throw new Error(`Cannot convert ${thisDim} to ${targetDim}: incompatible dimensions`);
+    }
+
+    const sourceDimension = this.unit.getDimension();
+    if (isCountOnlyDimension(sourceDimension)) {
+      const sourceHasInfo = hasInformationComponent(this.unit);
+      const targetHasInfo = hasInformationComponent(targetUnit);
+      const sourceHasRawCount = hasCountComponent(this.unit);
+      const targetHasRawCount = hasCountComponent(targetUnit);
+      if ((sourceHasInfo && targetHasRawCount) || (targetHasInfo && sourceHasRawCount)) {
+        throw new Error("Cannot convert custom count units to information units");
+      }
     }
 
     // Convert to base units, then to target units
