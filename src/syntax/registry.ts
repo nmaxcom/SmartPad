@@ -266,6 +266,36 @@ export const SUPPORTED_UNITS = {
       { symbol: "V", name: "volt", aliases: ["volt", "volts"] },
       { symbol: "Ω", name: "ohm", aliases: ["ohm", "ohms"] }
     ]
+  },
+  computer: {
+    name: "Computer",
+    units: [
+      { symbol: "bit", name: "bit", aliases: ["bits"] },
+      { symbol: "B", name: "byte", aliases: ["byte", "bytes"] },
+      { symbol: "KB", name: "kilobyte", aliases: ["kB", "kilobyte", "kilobytes"] },
+      { symbol: "MB", name: "megabyte", aliases: ["megabyte", "megabytes"] },
+      { symbol: "GB", name: "gigabyte", aliases: ["gigabyte", "gigabytes"] },
+      { symbol: "TB", name: "terabyte", aliases: ["terabyte", "terabytes"] },
+      { symbol: "KiB", name: "kibibyte", aliases: ["kibibyte", "kibibytes"] },
+      { symbol: "MiB", name: "mebibyte", aliases: ["mebibyte", "mebibytes"] },
+      { symbol: "GiB", name: "gibibyte", aliases: ["gibibyte", "gibibytes"] },
+      { symbol: "TiB", name: "tebibyte", aliases: ["tebibyte", "tebibytes"] }
+    ]
+  },
+  informationRate: {
+    name: "Information Rate",
+    units: [
+      { symbol: "bit/s", name: "bits per second", aliases: ["bps"] },
+      { symbol: "kbit/s", name: "kilobits per second", aliases: ["kbps", "Kb/s"] },
+      { symbol: "Mbit/s", name: "megabits per second", aliases: ["Mbps", "Mb/s"] },
+      { symbol: "Gbit/s", name: "gigabits per second", aliases: ["Gbps", "Gb/s"] },
+      { symbol: "Tbit/s", name: "terabits per second", aliases: ["Tbps", "Tb/s"] },
+      { symbol: "B/s", name: "bytes per second", aliases: ["Bps"] },
+      { symbol: "KB/s", name: "kilobytes per second", aliases: ["KBps"] },
+      { symbol: "MB/s", name: "megabytes per second", aliases: ["MBps"] },
+      { symbol: "GB/s", name: "gigabytes per second", aliases: ["GBps"] },
+      { symbol: "TB/s", name: "terabytes per second", aliases: ["TBps"] }
+    ]
   }
 };
 

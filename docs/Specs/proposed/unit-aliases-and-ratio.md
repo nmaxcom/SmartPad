@@ -242,6 +242,24 @@ $500 / ($0.15/h) => 3333.33 h
 
 No “currencyUnit” special cases.
 
+### 6.1 Information and throughput units
+
+Information units are treated as first-class unit symbols and can be converted between bit-based
+and byte-based representations:
+
+* Information size: `bit`, `B`, `KB`, `MB`, `GB`, `TB`, `KiB`, `MiB`, `GiB`, `TiB`
+* Information rate: `bit/s`, `kbit/s`, `Mbit/s`, `Gbit/s`, `Tbit/s`, `B/s`, `KB/s`, `MB/s`, `GB/s`, `TB/s`
+* Common aliases: `bps`, `kbps`, `Mbps`, `Gbps`, `MBps` (mapped to canonical units)
+
+Examples:
+
+```text
+24 Mbit/s to MB/s => 3 MB/s
+24 Mbps to MB/s => 3 MB/s
+2048 B to KiB => 2 KiB
+1 MiB to B => 1048576 B
+```
+
 ---
 
 ## 7. Conversion (`to` / `in`) Rules

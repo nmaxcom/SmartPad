@@ -29,12 +29,14 @@ describe("Units Reference System", () => {
       expect(categories).toContain("energy");
       expect(categories).toContain("power");
       expect(categories).toContain("electric");
+      expect(categories).toContain("computer");
+      expect(categories).toContain("informationRate");
     });
 
     test("should have correct total unit count", () => {
       const totalCount = getTotalUnitCount();
-      expect(totalCount).toBeGreaterThan(35); // Should have around 38 units
-      expect(totalCount).toBeLessThan(40);
+      expect(totalCount).toBeGreaterThan(55);
+      expect(totalCount).toBeLessThan(80);
     });
 
     test("should have length units", () => {
@@ -128,6 +130,30 @@ describe("Units Reference System", () => {
       expect(symbols).toContain("J");    // joule
       expect(symbols).toContain("cal");  // calorie
       expect(symbols).toContain("kWh");  // kilowatt hour
+    });
+
+    test("should have comprehensive computer units", () => {
+      const computerUnits = getUnitsByCategory("computer");
+      const symbols = computerUnits.map(unit => unit.symbol);
+
+      expect(symbols).toContain("bit");
+      expect(symbols).toContain("B");
+      expect(symbols).toContain("MB");
+      expect(symbols).toContain("GB");
+      expect(symbols).toContain("MiB");
+      expect(symbols).toContain("GiB");
+    });
+
+    test("should have comprehensive information rate units", () => {
+      const rateUnits = getUnitsByCategory("informationRate");
+      const symbols = rateUnits.map(unit => unit.symbol);
+      const aliases = rateUnits.flatMap(unit => unit.aliases);
+
+      expect(symbols).toContain("bit/s");
+      expect(symbols).toContain("Mbit/s");
+      expect(aliases).toContain("Mbps");
+      expect(symbols).toContain("MB/s");
+      expect(symbols).toContain("GB/s");
     });
   });
 

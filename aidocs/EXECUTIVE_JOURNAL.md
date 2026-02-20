@@ -1710,3 +1710,47 @@
     *   No product-code tests run because this interaction intentionally reverted product changes and only added backlog/journal metadata.
 *   Risks/blockers:
     *   None for this todo-only update.
+
+## Entry J-2026-02-20-09
+
+*   Timestamp: 2026-02-20 23:35:36 CET / 2026-02-20 22:35:36 UTC
+*   Summary:
+    *   User requested execution of computer/data unit support, including throughput forms like `Mbit/s`, and asked for practical example expectations.
+    *   Assistant implemented runtime information + information-rate units, added aliases (`Mbps`, `Gbps`, `MBps`), and added regression tests for conversions and problem-style throughput calculations.
+*   Decisions:
+    *   Implement in runtime unit registry (`src/units/definitions.ts`) first, then align syntax reference registry/docs/spec mapping.
+    *   Avoid single-letter alias `b` for bit due collisions with existing unit-alias workflows (`a`/`b` variable tests).
+*   User directives:
+    *   "go ahead"
+    *   Support units like `Mbit/s` and clarify alias behavior.
+*   Assistant commitments:
+    *   Land bit/byte size and throughput units with conversion behavior.
+    *   Keep spec/docs/test sync gates updated.
+*   Artifacts:
+    *   `src/units/definitions.ts` (added information and information-rate unit families + aliases)
+    *   `src/syntax/registry.ts` (added `computer` and `informationRate` unit catalog entries)
+    *   `tests/unit/unitAliasExamples.test.ts` (added real-world conversion/throughput scenarios)
+    *   `tests/unit/syntax-reference/units.test.ts` (category/count/search coverage for new unit groups)
+    *   `docs/Specs/proposed/unit-aliases-and-ratio.md` (documented information/throughput units and examples)
+    *   `docs/spec-map.json` (mapped `src/syntax/registry.ts` under Units And Conversions)
+    *   `aidocs/TODO_BACKLOG.md` (`T-2026-02-20-04` marked done)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+    *   `T-2026-02-20-03` and `T-2026-02-20-05` remain open (online webdocs + full-unit webdocs surfacing).
+*   Validation:
+    *   Passed:
+        *   `npm run test:unit -- tests/unit/syntax-reference/units.test.ts`
+        *   `npm run test:unit -- tests/unit/unitAliasExamples.test.ts`
+        *   `npm run test:unit -- tests/unit/unitsnetIntegrationPlan.test.ts`
+        *   `npm run test:unit -- tests/unit/definitions.test.ts`
+        *   `npm run test:unit -- tests/unit/unitAliasEdgeCases.test.ts`
+        *   `npm run docs:map -- HEAD`
+        *   `npm run docs:drift -- HEAD`
+        *   `npm run spec:test -- HEAD`
+        *   `npm run spec:trust`
+    *   `npm run verify:changed -- HEAD` failed on known sandbox watchman permission issue in related-test subprocess.
+    *   Additional related-test sweep with watchman disabled surfaced pre-existing failures outside changed scope (`tests/unit/list.test.ts`, `tests/unit/listSpecExamples.test.ts`) and one alias-matrix expectation mismatch (`tests/unit/unitAliasDecisionMatrix.test.ts` plural alias case).
+*   Risks/blockers:
+    *   Full `verify:changed` remains environment-sensitive due watchman permissions in this sandbox.
+    *   Some broad related-test failures appear unrelated to this feature slice and require separate triage.

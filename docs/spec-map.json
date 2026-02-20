@@ -19,6 +19,7 @@
       "name": "Units And Conversions",
       "specPrefixes": [
         "src/units/",
+        "src/syntax/registry.ts",
         "docs/Specs/duration.spec.md",
         "docs/Specs/proposed/unit-aliases-and-ratio.md"
       ],

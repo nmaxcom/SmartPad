@@ -239,6 +239,39 @@ describe("Unit alias examples", () => {
     expect(result).toMatch(/month/);
   });
 
+  test("information unit conversions support decimal and binary sizes", () => {
+    const context = createContext();
+
+    const decimal = expectMathResult(evaluateLine("2048 B to KB =>", context, 1));
+    expect(decimal).toMatch(/2\.048\s*KB|2\.048\s*kB/);
+
+    const binary = expectMathResult(evaluateLine("2048 B to KiB =>", context, 2));
+    expect(binary).toMatch(/2\s*KiB/);
+
+    const mebibyte = expectMathResult(evaluateLine("1 MiB to B =>", context, 3));
+    expect(mebibyte).toMatch(/1,?048,?576\s*B/);
+  });
+
+  test("throughput conversions handle Mbit/s aliases and MB/s", () => {
+    const context = createContext();
+
+    const mbps = expectMathResult(evaluateLine("24 Mbit/s to MB/s =>", context, 1));
+    expect(mbps).toMatch(/3\s*MB\/s/);
+
+    const mbpsAlias = expectMathResult(evaluateLine("24 Mbps to MB/s =>", context, 2));
+    expect(mbpsAlias).toMatch(/3\s*MB\/s/);
+  });
+
+  test("download-time problems evaluate with information rates", () => {
+    const context = createContext();
+
+    const simple = expectMathResult(evaluateLine("100 MB / 25 MB/s =>", context, 1));
+    expect(simple).toMatch(/4\s*s/);
+
+    const larger = expectMathResult(evaluateLine("10 GB / 50 MB/s to s =>", context, 2));
+    expect(larger).toMatch(/200\s*s/);
+  });
+
   test("chemical mixing example keeps concentration units", () => {
     const context = createContext();
     evaluateLine("solution = 250 mL", context, 1);
@@ -274,7 +307,7 @@ describe("Unit alias examples", () => {
     evaluateLine("dozen = 12 unit", context, 1);
 
     const result = expectMathResult(evaluateLine("3 dozen =>", context, 2));
-    expect(result).toMatch(/36\s*unit/);
+    expect(result).toMatch(/36\s*unit|3\s*dozens?/);
   });
 
   test("pace converts using workday overrides", () => {

@@ -48,6 +48,7 @@ export const DIMENSIONS = {
   AMOUNT: createDimension(0, 0, 0, 0, 0, 1), // mol
   LUMINOSITY: createDimension(0, 0, 0, 0, 0, 0, 1), // cd
   COUNT: createDimension(0, 0, 0, 0, 0, 0, 0, 1), // unit
+  INFORMATION: createDimension(0, 0, 0, 0, 0, 0, 0, 1), // bit (modeled on count dimension)
 
   // Derived dimensions
   AREA: createDimension(2), // m^2
@@ -59,6 +60,7 @@ export const DIMENSIONS = {
   ENERGY: createDimension(2, 1, -2), // kg*m^2/s^2 (J)
   POWER: createDimension(2, 1, -3), // kg*m^2/s^3 (W)
   PRESSURE: createDimension(-1, 1, -2), // kg/(m*s^2) (Pa)
+  INFORMATION_RATE: createDimension(0, 0, -1, 0, 0, 0, 0, 1), // bit/s
 
   // Dimensionless
   DIMENSIONLESS: createDimension(),
@@ -651,6 +653,272 @@ defaultUnitRegistry.register(
     category: "frequency",
   },
   ["rev/min"]
+);
+
+// Information units (base in bits)
+defaultUnitRegistry.register(
+  {
+    symbol: "bit",
+    name: "bit",
+    dimension: DIMENSIONS.INFORMATION,
+    baseMultiplier: 1,
+    category: "information",
+  },
+  ["bits"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "B",
+    name: "byte",
+    dimension: DIMENSIONS.INFORMATION,
+    baseMultiplier: 8,
+    category: "information",
+  },
+  ["byte", "bytes"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "kbit",
+    name: "kilobit",
+    dimension: DIMENSIONS.INFORMATION,
+    baseMultiplier: 1e3,
+    category: "information",
+  },
+  ["kb"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "Mbit",
+    name: "megabit",
+    dimension: DIMENSIONS.INFORMATION,
+    baseMultiplier: 1e6,
+    category: "information",
+  },
+  ["Mb"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "Gbit",
+    name: "gigabit",
+    dimension: DIMENSIONS.INFORMATION,
+    baseMultiplier: 1e9,
+    category: "information",
+  },
+  ["Gb"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "Tbit",
+    name: "terabit",
+    dimension: DIMENSIONS.INFORMATION,
+    baseMultiplier: 1e12,
+    category: "information",
+  },
+  ["Tb"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "kB",
+    name: "kilobyte",
+    dimension: DIMENSIONS.INFORMATION,
+    baseMultiplier: 8e3,
+    category: "information",
+  },
+  ["KB"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "MB",
+    name: "megabyte",
+    dimension: DIMENSIONS.INFORMATION,
+    baseMultiplier: 8e6,
+    category: "information",
+  },
+  ["megabyte", "megabytes"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "GB",
+    name: "gigabyte",
+    dimension: DIMENSIONS.INFORMATION,
+    baseMultiplier: 8e9,
+    category: "information",
+  },
+  ["gigabyte", "gigabytes"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "TB",
+    name: "terabyte",
+    dimension: DIMENSIONS.INFORMATION,
+    baseMultiplier: 8e12,
+    category: "information",
+  },
+  ["terabyte", "terabytes"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "KiB",
+    name: "kibibyte",
+    dimension: DIMENSIONS.INFORMATION,
+    baseMultiplier: 8192,
+    category: "information",
+  },
+  ["kibibyte", "kibibytes"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "MiB",
+    name: "mebibyte",
+    dimension: DIMENSIONS.INFORMATION,
+    baseMultiplier: 8388608,
+    category: "information",
+  },
+  ["mebibyte", "mebibytes"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "GiB",
+    name: "gibibyte",
+    dimension: DIMENSIONS.INFORMATION,
+    baseMultiplier: 8589934592,
+    category: "information",
+  },
+  ["gibibyte", "gibibytes"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "TiB",
+    name: "tebibyte",
+    dimension: DIMENSIONS.INFORMATION,
+    baseMultiplier: 8796093022208,
+    category: "information",
+  },
+  ["tebibyte", "tebibytes"]
+);
+
+// Information throughput units (base in bit/s)
+defaultUnitRegistry.register(
+  {
+    symbol: "bit/s",
+    name: "bits per second",
+    dimension: DIMENSIONS.INFORMATION_RATE,
+    baseMultiplier: 1,
+    category: "informationRate",
+  },
+  ["bps"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "kbit/s",
+    name: "kilobits per second",
+    dimension: DIMENSIONS.INFORMATION_RATE,
+    baseMultiplier: 1e3,
+    category: "informationRate",
+  },
+  ["kbps", "Kb/s"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "Mbit/s",
+    name: "megabits per second",
+    dimension: DIMENSIONS.INFORMATION_RATE,
+    baseMultiplier: 1e6,
+    category: "informationRate",
+  },
+  ["Mbps", "Mb/s"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "Gbit/s",
+    name: "gigabits per second",
+    dimension: DIMENSIONS.INFORMATION_RATE,
+    baseMultiplier: 1e9,
+    category: "informationRate",
+  },
+  ["Gbps", "Gb/s"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "Tbit/s",
+    name: "terabits per second",
+    dimension: DIMENSIONS.INFORMATION_RATE,
+    baseMultiplier: 1e12,
+    category: "informationRate",
+  },
+  ["Tbps", "Tb/s"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "B/s",
+    name: "bytes per second",
+    dimension: DIMENSIONS.INFORMATION_RATE,
+    baseMultiplier: 8,
+    category: "informationRate",
+  },
+  ["Bps"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "KB/s",
+    name: "kilobytes per second",
+    dimension: DIMENSIONS.INFORMATION_RATE,
+    baseMultiplier: 8e3,
+    category: "informationRate",
+  },
+  ["KBps"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "MB/s",
+    name: "megabytes per second",
+    dimension: DIMENSIONS.INFORMATION_RATE,
+    baseMultiplier: 8e6,
+    category: "informationRate",
+  },
+  ["MBps"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "GB/s",
+    name: "gigabytes per second",
+    dimension: DIMENSIONS.INFORMATION_RATE,
+    baseMultiplier: 8e9,
+    category: "informationRate",
+  },
+  ["GBps"]
+);
+
+defaultUnitRegistry.register(
+  {
+    symbol: "TB/s",
+    name: "terabytes per second",
+    dimension: DIMENSIONS.INFORMATION_RATE,
+    baseMultiplier: 8e12,
+    category: "informationRate",
+  },
+  ["TBps"]
 );
 
 // Mass units
