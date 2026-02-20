@@ -1598,3 +1598,40 @@
         *   `npm run build`
 *   Risks/blockers:
     *   Trust is now structurally enforced, but some domains (notably plotting) remain intentionally classified as non-implemented until dedicated trace coverage is added.
+
+## Entry J-2026-02-20-06
+
+*   Timestamp: 2026-02-20 03:26:29 CET / 2026-02-20 02:26:29 UTC
+*   Summary:
+    *   User redirected focus to the floating "maybe-spec" docs and asked to complete the cleanup toward trusted implemented-vs-proposed separation.
+    *   Assistant finalized migration of proposal-like docs to `docs/Specs/proposed/` with backward-compatible shims in `docs/` and repaired map/check integration.
+*   Decisions:
+    *   Keep compatibility shims in `docs/` for existing links while treating canonical proposal content as `docs/Specs/proposed/*`.
+    *   Add a dedicated `Spec Governance` group in `docs/spec-map.json` so governance/index/shim files are validated by CI without being interpreted as implementation behavior changes.
+*   User directives:
+    *   "focus on the maybe-specs floating in docs/"
+*   Assistant commitments:
+    *   Ensure mapping + drift + spec-test + trust checks all pass for the migration.
+*   Artifacts:
+    *   `docs/FEATURE_VISION.md` (compatibility shim)
+    *   `docs/Unit.spec.md` (compatibility shim)
+    *   `docs/UnitDecisionForks.md` (compatibility shim)
+    *   `docs/Specs/proposed/feature-vision.md`
+    *   `docs/Specs/proposed/unit-aliases-and-ratio.md`
+    *   `docs/Specs/proposed/unit-decision-forks.md`
+    *   `docs/Specs/proposed/index.md`
+    *   `docs/Specs/README.md`
+    *   `docs/spec-trust.json`
+    *   `docs/spec-map.json`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   None.
+*   Validation:
+    *   `npm run verify:changed -- HEAD` passed.
+    *   Sub-checks executed and passed through `verify:changed`:
+        *   `npm run docs:map -- HEAD`
+        *   `npm run docs:drift -- HEAD`
+        *   `npm run spec:test -- HEAD`
+        *   `npm run spec:trust`
+*   Risks/blockers:
+    *   The proposal docs are now cleanly separated and trustworthy in process terms; content-level truth still depends on continued feature-by-feature validation and promotion discipline.

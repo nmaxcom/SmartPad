@@ -73,6 +73,30 @@
       "canonicalSpec": "docs/Specs/proposed/plotting-and-dependency-views.md",
       "mappedGroups": ["Plotting And Visualization"],
       "testRefs": []
+    },
+    {
+      "id": "feature-vision",
+      "status": "proposed",
+      "sourceSpec": "docs/Specs/proposed/feature-vision.md",
+      "canonicalSpec": "docs/Specs/proposed/feature-vision.md",
+      "mappedGroups": ["UI Panels And Settings"],
+      "testRefs": []
+    },
+    {
+      "id": "unit-aliases-and-ratio",
+      "status": "proposed",
+      "sourceSpec": "docs/Specs/proposed/unit-aliases-and-ratio.md",
+      "canonicalSpec": "docs/Specs/proposed/unit-aliases-and-ratio.md",
+      "mappedGroups": ["Units And Conversions"],
+      "testRefs": []
+    },
+    {
+      "id": "unit-decision-forks",
+      "status": "proposed",
+      "sourceSpec": "docs/Specs/proposed/unit-decision-forks.md",
+      "canonicalSpec": "docs/Specs/proposed/unit-decision-forks.md",
+      "mappedGroups": ["Units And Conversions"],
+      "testRefs": []
     }
   ]
 }

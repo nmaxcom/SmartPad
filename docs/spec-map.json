@@ -22,10 +22,10 @@
       "specPrefixes": [
         "src/units/",
         "docs/Specs/duration.spec.md",
-        "docs/Unit.spec.md"
+        "docs/Specs/proposed/unit-aliases-and-ratio.md"
       ],
       "docPrefixes": [
-        "docs/Unit.spec.md",
+        "docs/Specs/proposed/unit-aliases-and-ratio.md",
         "docs/MATH_CAPABILITIES.md",
         "docs/UnitDecisionForks.md",
         "public/docs/"
@@ -105,6 +105,24 @@
       ],
       "docPrefixes": ["docs/ABOUT.md", "docs/notes.md", "public/docs/"],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
+    },
+    {
+      "name": "Spec Governance",
+      "specPrefixes": [
+        "docs/Specs/README.md",
+        "docs/Specs/proposed/index.md",
+        "docs/Unit.spec.md"
+      ],
+      "docPrefixes": [
+        "docs/Specs/README.md",
+        "docs/Specs/proposed/index.md",
+        "docs/spec-trust.json"
+      ],
+      "testPrefixes": [
+        "docs/Specs/README.md",
+        "docs/Specs/proposed/index.md",
+        "docs/Unit.spec.md"
+      ]
     }
   ]
 }

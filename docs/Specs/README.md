@@ -15,6 +15,7 @@ This folder is the canonical trust surface for SmartPad specs.
 - Legacy source specs remain in `docs/Specs/` during migration.
 - Trust registry is `docs/spec-trust.json`.
 - CI gate is `npm run spec:trust`.
+- Relocated proposal docs may keep compatibility shims in `docs/` to avoid breaking inbound links.
 
 ## Rules
 1. Every `docs/Specs/*.spec.md` file must exist in `docs/spec-trust.json`.
