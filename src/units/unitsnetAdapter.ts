@@ -65,6 +65,23 @@ function normalizeUnitString(unitString: string): string {
   return unitString.trim().replace(/·/g, "*");
 }
 
+function parseSimpleRateUnit(unitString: string): { numerator: string; denominator: string } | null {
+  const normalized = normalizeUnitString(unitString);
+  if (!normalized || normalized.includes("*") || normalized.includes("^")) {
+    return null;
+  }
+  const parts = normalized.split("/");
+  if (parts.length !== 2) {
+    return null;
+  }
+  const numerator = parts[0].trim();
+  const denominator = parts[1].trim();
+  if (!numerator || !denominator) {
+    return null;
+  }
+  return { numerator, denominator };
+}
+
 /**
  * SmartPad Quantity adapter that wraps unitsnet-js values
  */
@@ -902,6 +919,31 @@ export class SmartPadQuantity {
           return new SmartPadQuantity(value, "m^3/s");
         }
       } catch {}
+    }
+
+    // Simplify simple rate*time products, e.g. MB/s * h => MB.
+    // This keeps common throughput expressions intuitive in direct output.
+    const leftRate = parseSimpleRateUnit(this._unit);
+    const rightRate = parseSimpleRateUnit(other._unit);
+    if (leftRate) {
+      const rightQuantity = other.toQuantity();
+      if (rightQuantity) {
+        try {
+          const convertedTime = rightQuantity.convertTo(leftRate.denominator);
+          const value = this._value * convertedTime.value;
+          return SmartPadQuantity.fromValueAndUnit(value, leftRate.numerator);
+        } catch {}
+      }
+    }
+    if (rightRate) {
+      const leftQuantity = this.toQuantity();
+      if (leftQuantity) {
+        try {
+          const convertedTime = leftQuantity.convertTo(rightRate.denominator);
+          const value = other._value * convertedTime.value;
+          return SmartPadQuantity.fromValueAndUnit(value, rightRate.numerator);
+        } catch {}
+      }
     }
 
     if (this._quantity || other._quantity) {

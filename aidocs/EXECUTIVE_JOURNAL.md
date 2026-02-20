@@ -1776,3 +1776,26 @@
     *   `npm run test:unit -- tests/unit/unitAliasExamples.test.ts` passed (25/25 tests).
 *   Risks/blockers:
     *   None for this test-only addition.
+
+## Entry J-2026-02-20-11
+
+*   Timestamp: 2026-02-20 23:49:47 CET / 2026-02-20 22:49:47 UTC
+*   Summary:
+    *   User reported `6MB/s * 2h => 12 MB*h/s`, indicating missing rate×time simplification.
+    *   Assistant patched multiply behavior to collapse simple `X/time * time` into `X` and added regression coverage.
+*   Decisions:
+    *   Implement targeted simplification in `SmartPadQuantity.multiply` for simple rate units (single `/`, no power/product syntax), preserving existing fallback behavior.
+*   User directives:
+    *   Implicit bug report via observed incorrect output.
+*   Assistant commitments:
+    *   Fix direct output for rate×time without requiring explicit `to` conversion.
+*   Artifacts:
+    *   `src/units/unitsnetAdapter.ts` (added simple rate parser + multiply simplification path)
+    *   `tests/unit/unitAliasExamples.test.ts` (new regression: `6 MB/s * 2 h => 43200 MB`)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Validation:
+    *   `npm run test:unit -- tests/unit/unitAliasExamples.test.ts` passed (26/26 tests).
+*   Risks/blockers:
+    *   Simplification currently targets simple `numerator/denominator` rate patterns by design; complex multi-factor denominators remain handled by generic unit algebra/conversion paths.
