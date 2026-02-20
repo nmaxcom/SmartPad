@@ -1528,3 +1528,22 @@
         *   `npm run build`
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-20-04
+
+*   Timestamp: 2026-02-20 02:45:12 CET / 2026-02-20 01:45:12 UTC
+*   Summary:
+    *   User raised a core trust issue: specs/docs are not cleanly aligned with implemented SmartPad behavior, making it hard to know what is truly shipped.
+    *   User asked whether to test every feature first, then separate implemented vs not-yet-implemented specs for reliable cleanup.
+*   Decisions:
+    *   Recommend a staged traceability approach: inventory behavior from implementation/tests first, then reclassify specs into implemented vs proposed, enforced by CI.
+*   User directives:
+    *   "I want to be able to trust the specs a 100%."
+*   Assistant commitments:
+    *   Provide a concrete, execution-ready plan to reach near-absolute spec trust without halting ongoing development.
+*   Artifacts:
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   None.
+*   Risks/blockers:
+    *   Existing docs/spec entropy and historical drift mean this requires iterative cleanup, not a one-shot file move.
