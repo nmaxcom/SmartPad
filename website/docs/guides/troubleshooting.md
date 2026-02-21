@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting
-sidebar_position: 4
+sidebar_position: 5
 ---
 
 # Troubleshooting
@@ -19,4 +19,4 @@ sidebar_position: 4
 
 ## If behavior still feels off
 
-- Go to [Feature Guides](/specs) and open the relevant contract page.
+- Go to [Feature Guides](../../specs) and open the relevant contract page.

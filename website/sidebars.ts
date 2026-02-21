@@ -9,6 +9,7 @@ const sidebars: SidebarsConfig = {
       items: [
         "guides/getting-started",
         "guides/syntax-playbook",
+        "guides/units-reference",
         "guides/examples-gallery",
         "guides/troubleshooting",
         "guides/feature-map",

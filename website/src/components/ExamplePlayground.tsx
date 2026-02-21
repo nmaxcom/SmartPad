@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import useBaseUrl from "@docusaurus/useBaseUrl";
 
 type ExamplePlaygroundProps = {
   title: string;
@@ -6,29 +7,41 @@ type ExamplePlaygroundProps = {
   code: string;
 };
 
-function buildOpenInAppUrl(code: string, title: string) {
+function buildOpenInAppUrl(appBasePath: string, code: string, title: string) {
   const params = new URLSearchParams();
   params.set("sp_example", encodeURIComponent(code));
   params.set("sp_title", encodeURIComponent(title));
   params.set("sp_import", "1");
-  return `/${params.toString() ? `?${params.toString()}` : ""}`;
+  return `${appBasePath}${params.toString() ? `?${params.toString()}` : ""}`;
 }
 
-function buildInlinePreviewUrl(code: string, title: string, nonce: number) {
+function buildInlinePreviewUrl(appBasePath: string, code: string, title: string, nonce: number) {
   const params = new URLSearchParams();
   params.set("sp_embed", "1");
   params.set("sp_theme", "spatial-neon");
   params.set("sp_preview", encodeURIComponent(code));
   params.set("sp_preview_title", encodeURIComponent(title));
   params.set("_r", String(nonce));
-  return `/${params.toString() ? `?${params.toString()}` : ""}`;
+  return `${appBasePath}${params.toString() ? `?${params.toString()}` : ""}`;
+}
+
+function resolveAppBasePath(docsBasePath: string): string {
+  const normalized = docsBasePath.endsWith("/") ? docsBasePath : `${docsBasePath}/`;
+  if (normalized === "/docs/") return "/";
+  if (normalized.endsWith("/docs/")) return `${normalized.slice(0, -5)}`;
+  return normalized;
 }
 
 export default function ExamplePlayground({ title, description, code }: ExamplePlaygroundProps) {
   const [copied, setCopied] = useState(false);
   const [inlineReloadKey, setInlineReloadKey] = useState(0);
-  const openUrl = useMemo(() => buildOpenInAppUrl(code, title), [code, title]);
-  const inlineUrl = useMemo(() => buildInlinePreviewUrl(code, title, inlineReloadKey), [code, title, inlineReloadKey]);
+  const docsBasePath = useBaseUrl("/");
+  const appBasePath = useMemo(() => resolveAppBasePath(docsBasePath), [docsBasePath]);
+  const openUrl = useMemo(() => buildOpenInAppUrl(appBasePath, code, title), [appBasePath, code, title]);
+  const inlineUrl = useMemo(
+    () => buildInlinePreviewUrl(appBasePath, code, title, inlineReloadKey),
+    [appBasePath, code, title, inlineReloadKey],
+  );
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(code);

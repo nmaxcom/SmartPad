@@ -2007,3 +2007,35 @@
     *   `curl -I` against deployed JS asset confirms accessible published artifact.
 *   Risks/blockers:
     *   Browser cache can still show stale broken page until hard refresh/cache invalidation.
+
+## Entry J-2026-02-21-14
+
+*   Timestamp: 2026-02-21 18:33:14 CET / 2026-02-21 17:33:14 UTC
+*   Summary:
+    *   User reported three docs regressions: missing visible units list in nav context, root-absolute links resolving to `https://nmaxcom.github.io/specs/...` 404s, and interactive preview rendering GitHub 404 in iframe.
+    *   Assistant fixed docs link generation, added a dedicated `Units Reference` guide in sidebar, and fixed ExamplePlayground app URL base-path resolution for GitHub Pages.
+*   Decisions:
+    *   Use path-relative links in generated docs content to avoid root-absolute escapes from `/SmartPad/docs/`.
+    *   Keep prod correctness verified via `docs:docusaurus:publish-prod` and local usability via `docs:docusaurus:publish-local`.
+*   User directives:
+    *   "check them all"
+    *   "interactive view is 404 too"
+*   Assistant commitments:
+    *   Run full broken-link verification and validate interactive URLs in generated output.
+*   Artifacts:
+    *   `scripts/generate-docusaurus-docs.js` (fixed generated link paths; added `units-reference` page/sidebar entry)
+    *   `website/src/components/ExamplePlayground.tsx` (derive app root from Docusaurus base URL so iframe/open links target `/SmartPad/` in prod)
+    *   `website/docs/intro.md` (updated start-path links)
+    *   `website/docs/guides/units-reference.md` (new generated units page)
+    *   `website/docs/guides/getting-started.md`, `website/docs/guides/feature-map.md`, `website/docs/guides/troubleshooting.md`, `website/docs/specs/index.md`, `website/sidebars.ts` (regenerated)
+    *   `public/docs/*` (regenerated local docs output)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   Deploy latest commit to GitHub Pages and verify live links/iframe after publish.
+*   Validation:
+    *   `npm run docs:docusaurus:publish-prod` passed.
+    *   `npm run docs:docusaurus:publish-local` passed.
+    *   Local static link sweep over `public/docs/**/*.html` reported `broken_links=0`.
+    *   `npm run verify:changed` passed.
+*   Risks/blockers:
+    *   None in code; live confirmation depends on next successful Pages deploy of this commit.

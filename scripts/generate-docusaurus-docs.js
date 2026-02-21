@@ -390,10 +390,11 @@ const renderIndexPage = (recordsByCategory) => {
     "## Explore by path",
     "",
     '<div className="journey-grid">',
-    '<a className="journey-card" href="/guides/getting-started"><strong>Start Fast</strong><span>From blank sheet to meaningful output in minutes.</span></a>',
-    '<a className="journey-card" href="/guides/syntax-playbook"><strong>Master Syntax</strong><span>Write formulas that stay readable as complexity grows.</span></a>',
-    '<a className="journey-card" href="/guides/examples-gallery"><strong>Real Examples</strong><span>Use production-style snippets you can run immediately.</span></a>',
-    '<a className="journey-card" href="/guides/troubleshooting"><strong>Fix Fast</strong><span>Diagnose and resolve common issues quickly.</span></a>',
+    '<a className="journey-card" href="../guides/getting-started"><strong>Start Fast</strong><span>From blank sheet to meaningful output in minutes.</span></a>',
+    '<a className="journey-card" href="../guides/syntax-playbook"><strong>Master Syntax</strong><span>Write formulas that stay readable as complexity grows.</span></a>',
+    '<a className="journey-card" href="../guides/units-reference"><strong>Units Reference</strong><span>Browse all supported unit families and currency symbols.</span></a>',
+    '<a className="journey-card" href="../guides/examples-gallery"><strong>Real Examples</strong><span>Use production-style snippets you can run immediately.</span></a>',
+    '<a className="journey-card" href="../guides/troubleshooting"><strong>Fix Fast</strong><span>Diagnose and resolve common issues quickly.</span></a>',
     "</div>",
     "",
   ];
@@ -407,7 +408,7 @@ const renderIndexPage = (recordsByCategory) => {
     lines.push('<div className="feature-grid">');
     records.forEach((record) => {
       lines.push(
-        `<a className="feature-card" href="/specs/${record.slug}"><strong>${record.title}</strong><span>${record.summary}</span></a>`,
+        `<a className="feature-card" href="./${record.slug}"><strong>${record.title}</strong><span>${record.summary}</span></a>`,
       );
     });
     lines.push("</div>");
@@ -444,9 +445,10 @@ const renderGuidePages = (recordsByCategory) => {
         "",
         "## Next stops",
         "",
-        "- [Syntax Playbook](/guides/syntax-playbook)",
-        "- [Examples Gallery](/guides/examples-gallery)",
-        "- [Feature Guides](/specs)",
+        "- [Syntax Playbook](../syntax-playbook)",
+        "- [Units Reference](../units-reference)",
+        "- [Examples Gallery](../examples-gallery)",
+        "- [Feature Guides](../../specs)",
         "",
       ].join("\n"),
     },
@@ -481,11 +483,31 @@ const renderGuidePages = (recordsByCategory) => {
       ].join("\n"),
     },
     {
+      file: "units-reference.md",
+      body: [
+        "---",
+        "title: Units Reference",
+        "sidebar_position: 3",
+        "---",
+        "",
+        "# Units Reference",
+        "",
+        "<div className=\"doc-hero\">",
+        "<p className=\"doc-hero__kicker\">Complete Catalog</p>",
+        "<h2>All supported unit families from the canonical registry</h2>",
+        "<p>This page is generated from runtime unit/currency sources so docs stay aligned with app behavior.</p>",
+        "</div>",
+        "",
+        unitsPlaybookSection,
+        "",
+      ].join("\n"),
+    },
+    {
       file: "examples-gallery.md",
       body: [
         "---",
         "title: Examples Gallery",
-        "sidebar_position: 3",
+        "sidebar_position: 4",
         "---",
         "",
         'import ExamplePlayground from "@site/src/components/ExamplePlayground";',
@@ -511,7 +533,7 @@ const renderGuidePages = (recordsByCategory) => {
       body: [
         "---",
         "title: Troubleshooting",
-        "sidebar_position: 4",
+        "sidebar_position: 5",
         "---",
         "",
         "# Troubleshooting",
@@ -530,7 +552,7 @@ const renderGuidePages = (recordsByCategory) => {
         "",
         "## If behavior still feels off",
         "",
-        "- Go to [Feature Guides](/specs) and open the relevant contract page.",
+        "- Go to [Feature Guides](../../specs) and open the relevant contract page.",
         "",
       ].join("\n"),
     },
@@ -539,7 +561,7 @@ const renderGuidePages = (recordsByCategory) => {
       body: [
         "---",
         "title: Feature Map",
-        "sidebar_position: 5",
+        "sidebar_position: 6",
         "---",
         "",
         "# Feature Map",
@@ -548,7 +570,7 @@ const renderGuidePages = (recordsByCategory) => {
         "",
         ...CATEGORY_ORDER.flatMap((category) => {
           const records = recordsByCategory.get(category) || [];
-          return [`## ${category}`, "", ...records.map((record) => `- [${record.title}](/specs/${record.slug})`), ""];
+          return [`## ${category}`, "", ...records.map((record) => `- [${record.title}](../../specs/${record.slug})`), ""];
         }),
       ].join("\n"),
     },
@@ -568,6 +590,7 @@ const writeSidebar = (recordsByCategory) => {
     "      items: [",
     '        "guides/getting-started",',
     '        "guides/syntax-playbook",',
+    '        "guides/units-reference",',
     '        "guides/examples-gallery",',
     '        "guides/troubleshooting",',
     '        "guides/feature-map",',
