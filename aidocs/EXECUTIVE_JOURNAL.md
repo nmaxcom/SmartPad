@@ -2039,3 +2039,19 @@
     *   `npm run verify:changed` passed.
 *   Risks/blockers:
     *   None in code; live confirmation depends on next successful Pages deploy of this commit.
+
+## Entry J-2026-02-21-15
+
+*   Timestamp: 2026-02-21 18:36:39 CET / 2026-02-21 17:36:39 UTC
+*   Summary:
+    *   Assistant deployed the docs fixes to GitHub Pages and validated the exact user-reported failures on live pages.
+*   Artifacts:
+    *   Deploy run `22261180047` (Deploy To GitHub Pages): `success`.
+    *   Live checks on `https://nmaxcom.github.io/SmartPad/docs/`, `/guides/feature-map/`, `/guides/getting-started/`, and `/guides/units-reference/`.
+*   Validation:
+    *   Live `Feature Map` links now resolve as `/SmartPad/docs/specs/...` (no `/specs/...` root escapes).
+    *   Live `Getting Started` interactive links now target `/SmartPad/?sp_embed...` and `/SmartPad/?sp_import...` (no GitHub 404 iframe root).
+    *   Live units content is present in new nav page `/SmartPad/docs/guides/units-reference/` with `Computer` family and currency/rate sections.
+    *   Sitemap crawl check: `urls_checked=24`, `status_failures=0`, `bad_root_hrefs=0`.
+*   Pending updates:
+    *   None.
