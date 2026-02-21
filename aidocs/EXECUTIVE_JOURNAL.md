@@ -1990,3 +1990,20 @@
     *   `npm --prefix website ci && npm run docs:docusaurus:publish-prod` passed locally (including Docusaurus build).
 *   Risks/blockers:
     *   None in code; deployment outcome now depends on next GitHub Actions run.
+
+## Entry J-2026-02-21-13
+
+*   Timestamp: 2026-02-21 18:21:28 CET / 2026-02-21 17:21:28 UTC
+*   Summary:
+    *   Assistant pushed CI fix commit and triggered GitHub Pages deploy.
+    *   Deploy completed successfully and live docs asset URLs are now serving under `/SmartPad/docs/`.
+*   Decisions:
+    *   Keep workflow-dispatch rerun as immediate recovery path when push run is canceled by concurrency.
+*   Artifacts:
+    *   GitHub Actions run `22260948491` (Deploy To GitHub Pages): `success`.
+    *   Live check: `https://nmaxcom.github.io/SmartPad/docs/assets/js/main.98a698a2.js` returns `HTTP/2 200`.
+*   Validation:
+    *   `gh run list -w "Deploy To GitHub Pages" -L 3` shows latest run success.
+    *   `curl -I` against deployed JS asset confirms accessible published artifact.
+*   Risks/blockers:
+    *   Browser cache can still show stale broken page until hard refresh/cache invalidation.
