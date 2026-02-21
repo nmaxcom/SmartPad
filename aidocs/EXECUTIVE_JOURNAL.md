@@ -1941,3 +1941,28 @@
     *   Output spot-check confirms `/Users/nm4/STUFF/Coding/SmartPad/public/docs/index.html` now references `/SmartPad/docs/assets/...` and no `/SmartPad/docs/docs/...` link targets.
 *   Risks/blockers:
     *   Hosted GitHub Pages still requires CI deploy run completion to publish new assets; local build artifacts are ready.
+
+## Entry J-2026-02-21-11
+
+*   Timestamp: 2026-02-21 18:06:52 CET / 2026-02-21 17:06:52 UTC
+*   Summary:
+    *   User reported local docs (`localhost:3000/docs/index.html`) still showing Docusaurus baseUrl error after production-path fix.
+    *   Assistant re-published checked-in `public/docs` with local base (`/docs/`) while keeping GitHub Pages production correctness in CI via `docs:docusaurus:publish-prod`.
+*   Decisions:
+    *   Keep repository artifacts developer-friendly for local `/docs/...` preview.
+    *   Keep deploy correctness in pipeline, not by requiring local/prod artifact parity in git.
+*   User directives:
+    *   Screenshot report of localhost baseUrl banner.
+*   Assistant commitments:
+    *   Regenerate local docs artifacts and verify quality gates.
+*   Artifacts:
+    *   `public/docs/*` (re-synced with local baseUrl `/docs/`)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   None.
+*   Validation:
+    *   `npm run docs:docusaurus:publish-local` passed.
+    *   Spot-check confirms `/Users/nm4/STUFF/Coding/SmartPad/public/docs/index.html` now references `/docs/assets/...`.
+    *   `npm run verify:changed` passed.
+*   Risks/blockers:
+    *   None.
