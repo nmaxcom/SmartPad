@@ -1907,3 +1907,37 @@
     *   `npm run verify:changed` passed.
 *   Risks/blockers:
     *   No blockers for this task. Hosted-prod docs correctness (`T-2026-02-20-03`) is still pending separate deployment-path verification.
+
+## Entry J-2026-02-21-10
+
+*   Timestamp: 2026-02-21 18:02:23 CET / 2026-02-21 17:02:23 UTC
+*   Summary:
+    *   User reported GitHub Pages docs rendering with the Docusaurus baseUrl error banner and unstyled content.
+    *   Assistant fixed production docs deployment and link generation so hosted docs resolve under `/SmartPad/docs/`.
+*   Decisions:
+    *   Force GitHub Pages pipeline to rebuild docs with production base URL on every deploy (`docs:docusaurus:publish-prod`).
+    *   Normalize generated docs links to base-url-safe routes (`/guides/...`, `/specs/...`) instead of hardcoded `/docs/...`.
+*   User directives:
+    *   "would that also be the reason it shows like this in our github pages? Make it just work"
+*   Assistant commitments:
+    *   Patch deploy workflow and docs link generation, validate with prod docs build and repository verification gates.
+*   Artifacts:
+    *   `.github/workflows/deploy-pages.yml` (now runs `npm run docs:docusaurus:publish-prod` before `npm run build`)
+    *   `scripts/generate-docusaurus-docs.js` (fixed internal docs/spec links to base-url-safe paths)
+    *   `website/docs/intro.md` (fixed start-path links to base-url-safe paths)
+    *   `website/docs/guides/feature-map.md` (regenerated links)
+    *   `website/docs/guides/getting-started.md` (regenerated links)
+    *   `website/docs/guides/troubleshooting.md` (regenerated links)
+    *   `website/docs/specs/index.md` (regenerated links)
+    *   `public/docs/*` (republished prod-base output for `/SmartPad/docs/`)
+    *   `aidocs/TODO_BACKLOG.md` (marked `T-2026-02-20-03` done)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   None for webdocs path/baseUrl correctness.
+*   Validation:
+    *   `npm run docs:docusaurus:publish-prod` passed after link fixes.
+    *   `npm run build` passed.
+    *   `npm run verify:changed` passed.
+    *   Output spot-check confirms `/Users/nm4/STUFF/Coding/SmartPad/public/docs/index.html` now references `/SmartPad/docs/assets/...` and no `/SmartPad/docs/docs/...` link targets.
+*   Risks/blockers:
+    *   Hosted GitHub Pages still requires CI deploy run completion to publish new assets; local build artifacts are ready.

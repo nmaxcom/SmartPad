@@ -31,6 +31,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build docs for GitHub Pages base path
+        run: npm run docs:docusaurus:publish-prod
+
       - name: Build
         env:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/

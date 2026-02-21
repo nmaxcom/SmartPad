@@ -17,6 +17,6 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 ## Next stops
 
-- [Syntax Playbook](/docs/guides/syntax-playbook)
-- [Examples Gallery](/docs/guides/examples-gallery)
-- [Feature Guides](/docs/specs)
+- [Syntax Playbook](/guides/syntax-playbook)
+- [Examples Gallery](/guides/examples-gallery)
+- [Feature Guides](/specs)

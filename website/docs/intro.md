@@ -25,7 +25,7 @@ buffer = capacity - needed => 17`} />
 
 ## Start paths
 
-- [Getting Started](/docs/guides/getting-started)
-- [Syntax Playbook](/docs/guides/syntax-playbook)
-- [Examples Gallery](/docs/guides/examples-gallery)
-- [Feature Guides](/docs/specs)
+- [Getting Started](/guides/getting-started)
+- [Syntax Playbook](/guides/syntax-playbook)
+- [Examples Gallery](/guides/examples-gallery)
+- [Feature Guides](/specs)

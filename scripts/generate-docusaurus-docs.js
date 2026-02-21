@@ -390,10 +390,10 @@ const renderIndexPage = (recordsByCategory) => {
     "## Explore by path",
     "",
     '<div className="journey-grid">',
-    '<a className="journey-card" href="/docs/guides/getting-started"><strong>Start Fast</strong><span>From blank sheet to meaningful output in minutes.</span></a>',
-    '<a className="journey-card" href="/docs/guides/syntax-playbook"><strong>Master Syntax</strong><span>Write formulas that stay readable as complexity grows.</span></a>',
-    '<a className="journey-card" href="/docs/guides/examples-gallery"><strong>Real Examples</strong><span>Use production-style snippets you can run immediately.</span></a>',
-    '<a className="journey-card" href="/docs/guides/troubleshooting"><strong>Fix Fast</strong><span>Diagnose and resolve common issues quickly.</span></a>',
+    '<a className="journey-card" href="/guides/getting-started"><strong>Start Fast</strong><span>From blank sheet to meaningful output in minutes.</span></a>',
+    '<a className="journey-card" href="/guides/syntax-playbook"><strong>Master Syntax</strong><span>Write formulas that stay readable as complexity grows.</span></a>',
+    '<a className="journey-card" href="/guides/examples-gallery"><strong>Real Examples</strong><span>Use production-style snippets you can run immediately.</span></a>',
+    '<a className="journey-card" href="/guides/troubleshooting"><strong>Fix Fast</strong><span>Diagnose and resolve common issues quickly.</span></a>',
     "</div>",
     "",
   ];
@@ -407,7 +407,7 @@ const renderIndexPage = (recordsByCategory) => {
     lines.push('<div className="feature-grid">');
     records.forEach((record) => {
       lines.push(
-        `<a className="feature-card" href="/docs/specs/${record.slug}"><strong>${record.title}</strong><span>${record.summary}</span></a>`,
+        `<a className="feature-card" href="/specs/${record.slug}"><strong>${record.title}</strong><span>${record.summary}</span></a>`,
       );
     });
     lines.push("</div>");
@@ -444,9 +444,9 @@ const renderGuidePages = (recordsByCategory) => {
         "",
         "## Next stops",
         "",
-        "- [Syntax Playbook](/docs/guides/syntax-playbook)",
-        "- [Examples Gallery](/docs/guides/examples-gallery)",
-        "- [Feature Guides](/docs/specs)",
+        "- [Syntax Playbook](/guides/syntax-playbook)",
+        "- [Examples Gallery](/guides/examples-gallery)",
+        "- [Feature Guides](/specs)",
         "",
       ].join("\n"),
     },
@@ -530,7 +530,7 @@ const renderGuidePages = (recordsByCategory) => {
         "",
         "## If behavior still feels off",
         "",
-        "- Go to [Feature Guides](/docs/specs) and open the relevant contract page.",
+        "- Go to [Feature Guides](/specs) and open the relevant contract page.",
         "",
       ].join("\n"),
     },
@@ -548,7 +548,7 @@ const renderGuidePages = (recordsByCategory) => {
         "",
         ...CATEGORY_ORDER.flatMap((category) => {
           const records = recordsByCategory.get(category) || [];
-          return [`## ${category}`, "", ...records.map((record) => `- [${record.title}](/docs/specs/${record.slug})`), ""];
+          return [`## ${category}`, "", ...records.map((record) => `- [${record.title}](/specs/${record.slug})`), ""];
         }),
       ].join("\n"),
     },
