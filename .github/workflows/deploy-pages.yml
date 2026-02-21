@@ -27,9 +27,15 @@ jobs:
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            website/package-lock.json
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Install docs dependencies
+        run: npm --prefix website ci
 
       - name: Build docs for GitHub Pages base path
         run: npm run docs:docusaurus:publish-prod

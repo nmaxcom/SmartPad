@@ -1966,3 +1966,27 @@
     *   `npm run verify:changed` passed.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-21-12
+
+*   Timestamp: 2026-02-21 18:17:24 CET / 2026-02-21 17:17:24 UTC
+*   Summary:
+    *   User shared failing GitHub Actions log for "Build docs for GitHub Pages base path" with `sh: 1: docusaurus: not found`.
+    *   Assistant fixed workflow dependency installation so website-level Docusaurus CLI is present before prod docs build.
+*   Decisions:
+    *   Keep docs build in deployment workflow, but install `website` dependencies explicitly (`npm --prefix website ci`).
+    *   Add `website/package-lock.json` to setup-node cache key inputs.
+*   User directives:
+    *   "try now reaching github"
+*   Assistant commitments:
+    *   Validate root cause against workflow + package layout and patch CI.
+*   Artifacts:
+    *   `.github/workflows/deploy-pages.yml` (adds `cache-dependency-path` for both lockfiles and `Install docs dependencies` step)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   Re-run Deploy To GitHub Pages workflow on GitHub to publish fixed docs.
+*   Validation:
+    *   `gh auth status` confirms GitHub access.
+    *   `npm --prefix website ci && npm run docs:docusaurus:publish-prod` passed locally (including Docusaurus build).
+*   Risks/blockers:
+    *   None in code; deployment outcome now depends on next GitHub Actions run.
