@@ -84,7 +84,8 @@
         "src/components/SemanticHighlightExtension.ts",
         "src/components/Result",
         "src/components/Reference",
-        "docs/Specs/ResultChipsAndValueGraph.spec.md"
+        "docs/Specs/ResultChipsAndValueGraph.spec.md",
+        "docs/Specs/implemented/result-chips-and-references.md"
       ],
       "docPrefixes": [
         "docs/Specs/ResultChipsAndValueGraph.spec.md",

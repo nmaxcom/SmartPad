@@ -2209,3 +2209,15 @@
     *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
 *   Validation:
     *   Pending rerun after this commit: `docs:map`, `docs:drift`, `spec:test`, `spec:trust`, `verify:changed`.
+
+## Entry J-2026-02-22-07
+
+*   Timestamp: 2026-02-22 03:29:47 CET / 2026-02-22 02:29:47 UTC
+*   Summary:
+    *   Added `docs/Specs/implemented/result-chips-and-references.md` to `Editor And Result Chips` `specPrefixes` in `docs/spec-map.json`.
+    *   This closes a spec-map coverage blind spot where implemented trust cards were tracked files but not spec-mapped prefixes.
+*   Artifacts:
+    *   `docs/spec-map.json`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Pending rerun: `docs:map/docs:drift/spec:test/spec:trust/verify:changed` for `HEAD~2...HEAD`.
