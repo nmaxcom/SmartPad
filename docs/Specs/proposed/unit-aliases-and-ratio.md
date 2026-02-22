@@ -182,6 +182,18 @@ Smartpad accepts numeric literals immediately followed by a unit token, with no 
 
 This works for built-in units and user-defined unit aliases (including plurals). It is purely syntactic sugar — the semantic meaning still comes from the unit or alias definition.
 
+### 4.3 Constant-vs-unit safety
+
+Trailing unit-suffix rewrites must only run when the left side is a complete operand.
+
+Guardrail example:
+
+```text
+23*PI
+```
+
+This must stay arithmetic with the `PI` constant and must never be rewritten into malformed unit text.
+
 ---
 
 ## 5. Semantics: Alias Substitution Model

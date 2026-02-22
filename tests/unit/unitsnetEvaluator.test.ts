@@ -174,6 +174,14 @@ describe("UnitsNet.js Evaluator", () => {
       expect(value.getNumericValue()).toBeCloseTo(2 * Math.PI, 5);
     });
 
+    test("should not misread PI as a trailing unit suffix after operators", () => {
+      const result = evaluateUnitsNetExpression("23*PI");
+
+      expect(result.error).toBeUndefined();
+      const value = result.value as NumberValue;
+      expect(value.getNumericValue()).toBeCloseTo(23 * Math.PI, 10);
+    });
+
     test("should handle mathematical functions", () => {
       const result = evaluateUnitsNetExpression("sqrt(16 m^2)");
 
@@ -324,6 +332,7 @@ describe("UnitsNet.js Evaluator", () => {
       expect(expressionContainsUnitsNet("100")).toBe(false);
       expect(expressionContainsUnitsNet("x + y")).toBe(false);
       expect(expressionContainsUnitsNet("PI")).toBe(false);
+      expect(expressionContainsUnitsNet("23*PI")).toBe(false);
     });
   });
 

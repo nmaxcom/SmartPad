@@ -162,6 +162,12 @@ function rewriteTrailingUnitSuffix(expr: string): string {
   const unitStr = match[2];
   if (!before) return expr;
 
+  // Only rewrite when the left side ends with an operand. If it ends in an
+  // operator (e.g. "23*PI"), rewriting would create invalid text like "(23*)".
+  if (/[+\-*/^]$/.test(before)) {
+    return expr;
+  }
+
   if (/[a-zA-Z°µμΩ]/.test(before)) {
     return expr;
   }
