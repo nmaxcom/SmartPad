@@ -19,6 +19,7 @@ import { sanitizeReferencePlaceholdersForDisplay } from "./references/referenceI
 import { parseRuntimeModeParams, RuntimeModeParams } from "./utils/runtimeMode";
 
 const SHEET_DRAG_TYPE = "application/x-smartpad-sheet";
+const RESULT_REFERENCE_DRAG_TYPE = "application/x-smartpad-result-reference";
 
 // Expose tracing system to browser console for debugging
 // Usage examples:
@@ -343,16 +344,25 @@ function SheetSidebar() {
   }, [importMarkdownContent]);
 
   useEffect(() => {
+    const isInternalEditorDrag = (event: DragEvent): boolean => {
+      const types = Array.from(event.dataTransfer?.types || []);
+      return (
+        Boolean(draggingId) ||
+        types.includes(SHEET_DRAG_TYPE) ||
+        types.includes(RESULT_REFERENCE_DRAG_TYPE)
+      );
+    };
+
     const handleDragOver = (event: DragEvent) => {
       event.preventDefault();
-      if (draggingId || event.dataTransfer?.types?.includes(SHEET_DRAG_TYPE)) {
+      if (isInternalEditorDrag(event)) {
         return;
       }
       setIsDragging(true);
     };
 
     const handleDragLeave = (event: DragEvent) => {
-      if (draggingId || event.dataTransfer?.types?.includes(SHEET_DRAG_TYPE)) {
+      if (isInternalEditorDrag(event)) {
         return;
       }
       if ((event.target as HTMLElement)?.classList?.contains("drop-overlay")) {
@@ -365,7 +375,7 @@ function SheetSidebar() {
 
     const handleDrop = (event: DragEvent) => {
       event.preventDefault();
-      if (draggingId || event.dataTransfer?.types?.includes(SHEET_DRAG_TYPE)) {
+      if (isInternalEditorDrag(event)) {
         return;
       }
       setIsDragging(false);

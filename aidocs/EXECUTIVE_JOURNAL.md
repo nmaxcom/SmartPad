@@ -2102,3 +2102,25 @@
 *   Risks/blockers:
     *   `verify:changed` cannot fully pass in current sandbox because Watchman cannot initialize (`fchmod ... Operation not permitted`).
     *   Related Jest command currently surfaces unrelated failing tests in list/unit-alias suites that are outside this drag-chip scope.
+
+## Entry J-2026-02-22-02
+
+*   Timestamp: 2026-02-22 01:34:28 CET / 2026-02-22 00:34:28 UTC
+*   Summary:
+    *   Added mouse drag/drop affordances for result-chip insertion (line highlight + bottom new-line hint) to make drop behavior discoverable.
+    *   Prevented result-chip drag payloads from activating the sheet/file import drop overlay.
+    *   Hardened reference payload extraction so inserted reference chips always use displayed result text as value, avoiding expression-text chips.
+*   User directives:
+    *   "do 1, and also make sure dragging a chip doesn't trigger our sheets drop target"
+    *   "sometimes the chip created is an expression ... it should always be the result itself"
+*   Artifacts:
+    *   `src/components/ResultReferenceInteractionExtension.ts`
+    *   `src/components/Editor.css`
+    *   `src/App.tsx`
+    *   `tests/e2e/result-reference-drag-only.spec.ts`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   `npx playwright test tests/e2e/result-reference-drag-only.spec.ts` (passed; includes new overlay + label regression tests)
+    *   `npx playwright test tests/e2e/result-reference.spec.ts --project=chromium` (passed)
+*   Risks/blockers:
+    *   No new blockers identified for this scope.
