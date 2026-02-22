@@ -5,7 +5,7 @@ import { createReferencePlaceholder } from "../references/referenceIds";
 import type { SettingsState } from "../state/types";
 
 const RESULT_SELECTOR =
-  ".semantic-result-display, .semantic-live-result-display, .semantic-assignment-display";
+  ".semantic-result-display, .semantic-live-result-display";
 const REFERENCE_SELECTOR = ".semantic-reference-chip";
 const SOURCE_LINE_HIGHLIGHT_CLASS = "semantic-source-line-highlight";
 const RESULT_DRAG_ACTIVE_CLASS = "semantic-result-drag-active";
@@ -20,6 +20,7 @@ const REF_TRACE_LOG_STORE = "__SP_REF_TRACE_LOGS";
 const REF_TRACE_STORAGE_KEY = "smartpad-debug-ref-trace";
 const REF_TRACE_API_INSTALLED = "__SP_REF_TRACE_API_INSTALLED";
 const REF_TRACE_MAX_ENTRIES = 600;
+const RESULT_DRAG_ACTIVE_WINDOW_FLAG = "__SP_RESULT_CHIP_DRAG_ACTIVE";
 
 interface ReferencePayload {
   sourceLineId: string;
@@ -386,7 +387,23 @@ const shouldInsertOnBottomNewLine = (view: any, event: DragEvent): boolean => {
 
 const normalizeChipText = (value: string): string => String(value || "").replace(/\s+/g, " ").trim();
 
+const resolveDisplayedResultValue = (target: HTMLElement): string => {
+  const attrValue = normalizeChipText(String(target.getAttribute("data-result") || ""));
+  if (attrValue) return attrValue;
+  const ariaValue = normalizeChipText(String(target.getAttribute("aria-label") || ""));
+  if (ariaValue) return ariaValue;
+  const titleValue = normalizeChipText(String(target.getAttribute("title") || ""));
+  if (titleValue) return titleValue;
+  return normalizeChipText(target.textContent || "");
+};
+
 const payloadFromElement = (target: HTMLElement): ReferencePayload | null => {
+  if (
+    !target.matches(".semantic-result-display") &&
+    !target.matches(".semantic-live-result-display")
+  ) {
+    return null;
+  }
   const fallbackLineId = String(
     target.closest("p[data-line-id]")?.getAttribute("data-line-id") || ""
   ).trim();
@@ -397,9 +414,7 @@ const payloadFromElement = (target: HTMLElement): ReferencePayload | null => {
     String(target.getAttribute("data-source-label") || "").trim() ||
     String(target.getAttribute("aria-label") || "").trim();
   const renderedText = normalizeChipText(target.textContent || "");
-  const value = normalizeChipText(
-    String(target.getAttribute("data-result") || "").trim() || renderedText
-  );
+  const value = resolveDisplayedResultValue(target);
   const placeholderKey = String(target.getAttribute("data-placeholder-key") || "").trim();
   return {
     sourceLineId: lineId,
@@ -594,6 +609,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
     let highlightedSource: HoveredSourceRef | null = null;
     let highlightLockUntil = 0;
     let clearHighlightTimer: ReturnType<typeof setTimeout> | null = null;
+    let activeDragPayload: ReferencePayload | null = null;
     let dragHoverLine: HTMLElement | null = null;
     let dragBottomActive = false;
     const clearDragAffordance = (view: any) => {
@@ -604,6 +620,10 @@ export const ResultReferenceInteractionExtension = Extension.create({
         dragHoverLine = null;
       }
       dragBottomActive = false;
+      activeDragPayload = null;
+      if (typeof window !== "undefined") {
+        (window as any)[RESULT_DRAG_ACTIVE_WINDOW_FLAG] = false;
+      }
     };
     const setDragAffordance = (
       view: any,
@@ -987,17 +1007,25 @@ export const ResultReferenceInteractionExtension = Extension.create({
               if (!resultEl) return false;
               const payload = payloadFromElement(resultEl);
               if (!payload || !event.dataTransfer) return false;
+              activeDragPayload = payload;
               event.dataTransfer.effectAllowed = "copy";
               event.dataTransfer.setData(DND_MIME, JSON.stringify(payload));
+              event.dataTransfer.setData(
+                "text/plain",
+                payload.sourceValue || payload.sourceLabel || "value"
+              );
               view.dom.classList.add(RESULT_DRAG_ACTIVE_CLASS);
+              if (typeof window !== "undefined") {
+                (window as any)[RESULT_DRAG_ACTIVE_WINDOW_FLAG] = true;
+              }
               return true;
             },
             dragover: (view, event) => {
               const dragEvent = event as DragEvent;
-              if (!dragEvent.dataTransfer) return false;
-              if (
-                !Array.from(dragEvent.dataTransfer.types || []).includes(DND_MIME)
-              ) {
+              if (!dragEvent.dataTransfer && !activeDragPayload) return false;
+              const dragTypes = Array.from(dragEvent.dataTransfer?.types || []);
+              const isResultDrag = dragTypes.includes(DND_MIME) || !!activeDragPayload;
+              if (!isResultDrag) {
                 return false;
               }
               const insertOnBottom = shouldInsertOnBottomNewLine(view, dragEvent);
@@ -1016,7 +1044,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
             dragleave: (view, event) => {
               const dragEvent = event as DragEvent;
               const types = Array.from(dragEvent.dataTransfer?.types || []);
-              if (!types.includes(DND_MIME)) {
+              if (!types.includes(DND_MIME) && !activeDragPayload) {
                 return false;
               }
               const related = getEventElement((event as any).relatedTarget || null);
@@ -1030,11 +1058,16 @@ export const ResultReferenceInteractionExtension = Extension.create({
               return false;
             },
             drop: (view, event) => {
-              if (!event.dataTransfer) return false;
-              const raw = event.dataTransfer.getData(DND_MIME);
-              if (!raw) return false;
+              if (!event.dataTransfer && !activeDragPayload) return false;
+              const raw = event.dataTransfer?.getData(DND_MIME) || "";
               try {
-                const payload = JSON.parse(raw) as ReferencePayload;
+                const payload = raw
+                  ? (JSON.parse(raw) as ReferencePayload)
+                  : activeDragPayload;
+                if (!payload) {
+                  clearDragAffordance(view);
+                  return false;
+                }
                 const insertMode = getChipInsertMode();
                 const insertOnBottom = shouldInsertOnBottomNewLine(view, event as DragEvent);
                 const insertedCursor = insertOnBottom
@@ -1052,6 +1085,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
                   consumeResultClick = true;
                   clearDragAffordance(view);
                   event.preventDefault();
+                  event.stopPropagation();
                   return true;
                 }
                 clearDragAffordance(view);

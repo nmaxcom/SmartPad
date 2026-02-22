@@ -2124,3 +2124,23 @@
     *   `npx playwright test tests/e2e/result-reference.spec.ts --project=chromium` (passed)
 *   Risks/blockers:
     *   No new blockers identified for this scope.
+
+## Entry J-2026-02-22-03
+
+*   Timestamp: 2026-02-22 01:45:58 CET / 2026-02-22 00:45:58 UTC
+*   Summary:
+    *   Addressed user-reported drag regression: unreliable drop, unclear/undesired affordance visuals, and occasional expression-text reference chips.
+    *   Reworked result-chip drag session handling to keep an internal payload fallback when browser drag MIME availability is inconsistent.
+    *   Restricted drag sources to real result chips only and removed legacy assignment-display selector from reference insertion path.
+    *   Disabled native ProseMirror drop-cursor line to remove the white insertion bar during chip drags.
+*   Artifacts:
+    *   `src/components/ResultReferenceInteractionExtension.ts`
+    *   `src/components/Editor.tsx`
+    *   `src/components/Editor.css`
+    *   `src/App.tsx`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   `npx playwright test tests/e2e/result-reference-drag-only.spec.ts` (passed)
+    *   `npx playwright test tests/e2e/result-reference.spec.ts --project=chromium` (passed)
+*   Risks/blockers:
+    *   No new blockers identified for this scope.

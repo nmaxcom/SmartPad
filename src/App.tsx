@@ -20,6 +20,7 @@ import { parseRuntimeModeParams, RuntimeModeParams } from "./utils/runtimeMode";
 
 const SHEET_DRAG_TYPE = "application/x-smartpad-sheet";
 const RESULT_REFERENCE_DRAG_TYPE = "application/x-smartpad-result-reference";
+const RESULT_DRAG_ACTIVE_WINDOW_FLAG = "__SP_RESULT_CHIP_DRAG_ACTIVE";
 
 // Expose tracing system to browser console for debugging
 // Usage examples:
@@ -346,8 +347,12 @@ function SheetSidebar() {
   useEffect(() => {
     const isInternalEditorDrag = (event: DragEvent): boolean => {
       const types = Array.from(event.dataTransfer?.types || []);
+      const chipDragActive =
+        typeof window !== "undefined" &&
+        Boolean((window as any)[RESULT_DRAG_ACTIVE_WINDOW_FLAG]);
       return (
         Boolean(draggingId) ||
+        chipDragActive ||
         types.includes(SHEET_DRAG_TYPE) ||
         types.includes(RESULT_REFERENCE_DRAG_TYPE)
       );
