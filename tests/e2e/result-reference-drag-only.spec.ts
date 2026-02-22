@@ -3,10 +3,17 @@ import { waitForUIRenderComplete } from "./utils";
 
 const dispatchResultDrop = async (
   page: any,
-  options: { targetLineIndex?: number; dropAtBottom?: boolean }
+  options: { sourceLineIndex?: number; targetLineIndex?: number; dropAtBottom?: boolean } = {}
 ) => {
-  await page.evaluate(({ targetLineIndex, dropAtBottom }) => {
-    const chip = document.querySelector(".ProseMirror p .semantic-result-display") as HTMLElement | null;
+  await page.evaluate(({ sourceLineIndex, targetLineIndex, dropAtBottom }) => {
+    const paragraphs = Array.from(document.querySelectorAll(".ProseMirror p")) as HTMLElement[];
+    const sourceLine = paragraphs[sourceLineIndex || 0] || paragraphs[0];
+    const chip = (sourceLine?.querySelector(
+      ".semantic-live-result-display, .semantic-result-display"
+    ) ||
+      document.querySelector(
+        ".ProseMirror .semantic-live-result-display, .ProseMirror .semantic-result-display"
+      )) as HTMLElement | null;
     const editor = document.querySelector('[data-testid="smart-pad-editor"] .ProseMirror') as HTMLElement | null;
     if (!chip || !editor) return;
 
@@ -29,7 +36,6 @@ const dispatchResultDrop = async (
       clientX = rect.left + Math.max(20, rect.width * 0.2);
       clientY = rect.bottom - 8;
     } else {
-      const paragraphs = Array.from(document.querySelectorAll(".ProseMirror p")) as HTMLElement[];
       const targetLine = paragraphs[targetLineIndex || 1] || paragraphs[paragraphs.length - 1];
       if (!targetLine) return;
       const rect = targetLine.getBoundingClientRect();
@@ -57,6 +63,102 @@ const dispatchResultDrop = async (
       })
     );
   }, options);
+};
+
+const dispatchNativeResultDragDrop = async (
+  page: any,
+  options: {
+    sourceLineIndex?: number;
+    targetLineIndex?: number;
+    includeInterimDragLeave?: boolean;
+    poisonDataResultWithLabel?: boolean;
+  } = {}
+) => {
+  await page.evaluate(
+    ({ sourceLineIndex, targetLineIndex, includeInterimDragLeave, poisonDataResultWithLabel }) => {
+      const editor = document.querySelector(
+        '[data-testid="smart-pad-editor"] .ProseMirror'
+      ) as HTMLElement | null;
+      if (!editor) return;
+
+      const paragraphs = Array.from(document.querySelectorAll(".ProseMirror p")) as HTMLElement[];
+      const sourceLine = paragraphs[sourceLineIndex || 0] || paragraphs[0];
+      const sourceChip = (sourceLine?.querySelector(
+        ".semantic-live-result-display, .semantic-result-display"
+      ) ||
+        document.querySelector(
+          ".ProseMirror .semantic-live-result-display, .ProseMirror .semantic-result-display"
+        )) as HTMLElement | null;
+      if (!sourceChip) return;
+
+      if (poisonDataResultWithLabel) {
+        const sourceLabel = String(sourceChip.getAttribute("data-source-label") || "").trim();
+        if (sourceLabel) {
+          sourceChip.setAttribute("data-result", sourceLabel);
+        }
+      }
+
+      const targetLine = paragraphs[targetLineIndex || 1] || paragraphs[paragraphs.length - 1];
+      if (!targetLine) return;
+
+      const sourceRect = sourceChip.getBoundingClientRect();
+      const targetRect = targetLine.getBoundingClientRect();
+      const dt = new DataTransfer();
+
+      sourceChip.dispatchEvent(
+        new DragEvent("dragstart", {
+          bubbles: true,
+          cancelable: true,
+          dataTransfer: dt,
+          clientX: sourceRect.left + sourceRect.width * 0.5,
+          clientY: sourceRect.top + sourceRect.height * 0.5,
+        })
+      );
+
+      if (includeInterimDragLeave) {
+        editor.dispatchEvent(
+          new DragEvent("dragleave", {
+            bubbles: true,
+            cancelable: true,
+            dataTransfer: dt,
+            clientX: sourceRect.left - 8,
+            clientY: sourceRect.top - 8,
+          })
+        );
+      }
+
+      const clientX = Math.max(targetRect.left + 24, targetRect.right - 10);
+      const clientY = targetRect.top + Math.max(8, targetRect.height * 0.5);
+      targetLine.dispatchEvent(
+        new DragEvent("dragover", {
+          bubbles: true,
+          cancelable: true,
+          dataTransfer: dt,
+          clientX,
+          clientY,
+        })
+      );
+      targetLine.dispatchEvent(
+        new DragEvent("drop", {
+          bubbles: true,
+          cancelable: true,
+          dataTransfer: dt,
+          clientX,
+          clientY,
+        })
+      );
+      sourceChip.dispatchEvent(
+        new DragEvent("dragend", {
+          bubbles: true,
+          cancelable: true,
+          dataTransfer: dt,
+          clientX,
+          clientY,
+        })
+      );
+    },
+    options
+  );
 };
 
 test.describe("Result references (drag-only)", () => {
@@ -172,6 +274,55 @@ test.describe("Result references (drag-only)", () => {
     await expect(insertedChip).toHaveCount(1);
     await expect(insertedChip).toHaveText(await sourceResult.first().innerText());
     await expect(insertedChip).not.toContainText("a * b");
+  });
+
+  test("native drag keeps payload through dragleave and still drops a reference", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("100 + 20 =>");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("tax = ");
+    await waitForUIRenderComplete(page);
+
+    const targetLine = page.locator(".ProseMirror p").nth(1);
+    await dispatchNativeResultDragDrop(page, { targetLineIndex: 1, includeInterimDragLeave: true });
+    await page.keyboard.type("/2 =>");
+    await waitForUIRenderComplete(page);
+
+    await expect(targetLine.locator(".semantic-reference-chip")).toHaveCount(1);
+    await expect(targetLine.locator(".semantic-result-display").last()).toHaveAttribute(
+      "data-result",
+      "60"
+    );
+  });
+
+  test("native drag uses rendered chip value when data-result attribute is stale", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("monthly total = $1510");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("yearly total = monthly total * 12");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("target = ");
+    await waitForUIRenderComplete(page);
+
+    const sourceChip = page.locator(".ProseMirror p").nth(1).locator(".semantic-live-result-display");
+    const visibleValue = (await sourceChip.first().innerText()).trim();
+    await dispatchNativeResultDragDrop(page, {
+      sourceLineIndex: 1,
+      targetLineIndex: 2,
+      poisonDataResultWithLabel: true,
+    });
+    await waitForUIRenderComplete(page);
+
+    const insertedChip = page.locator(".ProseMirror p").nth(2).locator(".semantic-reference-chip").first();
+    await expect(insertedChip).toHaveCount(1);
+    await expect(insertedChip).toHaveText(visibleValue);
+    await expect(insertedChip).not.toContainText("monthly total * 12");
   });
 
   test("dropping a result chip at the editor bottom creates a new line with reference", async ({

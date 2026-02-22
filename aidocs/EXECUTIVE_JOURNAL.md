@@ -2167,3 +2167,33 @@
     *   `npm run test:e2e` (global suite currently has large unrelated baseline failures outside result-chip drag scope; targeted drag/reference suites pass)
 *   Risks/blockers:
     *   Repository-wide Jest/Playwright baselines currently fail in many unrelated areas, preventing a clean "100% green" full-suite state for this session.
+
+## Entry J-2026-02-22-05
+
+*   Timestamp: 2026-02-22 03:26:52 CET / 2026-02-22 02:26:52 UTC
+*   Summary:
+    *   Fixed drag-inserted reference chips that were still showing source expressions instead of rendered result values.
+    *   Hardened drag reliability by keeping active drag payload through transient `dragleave` events.
+    *   Corrected post-insert reference refresh path to resolve source value from render-node result output (not expression-oriented status display).
+    *   Added drag regressions covering stale `data-result` attributes and dragleave/drop continuity.
+    *   Updated result-chip/reference spec and trust card references to reflect the new drag guarantees and coverage.
+*   User directives:
+    *   "why do i still see this after drag?"
+    *   "work on this autonomously until you are 100% through jest and playwright"
+*   Artifacts:
+    *   `src/components/ResultReferenceInteractionExtension.ts`
+    *   `src/components/ResultsDecoratorExtension.ts`
+    *   `tests/e2e/result-reference-drag-only.spec.ts`
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
+    *   `docs/Specs/implemented/result-chips-and-references.md`
+    *   `docs/spec-trust.json`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   `npx playwright test tests/e2e/result-reference-drag-only.spec.ts tests/e2e/result-reference.spec.ts --project=chromium` (passed, 31/31)
+    *   `npm run test:unit` (fails in 3 pre-existing unrelated suites: `tests/unit/list.test.ts`, `tests/unit/listSpecExamples.test.ts`, `tests/unit/unitAliasDecisionMatrix.test.ts`)
+    *   `npm run build` (passed)
+    *   `npm run docs:map` (passed)
+    *   `npm run docs:drift` (currently fails until this commit is created; script diffs `HEAD~1...HEAD`)
+    *   `npm run spec:test` (currently fails until this commit is created; script diffs `HEAD~1...HEAD`)
+*   Risks/blockers:
+    *   Full-repo Jest baseline is still red in unrelated list/unit-alias areas, so repo-wide 100% green cannot be claimed from this drag-chip scope alone.

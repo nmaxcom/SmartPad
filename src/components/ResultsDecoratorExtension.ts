@@ -393,6 +393,41 @@ export const ResultsDecoratorExtension = Extension.create({
               if (!entry?.lineId) return;
               lineNumberById.set(entry.lineId, idx);
             });
+            const renderNodesByLine = new Map<number, any[]>();
+            (renderNodes as any[]).forEach((rn) => {
+              const list = renderNodesByLine.get(Number(rn?.line) || 0) || [];
+              list.push(rn);
+              renderNodesByLine.set(Number(rn?.line) || 0, list);
+            });
+            const resolveRenderDisplayValue = (rn: any): string => {
+              if (!rn) return "";
+              if (typeof rn.result === "number" || typeof rn.result === "string") {
+                return String(rn.result).trim();
+              }
+              const displayText = String(rn.displayText || rn.display || "").trim();
+              if (!displayText) return "";
+              if (displayText.includes("=>")) {
+                return displayText.replace(/^.*=>\s*/, "").trim();
+              }
+              return displayText;
+            };
+            const resolvedLineDisplayById = new Map<string, string>();
+            for (let i = 1; i < paragraphIndex.length; i++) {
+              const info = paragraphIndex[i];
+              if (!info?.lineId) continue;
+              const lineNodes = renderNodesByLine.get(i) || [];
+              const preferredNode =
+                lineNodes.find(
+                  (node) =>
+                    !!node?.livePreview &&
+                    (node?.type === "mathResult" || node?.type === "combined")
+                ) ||
+                lineNodes.find((node) => node?.type === "mathResult" || node?.type === "combined");
+              const resolvedDisplay = resolveRenderDisplayValue(preferredNode);
+              if (resolvedDisplay) {
+                resolvedLineDisplayById.set(info.lineId, resolvedDisplay);
+              }
+            }
 
             const duplicatePrefixesFromReference = (attrs: any): string[] => {
               const seen = new Set<string>();
@@ -487,7 +522,7 @@ export const ResultsDecoratorExtension = Extension.create({
                   const sourceStatus = sourceLineId ? lineResultStatusById.get(sourceLineId) : undefined;
                   const sourceDisplay =
                     sourceStatus && !sourceStatus.hasError
-                      ? String(sourceStatus.display || "").trim()
+                      ? String(resolvedLineDisplayById.get(sourceLineId) || "").trim()
                       : "";
                   const previousDisplay = String(attrs.sourceValue || attrs.label || "").trim();
                   const nextDisplay = sourceDisplay || previousDisplay;

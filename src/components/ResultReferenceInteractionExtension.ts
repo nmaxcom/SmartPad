@@ -385,13 +385,15 @@ const shouldInsertOnBottomNewLine = (view: any, event: DragEvent): boolean => {
 const normalizeChipText = (value: string): string => String(value || "").replace(/\s+/g, " ").trim();
 
 const resolveDisplayedResultValue = (target: HTMLElement): string => {
-  const attrValue = normalizeChipText(String(target.getAttribute("data-result") || ""));
-  if (attrValue) return attrValue;
+  // Prefer the literal rendered chip text so inserted references match exactly
+  // what the user sees, even if attributes are stale.
+  const visibleText = normalizeChipText(target.innerText || target.textContent || "");
+  if (visibleText) return visibleText;
   const ariaValue = normalizeChipText(String(target.getAttribute("aria-label") || ""));
   if (ariaValue) return ariaValue;
   const titleValue = normalizeChipText(String(target.getAttribute("title") || ""));
   if (titleValue) return titleValue;
-  return normalizeChipText(target.textContent || "");
+  return normalizeChipText(String(target.getAttribute("data-result") || ""));
 };
 
 const resolveResultElementFromTarget = (target: HTMLElement | null): HTMLElement | null => {
@@ -421,12 +423,13 @@ const payloadFromElement = (target: HTMLElement): ReferencePayload | null => {
     String(target.getAttribute("aria-label") || "").trim();
   const renderedText = normalizeChipText(target.textContent || "");
   const value = resolveDisplayedResultValue(target);
+  const sourceValue = value || renderedText;
   const placeholderKey = String(target.getAttribute("data-placeholder-key") || "").trim();
   return {
     sourceLineId: lineId,
     sourceLine,
-    sourceLabel: label || renderedText || value || "value",
-    sourceValue: value,
+    sourceLabel: label || sourceValue || "value",
+    sourceValue,
     placeholderKey,
   };
 };
@@ -1005,10 +1008,8 @@ export const ResultReferenceInteractionExtension = Extension.create({
               if (!types.includes(DND_MIME) && !activeDragPayload) {
                 return false;
               }
-              const related = getEventElement((event as any).relatedTarget || null);
-              if (!related || !view.dom.contains(related)) {
-                clearDragSession();
-              }
+              // Keep the drag payload alive until `drop`/`dragend`.
+              // `dragleave` often fires with null relatedTarget while still inside the editor.
               return false;
             },
             dragend: (_view) => {

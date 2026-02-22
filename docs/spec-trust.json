@@ -16,7 +16,7 @@
       "sourceSpec": "docs/Specs/ResultChipsAndValueGraph.spec.md",
       "canonicalSpec": "docs/Specs/implemented/result-chips-and-references.md",
       "mappedGroups": ["Editor And Result Chips"],
-      "testRefs": ["tests/e2e/result-reference.spec.ts", "tests/e2e/results-decorator-regression.spec.ts"]
+      "testRefs": ["tests/e2e/result-reference-drag-only.spec.ts", "tests/e2e/result-reference.spec.ts", "tests/e2e/results-decorator-regression.spec.ts"]
     },
     {
       "id": "currency-and-fx",
