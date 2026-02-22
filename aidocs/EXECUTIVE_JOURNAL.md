@@ -2197,3 +2197,15 @@
     *   `npm run spec:test` (currently fails until this commit is created; script diffs `HEAD~1...HEAD`)
 *   Risks/blockers:
     *   Full-repo Jest baseline is still red in unrelated list/unit-alias areas, so repo-wide 100% green cannot be claimed from this drag-chip scope alone.
+
+## Entry J-2026-02-22-06
+
+*   Timestamp: 2026-02-22 03:28:30 CET / 2026-02-22 02:28:30 UTC
+*   Summary:
+    *   Resolved post-commit `docs:map` failure by mapping `docs/Specs/implemented/result-chips-and-references.md` into the `Editor And Result Chips` docs prefixes.
+    *   Prepared follow-up commit so policy checks that diff `HEAD~1...HEAD` can validate the mapping change.
+*   Artifacts:
+    *   `docs/spec-map.json`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Pending rerun after this commit: `docs:map`, `docs:drift`, `spec:test`, `spec:trust`, `verify:changed`.

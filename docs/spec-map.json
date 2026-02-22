@@ -86,7 +86,11 @@
         "src/components/Reference",
         "docs/Specs/ResultChipsAndValueGraph.spec.md"
       ],
-      "docPrefixes": ["docs/Specs/ResultChipsAndValueGraph.spec.md", "public/docs/"],
+      "docPrefixes": [
+        "docs/Specs/ResultChipsAndValueGraph.spec.md",
+        "docs/Specs/implemented/result-chips-and-references.md",
+        "public/docs/"
+      ],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
     },
     {
