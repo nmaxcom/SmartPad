@@ -181,10 +181,12 @@ export const ResultsDecoratorExtension = Extension.create({
                         wrapper.className =
                           "semantic-wrapper semantic-lane-result-wrapper semantic-live-result-wrapper";
                         wrapper.setAttribute("contenteditable", "false");
+                        wrapper.setAttribute("draggable", "true");
                         const container = document.createElement("span");
                         container.className =
                           "semantic-result-container semantic-live-result-container";
                         container.setAttribute("contenteditable", "false");
+                        container.setAttribute("draggable", "true");
                         const span = document.createElement("span");
                         span.className = flashLiveResult
                           ? "semantic-result-display semantic-live-result-display semantic-result-flash"

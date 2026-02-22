@@ -73,10 +73,11 @@ export const ResultInlineNode = Node.create({
       {
         class: "semantic-wrapper",
         "data-result-node": "true",
+        draggable: "true",
       },
       [
         "span",
-        { class: "semantic-result-container" },
+        { class: "semantic-result-container", draggable: "true" },
         contentNode,
       ],
     ];

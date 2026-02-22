@@ -2144,3 +2144,26 @@
     *   `npx playwright test tests/e2e/result-reference.spec.ts --project=chromium` (passed)
 *   Risks/blockers:
     *   No new blockers identified for this scope.
+
+## Entry J-2026-02-22-04
+
+*   Timestamp: 2026-02-22 03:09:41 CET / 2026-02-22 02:09:41 UTC
+*   Summary:
+    *   Responded to user-reported drag regression by removing the extra newline banner affordance and restoring native drop-caret behavior.
+    *   Hardened drag/drop reliability for real mouse usage by introducing drag-session payload fallback and broadening valid drag-start hit area via wrapper/container draggability.
+    *   Tightened result-source resolution so drop payloads always resolve from actual result chip elements and prefer displayed result value over expression labels.
+*   Artifacts:
+    *   `src/components/ResultReferenceInteractionExtension.ts`
+    *   `src/components/Editor.tsx`
+    *   `src/components/Editor.css`
+    *   `src/components/ResultInlineNode.ts`
+    *   `src/components/ResultsDecoratorExtension.ts`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   `npx playwright test tests/e2e/result-reference-drag-only.spec.ts` (passed)
+    *   `npx playwright test tests/e2e/result-reference.spec.ts --project=chromium` (passed)
+    *   `npm run build` (passed)
+    *   `npm run test:unit` (still fails on 3 pre-existing unrelated suites: `list.test.ts`, `listSpecExamples.test.ts`, `unitAliasDecisionMatrix.test.ts`)
+    *   `npm run test:e2e` (global suite currently has large unrelated baseline failures outside result-chip drag scope; targeted drag/reference suites pass)
+*   Risks/blockers:
+    *   Repository-wide Jest/Playwright baselines currently fail in many unrelated areas, preventing a clean "100% green" full-suite state for this session.

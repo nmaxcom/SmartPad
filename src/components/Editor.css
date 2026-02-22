@@ -330,31 +330,6 @@ body.number-scrubbing * {
   cursor: pointer;
 }
 
-.ProseMirror.semantic-result-drag-active {
-  cursor: copy;
-}
-
-.ProseMirror p.semantic-result-drop-target {
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--syntax-result-bg) 78%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--syntax-result-border) 78%, transparent);
-}
-
-.ProseMirror.semantic-result-drop-bottom::after {
-  content: "Drop to insert on new line";
-  display: block;
-  margin-top: 6px;
-  padding: 2px 8px;
-  border-radius: 6px;
-  width: fit-content;
-  color: color-mix(in srgb, var(--syntax-result) 85%, #ffffff 15%);
-  background: color-mix(in srgb, var(--syntax-result-bg) 70%, transparent);
-  border: 1px dashed color-mix(in srgb, var(--syntax-result-border) 75%, transparent);
-  font-size: 0.8rem;
-  font-weight: 600;
-  pointer-events: none;
-}
-
 .semantic-live-blocked-display {
   margin-left: 1ch;
   color: #ff8fb6;

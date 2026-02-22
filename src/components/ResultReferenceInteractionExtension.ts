@@ -8,9 +8,6 @@ const RESULT_SELECTOR =
   ".semantic-result-display, .semantic-live-result-display";
 const REFERENCE_SELECTOR = ".semantic-reference-chip";
 const SOURCE_LINE_HIGHLIGHT_CLASS = "semantic-source-line-highlight";
-const RESULT_DRAG_ACTIVE_CLASS = "semantic-result-drag-active";
-const RESULT_DROP_TARGET_CLASS = "semantic-result-drop-target";
-const RESULT_DROP_BOTTOM_CLASS = "semantic-result-drop-bottom";
 const DND_MIME = "application/x-smartpad-result-reference";
 const CLIPBOARD_MIME = "application/x-smartpad-reference";
 const REF_DEBUG_FLAG = "__SP_REF_DEBUG";
@@ -397,6 +394,15 @@ const resolveDisplayedResultValue = (target: HTMLElement): string => {
   return normalizeChipText(target.textContent || "");
 };
 
+const resolveResultElementFromTarget = (target: HTMLElement | null): HTMLElement | null => {
+  if (!target) return null;
+  const direct = target.closest(RESULT_SELECTOR) as HTMLElement | null;
+  if (direct) return direct;
+  const wrapper = target.closest(".semantic-wrapper, .semantic-result-container") as HTMLElement | null;
+  if (!wrapper) return null;
+  return wrapper.querySelector(RESULT_SELECTOR) as HTMLElement | null;
+};
+
 const payloadFromElement = (target: HTMLElement): ReferencePayload | null => {
   if (
     !target.matches(".semantic-result-display") &&
@@ -610,48 +616,10 @@ export const ResultReferenceInteractionExtension = Extension.create({
     let highlightLockUntil = 0;
     let clearHighlightTimer: ReturnType<typeof setTimeout> | null = null;
     let activeDragPayload: ReferencePayload | null = null;
-    let dragHoverLine: HTMLElement | null = null;
-    let dragBottomActive = false;
-    const clearDragAffordance = (view: any) => {
-      view.dom.classList.remove(RESULT_DRAG_ACTIVE_CLASS);
-      view.dom.classList.remove(RESULT_DROP_BOTTOM_CLASS);
-      if (dragHoverLine) {
-        dragHoverLine.classList.remove(RESULT_DROP_TARGET_CLASS);
-        dragHoverLine = null;
-      }
-      dragBottomActive = false;
+    const clearDragSession = () => {
       activeDragPayload = null;
       if (typeof window !== "undefined") {
         (window as any)[RESULT_DRAG_ACTIVE_WINDOW_FLAG] = false;
-      }
-    };
-    const setDragAffordance = (
-      view: any,
-      opts: { targetLine: HTMLElement | null; bottom: boolean }
-    ) => {
-      view.dom.classList.add(RESULT_DRAG_ACTIVE_CLASS);
-      if (opts.bottom) {
-        if (!dragBottomActive) {
-          view.dom.classList.add(RESULT_DROP_BOTTOM_CLASS);
-        }
-        if (dragHoverLine) {
-          dragHoverLine.classList.remove(RESULT_DROP_TARGET_CLASS);
-          dragHoverLine = null;
-        }
-        dragBottomActive = true;
-        return;
-      }
-      if (dragBottomActive) {
-        view.dom.classList.remove(RESULT_DROP_BOTTOM_CLASS);
-        dragBottomActive = false;
-      }
-      if (dragHoverLine && dragHoverLine !== opts.targetLine) {
-        dragHoverLine.classList.remove(RESULT_DROP_TARGET_CLASS);
-        dragHoverLine = null;
-      }
-      if (opts.targetLine && dragHoverLine !== opts.targetLine) {
-        opts.targetLine.classList.add(RESULT_DROP_TARGET_CLASS);
-        dragHoverLine = opts.targetLine;
       }
     };
     const refreshHighlightDecorations = (view: any) => {
@@ -771,7 +739,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 clearTimeout(clearHighlightTimer);
                 clearHighlightTimer = null;
               }
-              clearDragAffordance(view);
+              clearDragSession();
               clearHighlightedSource(view);
             },
           };
@@ -1000,10 +968,10 @@ export const ResultReferenceInteractionExtension = Extension.create({
               });
               return false;
             },
-            dragstart: (view, event) => {
+            dragstart: (_view, event) => {
               const target = getEventElement(event.target);
               if (!target) return false;
-              const resultEl = target.closest(RESULT_SELECTOR) as HTMLElement | null;
+              const resultEl = resolveResultElementFromTarget(target);
               if (!resultEl) return false;
               const payload = payloadFromElement(resultEl);
               if (!payload || !event.dataTransfer) return false;
@@ -1014,7 +982,6 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 "text/plain",
                 payload.sourceValue || payload.sourceLabel || "value"
               );
-              view.dom.classList.add(RESULT_DRAG_ACTIVE_CLASS);
               if (typeof window !== "undefined") {
                 (window as any)[RESULT_DRAG_ACTIVE_WINDOW_FLAG] = true;
               }
@@ -1028,20 +995,11 @@ export const ResultReferenceInteractionExtension = Extension.create({
               if (!isResultDrag) {
                 return false;
               }
-              const insertOnBottom = shouldInsertOnBottomNewLine(view, dragEvent);
-              const pointerEl = document.elementFromPoint(
-                dragEvent.clientX,
-                dragEvent.clientY
-              ) as HTMLElement | null;
-              const targetLine = insertOnBottom
-                ? null
-                : (pointerEl?.closest("p[data-line-id]") as HTMLElement | null);
-              setDragAffordance(view, { targetLine, bottom: insertOnBottom });
               dragEvent.preventDefault();
               dragEvent.dataTransfer.dropEffect = "copy";
-              return true;
+              return false;
             },
-            dragleave: (view, event) => {
+            dragleave: (_view, event) => {
               const dragEvent = event as DragEvent;
               const types = Array.from(dragEvent.dataTransfer?.types || []);
               if (!types.includes(DND_MIME) && !activeDragPayload) {
@@ -1049,12 +1007,12 @@ export const ResultReferenceInteractionExtension = Extension.create({
               }
               const related = getEventElement((event as any).relatedTarget || null);
               if (!related || !view.dom.contains(related)) {
-                clearDragAffordance(view);
+                clearDragSession();
               }
               return false;
             },
-            dragend: (view) => {
-              clearDragAffordance(view);
+            dragend: (_view) => {
+              clearDragSession();
               return false;
             },
             drop: (view, event) => {
@@ -1065,7 +1023,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
                   ? (JSON.parse(raw) as ReferencePayload)
                   : activeDragPayload;
                 if (!payload) {
-                  clearDragAffordance(view);
+                  clearDragSession();
                   return false;
                 }
                 const insertMode = getChipInsertMode();
@@ -1083,15 +1041,15 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 if (typeof insertedCursor === "number") {
                   postInsertCursor = insertedCursor;
                   consumeResultClick = true;
-                  clearDragAffordance(view);
+                  clearDragSession();
                   event.preventDefault();
                   event.stopPropagation();
                   return true;
                 }
-                clearDragAffordance(view);
+                clearDragSession();
                 return false;
               } catch {
-                clearDragAffordance(view);
+                clearDragSession();
                 return false;
               }
             },

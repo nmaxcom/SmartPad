@@ -936,7 +936,6 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       StarterKit.configure({
         heading: false,
         italic: false,
-        dropcursor: false,
       }),
       Placeholder.configure({
         placeholder: "Start typing...",
