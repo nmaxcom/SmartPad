@@ -2221,3 +2221,18 @@
     *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
 *   Validation:
     *   Pending rerun: `docs:map/docs:drift/spec:test/spec:trust/verify:changed` for `HEAD~2...HEAD`.
+
+## Entry J-2026-02-22-08
+
+*   Timestamp: 2026-02-22 03:37:27 CET / 2026-02-22 02:37:27 UTC
+*   Summary:
+    *   Executed full Playwright suite per user demand for global validation status after drag-chip fixes.
+    *   Confirmed targeted drag/reference suites remain green while broad existing e2e baseline remains heavily red in unrelated areas.
+    *   Verified working tree cleanliness after e2e artifact update.
+*   Artifacts:
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   `npm run test:e2e` (217 tests: 81 passed, 135 failed, 1 skipped; failures span many unrelated suites)
+    *   Notable pass confirmation inside full run: all tests in `tests/e2e/result-reference-drag-only.spec.ts` passed.
+*   Risks/blockers:
+    *   Repository-wide Playwright baseline is currently far from green; cannot claim global 100% e2e pass for this repo state.
