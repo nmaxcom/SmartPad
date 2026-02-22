@@ -10,6 +10,72 @@ const getLineIdAtSelection = async (page: any) =>
     return paragraph?.getAttribute("data-line-id") || "";
   });
 
+const dispatchResultDrop = async (
+  page: any,
+  options: { sourceLineIndex?: number; targetLineIndex?: number; dropAtBottom?: boolean } = {}
+) => {
+  await page.evaluate(({ sourceLineIndex, targetLineIndex, dropAtBottom }) => {
+    const editor = document.querySelector('[data-testid="smart-pad-editor"] .ProseMirror') as HTMLElement | null;
+    if (!editor) return;
+
+    const paragraphs = Array.from(document.querySelectorAll(".ProseMirror p")) as HTMLElement[];
+    const sourceLine = paragraphs[sourceLineIndex || 0] || paragraphs[0];
+    const sourceChip = (sourceLine?.querySelector(
+      ".semantic-live-result-display, .semantic-result-display"
+    ) ||
+      document.querySelector(
+        ".ProseMirror .semantic-live-result-display, .ProseMirror .semantic-result-display"
+      )) as HTMLElement | null;
+    if (!sourceChip) return;
+
+    const payload = {
+      sourceLineId: String(sourceChip.getAttribute("data-source-line-id") || "").trim(),
+      sourceLine: Number(sourceChip.getAttribute("data-source-line") || 0),
+      sourceLabel: String(sourceChip.getAttribute("data-source-label") || "").trim() || "value",
+      sourceValue: String(sourceChip.getAttribute("data-result") || "").trim(),
+      placeholderKey: String(sourceChip.getAttribute("data-placeholder-key") || "").trim() || undefined,
+    };
+    const dt = new DataTransfer();
+    dt.setData("application/x-smartpad-result-reference", JSON.stringify(payload));
+
+    let dropTarget: HTMLElement = editor;
+    let clientX = 24;
+    let clientY = 24;
+
+    if (dropAtBottom) {
+      const rect = editor.getBoundingClientRect();
+      clientX = rect.left + Math.max(24, rect.width * 0.25);
+      clientY = rect.bottom - 8;
+    } else {
+      const targetLine = paragraphs[targetLineIndex || 1] || paragraphs[paragraphs.length - 1];
+      if (!targetLine) return;
+      const rect = targetLine.getBoundingClientRect();
+      dropTarget = targetLine;
+      clientX = Math.max(rect.left + 24, rect.right - 10);
+      clientY = rect.top + Math.max(8, rect.height * 0.5);
+    }
+
+    dropTarget.dispatchEvent(
+      new DragEvent("dragover", {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: dt,
+        clientX,
+        clientY,
+      })
+    );
+    dropTarget.dispatchEvent(
+      new DragEvent("drop", {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: dt,
+        clientX,
+        clientY,
+      })
+    );
+  }, options);
+};
+
 test.describe("Result References", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
@@ -48,7 +114,7 @@ test.describe("Result References", () => {
     await waitForUIRenderComplete(page);
   });
 
-  test("clicking a result chip inserts an invisible structured reference at caret", async ({
+  test("dragging a result chip inserts an invisible structured reference at caret", async ({
     page,
   }) => {
     const editor = page.locator('[data-testid="smart-pad-editor"]');
@@ -60,9 +126,8 @@ test.describe("Result References", () => {
 
     const taxLine = page.locator(".ProseMirror p").nth(1);
     await taxLine.click({ position: { x: 15, y: 8 } });
-    const sourceChip = page.locator(".ProseMirror p").first().locator(".semantic-result-display");
-    await expect(sourceChip).toHaveCount(1);
-    await sourceChip.click();
+    await expect(page.locator(".ProseMirror p").first().locator(".semantic-result-display")).toHaveCount(1);
+    await dispatchResultDrop(page, { targetLineIndex: 1 });
     await page.keyboard.type(" / 2");
     await waitForUIRenderComplete(page);
 
@@ -75,7 +140,7 @@ test.describe("Result References", () => {
     await expect(page.locator(".ProseMirror")).not.toContainText("@L");
   });
 
-  test("clicking a live result on the same source line inserts chip on a new line", async ({
+  test("dragging a live result from the same source line inserts chip on a new line", async ({
     page,
   }) => {
     const editor = page.locator('[data-testid="smart-pad-editor"]');
@@ -87,8 +152,7 @@ test.describe("Result References", () => {
     const liveChip = line.locator(".semantic-live-result-display");
     await expect(liveChip).toHaveCount(1);
 
-    await line.click({ position: { x: 10, y: 8 } });
-    await liveChip.click();
+    await dispatchResultDrop(page, { sourceLineIndex: 0, dropAtBottom: true });
     await waitForUIRenderComplete(page);
 
     const secondLine = page.locator(".ProseMirror p").nth(1);
@@ -108,16 +172,15 @@ test.describe("Result References", () => {
     await page.keyboard.type(" ");
     await waitForUIRenderComplete(page);
 
-    const sourceChip = page.locator(".ProseMirror p").first().locator(".semantic-result-display");
     const taxLine = page.locator(".ProseMirror p").nth(1);
     const shippingLine = page.locator(".ProseMirror p").nth(2);
 
     await taxLine.click({ position: { x: 12, y: 8 } });
-    await sourceChip.click();
+    await dispatchResultDrop(page, { targetLineIndex: 1 });
     await page.keyboard.type(" / 2");
     await waitForUIRenderComplete(page);
 
-    await sourceChip.dragTo(shippingLine);
+    await dispatchResultDrop(page, { targetLineIndex: 2 });
     await page.keyboard.type(" + 10");
     await waitForUIRenderComplete(page);
 
@@ -155,8 +218,7 @@ test.describe("Result References", () => {
 
     const taxLine = page.locator(".ProseMirror p").nth(1);
     await taxLine.click({ position: { x: 12, y: 8 } });
-    const sourceChip = page.locator(".ProseMirror p").first().locator(".semantic-result-display");
-    await sourceChip.click();
+    await dispatchResultDrop(page, { targetLineIndex: 1 });
     await page.keyboard.type(" / 2");
     await waitForUIRenderComplete(page);
 
@@ -271,10 +333,9 @@ test.describe("Result References", () => {
 
     const sourceLine = page.locator(".ProseMirror p").first();
     const sourceLineId = await sourceLine.getAttribute("data-line-id");
-    const sourceLiveChip = sourceLine.locator(".semantic-live-result-display");
     const dependentLine = page.locator(".ProseMirror p").nth(1);
     await dependentLine.click({ position: { x: 14, y: 8 } });
-    await sourceLiveChip.click();
+    await dispatchResultDrop(page, { targetLineIndex: 1 });
     await page.keyboard.type(" + 1 =>");
     await waitForUIRenderComplete(page);
 
@@ -293,10 +354,9 @@ test.describe("Result References", () => {
     await page.keyboard.type(" ");
     await waitForUIRenderComplete(page);
 
-    const sourceLiveChip = page.locator(".ProseMirror p").first().locator(".semantic-live-result-display");
     const dependentLine = page.locator(".ProseMirror p").nth(1);
     await dependentLine.click({ position: { x: 14, y: 8 } });
-    await sourceLiveChip.click();
+    await dispatchResultDrop(page, { targetLineIndex: 1 });
     await page.keyboard.type(" + 1 =>");
     await waitForUIRenderComplete(page);
 
@@ -339,10 +399,9 @@ test.describe("Result References", () => {
     await waitForUIRenderComplete(page);
 
     const sourceLine = page.locator(".ProseMirror p").first();
-    const sourceLiveChip = sourceLine.locator(".semantic-live-result-display");
     const dependentLine = page.locator(".ProseMirror p").nth(1);
     await dependentLine.click({ position: { x: 14, y: 8 } });
-    await sourceLiveChip.click();
+    await dispatchResultDrop(page, { targetLineIndex: 1 });
     await page.keyboard.type(" + 1 =>");
     await waitForUIRenderComplete(page);
 
@@ -365,7 +424,7 @@ test.describe("Result References", () => {
     await expect(referenceChip).toHaveClass(/semantic-reference-flash/);
   });
 
-  test("click-inserting a standalone reference does not also render a duplicate live result", async ({
+  test("drag-inserting a standalone reference does not also render a duplicate live result", async ({
     page,
   }) => {
     const editor = page.locator('[data-testid="smart-pad-editor"]');
@@ -375,10 +434,9 @@ test.describe("Result References", () => {
     await page.keyboard.type(" ");
     await waitForUIRenderComplete(page);
 
-    const sourceResult = page.locator(".ProseMirror p").first().locator(".semantic-result-display");
     const targetLine = page.locator(".ProseMirror p").nth(1);
     await targetLine.click({ position: { x: 14, y: 8 } });
-    await sourceResult.click();
+    await dispatchResultDrop(page, { targetLineIndex: 1 });
     await waitForUIRenderComplete(page);
 
     await expect(targetLine.locator(".semantic-reference-chip")).toHaveCount(1);
@@ -406,9 +464,8 @@ test.describe("Result References", () => {
     await page.keyboard.type(" ");
     await waitForUIRenderComplete(page);
 
-    const sourceChip = page.locator(".semantic-result-display").first();
-    await expect(sourceChip).toHaveCount(1);
-    await sourceChip.click();
+    await expect(page.locator(".semantic-result-display").first()).toHaveCount(1);
+    await dispatchResultDrop(page, { targetLineIndex: 2 });
     await page.keyboard.type(" *3");
     await waitForUIRenderComplete(page);
 
@@ -433,7 +490,7 @@ test.describe("Result References", () => {
     await waitForUIRenderComplete(page);
 
     const sourceLine = page.locator(".ProseMirror p").nth(1);
-    await sourceLine.locator(".semantic-live-result-display").click();
+    await dispatchResultDrop(page, { sourceLineIndex: 1, targetLineIndex: 2 });
     await page.keyboard.type(" *3");
     await waitForUIRenderComplete(page);
 
@@ -455,7 +512,7 @@ test.describe("Result References", () => {
     const sourceLine = page.locator(".ProseMirror p").first();
     const taxLine = page.locator(".ProseMirror p").nth(1);
     await taxLine.click({ position: { x: 16, y: 8 } });
-    await sourceLine.locator(".semantic-result-display").click();
+    await dispatchResultDrop(page, { targetLineIndex: 1 });
     await page.keyboard.type(" / 2 =>");
     await waitForUIRenderComplete(page);
 
@@ -491,9 +548,8 @@ test.describe("Result References", () => {
 
     const dependentLine = page.locator(".ProseMirror p").last();
     await dependentLine.click({ position: { x: 14, y: 8 } });
-    const sourceChip = page.locator(".semantic-result-display").first();
-    await expect(sourceChip).toHaveCount(1);
-    await sourceChip.click();
+    await expect(page.locator(".semantic-result-display").first()).toHaveCount(1);
+    await dispatchResultDrop(page, { targetLineIndex: 1 });
     await page.keyboard.type("+1");
     await waitForUIRenderComplete(page);
 
@@ -527,7 +583,7 @@ test.describe("Result References", () => {
       const sourceLine = page.locator(".ProseMirror p").first();
       const dependentLine = page.locator(".ProseMirror p").nth(1);
       await dependentLine.click({ position: { x: 14, y: 8 } });
-      await sourceLine.locator(".semantic-result-display").click();
+      await dispatchResultDrop(page, { targetLineIndex: 1 });
       await page.keyboard.type(" / 2 =>");
       await waitForUIRenderComplete(page);
     };
@@ -560,12 +616,11 @@ test.describe("Result References", () => {
     await page.keyboard.type(" ");
     await waitForUIRenderComplete(page);
 
-    const sourceLive = page.locator(".ProseMirror p").first().locator(".semantic-live-result-display");
     const targetLine = page.locator(".ProseMirror p").nth(1);
     await targetLine.click({ position: { x: 14, y: 8 } });
-    await sourceLive.click();
+    await dispatchResultDrop(page, { targetLineIndex: 1 });
     await page.keyboard.type(" + ");
-    await sourceLive.click();
+    await dispatchResultDrop(page, { targetLineIndex: 1 });
     await waitForUIRenderComplete(page);
 
     await expect(targetLine.locator(".semantic-live-result-display").last()).toHaveAttribute(
@@ -599,10 +654,9 @@ test.describe("Result References", () => {
     await page.keyboard.type(" ");
     await waitForUIRenderComplete(page);
 
-    const sourceChip = page.locator(".ProseMirror p").first().locator(".semantic-result-display");
     const line2 = page.locator(".ProseMirror p").nth(1);
     await line2.click({ position: { x: 16, y: 8 } });
-    await sourceChip.click();
+    await dispatchResultDrop(page, { targetLineIndex: 1 });
     await page.keyboard.type(" + 5 =>");
     await waitForUIRenderComplete(page);
 
@@ -631,10 +685,9 @@ test.describe("Result References", () => {
     await page.keyboard.type(" ");
     await waitForUIRenderComplete(page);
 
-    const sourceChip = page.locator(".ProseMirror p").first().locator(".semantic-result-display");
     const line2 = page.locator(".ProseMirror p").nth(1);
     await line2.click({ position: { x: 16, y: 8 } });
-    await sourceChip.click();
+    await dispatchResultDrop(page, { targetLineIndex: 1 });
     await page.keyboard.type(" + 5 =>");
     await waitForUIRenderComplete(page);
 
@@ -668,7 +721,7 @@ test.describe("Result References", () => {
     );
   });
 
-  test("click-inserted reference used in explicit trigger expression keeps a single reference token", async ({
+  test("drag-inserted reference used in explicit trigger expression keeps a single reference token", async ({
     page,
   }) => {
     const editor = page.locator('[data-testid="smart-pad-editor"]');
@@ -678,10 +731,9 @@ test.describe("Result References", () => {
     await page.keyboard.type(" ");
     await waitForUIRenderComplete(page);
 
-    const sourceLive = page.locator(".ProseMirror p").first().locator(".semantic-live-result-display");
     const dependent = page.locator(".ProseMirror p").nth(1);
     await dependent.click({ position: { x: 16, y: 8 } });
-    await sourceLive.click();
+    await dispatchResultDrop(page, { targetLineIndex: 1 });
     await page.keyboard.type("*2=>");
     await waitForUIRenderComplete(page);
 
@@ -721,10 +773,9 @@ test.describe("Result References", () => {
     await page.keyboard.type(" ");
     await waitForUIRenderComplete(page);
 
-    const sourceLive = page.locator(".ProseMirror p").first().locator(".semantic-live-result-display");
     const dependent = page.locator(".ProseMirror p").nth(1);
     await dependent.click({ position: { x: 16, y: 8 } });
-    await sourceLive.click();
+    await dispatchResultDrop(page, { targetLineIndex: 1 });
     await page.keyboard.type("*2=");
     await waitForUIRenderComplete(page);
     await page.keyboard.type(">");
@@ -767,10 +818,9 @@ test.describe("Result References", () => {
     await page.keyboard.type(" ");
     await waitForUIRenderComplete(page);
 
-    const sourceLive = page.locator(".ProseMirror p").first().locator(".semantic-live-result-display");
     const dependent = page.locator(".ProseMirror p").nth(1);
     await dependent.click({ position: { x: 16, y: 8 } });
-    await sourceLive.click();
+    await dispatchResultDrop(page, { targetLineIndex: 1 });
     await waitForUIRenderComplete(page);
 
     await dependent.locator(".semantic-reference-chip").first().click();
@@ -794,10 +844,7 @@ test.describe("Result References", () => {
     await page.keyboard.type("PI*10");
     await waitForUIRenderComplete(page);
 
-    const sourceLine = page.locator(".ProseMirror p").first();
-    const sourceLive = sourceLine.locator(".semantic-live-result-display");
-    await sourceLine.click({ position: { x: 8, y: 8 } });
-    await sourceLive.click();
+    await dispatchResultDrop(page, { sourceLineIndex: 0, dropAtBottom: true });
     await waitForUIRenderComplete(page);
 
     const dependent = page.locator(".ProseMirror p").nth(1);
@@ -822,10 +869,7 @@ test.describe("Result References", () => {
     await page.keyboard.type("PI*10");
     await waitForUIRenderComplete(page);
 
-    const sourceLine = page.locator(".ProseMirror p").first();
-    const sourceLive = sourceLine.locator(".semantic-live-result-display");
-    await sourceLine.click({ position: { x: 8, y: 8 } });
-    await sourceLive.click();
+    await dispatchResultDrop(page, { sourceLineIndex: 0, dropAtBottom: true });
     await page.keyboard.type("*2=>");
     await waitForUIRenderComplete(page);
 
@@ -850,10 +894,7 @@ test.describe("Result References", () => {
     await page.keyboard.type("PI*10");
     await waitForUIRenderComplete(page);
 
-    const sourceLive = page.locator(".ProseMirror p").first().locator(".semantic-live-result-display");
-    const line = page.locator(".ProseMirror p").first();
-    await line.click({ position: { x: 8, y: 8 } });
-    await sourceLive.click();
+    await dispatchResultDrop(page, { sourceLineIndex: 0, dropAtBottom: true });
     await waitForUIRenderComplete(page);
 
     await page.evaluate(() => {

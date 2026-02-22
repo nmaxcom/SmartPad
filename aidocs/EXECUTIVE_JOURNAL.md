@@ -2066,3 +2066,39 @@
     *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
 *   Validation:
     *   Backlog query filtered for `todo`/`in_progress`/`blocked` statuses.
+
+## Entry J-2026-02-22-01
+
+*   Timestamp: 2026-02-22 01:22:17 CET / 2026-02-22 00:22:17 UTC
+*   Summary:
+    *   Implemented drag-only result-chip insertion flow for reference/value insertion and removed click-to-insert behavior.
+    *   Added bottom-drop behavior so dropping below the last line creates a new line and inserts the chip there.
+    *   Added a new plot-UX follow-up todo per user request and updated interaction copy in settings.
+    *   Migrated result-reference e2e coverage to drag/drop semantics and added dedicated drag-only spec.
+*   Decisions:
+    *   Keep result-chip click non-inserting to avoid accidental insertion in mouse workflows.
+    *   Use `application/x-smartpad-result-reference` drag payload dispatch in Playwright tests for deterministic coverage.
+*   User directives:
+    *   "forget about keyboard stuff for this, it's all mouse interaction"
+    *   "forget plots for now, in fact create a todo to find a UI solution for plots"
+    *   "here just implement dragging the chip"
+*   Artifacts:
+    *   `src/components/ResultReferenceInteractionExtension.ts`
+    *   `src/components/ui/SettingsSections.tsx`
+    *   `tests/e2e/result-reference.spec.ts`
+    *   `tests/e2e/result-reference-drag-only.spec.ts`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   `npx playwright test tests/e2e/result-reference.spec.ts` (passed except one transient `beforeEach` timeout on first run; targeted rerun passed)
+    *   `npx playwright test tests/e2e/result-reference.spec.ts --project=google-chrome --grep "live-result source line remains directly editable"` (passed)
+    *   `npx playwright test tests/e2e/result-reference-drag-only.spec.ts` (passed)
+    *   `npm run docs:map` (passed)
+    *   `npm run docs:drift` (passed)
+    *   `npm run spec:test` (passed)
+    *   `npm run spec:trust` (passed)
+    *   `npm run verify:changed` (failed in this sandbox due Watchman permission issue during Jest invocation)
+    *   `npx jest --watchman=false --findRelatedTests src/units/unitsnetEvaluator.ts --passWithNoTests` (ran, but reported 3 pre-existing unrelated failing unit suites)
+*   Risks/blockers:
+    *   `verify:changed` cannot fully pass in current sandbox because Watchman cannot initialize (`fchmod ... Operation not permitted`).
+    *   Related Jest command currently surfaces unrelated failing tests in list/unit-alias suites that are outside this drag-chip scope.

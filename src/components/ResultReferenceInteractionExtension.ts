@@ -336,6 +336,51 @@ const insertReferenceOnNewLine = (
   return insertReferenceAt(view, payload, view.state.selection.from, mode);
 };
 
+const getLastTextblockSplitPos = (doc: any): number | null => {
+  let lastSplitPos: number | null = null;
+  doc.descendants((node: any, pos: number) => {
+    if (!node?.isTextblock) {
+      return true;
+    }
+    lastSplitPos = pos + node.nodeSize - 1;
+    return true;
+  });
+  return lastSplitPos;
+};
+
+const insertReferenceOnBottomNewLine = (
+  view: any,
+  payload: ReferencePayload,
+  mode: "reference" | "value" = "reference"
+): number | null => {
+  const { state } = view;
+  const splitPos = getLastTextblockSplitPos(state.doc);
+  if (typeof splitPos !== "number" || splitPos <= 0) {
+    return insertReferenceAt(view, payload, state.doc.content.size, mode);
+  }
+  try {
+    const splitSelectionPos = Math.max(1, Math.min(splitPos + 1, state.doc.content.size));
+    const splitTr = state.tr.split(splitPos);
+    splitTr.setSelection(TextSelection.create(splitTr.doc, splitSelectionPos));
+    view.dispatch(splitTr);
+    return insertReferenceAt(view, payload, view.state.selection.from, mode);
+  } catch {
+    return insertReferenceAt(view, payload, state.doc.content.size, mode);
+  }
+};
+
+const shouldInsertOnBottomNewLine = (view: any, event: DragEvent): boolean => {
+  const paragraphs = Array.from(
+    view.dom.querySelectorAll("p[data-line-id]")
+  ) as HTMLElement[];
+  const lastParagraph = paragraphs[paragraphs.length - 1];
+  if (!lastParagraph) {
+    return false;
+  }
+  const lastRect = lastParagraph.getBoundingClientRect();
+  return event.clientY >= lastRect.bottom + 6;
+};
+
 const payloadFromElement = (target: HTMLElement): ReferencePayload | null => {
   const fallbackLineId = String(
     target.closest("p[data-line-id]")?.getAttribute("data-line-id") || ""
@@ -782,14 +827,11 @@ export const ResultReferenceInteractionExtension = Extension.create({
               const resultEl = target.closest(RESULT_SELECTOR);
               if (!resultEl) return false;
               const payload = payloadFromElement(resultEl as HTMLElement);
-              event.preventDefault();
-              event.stopPropagation();
-              view.focus();
-              logRefDebug("result mousedown", {
+              logRefDebug("result mousedown (drag mode)", {
                 selectionFrom: view.state.selection.from,
                 hasPayload: !!payload,
               });
-              appendRefTrace("resultMouseDown", {
+              appendRefTrace("resultMouseDownDragMode", {
                 selectionFrom: view.state.selection.from,
                 hasPayload: !!payload,
                 sourceLineId: payload?.sourceLineId || "",
@@ -797,49 +839,6 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 sourceValue: payload?.sourceValue || "",
                 ...snapshotSelectionLine(view),
               });
-              if (!payload) {
-                return true;
-              }
-              const insertMode = getChipInsertMode();
-              if (insertMode === "reference") {
-                const activeLineId = getSelectedTextblockLineId(view.state);
-                if (
-                  activeLineId &&
-                  payload.sourceLineId &&
-                  activeLineId === payload.sourceLineId
-                ) {
-                  const insertedOnNewLine = insertReferenceOnNewLine(
-                    view,
-                    payload,
-                    "reference"
-                  );
-                  if (typeof insertedOnNewLine === "number") {
-                    postInsertCursor = insertedOnNewLine;
-                    consumeResultClick = true;
-                    view.focus();
-                    return true;
-                  }
-                  logRefDebug("skip self-reference insert (new line failed)", {
-                    activeLineId,
-                    sourceLineId: payload.sourceLineId,
-                  });
-                  appendRefTrace("selfReferenceInsertSkipped", {
-                    activeLineId,
-                    sourceLineId: payload.sourceLineId,
-                  });
-                  postInsertCursor = null;
-                  consumeResultClick = false;
-                  return true;
-                }
-              }
-              const insertionPos = view.state.selection.from;
-              const insertedCursor = insertReferenceAt(view, payload, insertionPos, insertMode);
-              if (typeof insertedCursor === "number") {
-                postInsertCursor = insertedCursor;
-                consumeResultClick = true;
-                view.focus();
-                return true;
-              }
               return false;
             },
             click: (view, event) => {
@@ -877,8 +876,6 @@ export const ResultReferenceInteractionExtension = Extension.create({
 
               const resultEl = target.closest(RESULT_SELECTOR) as HTMLElement | null;
               if (!resultEl) return false;
-              event.preventDefault();
-              event.stopPropagation();
               if (consumeResultClick && typeof postInsertCursor === "number") {
                 const clamped = Math.max(
                   1,
@@ -899,11 +896,10 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 postInsertCursor = null;
                 consumeResultClick = false;
               }
-              view.focus();
               appendRefTrace("resultClickHandled", {
                 ...snapshotSelectionLine(view),
               });
-              return true;
+              return false;
             },
             keydown: (view, event) => {
               appendRefTrace("domKeydown", {
@@ -946,21 +942,39 @@ export const ResultReferenceInteractionExtension = Extension.create({
               event.dataTransfer.setData(DND_MIME, JSON.stringify(payload));
               return true;
             },
+            dragover: (_view, event) => {
+              const dragEvent = event as DragEvent;
+              if (!dragEvent.dataTransfer) return false;
+              if (
+                !Array.from(dragEvent.dataTransfer.types || []).includes(DND_MIME)
+              ) {
+                return false;
+              }
+              dragEvent.preventDefault();
+              dragEvent.dataTransfer.dropEffect = "copy";
+              return true;
+            },
             drop: (view, event) => {
               if (!event.dataTransfer) return false;
               const raw = event.dataTransfer.getData(DND_MIME);
               if (!raw) return false;
               try {
                 const payload = JSON.parse(raw) as ReferencePayload;
-                const coords = view.posAtCoords({
-                  left: event.clientX,
-                  top: event.clientY,
-                });
-                const insertionPos = coords?.pos ?? view.state.selection.from;
                 const insertMode = getChipInsertMode();
-                const insertedCursor = insertReferenceAt(view, payload, insertionPos, insertMode);
+                const insertOnBottom = shouldInsertOnBottomNewLine(view, event as DragEvent);
+                const insertedCursor = insertOnBottom
+                  ? insertReferenceOnBottomNewLine(view, payload, insertMode)
+                  : (() => {
+                      const coords = view.posAtCoords({
+                        left: event.clientX,
+                        top: event.clientY,
+                      });
+                      const insertionPos = coords?.pos ?? view.state.selection.from;
+                      return insertReferenceAt(view, payload, insertionPos, insertMode);
+                    })();
                 if (typeof insertedCursor === "number") {
                   postInsertCursor = insertedCursor;
+                  consumeResultClick = true;
                   event.preventDefault();
                   return true;
                 }

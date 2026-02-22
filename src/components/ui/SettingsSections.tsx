@@ -366,10 +366,10 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
         <div className="settings-item settings-item-stack">
           <div className="settings-item-info">
             <label htmlFor={`${idPrefix}-chip-insert-mode`} className="settings-label">
-              Result chip click behavior
+              Result chip drag/drop insert mode
             </label>
             <p className="settings-description">
-              Choose what gets inserted when you click a result: a live reference chip (keeps
+              Choose what gets inserted when you drag a result chip: a live reference chip (keeps
               tracking updates) or the current plain value snapshot.
             </p>
           </div>
