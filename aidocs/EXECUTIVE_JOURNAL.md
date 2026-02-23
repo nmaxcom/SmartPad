@@ -2326,3 +2326,20 @@
     *   Failing case IDs: `3, 4, 9, 23, 40, 45, 49`.
 *   Risks/blockers:
     *   Some failures are syntax-acceptance/ambiguity gaps rather than hard runtime crashes; triage needed to decide desired UX behavior before enforcing as regression tests.
+
+## Entry J-2026-02-23-10
+
+*   Timestamp: 2026-02-23 05:45:34 CET / 2026-02-23 04:45:34 UTC
+*   Summary:
+    *   Refined exploratory harness validation logic to assert against computed result text (not echoed input/display prefix), preventing false passes.
+    *   Re-ran the 50-case temporary suite and identified one additional failure in thousands-separator assignment handling.
+*   Artifacts:
+    *   `scripts/run-temporary-edge-tests.js` (result-text assertion refinement)
+    *   `artifacts/temporary-edge-test-report.md` (updated run report)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Executed: `node scripts/run-temporary-edge-tests.js`
+    *   Outcome: 50 total, 42 passed, 8 failed.
+    *   Failing case IDs: `3, 4, 9, 23, 40, 45, 49, 50`.
+*   Risks/blockers:
+    *   Case `50` confirms a formatting/parser defect (`b=2,000=>` yielding `2, 0`) that looks user-facing and high-priority.

@@ -113,7 +113,8 @@ const runCase = (testCase) => {
     result = evaluateLine(testCase.input, context, lineNumber);
   }
 
-  const displayText = result?.displayText || result?.result || '';
+  const resultText = result?.result || result?.displayText || '';
+  const displayText = result?.displayText || resultText || '';
   let passed = !setupFailed && result?.type !== 'error';
   let reason = '';
 
@@ -121,9 +122,9 @@ const runCase = (testCase) => {
     reason = `setup error: ${setupResults[setupResults.length - 1]?.result?.error || 'unknown setup error'}`;
   } else if (result?.type === 'error') {
     reason = result.error || result.displayText || 'runtime error';
-  } else if (testCase.expectedPattern && !testCase.expectedPattern.test(String(displayText))) {
+  } else if (testCase.expectedPattern && !testCase.expectedPattern.test(String(resultText))) {
     passed = false;
-    reason = `unexpected output: ${displayText}`;
+    reason = `unexpected output: ${resultText || displayText}`;
   } else if (testCase.expectNonError && result?.type === 'error') {
     passed = false;
     reason = result.error || 'unexpected error';
@@ -136,7 +137,7 @@ const runCase = (testCase) => {
     input: testCase.input,
     passed,
     reason,
-    output: displayText,
+    output: resultText || displayText,
   };
 };
 
