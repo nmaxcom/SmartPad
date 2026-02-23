@@ -2380,3 +2380,12 @@
     *   Backlog update validated by row-level review in table tail.
 *   Risks/blockers:
     *   None; implementation work for these TODOs remains pending.
+
+## Entry J-2026-02-23-12
+
+*   Timestamp: 2026-02-23 05:45:01 CET / 2026-02-23 04:45:01 UTC
+*   Summary:
+    *   Split previously grouped implicit-multiplication follow-up into distinct TODOs so each failing exploratory case has a dedicated backlog item.
+*   Artifacts:
+    *   `aidocs/TODO_BACKLOG.md` (updated `T-2026-02-23-21`; added `T-2026-02-23-29`)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
