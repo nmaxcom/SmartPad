@@ -2637,3 +2637,17 @@
     *   ✅ `npm run verify:changed -- HEAD~2...HEAD`
 *   Risks/blockers:
     *   None for the current 3-7 scope after follow-up hardening.
+
+## Entry J-2026-02-23-20
+
+*   Timestamp: 2026-02-23 23:52:16 CET / 2026-02-23 22:52:16 UTC
+*   Summary:
+    *   Performed a plotting/data UX research pass to define a path from current SmartPad plotting toward CSV-backed statistical analysis.
+    *   Reviewed current plotting spec and confirmed supported view kinds (`plot`, `scatter`, `hist`, `box`, `auto`) and `@view` directive grammar.
+    *   Outlined staged syntax directions: no-table list-first plotting, lightweight row/table blocks, and datasource/import-driven analysis for CSV workflows.
+*   Artifacts:
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Reviewed `docs/Specs/Plotting.spec.md`, `docs/Specs/proposed/feature-vision.md`, `docs/Specs/proposed/plotting-and-dependency-views.md`.
+*   Risks/blockers:
+    *   Product-level decision still needed on data model progression (extend list semantics vs introduce table-native syntax early).
