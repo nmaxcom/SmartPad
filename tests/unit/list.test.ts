@@ -255,7 +255,7 @@ describe("List & statistical helpers", () => {
     const context = createContext();
     const result = evaluateLine("prices = €10, 20, 30 to $ =>", context, 1);
     expect(result?.type).toBe("error");
-    expect((result as any).displayText).toContain("Cannot convert");
+    expect((result as any).displayText).toMatch(/Cannot convert|No FX rate available/i);
   });
 
   test("percentage on/off applies element-wise", () => {

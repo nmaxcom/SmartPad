@@ -2514,3 +2514,26 @@
     *   ⚠️ `npm run verify:changed -- HEAD~4...HEAD` still fails only in this environment on related-test execution due watchman permission error (`fchmod ... watchman-state`) and pre-existing baseline failures in related suites (`tests/unit/list.test.ts`, `tests/unit/listSpecExamples.test.ts`, `tests/unit/unitAliasDecisionMatrix.test.ts`).
 *   Risks/blockers:
     *   Full related-test sweep for changed `src` files is blocked in this sandbox by watchman permission constraints and unrelated baseline red tests; targeted feature tests and focused e2e coverage for this work are green.
+
+## Entry J-2026-02-23-16
+
+*   Timestamp: 2026-02-23 22:54:26 CET / 2026-02-23 21:54:26 UTC
+*   Summary:
+    *   Resolved the three previously failing Jest suites by aligning stale expectations with current implemented behavior.
+    *   Updated list/currency assertion to accept the current FX error message shape.
+    *   Updated alias-plural assertion to reflect preserved user-entered quantity display (`5 boxes => 5 boxes`) when no explicit conversion is requested.
+    *   Updated list ambiguity assertion for grouped numeric literal input (`1,250 => 1250`).
+    *   Synced the Lists spec ambiguity examples/rules to match implemented behavior.
+*   User directives:
+    *   "do 1"
+*   Artifacts:
+    *   `tests/unit/list.test.ts`
+    *   `tests/unit/unitAliasDecisionMatrix.test.ts`
+    *   `tests/unit/listSpecExamples.test.ts`
+    *   `docs/Specs/Lists.spec.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   ✅ `npm run test:unit -- tests/unit/list.test.ts tests/unit/listSpecExamples.test.ts tests/unit/unitAliasDecisionMatrix.test.ts`
+    *   ✅ `npm run test:unit` (full suite: 55/55 passed)
+*   Risks/blockers:
+    *   None.

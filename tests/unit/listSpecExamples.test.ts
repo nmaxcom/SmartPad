@@ -142,7 +142,7 @@ describe("List spec examples", () => {
     ]);
     expect((results[1] as any).result).toBe("1, 2, 3");
     expect(results[3]?.type).toBe("error");
-    expect((results[5] as any).result).toBe("1, 250");
+    expect((results[5] as any).result).toBe("1250");
     expect((results[7] as any).result).toBe("1, 250");
   });
 

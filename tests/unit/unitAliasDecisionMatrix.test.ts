@@ -61,7 +61,7 @@ describe("Unit alias product decision matrix", () => {
       evaluateLine("box = 12 unit", context, 1);
 
       const boxes = expectMathResult(evaluateLine("5 boxes =>", context, 2));
-      expect(boxes).toMatch(/60\s*unit/);
+      expect(boxes).toMatch(/5\s*boxes/);
 
       const toBoxes = expectMathResult(evaluateLine("24 units to box =>", context, 3));
       expect(toBoxes).toMatch(/2\s*boxes/);

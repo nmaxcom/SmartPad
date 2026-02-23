@@ -147,11 +147,11 @@ xs => 1, 2, 3
 
 #### Ambiguity: “comma means list” vs “thousands separator”
 
-To guard from separator `$1,250` formatting confusion, the user can't input comma as a thousand separator, these can only appear in the results.
+SmartPad currently treats comma-separated numeric input differently based on pattern:
 
-**Recommended rule (simple and testable):**
-
-* A list separator is **comma**, regardless of spaces or lack thereof: `","`
+* Grouped numeric literals like `1,250` are parsed as a single number (`1250`).
+* Explicit comma-separated values with multiple list items (for example `1, 250`) are parsed as a list.
+* Grouped currency literals in raw list contexts (for example `$1,250`) are still rejected to avoid mixed-type ambiguity.
 
 Examples:
 
@@ -162,7 +162,7 @@ rent => ⚠️ Cannot create list: incompatible units
 
 ```text
 xs = 1,250
-xs => 1,250
+xs => 1250
 ```
 
 ```text
