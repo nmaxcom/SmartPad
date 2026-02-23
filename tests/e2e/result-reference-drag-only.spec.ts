@@ -3,9 +3,14 @@ import { waitForUIRenderComplete } from "./utils";
 
 const dispatchResultDrop = async (
   page: any,
-  options: { sourceLineIndex?: number; targetLineIndex?: number; dropAtBottom?: boolean } = {}
+  options: {
+    sourceLineIndex?: number;
+    targetLineIndex?: number;
+    dropAtBottom?: boolean;
+    dropNearLastLineBottom?: boolean;
+  } = {}
 ) => {
-  await page.evaluate(({ sourceLineIndex, targetLineIndex, dropAtBottom }) => {
+  await page.evaluate(({ sourceLineIndex, targetLineIndex, dropAtBottom, dropNearLastLineBottom }) => {
     const paragraphs = Array.from(document.querySelectorAll(".ProseMirror p")) as HTMLElement[];
     const sourceLine = paragraphs[sourceLineIndex || 0] || paragraphs[0];
     const chip = (sourceLine?.querySelector(
@@ -35,6 +40,13 @@ const dispatchResultDrop = async (
       const rect = editor.getBoundingClientRect();
       clientX = rect.left + Math.max(20, rect.width * 0.2);
       clientY = rect.bottom - 8;
+    } else if (dropNearLastLineBottom) {
+      const lastLine = paragraphs[paragraphs.length - 1];
+      if (!lastLine) return;
+      const rect = lastLine.getBoundingClientRect();
+      dropTarget = lastLine;
+      clientX = Math.max(rect.left + 24, rect.right - 10);
+      clientY = rect.bottom - 3;
     } else {
       const targetLine = paragraphs[targetLineIndex || 1] || paragraphs[paragraphs.length - 1];
       if (!targetLine) return;
@@ -334,6 +346,26 @@ test.describe("Result references (drag-only)", () => {
     await waitForUIRenderComplete(page);
 
     await dispatchResultDrop(page, { dropAtBottom: true });
+    await page.keyboard.type("+5 =>");
+    await waitForUIRenderComplete(page);
+
+    const newLastLine = page.locator(".ProseMirror p").last();
+    await expect(newLastLine.locator(".semantic-reference-chip")).toHaveCount(1);
+    await expect(newLastLine.locator(".semantic-result-display").last()).toHaveAttribute(
+      "data-result",
+      "125"
+    );
+  });
+
+  test("dropping near the bottom edge of the last line creates a newline reference", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("100 + 20 =>");
+    await waitForUIRenderComplete(page);
+
+    await dispatchResultDrop(page, { dropNearLastLineBottom: true });
     await page.keyboard.type("+5 =>");
     await waitForUIRenderComplete(page);
 

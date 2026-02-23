@@ -18,6 +18,7 @@ const REF_TRACE_STORAGE_KEY = "smartpad-debug-ref-trace";
 const REF_TRACE_API_INSTALLED = "__SP_REF_TRACE_API_INSTALLED";
 const REF_TRACE_MAX_ENTRIES = 600;
 const RESULT_DRAG_ACTIVE_WINDOW_FLAG = "__SP_RESULT_CHIP_DRAG_ACTIVE";
+const BOTTOM_DROP_ACTIVE_CLASS = "sp-bottom-drop-active";
 
 interface ReferencePayload {
   sourceLineId: string;
@@ -371,15 +372,20 @@ const insertReferenceOnBottomNewLine = (
 };
 
 const shouldInsertOnBottomNewLine = (view: any, event: DragEvent): boolean => {
+  const editorRect = view.dom.getBoundingClientRect();
   const paragraphs = Array.from(
     view.dom.querySelectorAll("p[data-line-id]")
   ) as HTMLElement[];
   const lastParagraph = paragraphs[paragraphs.length - 1];
   if (!lastParagraph) {
-    return false;
+    return event.clientY >= editorRect.bottom - 56;
   }
   const lastRect = lastParagraph.getBoundingClientRect();
-  return event.clientY >= lastRect.bottom + 6;
+  const bottomZoneTop = Math.max(
+    editorRect.top + 16,
+    Math.min(lastRect.bottom - 6, editorRect.bottom - 56)
+  );
+  return event.clientY >= bottomZoneTop;
 };
 
 const normalizeChipText = (value: string): string => String(value || "").replace(/\s+/g, " ").trim();
@@ -619,6 +625,9 @@ export const ResultReferenceInteractionExtension = Extension.create({
     let highlightLockUntil = 0;
     let clearHighlightTimer: ReturnType<typeof setTimeout> | null = null;
     let activeDragPayload: ReferencePayload | null = null;
+    const setBottomDropActive = (view: any, active: boolean) => {
+      view.dom.classList.toggle(BOTTOM_DROP_ACTIVE_CLASS, active);
+    };
     const clearDragSession = () => {
       activeDragPayload = null;
       if (typeof window !== "undefined") {
@@ -743,6 +752,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 clearHighlightTimer = null;
               }
               clearDragSession();
+              setBottomDropActive(view, false);
               clearHighlightedSource(view);
             },
           };
@@ -996,28 +1006,36 @@ export const ResultReferenceInteractionExtension = Extension.create({
               const dragTypes = Array.from(dragEvent.dataTransfer?.types || []);
               const isResultDrag = dragTypes.includes(DND_MIME) || !!activeDragPayload;
               if (!isResultDrag) {
+                setBottomDropActive(view, false);
                 return false;
               }
               dragEvent.preventDefault();
               dragEvent.dataTransfer.dropEffect = "copy";
+              setBottomDropActive(view, shouldInsertOnBottomNewLine(view, dragEvent));
               return false;
             },
-            dragleave: (_view, event) => {
+            dragleave: (view, event) => {
               const dragEvent = event as DragEvent;
               const types = Array.from(dragEvent.dataTransfer?.types || []);
               if (!types.includes(DND_MIME) && !activeDragPayload) {
                 return false;
               }
+              const related = getEventElement((event as any).relatedTarget || null);
+              if (!related || !view.dom.contains(related)) {
+                setBottomDropActive(view, false);
+              }
               // Keep the drag payload alive until `drop`/`dragend`.
               // `dragleave` often fires with null relatedTarget while still inside the editor.
               return false;
             },
-            dragend: (_view) => {
+            dragend: (view) => {
+              setBottomDropActive(view, false);
               clearDragSession();
               return false;
             },
             drop: (view, event) => {
               if (!event.dataTransfer && !activeDragPayload) return false;
+              setBottomDropActive(view, false);
               const raw = event.dataTransfer?.getData(DND_MIME) || "";
               try {
                 const payload = raw

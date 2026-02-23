@@ -2,6 +2,7 @@ import React, { useCallback, useRef, useEffect, createContext, useContext } from
 import { useEditor, EditorContent } from "@tiptap/react";
 import { Extension } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
+import Dropcursor from "@tiptap/extension-dropcursor";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Fragment, Slice, Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { TextSelection } from "@tiptap/pm/state";
@@ -936,6 +937,12 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       StarterKit.configure({
         heading: false,
         italic: false,
+        dropcursor: false,
+      }),
+      Dropcursor.configure({
+        width: 3,
+        color: "var(--syntax-result-border)",
+        class: "semantic-chip-dropcursor",
       }),
       Placeholder.configure({
         placeholder: "Start typing...",

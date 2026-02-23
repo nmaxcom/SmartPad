@@ -152,11 +152,14 @@ Flow:
 3. Reference token inserted at drop position.
 4. Reference value payload must resolve from the rendered chip text first (then `aria-label`/`title`), and only use `data-result` as last-resort fallback.
 5. In-flight drag payload must survive transient `dragleave` events so drop insertion remains reliable during normal pointer movement.
+6. Drop cursor should be visually prominent (thicker/high-contrast) so line insertion is easy to target.
+7. Last-line drop should expose a generous bottom drop band that creates a new line when dropped near the editor bottom.
 
 Guardrails:
 
 1. Dragging result chips must not trigger sheet/file import drop overlays.
 2. Inserted reference chip label must match the exact visible source result, not the source expression text.
+3. Bottom drop affordance must remain visible near the end of the document, including last-line drop for newline insertion.
 
 ### 5.3 Copy/paste chip as reference
 
@@ -462,6 +465,7 @@ Interpretation goals:
 10. Performance targets are met on representative large sheets.
 11. Dragging a result chip through intermediate `dragleave` events still inserts at drop target.
 12. If source chip `data-result` is stale but visible chip value is correct, inserted reference uses visible value.
+13. Dropping near the bottom edge of the last line inserts on a new line without pixel-perfect positioning.
 
 ---
 

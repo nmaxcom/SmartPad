@@ -2236,3 +2236,25 @@
     *   Notable pass confirmation inside full run: all tests in `tests/e2e/result-reference-drag-only.spec.ts` passed.
 *   Risks/blockers:
     *   Repository-wide Playwright baseline is currently far from green; cannot claim global 100% e2e pass for this repo state.
+
+## Entry J-2026-02-23-01
+
+*   Timestamp: 2026-02-23 05:40:24 CET / 2026-02-23 04:40:24 UTC
+*   Summary:
+    *   Improved result-chip drag/drop ergonomics for mouse users by widening and clarifying drop affordances.
+    *   Added explicit `Dropcursor` configuration (thicker/high-contrast line) and disabled StarterKit default dropcursor to avoid conflicting cursor config.
+    *   Added a bottom drop-band affordance on the editor so dropping near the last line reliably inserts a new line reference.
+    *   Expanded bottom new-line detection to a generous zone near the editor bottom / last line bottom edge.
+    *   Added e2e regression coverage for dropping near the bottom edge of the last line.
+*   Artifacts:
+    *   `src/components/Editor.tsx`
+    *   `src/components/Editor.css`
+    *   `src/components/ResultReferenceInteractionExtension.ts`
+    *   `tests/e2e/result-reference-drag-only.spec.ts`
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   `npx playwright test tests/e2e/result-reference-drag-only.spec.ts tests/e2e/result-reference.spec.ts --project=chromium` (passed, 32/32)
+    *   `npm run build` (passed)
+*   Risks/blockers:
+    *   No new blockers in drag/reference scope.
