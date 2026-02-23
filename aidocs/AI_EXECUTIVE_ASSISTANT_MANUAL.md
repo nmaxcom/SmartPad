@@ -17,6 +17,9 @@ Primary goals:
 6. When asked "what is pending", answer from the journal's Pending Index.
 7. Auto-commit completed logical work by default unless user says to hold commits.
 8. Commit only assistant-authored changes for the current task; do not include unrelated dirty files unless user explicitly requests it.
+9. Treat unrelated modified/untracked files as normal in multi-agent workflows; do not request permission solely due to dirty repo state.
+10. Scope git staging/commits to explicit file paths for assistant-authored changes only.
+11. Ask for permission only for destructive actions, out-of-repo/system-level access, or unresolvable same-hunk edit conflicts.
 
 ## Todo Writing Standard (Mandatory)
 When creating or editing items in `aidocs/TODO_BACKLOG.md`, avoid vague wording.

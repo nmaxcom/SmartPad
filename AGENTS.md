@@ -89,6 +89,15 @@ Do this automatically; user should not have to request it.
 - If unrelated dirty changes are present, commit only touched files for the current task.
 - Never include files the assistant did not modify in the current task unless the user explicitly asks.
 - Skip auto-commit only when user explicitly asks to review first or hold commits.
+- Treat unrelated modified/untracked files as expected in multi-agent workflows; do not ask for permission solely because the repo is dirty.
+- Stage explicitly by file path (no broad staging commands) so only assistant-authored changes for the active task are committed.
+
+## Concurrent Agent Worktree Policy
+- Do not block on unrelated dirty files or untracked files.
+- Continue execution by scoping edits, tests, and git operations to files touched for the active task.
+- Ask for user input only when there is a true safety risk:
+  - destructive operation needed, or
+  - same-hunk conflict in a file the assistant must modify cannot be resolved safely.
 
 ## Docs Triggers
 Map user commands to executable actions:
@@ -106,5 +115,6 @@ Map user commands to executable actions:
 ## Command Approval Policy
 - Treat this repository root as pre-approved for normal operations.
 - Do not ask for approval for reads/writes, tests, build commands, or git operations that stay inside this repo.
+- Do not ask for approval just because `git status` shows unrelated modified/untracked files.
 - Ask for approval only when a command needs access outside this repo, requires unsandboxed/system-level privileges, or is destructive.
 - Prefer running commands from repo `workdir` instead of path-prefixed variants that can trigger unnecessary approval prompts.
