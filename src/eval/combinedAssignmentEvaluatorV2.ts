@@ -42,11 +42,16 @@ import { parseExpressionComponents } from "../parsing/expressionComponents";
 import { SimpleExpressionParser } from "./expressionEvaluatorV2";
 import { isAggregatorExpression } from "./aggregatorUtils";
 import { rewriteLocaleDateLiterals } from "../utils/localeDateNormalization";
+import { expressionContainsUnitsNet } from "../units/unitsnetEvaluator";
 import {
   containsRangeOperatorOutsideString,
   isValidRangeExpressionCandidate,
   normalizeRangeErrorMessage,
 } from "../utils/rangeExpression";
+import {
+  GROUPED_NUMERIC_INPUT_ERROR,
+  isGroupedNumericLiteral,
+} from "../utils/groupedNumberInput";
 import { attemptPerUnitConversion } from "./unitConversionUtils";
 import { extractConversionSuffix } from "../utils/conversionSuffix";
 import {
@@ -127,6 +132,20 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
     const conversion = this.extractConversionSuffix(normalized.expression);
     const expression = conversion ? conversion.baseExpression : normalized.expression;
     const components = this.parseComponents(expression);
+    const parseContext = this.getExpressionParseContext(
+      expression,
+      components,
+      context
+    );
+
+    if (isGroupedNumericLiteral(expression)) {
+      return this.createErrorNode(
+        GROUPED_NUMERIC_INPUT_ERROR,
+        combNode.variableName,
+        combNode.expression,
+        context.lineNumber
+      );
+    }
     
     try {
       let listCandidate = this.tryBuildListFromExpression(expression, context);
@@ -180,14 +199,14 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
         if (!semanticValue && components.length > 0) {
           semanticValue = SimpleExpressionParser.parseComponents(
             components,
-            context
+            parseContext
           );
         }
 
         if (!semanticValue) {
           semanticValue = SimpleExpressionParser.parseArithmetic(
             expression,
-            context
+            parseContext
           );
         }
 
@@ -522,6 +541,61 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
     }
 
     return { unit, symbol };
+  }
+
+  private getExpressionParseContext(
+    expression: string,
+    components: ExpressionComponent[],
+    context: EvaluationContext
+  ): EvaluationContext {
+    if (!this.shouldPreferSymbolicVariables(expression, components, context)) {
+      return context;
+    }
+    return {
+      ...context,
+      implicitUnitSymbols: false,
+    };
+  }
+
+  private shouldPreferSymbolicVariables(
+    expression: string,
+    components: ExpressionComponent[],
+    context: EvaluationContext
+  ): boolean {
+    if (!components.length) {
+      return false;
+    }
+    if (expressionContainsUnitsNet(expression)) {
+      return false;
+    }
+    const unresolved = this.collectUnresolvedIdentifiers(components, context);
+    return unresolved.size > 0;
+  }
+
+  private collectUnresolvedIdentifiers(
+    components: ExpressionComponent[],
+    context: EvaluationContext,
+    unresolved: Set<string> = new Set()
+  ): Set<string> {
+    for (const component of components) {
+      if (component.type === "variable") {
+        const name = component.value.replace(/\s+/g, " ").trim();
+        const hasContextVariable = context.variableContext.has(name);
+        const hasStoreVariable = context.variableStore.hasVariable(name);
+        if (!hasContextVariable && !hasStoreVariable) {
+          unresolved.add(name);
+        }
+      }
+      if (component.children && component.children.length > 0) {
+        this.collectUnresolvedIdentifiers(component.children, context, unresolved);
+      }
+      if (component.type === "function" && component.args) {
+        for (const arg of component.args) {
+          this.collectUnresolvedIdentifiers(arg.components, context, unresolved);
+        }
+      }
+    }
+    return unresolved;
   }
 
   private tryBuildListFromExpression(

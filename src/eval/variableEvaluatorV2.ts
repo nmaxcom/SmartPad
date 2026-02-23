@@ -40,6 +40,10 @@ import { SimpleExpressionParser } from "./expressionEvaluatorV2";
 import { expressionContainsUnitsNet } from "../units/unitsnetEvaluator";
 import { inferListDelimiter } from "../utils/listExpression";
 import { rewriteLocaleDateLiterals } from "../utils/localeDateNormalization";
+import {
+  GROUPED_NUMERIC_INPUT_ERROR,
+  isGroupedNumericLiteral,
+} from "../utils/groupedNumberInput";
 import { attemptPerUnitConversion } from "./unitConversionUtils";
 import {
   convertCurrencyUnitValue,
@@ -128,14 +132,22 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
       );
     }
 
-    const thousandCommaPattern = /^[\$€£¥₹₿]\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?\s*$/;
-    if (thousandCommaPattern.test(normalizedRawValue)) {
+    if (isGroupedNumericLiteral(expressionRawValue)) {
       return this.createErrorNode(
-        "Cannot create list: incompatible units",
+        GROUPED_NUMERIC_INPUT_ERROR,
         varNode.variableName,
         context.lineNumber
       );
     }
+
+    const expressionComponents = this.parseExpressionComponentsSafe(
+      expressionRawValue
+    );
+    const parseContext = this.getExpressionParseContext(
+      expressionRawValue,
+      expressionComponents,
+      context
+    );
 
     if (this.shouldDeferToUnitsNet(varNode, context, expressionRawValue)) {
       return null;
@@ -235,14 +247,27 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
             resolvedValue = listValue;
           } else {
             try {
-              resolvedValue = SimpleExpressionParser.parseComponents(
-              parseExpressionComponents(expressionRawValue),
-              context
-            );
+              resolvedValue =
+                expressionComponents.length > 0
+                  ? SimpleExpressionParser.parseComponents(
+                      expressionComponents,
+                      parseContext
+                    )
+                  : null;
             } catch (parseError) {
               resolvedValue = ErrorValue.parseError(
                 parseError instanceof Error ? parseError.message : String(parseError)
               );
+            }
+
+            if (!resolvedValue || SemanticValueTypes.isError(resolvedValue)) {
+              const arithmetic = SimpleExpressionParser.parseArithmetic(
+                expressionRawValue,
+                parseContext
+              );
+              if (arithmetic && !SemanticValueTypes.isError(arithmetic)) {
+                resolvedValue = arithmetic;
+              }
             }
 
             if (!resolvedValue || SemanticValueTypes.isError(resolvedValue)) {
@@ -752,6 +777,71 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
     }
 
     return parts;
+  }
+
+  private parseExpressionComponentsSafe(
+    expression: string
+  ): ExpressionComponent[] {
+    try {
+      return parseExpressionComponents(expression);
+    } catch {
+      return [];
+    }
+  }
+
+  private getExpressionParseContext(
+    expression: string,
+    components: ExpressionComponent[],
+    context: EvaluationContext
+  ): EvaluationContext {
+    if (!this.shouldPreferSymbolicVariables(expression, components, context)) {
+      return context;
+    }
+    return {
+      ...context,
+      implicitUnitSymbols: false,
+    };
+  }
+
+  private shouldPreferSymbolicVariables(
+    expression: string,
+    components: ExpressionComponent[],
+    context: EvaluationContext
+  ): boolean {
+    if (!components.length) {
+      return false;
+    }
+    if (expressionContainsUnitsNet(expression)) {
+      return false;
+    }
+    const unresolved = this.collectUnresolvedIdentifiers(components, context);
+    return unresolved.size > 0;
+  }
+
+  private collectUnresolvedIdentifiers(
+    components: ExpressionComponent[],
+    context: EvaluationContext,
+    unresolved: Set<string> = new Set()
+  ): Set<string> {
+    for (const component of components) {
+      if (component.type === "variable") {
+        const name = component.value.replace(/\s+/g, " ").trim();
+        const hasContextVariable = context.variableContext.has(name);
+        const hasStoreVariable = context.variableStore.hasVariable(name);
+        if (!hasContextVariable && !hasStoreVariable) {
+          unresolved.add(name);
+        }
+      }
+      if (component.children && component.children.length > 0) {
+        this.collectUnresolvedIdentifiers(component.children, context, unresolved);
+      }
+      if (component.type === "function" && component.args) {
+        for (const arg of component.args) {
+          this.collectUnresolvedIdentifiers(arg.components, context, unresolved);
+        }
+      }
+    }
+    return unresolved;
   }
 
   private evaluateExpressionComponentsFromRaw(

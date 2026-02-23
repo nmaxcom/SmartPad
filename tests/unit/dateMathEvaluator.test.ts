@@ -241,12 +241,12 @@ describe("Date Math Evaluator", () => {
     }
   });
 
-  test("should reject locale numeric dates when locale is unset", () => {
+  test("should parse locale numeric dates when locale is unset", () => {
     const node = parseLine("06/05/2024 =>", 1);
     const result = defaultRegistry.evaluate(node, createContext());
-    expect(result?.type).toBe("error");
-    if (result?.type === "error") {
-      expect(result.displayText).toContain('Unsupported date format "06/05/2024"');
+    expect(result?.type).toBe("mathResult");
+    if (result?.type === "mathResult") {
+      expect(result.displayText).toMatch(/^06\/05\/2024 => 2024-\d{2}-\d{2}$/);
     }
   });
 });

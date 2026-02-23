@@ -106,6 +106,14 @@ mass flow to lb/min =>
 fuel economy = 28 mpg
 fuel economy to km/L =>
 
+# Time-slot ranges and deferred formulas
+
+slots = 09:00..11:00 step 30 min =>
+total deferred = price*qty
+price = 3
+qty = 4
+total deferred =>
+
 # Lists and solver tease
 
 costs = $12, $15, $9
@@ -114,6 +122,11 @@ avg(costs) => $12
 
 expenses = $1250, $185, $50
 sum(expenses) => $1485
+
+# Grouped input note: use plain digits in assignments
+
+rent plain digits = 1250
+rent plain digits =>
 
 lengths = 3m, 25m, 48km
 lengths =>3 m, 25 m, 48 km

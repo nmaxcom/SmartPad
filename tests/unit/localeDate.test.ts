@@ -43,13 +43,13 @@ describe("Locale-aware date literals", () => {
     expect((result as any).result).toContain("2023-02-01");
   });
 
-  test("unsupported numeric dates error when locale is unset", () => {
+  test("numeric slash dates parse when locale is unset", () => {
     const context = createContext();
-    const result = evaluateLine("d = 01-02-2023 =>", context, 1);
-    expect(result?.type).toBe("error");
-    expect((result as any).displayText).toContain(
-      'Unsupported date format "01-02-2023"'
-    );
+    const result = evaluateLine("d = 06/05/2024 =>", context, 1);
+    expect(result?.type).toBe("combined");
+    const output = (result as any).result as string;
+    expect(output).toMatch(/^2024-\d{2}-\d{2}$/);
+    expect(output).not.toContain("Unsupported date format");
   });
 
   test("es-ES datetime values show timezone offsets instead of local", () => {

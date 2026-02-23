@@ -149,20 +149,20 @@ xs => 1, 2, 3
 
 SmartPad currently treats comma-separated numeric input differently based on pattern:
 
-* Grouped numeric literals like `1,250` are parsed as a single number (`1250`).
+* Grouped numeric literals like `1,250` are **rejected** in assignment input.
+* Grouped currency literals like `$1,250` are **rejected** in assignment input.
 * Explicit comma-separated values with multiple list items (for example `1, 250`) are parsed as a list.
-* Grouped currency literals in raw list contexts (for example `$1,250`) are still rejected to avoid mixed-type ambiguity.
 
 Examples:
 
 ```text
 rent = $1,250
-rent => ⚠️ Cannot create list: incompatible units
+rent => ⚠️ Thousands separators in input are not supported; use plain digits (e.g., 2000).
 ```
 
 ```text
 xs = 1,250
-xs => 1250
+xs => ⚠️ Thousands separators in input are not supported; use plain digits (e.g., 2000).
 ```
 
 ```text

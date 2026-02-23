@@ -101,4 +101,12 @@ describe("Thousands grouping formatting", () => {
       expect(grouped.result).toBe("999,999");
     }
   });
+
+  test("Grouped numeric input in assignments shows explicit validation error", () => {
+    const result = evaluateExpression("b=2,000=>");
+    expect(result?.type).toBe("error");
+    expect((result as any).displayText).toContain(
+      "Thousands separators in input are not supported"
+    );
+  });
 });

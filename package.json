@@ -13,6 +13,7 @@
     "test:full": "npm run test:unit && npm run test:browser && npm run test:e2e",
     "test:bdd": "cucumber-js --config cucumber.config.js",
     "test:e2e": "playwright test --project=chromium --config=playwright.config.ts",
+    "test:temporary-edge": "node scripts/run-temporary-edge-tests.js",
     "test:visual": "playwright test --project=visual-tests --config=playwright.config.ts",
     "test:visual:update": "playwright test --project=visual-tests --update-snapshots --config=playwright.config.ts",
     "generate-syntax-docs": "tsx scripts/generate-syntax-docs.ts",

@@ -36,6 +36,7 @@ import {
   createListResult,
   mapListItems,
   DurationValue,
+  TimeValue,
 } from "../types";
 import { DateTime } from "luxon";
 import {
@@ -1206,7 +1207,7 @@ const DATE_RANGE_STEP_ERROR =
 const RANGE_TIME_MISMATCH_ERROR = "Range endpoints must both include time or both be date-only";
 const TIME_ONLY_DURATION_UNITS = new Set<DurationUnit>(["hour", "minute", "second"]);
 
-type RangeEndpoint = number | DateValue;
+type RangeEndpoint = number | DateValue | TimeValue;
 type DurationUnit = "year" | "month" | "week" | "day" | "hour" | "minute" | "second";
 type DurationStep = {
   value: number;
@@ -1267,7 +1268,13 @@ const evaluateRangeLiteralFunction = (
     return evaluateDateRange(startEndpoint, endEndpoint, args.positional[2]);
   }
 
-  return ErrorValue.semanticError("range endpoints must be both numbers or both dates");
+  if (startEndpoint instanceof TimeValue && endEndpoint instanceof TimeValue) {
+    return evaluateTimeRange(startEndpoint, endEndpoint, args.positional[2]);
+  }
+
+  return ErrorValue.semanticError(
+    "range endpoints must be both numbers, both dates, or both times"
+  );
 };
 
 const evaluateNumericRange = (
@@ -1342,9 +1349,52 @@ const evaluateDateRange = (
   return buildDateRangeList(start, end, step, direction);
 };
 
+const evaluateTimeRange = (
+  start: TimeValue,
+  end: TimeValue,
+  stepArg?: SemanticValue
+): SemanticValue => {
+  const startSeconds = start.getSeconds();
+  const endSeconds = end.getSeconds();
+  if (startSeconds === endSeconds) {
+    return buildListValue([start]);
+  }
+
+  if (!stepArg) {
+    return ErrorValue.semanticError(DATE_RANGE_STEP_ERROR);
+  }
+
+  const ensured = ensureDurationStep(stepArg);
+  if (ensured instanceof ErrorValue) {
+    return ensured;
+  }
+  const step = ensured;
+
+  if (!TIME_ONLY_DURATION_UNITS.has(step.unit)) {
+    return ErrorValue.semanticError(
+      "Time ranges require hour/minute/second steps"
+    );
+  }
+
+  const stepSeconds = durationStepToSeconds(step);
+  if (stepSeconds <= 0) {
+    return ErrorValue.semanticError("Invalid range step: expected a positive duration");
+  }
+
+  const direction = Math.sign(endSeconds - startSeconds);
+  if (direction === 0) {
+    return buildListValue([start]);
+  }
+
+  return buildTimeRangeList(start, end, stepSeconds, direction);
+};
+
 const ensureRangeEndpoint = (value: SemanticValue): RangeEndpoint | ErrorValue => {
   if (value.getType() === "date") {
     return value as DateValue;
+  }
+  if (value.getType() === "time") {
+    return value as TimeValue;
   }
 
   if (value.getType() !== "number") {
@@ -1545,6 +1595,49 @@ const addDurationStep = (
       break;
   }
   return DateValue.fromDateTime(updated, current.getZone(), current.hasTimeComponent());
+};
+
+const durationStepToSeconds = (step: DurationStep): number => {
+  switch (step.unit) {
+    case "hour":
+      return step.value * 3600;
+    case "minute":
+      return step.value * 60;
+    case "second":
+      return step.value;
+    default:
+      return 0;
+  }
+};
+
+const buildTimeRangeList = (
+  start: TimeValue,
+  end: TimeValue,
+  stepSeconds: number,
+  direction: number
+): SemanticValue => {
+  const endSeconds = end.getSeconds();
+  const comparator =
+    direction > 0
+      ? (value: number) => value <= endSeconds
+      : (value: number) => value >= endSeconds;
+  const items: SemanticValue[] = [];
+  const showSeconds =
+    start.getShowSeconds() || end.getShowSeconds() || stepSeconds % 60 !== 0;
+  let currentSeconds = start.getSeconds();
+  let count = 0;
+  const limit = getRangeElementLimit();
+
+  while (comparator(currentSeconds)) {
+    items.push(new TimeValue(currentSeconds, showSeconds));
+    count += 1;
+    if (count > limit) {
+      return ErrorValue.semanticError(`range too large (${count} elements; max ${limit})`);
+    }
+    currentSeconds += stepSeconds * direction;
+  }
+
+  return buildListValue(items);
 };
 
 const buildListValue = (items: SemanticValue[]): SemanticValue => {

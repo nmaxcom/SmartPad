@@ -9,7 +9,8 @@ const LOCALE_REGEX: Record<string, RegExp> = {
   "es-ES": /\b(\d{2})[/-](\d{2})[/-](\d{4})\b/g,
 };
 
-const GENERIC_DMY_REGEX = /\b\d{2}[/-]\d{2}[/-]\d{4}\b/g;
+const NUMERIC_DATE_LITERAL_REGEX = /\b(\d{1,2})[/-](\d{1,2})[/-](\d{4})\b/g;
+type LocaleDateOrder = "mdy" | "dmy";
 
 const collectStringRanges = (expression: string): Array<[number, number]> => {
   const ranges: Array<[number, number]> = [];
@@ -51,36 +52,51 @@ const collectStringRanges = (expression: string): Array<[number, number]> => {
 const isIndexInsideRange = (index: number, ranges: Array<[number, number]>): boolean =>
   ranges.some(([start, end]) => index >= start && index < end);
 
+const getLocaleDateOrder = (locale?: string): LocaleDateOrder | null => {
+  if (!locale?.trim()) {
+    return null;
+  }
+  try {
+    const formatter = new Intl.DateTimeFormat(locale, {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+    const parts = formatter.formatToParts(new Date(2006, 3, 23));
+    const order = parts
+      .filter((part) => part.type === "day" || part.type === "month" || part.type === "year")
+      .map((part) => part.type);
+    return order[0] === "day" ? "dmy" : "mdy";
+  } catch {
+    return null;
+  }
+};
+
 export const rewriteLocaleDateLiterals = (
   expression: string,
   locale?: string
 ): LocaleDateRewriteResult => {
   const pattern = locale ? LOCALE_REGEX[locale] : undefined;
   const stringRanges = collectStringRanges(expression);
+  const localeOrder = getLocaleDateOrder(locale);
 
-  if (!pattern) {
-    const match = Array.from(expression.matchAll(GENERIC_DMY_REGEX)).find(
-      (candidate) => !isIndexInsideRange(candidate.index ?? 0, stringRanges)
-    );
-    if (match?.[0]) {
-      return {
-        expression,
-        errors: [
-          `Unsupported date format "${match[0]}". Use ISO "YYYY-MM-DD".`,
-        ],
-      };
-    }
+  if (!localeOrder) {
     return { expression, errors: [] };
   }
 
   const errors: string[] = [];
-  const rewritten = expression.replace(pattern, (match, day, month, year, offset) => {
+  const rewritePattern = pattern ?? NUMERIC_DATE_LITERAL_REGEX;
+  const rewritten = expression.replace(
+    rewritePattern,
+    (match, firstPart, secondPart, year, offset) => {
     if (typeof offset === "number" && isIndexInsideRange(offset, stringRanges)) {
       return match;
     }
+    const day = localeOrder === "dmy" ? Number(firstPart) : Number(secondPart);
+    const month = localeOrder === "dmy" ? Number(secondPart) : Number(firstPart);
     const parsed = DateTime.fromObject({
-      day: Number(day),
-      month: Number(month),
+      day,
+      month,
       year: Number(year),
     });
     if (!parsed.isValid) {
@@ -90,7 +106,8 @@ export const rewriteLocaleDateLiterals = (
     return `${parsed.year.toString().padStart(4, "0")}-${parsed.month
       .toString()
       .padStart(2, "0")}-${parsed.day.toString().padStart(2, "0")}`;
-  });
+    }
+  );
 
   return {
     expression: rewritten,

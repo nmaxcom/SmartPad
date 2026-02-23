@@ -35,6 +35,10 @@ Checks:
 5. Related unit tests (Jest) for changed `src/**` files:
    - `npx jest --findRelatedTests <changed-src-files> --passWithNoTests`
 6. `npm run build` when the diff is deploy-impacting (for example `src/` or core config changes)
+7. Optional exploratory triage sweep:
+   - `npm run test:temporary-edge`
+   - Generates `artifacts/temporary-edge-test-report.md`
+   - Failing cases must include linked TODO ids in the report metadata
 
 Output:
 - human markdown summary (stdout)
@@ -80,3 +84,4 @@ If `verify:changed` fails:
 - Do not bypass `verify:changed` unless explicitly directed by the user.
 - Prefer interpreting failures as process feedback, not isolated script noise.
 - Keep commit scopes small so diff-range checks remain precise.
+- Keep temporary edge test metadata current (`scripts/run-temporary-edge-tests.js`) so report failures remain triage-ready.

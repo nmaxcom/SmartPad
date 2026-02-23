@@ -134,16 +134,20 @@ describe("List spec examples", () => {
       "xs = 1, 2, 3",
       "xs => 1, 2, 3",
       "rent = $1,250",
-      "rent => ⚠️ Cannot create list: incompatible units",
       "xs = 1,250",
-      "xs => 1, 250",
       "xs = 1, 250",
       "xs => 1, 250",
     ]);
     expect((results[1] as any).result).toBe("1, 2, 3");
+    expect(results[2]?.type).toBe("error");
+    expect((results[2] as any).displayText).toContain(
+      "Thousands separators in input are not supported"
+    );
     expect(results[3]?.type).toBe("error");
-    expect((results[5] as any).result).toBe("1250");
-    expect((results[7] as any).result).toBe("1, 250");
+    expect((results[3] as any).displayText).toContain(
+      "Thousands separators in input are not supported"
+    );
+    expect((results[5] as any).result).toBe("1, 250");
   });
 
   test("block 13: consistent unit display", () => {

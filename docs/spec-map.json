@@ -52,7 +52,11 @@
         "docs/Specs/Lists.spec.md",
         "docs/Specs/Ranges.spec.md"
       ],
-      "docPrefixes": ["public/docs/"],
+      "docPrefixes": [
+        "docs/Specs/Lists.spec.md",
+        "docs/Specs/Ranges.spec.md",
+        "public/docs/"
+      ],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
     },
     {

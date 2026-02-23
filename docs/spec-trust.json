@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-02-20",
+  "generatedAt": "2026-02-23",
   "entries": [
     {
       "id": "live-results",
@@ -37,7 +37,11 @@
       "sourceSpec": "docs/Specs/Lists.spec.md",
       "canonicalSpec": "docs/Specs/implemented/lists.md",
       "mappedGroups": ["Lists And Ranges"],
-      "testRefs": ["tests/unit/list.test.ts", "tests/unit/listSpecExamples.test.ts"]
+      "testRefs": [
+        "tests/unit/list.test.ts",
+        "tests/unit/listSpecExamples.test.ts",
+        "tests/unit/thousandGroupingFormatting.test.ts"
+      ]
     },
     {
       "id": "ranges",
@@ -53,7 +57,11 @@
       "sourceSpec": "docs/Specs/Locale.spec.md",
       "canonicalSpec": "docs/Specs/implemented/locale-date-time.md",
       "mappedGroups": ["Date Time And Duration"],
-      "testRefs": ["tests/unit/localeDate.test.ts"]
+      "testRefs": [
+        "tests/unit/localeDate.test.ts",
+        "tests/unit/dateRange.test.ts",
+        "tests/unit/dateMathEvaluator.test.ts"
+      ]
     },
     {
       "id": "duration-and-time-values",

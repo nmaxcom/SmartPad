@@ -4,7 +4,7 @@ import { parseLine } from "../../src/parsing/astParser";
 import { ReactiveVariableStore } from "../../src/state/variableStore";
 import type { Variable } from "../../src/state/types";
 import { recordEquationFromNode } from "../../src/solve/equationStore";
-import { ListValue, DateValue } from "../../src/types";
+import { ListValue, DateValue, TimeValue } from "../../src/types";
 import { DEFAULT_LIST_MAX_LENGTH, setListMaxLength } from "../../src/types/listConfig";
 
 const createContext = (): EvaluationContext => ({
@@ -129,6 +129,38 @@ describe("Date and time ranges", () => {
     expect(formatted).toEqual(["09:00", "09:30", "10:00", "10:30", "11:00"]);
   });
 
+  test("clock-time ranges produce time slots", () => {
+    const context = createContext();
+    evaluateLine("slots = 09:00..11:00 step 30 min", context, 1);
+    const variable = context.variableContext.get("slots");
+    expect(variable?.value).toBeInstanceOf(ListValue);
+    const items = (variable?.value as ListValue).getItems();
+    expect(items).toHaveLength(5);
+    expect(items.every((item) => item instanceof TimeValue)).toBe(true);
+    expect(items.map((item) => item.toString())).toEqual([
+      "09:00",
+      "09:30",
+      "10:00",
+      "10:30",
+      "11:00",
+    ]);
+  });
+
+  test("clock-time ranges support decreasing order", () => {
+    const context = createContext();
+    evaluateLine("slots = 11:00..09:00 step 30 min", context, 1);
+    const variable = context.variableContext.get("slots");
+    expect(variable?.value).toBeInstanceOf(ListValue);
+    const items = (variable?.value as ListValue).getItems();
+    expect(items.map((item) => item.toString())).toEqual([
+      "11:00",
+      "10:30",
+      "10:00",
+      "09:30",
+      "09:00",
+    ]);
+  });
+
   test("datetime ranges respect the provided timezone", () => {
     const context = createContext();
     evaluateLine("slots = 2026-01-01 09:00 UTC..2026-01-01 12:00 UTC step 1 h", context, 1);
@@ -171,6 +203,15 @@ describe("Date and time ranges", () => {
     const result = evaluateLine("slots = 2026-01-01 09:00..2026-01-01 11:00 =>", context, 1);
     expect(result?.type).toBe("error");
     expect((result as any).displayText).toContain("duration step");
+  });
+
+  test("clock-time ranges reject non-time duration units", () => {
+    const context = createContext();
+    const result = evaluateLine("slots = 09:00..11:00 step 1 day =>", context, 1);
+    expect(result?.type).toBe("error");
+    expect((result as any).displayText).toContain(
+      "Time ranges require hour/minute/second steps"
+    );
   });
 
   test("non-duration step triggers a helpful error", () => {

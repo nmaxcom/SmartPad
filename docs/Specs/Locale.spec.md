@@ -121,7 +121,7 @@ A datetime literal is `DATE_LITERAL` + space + `TIME_LITERAL`:
 ### Disambiguation policy (opinionated)
 
 * In `es-ES`, `DD-MM-YYYY` is not ambiguous → always interpret as day-month-year.
-* If the locale is unknown/unset, only ISO is accepted as input.
+* If locale is unset, numeric slash/dash dates are parsed using the runtime/system locale order.
 
 ### Tests (es-ES parsing)
 
@@ -156,10 +156,11 @@ Must not error as solver/dateMath; must produce a datetime list (guardrail permi
 d = 32-02-2023 =>⚠️ Invalid date literal "32-02-2023"
 ```
 
-If locale is unset and user uses `DD-MM-YYYY`:
+If locale is unset, SmartPad still accepts numeric slash/dash dates and resolves day/month order from the runtime locale:
 
 ```text
-d = 01-02-2023 =>⚠️ Unsupported date format "01-02-2023". Use ISO "2023-02-01".
+en-US runtime: d = 06/05/2024 => 2024-06-05
+es-ES runtime: d = 06/05/2024 => 2024-05-06
 ```
 
 ---

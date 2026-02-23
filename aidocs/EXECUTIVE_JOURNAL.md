@@ -2561,3 +2561,58 @@
     *   Reviewed policy docs: `docs/Specs/proposed/unit-aliases-and-ratio.md`.
 *   Risks/blockers:
     *   Product policy for alias default-display is currently ambiguous between "preserve alias" and "normalize to base".
+
+## Entry J-2026-02-23-18
+
+*   Timestamp: 2026-02-23 23:16:32 CET / 2026-02-23 22:16:32 UTC
+*   Summary:
+    *   Completed backlog items `T-2026-02-23-24` through `T-2026-02-23-28` end-to-end.
+    *   Added native time-only range evaluation (`09:00..11:00 step 30 min=>`), fixed deferred variable-vs-unit ambiguity (`x=2*y`, later `y=3`), and enforced explicit grouped-number assignment input errors.
+    *   Updated locale slash-date handling to be locale-order aware without forcing ISO-only errors when locale is unset.
+    *   Upgraded temporary 50-case edge triage tooling with TODO-link metadata and expected-error support, then re-ran to 50/50 pass.
+*   Decisions:
+    *   Preserve variable intent before implicit unit-symbol fallback when assignment formulas include unresolved identifiers and no UnitsNet signature.
+    *   Keep grouped numeric assignment input unsupported by policy, but always emit explicit guidance (`use plain digits`).
+    *   Treat runtime locale as fallback authority for slash/dash numeric dates when `dateLocale` is not explicitly set.
+*   User directives:
+    *   "you can now work on all 3-7"
+*   Assistant commitments:
+    *   Implemented all five items, updated specs/trust/docs mappings, added regression coverage (unit + e2e), and executed reliability gates.
+*   Artifacts:
+    *   `src/eval/expressionEvaluatorV2.ts` (time endpoint range support)
+    *   `src/eval/variableEvaluatorV2.ts` (variable-first parse context + grouped numeric assignment error)
+    *   `src/eval/combinedAssignmentEvaluatorV2.ts` (variable-first parse context + grouped numeric assignment error)
+    *   `src/utils/localeDateNormalization.ts` (locale-order rewrite policy updates)
+    *   `src/utils/groupedNumberInput.ts` (new shared grouped numeric validator)
+    *   `scripts/run-temporary-edge-tests.js` (TODO-linked triage metadata + expected-error handling)
+    *   `src/templates/quickTourTemplate.ts` (time-range + deferred-formula examples)
+    *   `tests/unit/dateRange.test.ts`
+    *   `tests/unit/localeDate.test.ts`
+    *   `tests/unit/dateMathEvaluator.test.ts`
+    *   `tests/unit/thousandGroupingFormatting.test.ts`
+    *   `tests/unit/listSpecExamples.test.ts`
+    *   `tests/unit/variableUnitAmbiguity.test.ts` (new)
+    *   `tests/e2e/edge-cases-3-7.spec.ts` (new)
+    *   `docs/Specs/Lists.spec.md`
+    *   `docs/Specs/Locale.spec.md`
+    *   `docs/Specs/implemented/lists.md`
+    *   `docs/Specs/implemented/locale-date-time.md`
+    *   `docs/spec-trust.json`
+    *   `docs/spec-map.json`
+    *   `aidocs/AI_RELIABILITY_SYSTEM.md`
+    *   `aidocs/TODO_BACKLOG.md` (T-2026-02-23-24..28 marked done)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   ✅ `CI=1 npx jest tests/unit/range.test.ts tests/unit/dateRange.test.ts tests/unit/localeDate.test.ts tests/unit/dateMathEvaluator.test.ts tests/unit/thousandGroupingFormatting.test.ts tests/unit/listSpecExamples.test.ts tests/unit/variableUnitAmbiguity.test.ts tests/unit/combinedAssignmentEvaluatorV2.test.ts tests/unit/integration-fixes.test.ts --runInBand --watchman=false`
+    *   ✅ `node scripts/run-temporary-edge-tests.js` -> `50/50` pass
+    *   ✅ `npx playwright test tests/e2e/edge-cases-3-7.spec.ts --project=chromium`
+    *   ✅ `npm run docs:docusaurus:publish-local`
+    *   ✅ `npm run docs:map`
+    *   ✅ `npm run docs:drift`
+    *   ✅ `npm run spec:test`
+    *   ✅ `npm run spec:trust`
+    *   ✅ `npm run verify:changed`
+    *   ⚠️ Additional e2e sweep (`tests/e2e/template-basic-functionality.spec.ts`, `tests/e2e/units-basic.spec.ts`) reports existing failures unrelated to this change-set (template selector timeout for missing `Rent Calculator` button title, and unit tests relying on `editor.fill` state replacement).
+*   Risks/blockers:
+    *   No blockers for the completed 3-7 scope.
+    *   Existing baseline e2e instability remains in template/unit legacy suites and should be triaged separately.

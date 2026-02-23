@@ -41,7 +41,12 @@ const cases = [
   { id: 6, title: 'Parenthesized negative base exponent', input: '(-2)^2=>', expectedPattern: /4\b/ },
   { id: 7, title: 'Function call without parentheses style', input: 'abs -4=>', expectedPattern: /4\b/ },
   { id: 8, title: 'PI rounding helper', input: 'round(PI,2)=>', expectedPattern: /3\.14/ },
-  { id: 9, title: 'Max helper without function parentheses', input: 'max 3,7=>', expectedPattern: /7\b/ },
+  {
+    id: 9,
+    title: 'Max helper without function parentheses (unsupported syntax)',
+    input: 'max 3,7=>',
+    expectedErrorPattern: /Cannot create list|expects .*list|invalid/i,
+  },
   { id: 10, title: 'Chained function and decimal', input: 'sqrt(16)+2.5=>', expectedPattern: /6\.5/ },
 
   { id: 11, title: 'Phrase percentage with spaced variable name', setup: ['discount=15%', 'base price=$120.50'], input: 'discount off base price =>', expectedPattern: /102\.425|102\.43/ },
@@ -75,18 +80,45 @@ const cases = [
   { id: 37, title: 'Today keyword compact spacing', input: 'today+10 days=>', expectedPattern: /\d{4}-\d{2}-\d{2}/ },
   { id: 38, title: 'Relative weekday lowercase', input: 'next monday+2 weeks=>', expectedPattern: /\d{4}-\d{2}-\d{2}/ },
   { id: 39, title: 'Date range explicit duration step', input: '2026-01-01..2026-01-05 step 1 day=>', expectedPattern: /2026-01-05/ },
-  { id: 40, title: 'Time range explicit duration step', input: '09:00..11:00 step 30 min=>', expectedPattern: /11:00/ },
+  {
+    id: 40,
+    title: 'Time range explicit duration step',
+    input: '09:00..11:00 step 30 min=>',
+    expectedPattern: /11:00/,
+    todoId: 'T-2026-02-23-24',
+  },
 
   { id: 41, title: 'List sum with compact assignment', setup: ['costs=$12,$15,$9'], input: 'sum(costs)=>', expectedPattern: /36/ },
   { id: 42, title: 'Average with direct list args', input: 'avg($12,$15,$9)=>', expectedPattern: /12/ },
   { id: 43, title: 'Total over mixed-distance list', setup: ['lengths=3m,25m,48km'], input: 'total(lengths)=>', expectedPattern: /48\.028\s*km|48028\s*m/i },
   { id: 44, title: 'Where filter over currency list', setup: ['costs=$12,$15,$9'], input: 'costs where > $10=>', expectedPattern: /\$12.*\$15/i },
-  { id: 45, title: 'Typing order variable dependency', setup: ['x = 2*y', 'y=3'], input: 'x=>', expectedPattern: /6\b/ },
+  {
+    id: 45,
+    title: 'Typing order variable dependency',
+    setup: ['x = 2*y', 'y=3'],
+    input: 'x=>',
+    expectedPattern: /6\b/,
+    todoId: 'T-2026-02-23-25',
+  },
   { id: 46, title: 'Typing order with deferred formula', setup: ['total = price*qty', 'price=3', 'qty=4'], input: 'total=>', expectedPattern: /12\b/ },
   { id: 47, title: 'Explicit solve with inline knowns', setup: ['distance=40m', 'time=2s'], input: 'solve v in distance = v * time =>', expectedPattern: /20\s*m\/s|v\s*=\s*20/i },
   { id: 48, title: 'Store and convert unit result', setup: ['result=2km+300m=>'], input: 'result to km=>', expectedPattern: /2\.3\s*km/i },
-  { id: 49, title: 'Locale-style date slash input', input: '06/05/2024=>', expectNonError: true },
-  { id: 50, title: 'Thousands separator in assignment value', setup: ['a=2000=>'], input: 'b=2,000=>', expectedPattern: /2000|2,000/ },
+  {
+    id: 49,
+    title: 'Locale-style date slash input',
+    input: '06/05/2024=>',
+    expectNonError: true,
+    todoId: 'T-2026-02-23-26',
+  },
+  {
+    id: 50,
+    title: 'Thousands separator in assignment value',
+    setup: ['a=2000=>'],
+    input: 'b=2,000=>',
+    expectedErrorPattern:
+      /Thousands separators in input are not supported; use plain digits/i,
+    todoId: 'T-2026-02-23-27',
+  },
 ];
 
 if (cases.length !== 50) {
@@ -115,12 +147,22 @@ const runCase = (testCase) => {
 
   const resultText = result?.result || result?.displayText || '';
   const displayText = result?.displayText || resultText || '';
-  let passed = !setupFailed && result?.type !== 'error';
+  let passed = !setupFailed;
   let reason = '';
 
   if (setupFailed) {
+    passed = false;
     reason = `setup error: ${setupResults[setupResults.length - 1]?.result?.error || 'unknown setup error'}`;
+  } else if (testCase.expectedErrorPattern) {
+    if (result?.type !== 'error') {
+      passed = false;
+      reason = `expected an error but got: ${resultText || displayText || '(none)'}`;
+    } else if (!testCase.expectedErrorPattern.test(String(displayText))) {
+      passed = false;
+      reason = `unexpected error output: ${displayText || resultText}`;
+    }
   } else if (result?.type === 'error') {
+    passed = false;
     reason = result.error || result.displayText || 'runtime error';
   } else if (testCase.expectedPattern && !testCase.expectedPattern.test(String(resultText))) {
     passed = false;
@@ -138,6 +180,7 @@ const runCase = (testCase) => {
     passed,
     reason,
     output: resultText || displayText,
+    todoId: testCase.todoId || null,
   };
 };
 
@@ -161,6 +204,7 @@ if (failed.length === 0) {
 } else {
   for (const entry of failed) {
     lines.push(`### Case ${entry.id}: ${entry.title}`);
+    lines.push(`- Linked TODO: ${entry.todoId || "UNMAPPED"}`);
     lines.push(`- Setup: ${entry.setup.length ? entry.setup.join(' | ') : '(none)'}`);
     lines.push(`- Input: \`${entry.input}\``);
     lines.push(`- Reason: ${entry.reason}`);
@@ -169,14 +213,34 @@ if (failed.length === 0) {
   }
 }
 
+lines.push('## Failing Case TODO Coverage');
+lines.push('');
+if (failed.length === 0) {
+  lines.push('- No failing cases.');
+} else {
+  const unmapped = failed.filter((entry) => !entry.todoId);
+  if (unmapped.length === 0) {
+    lines.push('- All failing cases have linked TODO ids.');
+  } else {
+    lines.push(
+      `- Missing TODO links for case ids: ${unmapped
+        .map((entry) => entry.id)
+        .join(', ')}`
+    );
+  }
+}
+
 lines.push('## All Cases');
 lines.push('');
-lines.push('| # | Case | Input | Status | Output |');
-lines.push('|---|---|---|---|---|');
+lines.push('| # | Case | Input | Status | TODO | Output |');
+lines.push('|---|---|---|---|---|---|');
 for (const entry of results) {
   const status = entry.passed ? 'PASS' : 'FAIL';
   const output = (entry.output || '').replace(/\|/g, '\\|');
-  lines.push(`| ${entry.id} | ${entry.title} | \`${entry.input}\` | ${status} | ${output} |`);
+  const todo = entry.todoId || '';
+  lines.push(
+    `| ${entry.id} | ${entry.title} | \`${entry.input}\` | ${status} | ${todo} | ${output} |`
+  );
 }
 
 const reportDir = path.join(process.cwd(), 'artifacts');
