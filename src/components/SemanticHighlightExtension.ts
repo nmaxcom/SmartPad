@@ -24,7 +24,10 @@ import {
 } from "../parsing/ast";
 
 const LIVE_HIGHLIGHT_KEYWORD_REGEX = /\b(to|in|of|on|off|as|is|per)\b/i;
-const PURE_NUMBER_REGEX = /^[-+]?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?:[eE][+-]?\d+)?$/;
+const SCRUBBABLE_NUMBER_LITERAL_REGEX = /^[-+]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/;
+const GROUPED_NUMBER_LITERAL_PREFIX_REGEX =
+  /^[+-]?\d{1,3}(?:,\d{3})+(?:\.\d+)?(?:[eE][+-]?\d+)?/;
+const PURE_NUMBER_REGEX = SCRUBBABLE_NUMBER_LITERAL_REGEX;
 
 const shouldHighlightPlainTextAsExpression = (
   text: string,
@@ -363,9 +366,7 @@ function extractTokensFromASTNode(
       const valueText = text.substring(valueStart).trim();
       const valueStartPos = text.indexOf(valueText, valueStart);
 
-      const isSimpleNumber = /^-?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(
-        valueText.trim()
-      );
+      const isSimpleNumber = SCRUBBABLE_NUMBER_LITERAL_REGEX.test(valueText.trim());
 
       if (astNode.parsedValue?.isNumeric() && isSimpleNumber) {
         tokens.push({
@@ -518,7 +519,7 @@ export function tokenizeExpression(
   };
 
   // Regular expressions for different token types
-  const numberRegex = /^-?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?:[eE][+-]?\d+)?/;
+  const numberRegex = /^[-+]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/;
   const functionRegex = /^([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/;
   const operatorRegex = /^[\+\-\*\/\^\%]/;
   const parenRegex = /^[\(\)]/;
@@ -605,6 +606,22 @@ export function tokenizeExpression(
             break;
           }
         }
+      }
+    }
+
+    // Grouped input numbers are not valid SmartPad input literals.
+    // Keep them non-scrubbable so users don't get a draggable affordance on invalid input.
+    if (!matched) {
+      const groupedNumberMatch = expr.substring(pos).match(GROUPED_NUMBER_LITERAL_PREFIX_REGEX);
+      if (groupedNumberMatch) {
+        pushToken({
+          type: "number",
+          start: baseOffset + pos,
+          end: baseOffset + pos + groupedNumberMatch[0].length,
+          text: groupedNumberMatch[0],
+        });
+        pos += groupedNumberMatch[0].length;
+        matched = true;
       }
     }
 

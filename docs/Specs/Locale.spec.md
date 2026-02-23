@@ -369,6 +369,29 @@ slots = 2026-01-01 09:00..2026-01-01 11:00 step 30 min
 slots =>2026-01-01: 09:00, 09:30, 10:00, 10:30, 11:00 Europe/Madrid (UTC+1)
 ```
 
+### 7.4 Date display settings must be applied to existing result chips
+
+When `dateDisplayFormat` is changed, existing date/datetime result chips must re-render using the new format.
+
+* `iso` format: `YYYY-MM-DD` (and `YYYY-MM-DD HH:MM <zone>` for datetime)
+* `locale` format: locale-style date order (for example `DD/MM/YYYY` in `es-ES`)
+
+When locale mode is custom, changing the locale override must immediately update locale-formatted chips.
+
+#### Tests
+
+```text
+settings: dateLocaleMode=custom, dateLocaleOverride=es-ES, dateDisplayFormat=locale
+meeting = 2024-06-05 17:00 UTC => 05/06/2024 17:00 UTC (locale-formatted)
+toggle dateDisplayFormat=iso => 2024-06-05 17:00 UTC
+```
+
+```text
+settings: dateLocaleMode=custom, dateLocaleOverride=en-US, dateDisplayFormat=locale
+2024-06-05 => 06/05/2024
+change dateLocaleOverride=es-ES => 05/06/2024
+```
+
 ---
 
 ## 8) Reference Test Set (focused on the reported failures)

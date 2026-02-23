@@ -151,6 +151,7 @@ SmartPad currently treats comma-separated numeric input differently based on pat
 
 * Grouped numeric literals like `1,250` are **rejected** in assignment input.
 * Grouped currency literals like `$1,250` are **rejected** in assignment input.
+* Grouped numeric input is rendered as **non-scrubbable** text in the editor (no drag affordance).
 * Explicit comma-separated values with multiple list items (for example `1, 250`) are parsed as a list.
 
 Examples:

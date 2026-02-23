@@ -40,7 +40,9 @@
       "testRefs": [
         "tests/unit/list.test.ts",
         "tests/unit/listSpecExamples.test.ts",
-        "tests/unit/thousandGroupingFormatting.test.ts"
+        "tests/unit/thousandGroupingFormatting.test.ts",
+        "tests/unit/semanticHighlightTokenization.test.ts",
+        "tests/e2e/grouped-input-and-date-settings.spec.ts"
       ]
     },
     {
@@ -60,7 +62,8 @@
       "testRefs": [
         "tests/unit/localeDate.test.ts",
         "tests/unit/dateRange.test.ts",
-        "tests/unit/dateMathEvaluator.test.ts"
+        "tests/unit/dateMathEvaluator.test.ts",
+        "tests/e2e/grouped-input-and-date-settings.spec.ts"
       ]
     },
     {

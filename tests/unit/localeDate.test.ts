@@ -114,4 +114,24 @@ describe("Locale-aware date literals", () => {
     expect(output).toContain("2026-01-01:");
     expect(output).toContain("; 2026-01-02:");
   });
+
+  test("locale display format renders date-only results in locale style", () => {
+    const context = createContext();
+    context.dateLocale = "es-ES";
+    context.dateDisplayFormat = "locale";
+    const result = evaluateLine("d = 2024-06-05 =>", context, 1);
+    expect(result?.type).toBe("combined");
+    const output = (result as any).result as string;
+    expect(output).toMatch(/05\/06\/2024/);
+  });
+
+  test("locale display format renders datetime results in locale style", () => {
+    const context = createContext();
+    context.dateLocale = "es-ES";
+    context.dateDisplayFormat = "locale";
+    const result = evaluateLine("meeting = 2024-06-05 17:00 UTC =>", context, 1);
+    expect(result?.type).toBe("combined");
+    const output = (result as any).result as string;
+    expect(output).toMatch(/05\/06\/2024.*17:00.*UTC/);
+  });
 });

@@ -2651,3 +2651,45 @@
     *   Reviewed `docs/Specs/Plotting.spec.md`, `docs/Specs/proposed/feature-vision.md`, `docs/Specs/proposed/plotting-and-dependency-views.md`.
 *   Risks/blockers:
     *   Product-level decision still needed on data model progression (extend list semantics vs introduce table-native syntax early).
+
+## Entry J-2026-02-23-21
+
+*   Timestamp: 2026-02-23 23:54:44 CET / 2026-02-23 22:54:44 UTC
+*   Summary:
+    *   Fixed grouped-number scrubber regression so comma-grouped input literals (for example `2,000`) are no longer treated as scrubbable numeric input.
+    *   Fixed stale date-settings capture in editor evaluation pipeline so date result chips now honor `dateDisplayFormat` and locale override changes immediately.
+    *   Added dedicated regression coverage (unit + e2e) and synced specs/trust cards for grouped-input and date-display behavior.
+*   User directives:
+    *   "fix the parser and scrubber that identify eg 2,000 as a valid scrubbable number..."
+    *   "do proper tests to make sure settings work as expected" (date `x/x/x` locale display behavior).
+*   Decisions:
+    *   Treat grouped input literals as non-scrubbable semantic-number tokens in highlighting, while preserving explicit validation errors for unsupported thousand separators.
+    *   Resolve evaluation date locale directly from current settings each update pass (instead of stale callback-captured values/global override timing).
+    *   Keep new e2e coverage in an isolated spec to avoid unrelated baseline failures in older broad suites.
+*   Artifacts:
+    *   `src/components/SemanticHighlightExtension.ts`
+    *   `src/components/NumberScrubberExtension.ts`
+    *   `src/components/Editor.tsx`
+    *   `tests/unit/semanticHighlightTokenization.test.ts` (new)
+    *   `tests/unit/localeDate.test.ts`
+    *   `tests/e2e/grouped-input-and-date-settings.spec.ts` (new)
+    *   `docs/Specs/Lists.spec.md`
+    *   `docs/Specs/Locale.spec.md`
+    *   `docs/Specs/implemented/lists.md`
+    *   `docs/Specs/implemented/locale-date-time.md`
+    *   `docs/spec-trust.json`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   ✅ `npm run test:unit -- tests/unit/semanticHighlightTokenization.test.ts tests/unit/localeDate.test.ts`
+    *   ✅ `npm run test:unit -- tests/unit/thousandGroupingFormatting.test.ts tests/unit/dateMathEvaluator.test.ts`
+    *   ✅ `npx playwright test tests/e2e/grouped-input-and-date-settings.spec.ts --project=chromium --config=playwright.config.ts`
+    *   ✅ `npx playwright test tests/e2e/grouped-input-and-date-settings.spec.ts tests/e2e/edge-cases-3-7.spec.ts --project=chromium --config=playwright.config.ts`
+    *   ✅ `npm run build`
+    *   ✅ `npm run docs:map`
+    *   ✅ `npm run docs:drift`
+    *   ✅ `npm run spec:test`
+    *   ✅ `npm run spec:trust`
+    *   ✅ `npm run verify:changed`
+    *   ⚠️ A broad run of legacy suites (`tests/e2e/semantic-highlighting.spec.ts` + `tests/e2e/settings-integration.spec.ts`) shows pre-existing baseline failures unrelated to this change-set; isolated targeted e2e coverage for the fixed behavior is green.
+*   Risks/blockers:
+    *   `verify:changed` currently checks `HEAD~1...HEAD`, so local unstaged diffs are not fully represented by that gate output; targeted validation above was run explicitly for this change-set.

@@ -202,6 +202,22 @@ const parseRenderNodeValue = (renderNode: any): any | null => {
   return null;
 };
 
+const resolveDateLocaleForEvaluation = (settings: {
+  dateLocaleMode: "system" | "custom";
+  dateLocaleOverride: string;
+}): string => {
+  const override =
+    settings.dateLocaleMode === "custom" ? settings.dateLocaleOverride.trim() : "";
+  if (override) {
+    try {
+      return new Intl.DateTimeFormat(override).resolvedOptions().locale;
+    } catch {
+      // Fall back to detected locale when override is invalid.
+    }
+  }
+  return getDateLocaleEffective();
+};
+
 // Create Editor Context
 interface EditorContextType {
   editor: any;
@@ -316,6 +332,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
           const to = from + 2;
           lineToPositions.set(lineNum, { exprFrom, exprTo, from, to });
         }
+        const effectiveDateLocale = resolveDateLocaleForEvaluation(settings);
         for (let index = 0; index < astNodes.length; index++) {
           const node = astNodes[index] as any;
           const lineInfo = lineData[index];
@@ -395,7 +412,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
             scientificTrimTrailingZeros: settings.scientificTrimTrailingZeros,
             groupThousands: settings.groupThousands,
             dateDisplayFormat: settings.dateDisplayFormat,
-            dateLocale: getDateLocaleEffective(),
+            dateLocale: effectiveDateLocale,
             functionCallDepth: 0,
             plotSampleCount: settings.plotSampleCount,
             plotScrubSampleCount: settings.plotScrubSampleCount,
@@ -721,6 +738,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
                             ),
                             scientificTrimTrailingZeros: settings.scientificTrimTrailingZeros,
                             dateFormat: settings.dateDisplayFormat,
+                            dateLocale: effectiveDateLocale,
                             groupThousands: settings.groupThousands,
                           })
                         : String(assignedVariable.value);
@@ -926,6 +944,17 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       settings.scientificTrimTrailingZeros,
       settings.groupThousands,
       settings.liveResultEnabled,
+      settings.dateLocaleMode,
+      settings.dateLocaleOverride,
+      settings.dateDisplayFormat,
+      settings.plotSampleCount,
+      settings.plotScrubSampleCount,
+      settings.plotMinSamples,
+      settings.plotMaxSamples,
+      settings.plotDomainExpansion,
+      settings.plotYViewPadding,
+      settings.plotYDomainPadding,
+      settings.plotPanYDomainPadding,
     ]
   );
 

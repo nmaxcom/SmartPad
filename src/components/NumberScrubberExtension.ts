@@ -23,6 +23,17 @@ interface NumberScrubState {
   deltaChip: HTMLDivElement | null;
 }
 
+const SCRUBBABLE_LITERAL_REGEX = /^[-+]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/;
+
+function parseScrubbableLiteral(text: string): number | null {
+  const trimmed = text.trim();
+  if (!SCRUBBABLE_LITERAL_REGEX.test(trimmed)) {
+    return null;
+  }
+  const value = Number(trimmed);
+  return Number.isFinite(value) ? value : null;
+}
+
 export const NumberScrubberExtension = Extension.create({
   name: "numberScrubber",
 
@@ -39,9 +50,9 @@ export const NumberScrubberExtension = Extension.create({
               // Check if we clicked on a scrubbable number
               if (target.classList.contains("semantic-scrubbableNumber")) {
                 const text = target.textContent || "";
-                const value = parseFloat(text.replace(/,/g, ""));
+                const value = parseScrubbableLiteral(text);
 
-                if (isNaN(value)) return false; // Let normal text editing handle this
+                if (value === null) return false; // Let normal text editing handle this
 
                 // Calculate decimal places for precision preservation
                 const decimalPlaces = getDecimalPlaces(text);
