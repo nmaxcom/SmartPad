@@ -2486,3 +2486,31 @@
     *   ✅ `npm run verify:changed`
 *   Risks/blockers:
     *   Broader list-focused suites still show unrelated baseline failures in this repo context (`tests/unit/list.test.ts`, `tests/unit/listSpecExamples.test.ts`) not caused by this change-set.
+
+## Entry J-2026-02-23-15
+
+*   Timestamp: 2026-02-23 22:48:25 CET / 2026-02-23 21:48:25 UTC
+*   Summary:
+    *   Completed post-implementation governance alignment so docs/spec automation recognizes the new parser/unit/template updates.
+    *   Added spec-map coverage for canonical live-result docs and `TemplatePanel`, plus a units spec note for compact rate-duration operator boundaries.
+    *   Added an extra UnitsNet regression test entry so spec-test sync remains green for the follow-up docs commit range.
+    *   Updated `docs/ABOUT.md` to reflect the new live-result template examples.
+*   Artifacts:
+    *   `docs/spec-map.json` (mapping/doc-prefix updates)
+    *   `docs/Specs/proposed/unit-aliases-and-ratio.md` (compact rate-duration operator-boundary note)
+    *   `tests/unit/unitsnetEvaluator.test.ts` (added compact no-space rate-duration regression)
+    *   `docs/ABOUT.md` (documented live-result template additions)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+    *   Commits:
+      * `ca1a01d3` - align spec map + units docs for drift checks
+      * `20911f4c` - add compact rate-duration regression test
+      * `e5caed7d` - update ABOUT with template examples
+*   Validation:
+    *   ✅ `npm run verify:changed` (latest commit range)
+    *   ✅ `npm run docs:map -- HEAD~4...HEAD`
+    *   ✅ `npm run docs:drift -- HEAD~4...HEAD`
+    *   ✅ `npm run spec:test -- HEAD~4...HEAD`
+    *   ✅ `npm run spec:trust`
+    *   ⚠️ `npm run verify:changed -- HEAD~4...HEAD` still fails only in this environment on related-test execution due watchman permission error (`fchmod ... watchman-state`) and pre-existing baseline failures in related suites (`tests/unit/list.test.ts`, `tests/unit/listSpecExamples.test.ts`, `tests/unit/unitAliasDecisionMatrix.test.ts`).
+*   Risks/blockers:
+    *   Full related-test sweep for changed `src` files is blocked in this sandbox by watchman permission constraints and unrelated baseline red tests; targeted feature tests and focused e2e coverage for this work are green.
