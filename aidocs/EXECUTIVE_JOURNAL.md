@@ -2616,3 +2616,24 @@
 *   Risks/blockers:
     *   No blockers for the completed 3-7 scope.
     *   Existing baseline e2e instability remains in template/unit legacy suites and should be triaged separately.
+
+## Entry J-2026-02-23-19
+
+*   Timestamp: 2026-02-23 23:21:06 CET / 2026-02-23 22:21:06 UTC
+*   Summary:
+    *   Added a follow-up hardening pass after the first 3-7 commit to keep `verify:changed` reliable on this repo and avoid regressions in duration/currency rate formulas.
+    *   Refined variable-first ambiguity heuristic so slash-based rate expressions (for example `$20/h * time`) keep intended unit behavior while `x = 2*y` still remains variable-first.
+    *   Updated spec-map and reliability gate command defaults so docs/test checks pass on full diff ranges without watchman dependency issues.
+*   Artifacts:
+    *   `src/eval/variableEvaluatorV2.ts` (heuristic guard for slash expressions)
+    *   `src/eval/combinedAssignmentEvaluatorV2.ts` (heuristic guard for slash expressions)
+    *   `docs/spec-map.json` (mapping coverage updates for locale/lists/template/grouped-number files)
+    *   `scripts/verify-changed.js` (related Jest check now runs with `CI=1 --watchman=false --runInBand`)
+    *   `docs/ABOUT.md` (template/docs sync note for new time-range/deferred examples and grouped-number policy)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+    *   Commit: `1aedef77` - stabilize verify-changed mappings and unit-rate heuristics
+*   Validation:
+    *   ✅ `CI=1 npx jest tests/unit/variableUnitAmbiguity.test.ts tests/unit/durationMath.test.ts tests/unit/unitAliasExamples.test.ts --runInBand --watchman=false`
+    *   ✅ `npm run verify:changed -- HEAD~2...HEAD`
+*   Risks/blockers:
+    *   None for the current 3-7 scope after follow-up hardening.
