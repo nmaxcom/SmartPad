@@ -209,6 +209,15 @@ describe("UnitsNet.js Evaluator", () => {
       expect(quantity.getUnit()).toBe("L");
     });
 
+    test("should parse compact rate-duration multiplication without spaces", () => {
+      const result = evaluateUnitsNetExpression("9L/min*18min");
+
+      expect(result.error).toBeUndefined();
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBeCloseTo(162, 10);
+      expect(quantity.getUnit()).toBe("L");
+    });
+
     test("should handle temperature conversions", () => {
       const result = evaluateUnitsNetExpression("25 C + 10 K");
 
