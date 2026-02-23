@@ -18,7 +18,9 @@ const REF_TRACE_STORAGE_KEY = "smartpad-debug-ref-trace";
 const REF_TRACE_API_INSTALLED = "__SP_REF_TRACE_API_INSTALLED";
 const REF_TRACE_MAX_ENTRIES = 600;
 const RESULT_DRAG_ACTIVE_WINDOW_FLAG = "__SP_RESULT_CHIP_DRAG_ACTIVE";
-const BOTTOM_DROP_ACTIVE_CLASS = "sp-bottom-drop-active";
+const DROP_TARGET_AFTER_CLASS = "sp-chip-drop-target-after";
+const DROP_BOUNDARY_BAND_PX = 14;
+const LAST_LINE_DROP_EXTRA_PX = 56;
 
 interface ReferencePayload {
   sourceLineId: string;
@@ -31,6 +33,13 @@ interface ReferencePayload {
 interface HoveredSourceRef {
   sourceLineId: string;
   sourceLine: number;
+}
+
+interface LineBoundaryDropTarget {
+  sourceLineId: string;
+  sourceLine: number;
+  isLastLine: boolean;
+  paragraphIndex: number;
 }
 
 const HIGHLIGHT_REFRESH_META = "spRefHighlightRefresh";
@@ -371,21 +380,109 @@ const insertReferenceOnBottomNewLine = (
   }
 };
 
-const shouldInsertOnBottomNewLine = (view: any, event: DragEvent): boolean => {
-  const editorRect = view.dom.getBoundingClientRect();
-  const paragraphs = Array.from(
-    view.dom.querySelectorAll("p[data-line-id]")
-  ) as HTMLElement[];
-  const lastParagraph = paragraphs[paragraphs.length - 1];
-  if (!lastParagraph) {
-    return event.clientY >= editorRect.bottom - 56;
+const getTextblockSplitPosByLineId = (doc: any, sourceLineId: string): number | null => {
+  if (!sourceLineId) return null;
+  let splitPos: number | null = null;
+  doc.descendants((node: any, pos: number) => {
+    if (!node?.isTextblock) {
+      return true;
+    }
+    const nodeLineId = String((node as any).attrs?.lineId || "");
+    if (nodeLineId !== sourceLineId) {
+      return true;
+    }
+    splitPos = pos + node.nodeSize - 1;
+    return false;
+  });
+  return splitPos;
+};
+
+const getTextblockSplitPosByLineNumber = (doc: any, sourceLine: number): number | null => {
+  if (!Number.isFinite(sourceLine) || sourceLine <= 0) return null;
+  let line = 0;
+  let splitPos: number | null = null;
+  doc.descendants((node: any, pos: number) => {
+    if (!node?.isTextblock) {
+      return true;
+    }
+    line += 1;
+    if (line !== sourceLine) {
+      return true;
+    }
+    splitPos = pos + node.nodeSize - 1;
+    return false;
+  });
+  return splitPos;
+};
+
+const insertReferenceAfterBoundary = (
+  view: any,
+  payload: ReferencePayload,
+  target: LineBoundaryDropTarget,
+  mode: "reference" | "value" = "reference"
+): number | null => {
+  const { state } = view;
+  const splitPosById = target.sourceLineId
+    ? getTextblockSplitPosByLineId(state.doc, target.sourceLineId)
+    : null;
+  const splitPos =
+    typeof splitPosById === "number" && splitPosById > 0
+      ? splitPosById
+      : getTextblockSplitPosByLineNumber(state.doc, target.sourceLine);
+  if (typeof splitPos !== "number" || splitPos <= 0) {
+    return insertReferenceOnBottomNewLine(view, payload, mode);
   }
-  const lastRect = lastParagraph.getBoundingClientRect();
-  const bottomZoneTop = Math.max(
-    editorRect.top + 16,
-    Math.min(lastRect.bottom - 6, editorRect.bottom - 56)
-  );
-  return event.clientY >= bottomZoneTop;
+  try {
+    const splitSelectionPos = Math.max(1, Math.min(splitPos + 1, state.doc.content.size));
+    const splitTr = state.tr.split(splitPos);
+    splitTr.setSelection(TextSelection.create(splitTr.doc, splitSelectionPos));
+    view.dispatch(splitTr);
+    return insertReferenceAt(view, payload, view.state.selection.from, mode);
+  } catch {
+    return insertReferenceOnBottomNewLine(view, payload, mode);
+  }
+};
+
+const resolveBoundaryDropTarget = (view: any, event: DragEvent): LineBoundaryDropTarget | null => {
+  const editorRect = view.dom.getBoundingClientRect();
+  const paragraphs = Array.from(view.dom.querySelectorAll("p")) as HTMLElement[];
+  if (paragraphs.length === 0) {
+    return null;
+  }
+
+  const candidates: Array<{ distance: number; target: LineBoundaryDropTarget }> = [];
+  for (let idx = 0; idx < paragraphs.length; idx += 1) {
+    const paragraph = paragraphs[idx];
+    const sourceLineId = String(paragraph.getAttribute("data-line-id") || "").trim();
+    const rect = paragraph.getBoundingClientRect();
+    const isLastLine = idx === paragraphs.length - 1;
+    const nextParagraph = !isLastLine ? paragraphs[idx + 1] : null;
+    const nextTop = nextParagraph?.getBoundingClientRect().top;
+    const lowerBandLimit =
+      typeof nextTop === "number"
+        ? nextTop + DROP_BOUNDARY_BAND_PX
+        : Math.max(rect.bottom + LAST_LINE_DROP_EXTRA_PX, editorRect.bottom - 4);
+    const inBoundaryBand =
+      event.clientY >= rect.bottom - DROP_BOUNDARY_BAND_PX && event.clientY <= lowerBandLimit;
+    if (!inBoundaryBand) {
+      continue;
+    }
+    candidates.push({
+      distance: Math.abs(event.clientY - rect.bottom),
+      target: {
+        sourceLineId,
+        sourceLine: idx + 1,
+        isLastLine,
+        paragraphIndex: idx,
+      },
+    });
+  }
+
+  if (candidates.length === 0) {
+    return null;
+  }
+  candidates.sort((a, b) => a.distance - b.distance);
+  return candidates[0].target;
 };
 
 const normalizeChipText = (value: string): string => String(value || "").replace(/\s+/g, " ").trim();
@@ -625,8 +722,21 @@ export const ResultReferenceInteractionExtension = Extension.create({
     let highlightLockUntil = 0;
     let clearHighlightTimer: ReturnType<typeof setTimeout> | null = null;
     let activeDragPayload: ReferencePayload | null = null;
-    const setBottomDropActive = (view: any, active: boolean) => {
-      view.dom.classList.toggle(BOTTOM_DROP_ACTIVE_CLASS, active);
+    let activeBoundaryDropTarget: LineBoundaryDropTarget | null = null;
+    const clearDropTargetIndicator = (view: any) => {
+      view.dom
+        .querySelectorAll(`p.${DROP_TARGET_AFTER_CLASS}`)
+        .forEach((paragraph) => paragraph.classList.remove(DROP_TARGET_AFTER_CLASS));
+      activeBoundaryDropTarget = null;
+    };
+    const applyDropTargetIndicator = (view: any, target: LineBoundaryDropTarget | null) => {
+      clearDropTargetIndicator(view);
+      if (!target) return;
+      const paragraphs = Array.from(view.dom.querySelectorAll("p")) as HTMLElement[];
+      const paragraph = paragraphs[target.paragraphIndex] || null;
+      if (!paragraph) return;
+      paragraph.classList.add(DROP_TARGET_AFTER_CLASS);
+      activeBoundaryDropTarget = target;
     };
     const clearDragSession = () => {
       activeDragPayload = null;
@@ -752,7 +862,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 clearHighlightTimer = null;
               }
               clearDragSession();
-              setBottomDropActive(view, false);
+              clearDropTargetIndicator(view);
               clearHighlightedSource(view);
             },
           };
@@ -1006,12 +1116,13 @@ export const ResultReferenceInteractionExtension = Extension.create({
               const dragTypes = Array.from(dragEvent.dataTransfer?.types || []);
               const isResultDrag = dragTypes.includes(DND_MIME) || !!activeDragPayload;
               if (!isResultDrag) {
-                setBottomDropActive(view, false);
+                clearDropTargetIndicator(view);
                 return false;
               }
               dragEvent.preventDefault();
               dragEvent.dataTransfer.dropEffect = "copy";
-              setBottomDropActive(view, shouldInsertOnBottomNewLine(view, dragEvent));
+              const target = resolveBoundaryDropTarget(view, dragEvent);
+              applyDropTargetIndicator(view, target);
               return false;
             },
             dragleave: (view, event) => {
@@ -1022,20 +1133,22 @@ export const ResultReferenceInteractionExtension = Extension.create({
               }
               const related = getEventElement((event as any).relatedTarget || null);
               if (!related || !view.dom.contains(related)) {
-                setBottomDropActive(view, false);
+                clearDropTargetIndicator(view);
               }
               // Keep the drag payload alive until `drop`/`dragend`.
               // `dragleave` often fires with null relatedTarget while still inside the editor.
               return false;
             },
             dragend: (view) => {
-              setBottomDropActive(view, false);
+              clearDropTargetIndicator(view);
               clearDragSession();
               return false;
             },
             drop: (view, event) => {
               if (!event.dataTransfer && !activeDragPayload) return false;
-              setBottomDropActive(view, false);
+              const boundaryTarget =
+                activeBoundaryDropTarget || resolveBoundaryDropTarget(view, event as DragEvent);
+              clearDropTargetIndicator(view);
               const raw = event.dataTransfer?.getData(DND_MIME) || "";
               try {
                 const payload = raw
@@ -1046,9 +1159,8 @@ export const ResultReferenceInteractionExtension = Extension.create({
                   return false;
                 }
                 const insertMode = getChipInsertMode();
-                const insertOnBottom = shouldInsertOnBottomNewLine(view, event as DragEvent);
-                const insertedCursor = insertOnBottom
-                  ? insertReferenceOnBottomNewLine(view, payload, insertMode)
+                const insertedCursor = boundaryTarget
+                  ? insertReferenceAfterBoundary(view, payload, boundaryTarget, insertMode)
                   : (() => {
                       const coords = view.posAtCoords({
                         left: event.clientX,

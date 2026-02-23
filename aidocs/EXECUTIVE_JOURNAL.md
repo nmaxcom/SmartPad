@@ -2389,3 +2389,38 @@
 *   Artifacts:
     *   `aidocs/TODO_BACKLOG.md` (updated `T-2026-02-23-21`; added `T-2026-02-23-29`)
     *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+
+## Entry J-2026-02-23-13
+
+*   Timestamp: 2026-02-23 06:09:28 CET / 2026-02-23 05:09:39 UTC
+*   Summary:
+    *   Completed a tracked implementation pass for result-chip drag/drop boundary homogenization with a dedicated markdown checklist file.
+    *   Hardened boundary resolution to work across all paragraphs (including missing `data-line-id` cases) using line-index fallback for insertion.
+    *   Expanded last-line drop coverage and boundary hit reliability, while preserving visible-value-first payload behavior for inserted chips.
+    *   Added two drag/drop regressions for deep last-line dropping and missing-line-id boundary insertion.
+    *   Synced behavior wording in result-chip spec guardrails and flow.
+*   User directives:
+    *   "i want a written md of this where you check tasks as you go along this implementation until it's finished. then you can satart"
+*   Artifacts:
+    *   `aidocs/DROP_TARGET_HOMOGENIZATION_TRACKER.md` (new checklist tracker with in-progress checkmarks)
+    *   `src/components/ResultReferenceInteractionExtension.ts` (boundary resolver and insertion fallback hardening)
+    *   `tests/e2e/result-reference-drag-only.spec.ts` (new regressions + broader drop helper scenarios)
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md` (updated drag/drop guardrails)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   ✅ `npm run test:e2e -- tests/e2e/result-reference-drag-only.spec.ts` (11/11 passing)
+    *   ✅ `npm run test:e2e -- tests/e2e/result-reference.spec.ts` (24/24 passing)
+    *   ✅ `npm run test:unit -- tests/unit/referenceTokens.test.ts`
+    *   ✅ `npm run test:unit -- tests/unit/syntax-reference/units.test.ts`
+    *   ✅ `npm run build`
+    *   ✅ `npm run docs:map`
+    *   ✅ `npm run docs:drift`
+    *   ✅ `npm run spec:test`
+    *   ✅ `npm run spec:trust`
+    *   ✅ `npm run verify:changed`
+    *   ⚠️ `npm run test:unit` (full suite) has unrelated pre-existing failures in list/alias specs:
+        * `tests/unit/list.test.ts`
+        * `tests/unit/unitAliasDecisionMatrix.test.ts`
+        * `tests/unit/listSpecExamples.test.ts`
+*   Risks/blockers:
+    *   Full Jest suite is not fully green due unrelated baseline failures outside result-chip drag/drop modules.

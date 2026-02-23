@@ -8,9 +8,21 @@ const dispatchResultDrop = async (
     targetLineIndex?: number;
     dropAtBottom?: boolean;
     dropNearLastLineBottom?: boolean;
+    dropWellBelowLastLine?: boolean;
+    dropAfterLineIndex?: number;
+    stripTargetLineId?: boolean;
   } = {}
 ) => {
-  await page.evaluate(({ sourceLineIndex, targetLineIndex, dropAtBottom, dropNearLastLineBottom }) => {
+  await page.evaluate(
+    ({
+      sourceLineIndex,
+      targetLineIndex,
+      dropAtBottom,
+      dropNearLastLineBottom,
+      dropWellBelowLastLine,
+      dropAfterLineIndex,
+      stripTargetLineId,
+    }) => {
     const paragraphs = Array.from(document.querySelectorAll(".ProseMirror p")) as HTMLElement[];
     const sourceLine = paragraphs[sourceLineIndex || 0] || paragraphs[0];
     const chip = (sourceLine?.querySelector(
@@ -40,6 +52,16 @@ const dispatchResultDrop = async (
       const rect = editor.getBoundingClientRect();
       clientX = rect.left + Math.max(20, rect.width * 0.2);
       clientY = rect.bottom - 8;
+    } else if (typeof dropAfterLineIndex === "number") {
+      const afterLine = paragraphs[dropAfterLineIndex] || paragraphs[paragraphs.length - 1];
+      if (!afterLine) return;
+      if (stripTargetLineId) {
+        afterLine.removeAttribute("data-line-id");
+      }
+      const rect = afterLine.getBoundingClientRect();
+      dropTarget = afterLine;
+      clientX = Math.max(rect.left + 24, rect.right - 10);
+      clientY = rect.bottom + 8;
     } else if (dropNearLastLineBottom) {
       const lastLine = paragraphs[paragraphs.length - 1];
       if (!lastLine) return;
@@ -47,6 +69,14 @@ const dispatchResultDrop = async (
       dropTarget = lastLine;
       clientX = Math.max(rect.left + 24, rect.right - 10);
       clientY = rect.bottom - 3;
+    } else if (dropWellBelowLastLine) {
+      const lastLine = paragraphs[paragraphs.length - 1];
+      if (!lastLine) return;
+      const editorRect = editor.getBoundingClientRect();
+      const rect = lastLine.getBoundingClientRect();
+      dropTarget = editor;
+      clientX = Math.max(rect.left + 24, rect.right - 10);
+      clientY = Math.min(editorRect.bottom - 6, rect.bottom + 34);
     } else {
       const targetLine = paragraphs[targetLineIndex || 1] || paragraphs[paragraphs.length - 1];
       if (!targetLine) return;
@@ -74,7 +104,9 @@ const dispatchResultDrop = async (
         clientY,
       })
     );
-  }, options);
+    },
+    options
+  );
 };
 
 const dispatchNativeResultDragDrop = async (
@@ -374,6 +406,80 @@ test.describe("Result references (drag-only)", () => {
     await expect(newLastLine.locator(".semantic-result-display").last()).toHaveAttribute(
       "data-result",
       "125"
+    );
+  });
+
+  test("dropping well below the last line still creates a newline reference", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("100 + 20 =>");
+    await waitForUIRenderComplete(page);
+
+    await dispatchResultDrop(page, { dropWellBelowLastLine: true });
+    await page.keyboard.type("+5 =>");
+    await waitForUIRenderComplete(page);
+
+    const newLastLine = page.locator(".ProseMirror p").last();
+    await expect(newLastLine.locator(".semantic-reference-chip")).toHaveCount(1);
+    await expect(newLastLine.locator(".semantic-result-display").last()).toHaveAttribute(
+      "data-result",
+      "125"
+    );
+  });
+
+  test("boundary drop between middle lines inserts at that boundary, not at document end", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("100 + 20 =>");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("middle = 1");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("tail = ");
+    await waitForUIRenderComplete(page);
+
+    const beforeCount = await page.locator(".ProseMirror p").count();
+    await dispatchResultDrop(page, { sourceLineIndex: 0, dropAfterLineIndex: 1 });
+    await waitForUIRenderComplete(page);
+
+    await expect(page.locator(".ProseMirror p")).toHaveCount(beforeCount + 1);
+    await expect(page.locator(".ProseMirror p").nth(2).locator(".semantic-reference-chip")).toHaveCount(
+      1
+    );
+    await expect(page.locator(".ProseMirror p").last().locator(".semantic-reference-chip")).toHaveCount(
+      0
+    );
+  });
+
+  test("boundary drop still works when target paragraph is missing data-line-id", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("100 + 20 =>");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("middle = 1");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("tail = ");
+    await waitForUIRenderComplete(page);
+
+    const beforeCount = await page.locator(".ProseMirror p").count();
+    await dispatchResultDrop(page, {
+      sourceLineIndex: 0,
+      dropAfterLineIndex: 1,
+      stripTargetLineId: true,
+    });
+    await waitForUIRenderComplete(page);
+
+    await expect(page.locator(".ProseMirror p")).toHaveCount(beforeCount + 1);
+    await expect(page.locator(".ProseMirror p").nth(2).locator(".semantic-reference-chip")).toHaveCount(
+      1
+    );
+    await expect(page.locator(".ProseMirror p").last().locator(".semantic-reference-chip")).toHaveCount(
+      0
     );
   });
 });

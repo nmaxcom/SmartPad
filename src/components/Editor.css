@@ -67,29 +67,23 @@
   padding-bottom: 2.5rem;
 }
 
-.editor-content .ProseMirror .semantic-chip-dropcursor,
-.editor-content .ProseMirror .ProseMirror-dropcursor {
-  height: 3px !important;
-  border-radius: 999px;
-  background-color: color-mix(in srgb, var(--syntax-result-border) 82%, white 18%) !important;
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--syntax-result-border) 55%, transparent);
+.editor-content p {
+  margin: 0;
+  position: relative;
 }
 
-.editor-content .ProseMirror.sp-bottom-drop-active::after {
+.editor-content p.sp-chip-drop-target-after::after {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0.5rem;
+  bottom: -2px;
   height: 3px;
   border-radius: 999px;
-  background-color: color-mix(in srgb, var(--syntax-result-border) 82%, white 18%);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--syntax-result-border) 55%, transparent);
+  background-color: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22);
   pointer-events: none;
-}
-
-.editor-content p {
-  margin: 0;
+  z-index: 5;
 }
 
 .editor-content p.semantic-source-line-highlight {

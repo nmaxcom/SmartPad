@@ -154,12 +154,15 @@ Flow:
 5. In-flight drag payload must survive transient `dragleave` events so drop insertion remains reliable during normal pointer movement.
 6. Drop cursor should be visually prominent (thicker/high-contrast) so line insertion is easy to target.
 7. Last-line drop should expose a generous bottom drop band that creates a new line when dropped near the editor bottom.
+8. Boundary targeting must use one canonical resolver where the shown boundary indicator and the final insertion boundary are the same target.
+9. Boundary insertion must tolerate missing paragraph `data-line-id` in the DOM by falling back to textblock line index, not defaulting silently to document end.
 
 Guardrails:
 
 1. Dragging result chips must not trigger sheet/file import drop overlays.
 2. Inserted reference chip label must match the exact visible source result, not the source expression text.
 3. Bottom drop affordance must remain visible near the end of the document, including last-line drop for newline insertion.
+4. Every inter-line boundary should expose a reliable mouse hit-zone; dropping in a shown boundary must not insert at document end.
 
 ### 5.3 Copy/paste chip as reference
 
