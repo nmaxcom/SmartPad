@@ -2364,3 +2364,19 @@
     *   `git show --oneline --name-only --pretty=format:"%h %s" HEAD` confirms only `AGENTS.md` and `aidocs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` in commit `d1f48d6f`.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-23-11
+
+*   Timestamp: 2026-02-23 05:45:01 CET / 2026-02-23 04:45:01 UTC
+*   Summary:
+    *   User requested a case-by-case analysis of the 8 exploratory failures, including expected behavior, likely root cause, and concrete TODO creation.
+    *   Assistant reviewed each failed case from `artifacts/temporary-edge-test-report.md` and added eight specific maintenance TODOs plus one triage workflow TODO in `aidocs/TODO_BACKLOG.md`.
+*   User directives:
+    *   "Go through them one by one ... what should be done with each (through a specific todo add)."
+*   Artifacts:
+    *   `aidocs/TODO_BACKLOG.md` (added `T-2026-02-23-21` through `T-2026-02-23-28`)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Backlog update validated by row-level review in table tail.
+*   Risks/blockers:
+    *   None; implementation work for these TODOs remains pending.
