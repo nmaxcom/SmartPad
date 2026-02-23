@@ -134,6 +134,9 @@ Examples:
 - `a+b` when `a` is undefined -> no live result.
 - `(3+` -> no live result.
 - `9L/min * 18 min` -> show `162 L` when complete.
+- `9L/min*18min` -> show `162 L` when complete (compact no-space form).
+- `2(3+4)` -> show `14` when complete.
+- `(2+3)(4+5)` -> show `45` when complete.
 
 ---
 
@@ -166,6 +169,8 @@ Plain:
 8. Live result color differs from explicit result color.
 9. Debounce behavior matches existing typing/result cadence.
 10. Counters increment on expected paths (rendered vs suppression reasons).
+11. Implicit multiplication adjacency works for `number(` and `)(` expressions in live mode.
+12. Compact rate-duration expressions without spacing (for example `9L/min*18min`) render the same result as spaced equivalents.
 
 ---
 

@@ -2441,3 +2441,48 @@
     *   Backlog row review completed after edit.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-23-14
+
+*   Timestamp: 2026-02-23 22:44:08 CET / 2026-02-23 21:44:08 UTC
+*   Summary:
+    *   Implemented backlog items `T-2026-02-23-21` and `T-2026-02-23-23` end-to-end.
+    *   Added implicit multiplication adjacency for `number(` and `)(` in semantic expression parsing.
+    *   Fixed compact rate-duration parsing so expressions like `9L/min*18min=>` evaluate correctly.
+    *   Added broad regression coverage (new unit suite + e2e updates), updated specs/trust metadata, and updated Live Result template examples.
+*   Decisions:
+    *   Keep implicit multiplication scope conservative to the agreed adjacency forms (`number(` and `)(`) to reduce parser risk.
+    *   Fix compact unit tokenization by tightening `*`/`/` boundary handling only when followed by unit-start symbols.
+*   User directives:
+    *   "implement 1 and 2 ... verify edge cases ... lots of new tests ... run a few playwright tests ... update the spec ... add them in a fitting template panel"
+*   Assistant commitments:
+    *   Completed implementation + targeted regression sweeps + docs/spec sync + e2e visual verification for these two items.
+*   Artifacts:
+    *   `src/parsing/expressionComponents.ts` (implicit `*` insertion for `number(` and `)(`)
+    *   `src/units/unitsnetEvaluator.ts` (compound-unit tokenizer boundary fix)
+    *   `tests/unit/implicitMultiplicationAndCompactRate.test.ts` (new high-coverage regression suite)
+    *   `tests/e2e/live-result.spec.ts` (new live-result checks for implicit multiplication + compact units)
+    *   `tests/e2e/unitsnet-integration.spec.ts` (compact no-space unit arithmetic e2e)
+    *   `tests/e2e/live-result-template-visual.spec.ts` (updated expected template values)
+    *   `src/components/VariablePanel/TemplatePanel.tsx` (added `2(3+4)`, `(2+3)(4+5)`, `9L/min*18min` to Live Result template)
+    *   `docs/Specs/LiveResult.spec.md` (acceptance/examples updated)
+    *   `docs/Specs/implemented/live-results.md` (trust card test refs updated)
+    *   `docs/spec-trust.json` (live-results test refs updated)
+    *   `aidocs/TODO_BACKLOG.md` (`T-2026-02-23-21` and `T-2026-02-23-23` marked `done`)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   `T-2026-02-23-21` marked `done`.
+    *   `T-2026-02-23-23` marked `done`.
+    *   Remaining failing temporary-edge cases are still pending under existing TODOs (`T-2026-02-23-24`, `T-2026-02-23-25`, `T-2026-02-23-26`, `T-2026-02-23-27`, `T-2026-02-23-28`).
+*   Validation:
+    *   ✅ `CI=1 npx jest tests/unit/implicitMultiplicationAndCompactRate.test.ts tests/unit/mathEvaluator.test.ts tests/unit/astParser.test.ts tests/unit/unitsnetEvaluator.test.ts tests/unit/unitsnetIntegration.test.ts tests/unit/percentages.test.ts tests/unit/range.test.ts tests/unit/solve.test.ts tests/unit/combinedAssignmentEvaluatorV2.test.ts tests/unit/integration-fixes.test.ts --runInBand --watchman=false`
+    *   ✅ `node scripts/run-temporary-edge-tests.js` -> `45/50` passing; previously failing case IDs `3`, `4`, `23` now pass
+    *   ✅ `npx playwright test tests/e2e/live-result.spec.ts --grep "implicit expression lines|template playground|enabled by default"`
+    *   ✅ `npx playwright test tests/e2e/unitsnet-integration.spec.ts --grep "compact rate-duration arithmetic without spacing|unit arithmetic with unitsnet-js"`
+    *   ✅ `npm run docs:map`
+    *   ✅ `npm run docs:drift`
+    *   ✅ `npm run spec:test`
+    *   ✅ `npm run spec:trust`
+    *   ✅ `npm run verify:changed`
+*   Risks/blockers:
+    *   Broader list-focused suites still show unrelated baseline failures in this repo context (`tests/unit/list.test.ts`, `tests/unit/listSpecExamples.test.ts`) not caused by this change-set.

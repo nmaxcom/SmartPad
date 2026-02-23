@@ -17,7 +17,7 @@ test("live result template visual check", async ({ page }) => {
   );
   console.log("live-result-template-values:", JSON.stringify(liveValues));
   console.log("live-result-template-count:", liveValues.length);
-  expect(liveValues).toEqual(["3", "12", "1.81 kg", "162 L", "6", "6.28", "15"]);
+  expect(liveValues).toEqual(["3", "12", "14", "45", "1.81 kg", "162 L", "6", "6.28", "15"]);
 
   await page.screenshot({
     path: "test-results/live-result-template-visual.png",

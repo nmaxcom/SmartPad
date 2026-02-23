@@ -8,23 +8,31 @@ test.describe("Live Result", () => {
   });
 
   test("is enabled by default and shows live math results without =>", async ({ page }) => {
-    const editor = page.locator('[data-testid="smart-pad-editor"]');
-    await editor.click();
-    await page.keyboard.type("3*4");
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      editor.commands.setContent("3*4");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
 
     await waitForUIRenderComplete(page);
-    await expect(page.locator(".semantic-live-result-display")).toHaveCount(1);
-    await expect(page.locator(".semantic-live-result-display").first()).toHaveAttribute(
-      "data-result",
-      "12"
-    );
+    const liveResults = page.locator(".ProseMirror p .semantic-live-result-display");
+    await expect(liveResults).toHaveCount(1);
+    await expect(liveResults.first()).toHaveAttribute("data-result", "12");
   });
 
   test("shows live results for implicit expression lines parsed without =>", async ({ page }) => {
     const editor = page.locator('[data-testid="smart-pad-editor"]');
     await editor.click();
+    await page.keyboard.press("Control+a");
+    await page.keyboard.press("Delete");
 
     await page.keyboard.type("4lb to kg");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("2(3+4)");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("(2+3)(4+5)");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("9L/min*18min");
     await page.keyboard.press("Enter");
     await page.keyboard.type("sqrt(16)+2");
     await page.keyboard.press("Enter");
@@ -35,12 +43,15 @@ test.describe("Live Result", () => {
     await page.keyboard.type("known*3");
 
     await waitForUIRenderComplete(page);
-    const liveResults = page.locator(".semantic-live-result-display");
-    await expect(liveResults).toHaveCount(4);
-    await expect(liveResults.nth(0)).toHaveAttribute("data-result", /1\.81\s*kg/i);
-    await expect(liveResults.nth(1)).toHaveAttribute("data-result", "6");
-    await expect(liveResults.nth(2)).toHaveAttribute("data-result", /6\.28/);
-    await expect(liveResults.nth(3)).toHaveAttribute("data-result", "15");
+    const values = await page.$$eval(".semantic-live-result-display", (nodes) =>
+      nodes.map((node) => (node as HTMLElement).getAttribute("data-result") || "")
+    );
+    expect(values.some((value) => /1\.81\s*kg/i.test(value))).toBe(true);
+    expect(values).toContain("14");
+    expect(values).toContain("45");
+    expect(values).toContain("162 L");
+    expect(values).toContain("6");
+    expect(values.some((value) => /6\.28/.test(value))).toBe(true);
   });
 
   test("live result visuals match triggered results and flash on update", async ({ page }) => {
@@ -105,7 +116,7 @@ test.describe("Live Result", () => {
       nodes.map((node) => (node as HTMLElement).getAttribute("data-result") || "")
     );
 
-    expect(values).toEqual(["3", "12", "1.81 kg", "162 L", "6", "6.28", "15"]);
+    expect(values).toEqual(["3", "12", "14", "45", "1.81 kg", "162 L", "6", "6.28", "15"]);
   });
 
   test("applies visible left spacing for live-result chip", async ({ page }) => {

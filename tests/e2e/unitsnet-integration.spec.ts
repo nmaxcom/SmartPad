@@ -78,6 +78,27 @@ test.describe("UnitsNet.js Integration", () => {
     );
   });
 
+  test("should parse compact rate-duration arithmetic without spacing", async ({ page }) => {
+    const editor = page.locator(".ProseMirror");
+    await editor.click();
+
+    await editor.fill("9L/min*18min =>");
+    await page.keyboard.press("Enter");
+    await waitForUIRenderComplete(page);
+    await expect(page.locator(".semantic-result-display").last()).toHaveAttribute(
+      "data-result",
+      /162\s*L/
+    );
+
+    await editor.fill("10m/s*2s =>");
+    await page.keyboard.press("Enter");
+    await waitForUIRenderComplete(page);
+    await expect(page.locator(".semantic-result-display").last()).toHaveAttribute(
+      "data-result",
+      /20\s*m\b/
+    );
+  });
+
   test("should handle unit conversions with unitsnet-js", async ({ page }) => {
     const editor = page.locator(".ProseMirror");
     await editor.click();

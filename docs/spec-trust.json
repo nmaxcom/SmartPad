@@ -8,7 +8,12 @@
       "sourceSpec": "docs/Specs/LiveResult.spec.md",
       "canonicalSpec": "docs/Specs/implemented/live-results.md",
       "mappedGroups": ["Expression Engine"],
-      "testRefs": ["tests/e2e/live-result.spec.ts", "tests/unit/liveResultPreview.test.ts"]
+      "testRefs": [
+        "tests/e2e/live-result.spec.ts",
+        "tests/e2e/live-result-template-visual.spec.ts",
+        "tests/unit/liveResultPreview.test.ts",
+        "tests/unit/implicitMultiplicationAndCompactRate.test.ts"
+      ]
     },
     {
       "id": "result-chips-and-references",

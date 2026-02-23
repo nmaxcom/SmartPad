@@ -709,8 +709,10 @@ weird = 3 m, 2 h =>
 # Should show live result as you type (no =>):
 3
 3*4
+2(3+4)
+(2+3)(4+5)
 4lb to kg
-9L/min * 18 min
+9L/min*18min
 sqrt(16)+2
 PI*2
 known = 5

@@ -315,12 +315,51 @@ function tokenize(expression: string): Token[] {
   return tokens;
 }
 
+function shouldInsertImplicitMultiply(previous: Token, current: Token): boolean {
+  const previousIsNumber = previous.type === "number";
+  const previousIsClosingParen =
+    previous.type === "parentheses" && previous.value === ")";
+  const currentIsOpeningParen = current.type === "parentheses" && current.value === "(";
+
+  if (!currentIsOpeningParen) {
+    return false;
+  }
+
+  return previousIsNumber || previousIsClosingParen;
+}
+
+function insertImplicitMultiplyTokens(tokens: Token[]): Token[] {
+  if (tokens.length < 2) {
+    return tokens;
+  }
+
+  const rewritten: Token[] = [];
+
+  for (let i = 0; i < tokens.length; i += 1) {
+    const token = tokens[i];
+    const previous = rewritten[rewritten.length - 1];
+
+    if (previous && shouldInsertImplicitMultiply(previous, token)) {
+      rewritten.push({
+        type: "operator",
+        value: "*",
+        start: previous.end,
+        end: previous.end,
+      });
+    }
+
+    rewritten.push(token);
+  }
+
+  return rewritten;
+}
+
 /**
  * Parses an expression into a semantic component tree
  */
 export function parseExpressionComponents(expression: string): ExpressionComponent[] {
   const rewrittenExpression = rewriteRangeExpressions(expression);
-  const tokens = tokenize(rewrittenExpression);
+  const tokens = insertImplicitMultiplyTokens(tokenize(rewrittenExpression));
   const components: ExpressionComponent[] = [];
   let pos = 0;
 
