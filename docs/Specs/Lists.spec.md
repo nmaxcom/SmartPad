@@ -193,6 +193,13 @@ speeds = 3, 4, 5, 6 to m/s
 speeds =>3 m/s, 4 m/s, 5 m/s, 6 m/s
 ```
 
+Trailing comma is optional, not required:
+
+```text
+2,0,1,2 to $ => $2, $0, $1, $2
+2,0,1,2, to $ => $2, $0, $1, $2
+```
+
 ### `to <unit>` binds to the entire list
 
 ```text

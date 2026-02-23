@@ -58,6 +58,7 @@ import { parseExpressionComponents } from "../parsing/expressionComponents";
 import { applyThousandsSeparator } from "../utils/numberFormatting";
 import { parseUnitTargetWithScale } from "./unitConversionTarget";
 import { extractConversionSuffix } from "../utils/conversionSuffix";
+import { splitTopLevelCommas } from "../utils/listExpression";
 
 const containsResultReferenceComponent = (expression: string): boolean => {
   const trimmed = expression.trim();
@@ -925,6 +926,13 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     expression: string,
     context: EvaluationContext
   ): boolean {
+    // Semantic evaluators own comma-list construction and per-item annotation/conversion.
+    // Deferring here avoids UnitsNet parse errors like "Unexpected token: ," for inputs such as:
+    // "2,0,1,2 to $"
+    if (splitTopLevelCommas(expression).length > 1) {
+      return true;
+    }
+
     if (/\bmod\b/i.test(expression)) {
       return true;
     }

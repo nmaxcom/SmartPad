@@ -88,4 +88,16 @@ test.describe("Grouped numeric input and date display settings", () => {
 
     await expect(firstLineResult).toHaveAttribute("data-result", /05\/06\/2024/);
   });
+
+  test("currency annotation list expressions do not require trailing comma", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await waitForEditorReady(page);
+    await clearEditor(page);
+    await setLine(page, "2,0,1,2 to $ =>");
+
+    const firstLineResult = page.locator('.semantic-result-display[data-source-line="1"]').first();
+    await expect(firstLineResult).toHaveAttribute("data-result", "$2, $0, $1, $2");
+  });
 });

@@ -251,6 +251,17 @@ describe("List & statistical helpers", () => {
     expect((result as any).result).toBe("$10, $20, $30");
   });
 
+  test("currency annotation for expression lists does not require trailing comma", () => {
+    const context = createContext();
+    const noTrailingComma = evaluateLine("2,0,1,2 to $ =>", context, 1);
+    const trailingComma = evaluateLine("2,0,1,2, to $ =>", context, 2);
+
+    expect(noTrailingComma?.type).toBe("mathResult");
+    expect((noTrailingComma as any).result).toBe("$2, $0, $1, $2");
+    expect(trailingComma?.type).toBe("mathResult");
+    expect((trailingComma as any).result).toBe("$2, $0, $1, $2");
+  });
+
   test("mixed currencies with to $ error out", () => {
     const context = createContext();
     const result = evaluateLine("prices = €10, 20, 30 to $ =>", context, 1);

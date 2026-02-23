@@ -2693,3 +2693,35 @@
     *   ⚠️ A broad run of legacy suites (`tests/e2e/semantic-highlighting.spec.ts` + `tests/e2e/settings-integration.spec.ts`) shows pre-existing baseline failures unrelated to this change-set; isolated targeted e2e coverage for the fixed behavior is green.
 *   Risks/blockers:
     *   `verify:changed` currently checks `HEAD~1...HEAD`, so local unstaged diffs are not fully represented by that gate output; targeted validation above was run explicitly for this change-set.
+
+## Entry J-2026-02-23-22
+
+*   Timestamp: 2026-02-24 00:09:32 CET / 2026-02-23 23:09:32 UTC
+*   Summary:
+    *   Fixed list annotation parsing so `2,0,1,2 to $` works without requiring a trailing comma.
+    *   Root cause was evaluator routing: UnitsNet consumed top-level comma-list expressions first and failed with `Unexpected token: ,`.
+    *   Added regression coverage in unit and e2e tests; updated list spec wording to make trailing-comma optional behavior explicit.
+*   User directives:
+    *   Confirm/fix that last comma should not be necessary for `2,0,1,2 to $`.
+*   Decisions:
+    *   Defer all top-level comma-list expressions from UnitsNet to semantic list evaluators.
+    *   Keep both forms valid (`2,0,1,2 to $` and `2,0,1,2, to $`) with identical output.
+*   Artifacts:
+    *   `src/units/unitsnetAstEvaluator.ts`
+    *   `tests/unit/list.test.ts`
+    *   `tests/e2e/grouped-input-and-date-settings.spec.ts`
+    *   `docs/Specs/Lists.spec.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   ✅ direct repro check via `node -e` evaluator probe:
+        * `2,0,1,2 to $ =>` -> `$2, $0, $1, $2`
+        * `2,0,1,2, to $ =>` -> `$2, $0, $1, $2`
+    *   ✅ `npm run test:unit -- tests/unit/list.test.ts`
+    *   ✅ `npx playwright test tests/e2e/grouped-input-and-date-settings.spec.ts --project=chromium --config=playwright.config.ts`
+    *   ✅ `npm run docs:map`
+    *   ✅ `npm run docs:drift`
+    *   ✅ `npm run spec:test`
+    *   ✅ `npm run spec:trust`
+    *   ✅ `npm run verify:changed`
+*   Risks/blockers:
+    *   `verify:changed` range remains `HEAD~1...HEAD`; targeted tests above are the authoritative validation for this unstaged change-set.
