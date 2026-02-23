@@ -2537,3 +2537,27 @@
     *   ✅ `npm run test:unit` (full suite: 55/55 passed)
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-23-17
+
+*   Timestamp: 2026-02-23 22:54:26 CET / 2026-02-23 21:54:26 UTC
+*   Summary:
+    *   Investigated unit-alias display semantics (`5 boxes =>`) across current implementation, tests, and proposed specs.
+    *   Verified current engine behavior with direct evaluator probes:
+        * `box = 12 unit` -> `12 units`
+        * `5 boxes =>` -> `5 boxes`
+        * `box * 5 =>` -> `60 units`
+        * `24 units to box =>` -> `2 boxes`
+        * `sum(xs)` over `1 box, 2 boxes, 3 box` -> `6 boxes`
+    *   Confirmed this is not a parser bug but a policy choice: aliases are behaving like normal units (preserved unless explicitly converted).
+    *   Identified drift between artifacts:
+        * Current unit tests largely assume alias-preserving display.
+        * Proposed alias spec includes examples favoring base expansion (`2 boxes => 48 item`), showing unresolved policy tension.
+*   Artifacts:
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Ran targeted evaluator probes via `node` + `ts-node/register/transpile-only`.
+    *   Reviewed alias suites: `tests/unit/unitAliasDecisionMatrix.test.ts`, `tests/unit/unitAliasExamples.test.ts`, `tests/unit/unitAliasEdgeCases.test.ts`.
+    *   Reviewed policy docs: `docs/Specs/proposed/unit-aliases-and-ratio.md`.
+*   Risks/blockers:
+    *   Product policy for alias default-display is currently ambiguous between "preserve alias" and "normalize to base".
