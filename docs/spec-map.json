@@ -7,9 +7,12 @@
         "src/parsing/",
         "src/lowering/",
         "src/math/",
-        "docs/Specs/LiveResult.spec.md"
+        "docs/Specs/LiveResult.spec.md",
+        "docs/Specs/implemented/live-results.md"
       ],
       "docPrefixes": [
+        "docs/Specs/LiveResult.spec.md",
+        "docs/Specs/implemented/live-results.md",
         "docs/Specs/proposed/solve-symbolic-capabilities.md",
         "public/docs/"
       ],
@@ -105,6 +108,7 @@
       "specPrefixes": [
         "src/components/ui/",
         "src/components/Layout/",
+        "src/components/VariablePanel/TemplatePanel.tsx",
         "src/state/settingsStore.ts",
         "src/state/SettingsContext.tsx",
         "src/App.css",

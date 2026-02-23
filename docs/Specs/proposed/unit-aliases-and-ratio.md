@@ -182,7 +182,26 @@ Smartpad accepts numeric literals immediately followed by a unit token, with no 
 
 This works for built-in units and user-defined unit aliases (including plurals). It is purely syntactic sugar — the semantic meaning still comes from the unit or alias definition.
 
-### 4.3 Constant-vs-unit safety
+### 4.3 Operator boundaries for compact rate arithmetic
+
+Compound units may contain `*` and `/`, but unit scanning must stop when those operators begin a new
+arithmetic term.
+
+Examples that must parse as arithmetic:
+
+```text
+9L/min*18min => 162 L
+10m/s*2s => 20 m
+```
+
+Examples that must remain valid compound-unit literals:
+
+```text
+2N*m
+1kg*m/s^2
+```
+
+### 4.4 Constant-vs-unit safety
 
 Trailing unit-suffix rewrites must only run when the left side is a complete operand.
 
