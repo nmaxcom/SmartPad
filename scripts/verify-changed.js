@@ -173,13 +173,13 @@ const main = () => {
     checks.push(
       runCheck(
         "Related unit tests",
-        `npx jest --findRelatedTests ${quotedSources} --passWithNoTests`
+        `CI=1 npx jest --findRelatedTests ${quotedSources} --passWithNoTests --watchman=false --runInBand`
       )
     );
   } else {
     checks.push({
       label: "Related unit tests",
-      cmd: "npx jest --findRelatedTests <changed src files> --passWithNoTests",
+      cmd: "CI=1 npx jest --findRelatedTests <changed src files> --passWithNoTests --watchman=false --runInBand",
       ok: true,
       skipped: true,
     });

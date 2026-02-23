@@ -9,6 +9,8 @@ It's a node web application, written in typescript and react.
 Recent template updates:
 - The `Live Result` quick template now includes implicit multiplication examples (`2(3+4)`, `(2+3)(4+5)`).
 - The same template now includes compact no-space rate-duration arithmetic (`9L/min*18min`).
+- The template now includes time-slot ranges (`09:00..11:00 step 30 min`) and deferred dependency examples (`total deferred = price*qty` before defining `qty`).
+- Grouped numeric input in assignments is explicitly unsupported (`2,000` should be entered as `2000`).
 
 These are some examples of its syntax:
 # Quick Tour: a guided walkthrough

@@ -13,6 +13,10 @@
       "docPrefixes": [
         "docs/Specs/LiveResult.spec.md",
         "docs/Specs/implemented/live-results.md",
+        "docs/Specs/Lists.spec.md",
+        "docs/Specs/implemented/lists.md",
+        "docs/Specs/Locale.spec.md",
+        "docs/Specs/implemented/locale-date-time.md",
         "docs/Specs/proposed/solve-symbolic-capabilities.md",
         "public/docs/"
       ],
@@ -48,9 +52,11 @@
       "specPrefixes": [
         "src/utils/listExpression.ts",
         "src/utils/rangeExpression.ts",
+        "src/utils/groupedNumberInput.ts",
         "src/types/ListValue.ts",
         "docs/Specs/Lists.spec.md",
-        "docs/Specs/Ranges.spec.md"
+        "docs/Specs/Ranges.spec.md",
+        "docs/Specs/implemented/lists.md"
       ],
       "docPrefixes": [
         "docs/Specs/Lists.spec.md",
@@ -61,8 +67,15 @@
     },
     {
       "name": "Date Time And Duration",
-      "specPrefixes": ["src/date/", "src/utils/localeDateNormalization.ts"],
+      "specPrefixes": [
+        "src/date/",
+        "src/utils/localeDateNormalization.ts",
+        "docs/Specs/Locale.spec.md",
+        "docs/Specs/implemented/locale-date-time.md"
+      ],
       "docPrefixes": [
+        "docs/Specs/Locale.spec.md",
+        "docs/Specs/implemented/locale-date-time.md",
         "docs/Specs/proposed/date-keywords-timezones-business-days.md",
         "public/docs/"
       ],
@@ -115,6 +128,7 @@
         "src/components/VariablePanel/TemplatePanel.tsx",
         "src/state/settingsStore.ts",
         "src/state/SettingsContext.tsx",
+        "src/templates/quickTourTemplate.ts",
         "src/App.css",
         "src/styles/",
         "src/App.tsx",

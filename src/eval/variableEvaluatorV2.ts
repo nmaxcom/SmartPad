@@ -811,6 +811,9 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
     if (!components.length) {
       return false;
     }
+    if (expression.includes("/")) {
+      return false;
+    }
     if (expressionContainsUnitsNet(expression)) {
       return false;
     }
