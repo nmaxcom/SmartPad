@@ -6,6 +6,10 @@ Smartpad emphasizes readability and intent over strict syntax. Units are first-c
 
 It's a node web application, written in typescript and react.
 
+Recent template updates:
+- The `Live Result` quick template now includes implicit multiplication examples (`2(3+4)`, `(2+3)(4+5)`).
+- The same template now includes compact no-space rate-duration arithmetic (`9L/min*18min`).
+
 These are some examples of its syntax:
 # Quick Tour: a guided walkthrough
 # Core idea: write a line and add "=> " to evaluate
