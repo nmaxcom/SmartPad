@@ -2343,3 +2343,24 @@
     *   Failing case IDs: `3, 4, 9, 23, 40, 45, 49, 50`.
 *   Risks/blockers:
     *   Case `50` confirms a formatting/parser defect (`b=2,000=>` yielding `2, 0`) that looks user-facing and high-priority.
+
+## Entry J-2026-02-23-11
+
+*   Timestamp: 2026-02-23 05:53:04 CET / 2026-02-23 05:53:04 UTC
+*   Summary:
+    *   User clarified standing rule: always commit only assistant-authored changes.
+    *   Assistant applied that rule by committing only policy-document edits for multi-agent dirty-worktree handling.
+    *   Confirmed commit scope contains only the two intended files.
+*   Decisions:
+    *   Enforce file-scoped staging/commit discipline as default behavior for this repo.
+*   User directives:
+    *   "Always commit only your changes"
+*   Assistant commitments:
+    *   Continue using explicit file-path staging and exclude unrelated files from commits.
+*   Artifacts:
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+    *   Commit `d1f48d6f` (`AGENTS.md`, `aidocs/AI_EXECUTIVE_ASSISTANT_MANUAL.md`)
+*   Validation:
+    *   `git show --oneline --name-only --pretty=format:"%h %s" HEAD` confirms only `AGENTS.md` and `aidocs/AI_EXECUTIVE_ASSISTANT_MANUAL.md` in commit `d1f48d6f`.
+*   Risks/blockers:
+    *   None.
