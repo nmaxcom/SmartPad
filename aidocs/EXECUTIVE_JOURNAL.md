@@ -2274,3 +2274,55 @@
     *   `npm run verify:changed` (fails only at related Jest phase because Watchman cannot initialize in sandbox)
 *   Risks/blockers:
     *   Watchman sandbox restriction prevents a fully green `verify:changed` result despite passing docs/spec/build stages.
+
+## Entry J-2026-02-23-03
+
+*   Timestamp: 2026-02-23 05:44:33 CET / 2026-02-23 05:44:33 UTC
+*   Summary:
+    *   User reported frequent permission interruptions when unrelated files are dirty/untracked in multi-agent workflows.
+    *   Updated assistant policy to treat unrelated dirty worktree state as normal and non-blocking.
+    *   Added explicit requirement to scope staging/commits to assistant-authored files and only escalate for real safety risks.
+*   Decisions:
+    *   Dirty/untracked unrelated files are not a permission gate.
+    *   Assistant must continue autonomously with file-scoped git operations.
+*   User directives:
+    *   "we can safely focus on, automatically and without my permission, the files and parts of files we have modified ourselves"
+*   Assistant commitments:
+    *   Do not request permission due only to unrelated worktree dirtiness.
+    *   Keep commits strictly scoped to task-owned files.
+*   Artifacts:
+    *   `AGENTS.md`
+    *   `aidocs/AI_EXECUTIVE_ASSISTANT_MANUAL.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Policy/docs update only; no code-path runtime tests required.
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal upkeep).
+*   Risks/blockers:
+    *   None.
+
+## Entry J-2026-02-23-09
+
+*   Timestamp: 2026-02-23 05:45:01 CET / 2026-02-23 04:45:01 UTC
+*   Summary:
+    *   User requested a temporary, creative edge-case test set to discover additional unexpected failures.
+    *   Assistant created and executed a standalone 50-case exploratory runner covering arithmetic, percentages, units, date/time, ranges, list behavior, and typing-order scenarios.
+*   Decisions:
+    *   Keep this as a temporary standalone runner under `scripts/` instead of adding failing tests to normal Jest CI paths.
+    *   Persist a markdown report under `artifacts/` for immediate inspection and reproducibility.
+*   User directives:
+    *   "I want to see 50 such unique tests."
+*   Assistant commitments:
+    *   Deliver 50 unique runnable cases and surface newly discovered failures.
+*   Artifacts:
+    *   `scripts/run-temporary-edge-tests.js` (new, 50-case exploratory harness)
+    *   `artifacts/temporary-edge-test-report.md` (generated run report)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Pending updates:
+    *   None.
+*   Validation:
+    *   Executed: `node scripts/run-temporary-edge-tests.js`
+    *   Outcome: 50 total, 43 passed, 7 failed.
+    *   Failing case IDs: `3, 4, 9, 23, 40, 45, 49`.
+*   Risks/blockers:
+    *   Some failures are syntax-acceptance/ambiguity gaps rather than hard runtime crashes; triage needed to decide desired UX behavior before enforcing as regression tests.
