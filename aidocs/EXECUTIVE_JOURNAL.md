@@ -2810,3 +2810,23 @@
     *   Verified all 14 findings are present with copy-paste repro syntax.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-24-27
+
+*   Timestamp: 2026-02-25 00:18:17 CET / 2026-02-24 23:18:17 UTC
+*   Summary:
+    *   Reviewed user feedback on BH-002/BH-003/BH-012 and refined interpretation notes for bug-hunt triage.
+    *   Added two new backlog items based on explicit user direction: track trailing-comma policy (BH-013) and enforce triple-dot range error behavior (BH-014).
+*   User directives:
+    *   "let's add thinking about this as a todo" (BH-013)
+    *   "let's error this" (BH-014)
+*   Decisions:
+    *   Treat BH-013 as a policy/spec decision task first, then implementation+tests.
+    *   Treat BH-014 as a concrete parser/evaluator bug fix with regression coverage.
+*   Artifacts:
+    *   `aidocs/TODO_BACKLOG.md` (added `T-2026-02-24-02`, `T-2026-02-24-03`)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Confirmed both new todo rows include explicit deliverables, verification steps, and done criteria per todo quality rules.
+*   Risks/blockers:
+    *   None.
