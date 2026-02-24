@@ -1,0 +1,529 @@
+{
+  "startedAt": "2026-02-24T01:07:28.923Z",
+  "totalSuites": 5,
+  "totalCases": 47,
+  "summaryByType": {
+    "none": 3,
+    "mathResult": 25,
+    "variable": 4,
+    "error": 15
+  },
+  "suites": [
+    {
+      "name": "lists-and-punctuation",
+      "setup": [],
+      "cases": [
+        {
+          "suite": "lists-and-punctuation",
+          "id": "L1",
+          "title": "double comma inside list literal",
+          "input": "1,,2=>",
+          "nodeType": "expression",
+          "resultType": "none",
+          "resultText": ""
+        },
+        {
+          "suite": "lists-and-punctuation",
+          "id": "L2",
+          "title": "blank list element with spaces",
+          "input": "1, ,2=>",
+          "nodeType": "expression",
+          "resultType": "none",
+          "resultText": ""
+        },
+        {
+          "suite": "lists-and-punctuation",
+          "id": "L3",
+          "title": "missing conversion target after to",
+          "input": "1,2 to =>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "1 to, 2 tos"
+        },
+        {
+          "suite": "lists-and-punctuation",
+          "id": "L4",
+          "title": "double conversion suffix chain",
+          "input": "1,2,3 to $ in EUR=>",
+          "nodeType": "expression",
+          "resultType": "none",
+          "resultText": ""
+        },
+        {
+          "suite": "lists-and-punctuation",
+          "id": "L5",
+          "title": "trailing comma in explicit list output",
+          "input": "1,2,3,=>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "1, 2, 3"
+        },
+        {
+          "suite": "lists-and-punctuation",
+          "id": "L6",
+          "title": "list assignment compact syntax",
+          "input": "xs=1,2,3",
+          "nodeType": "variableAssignment",
+          "resultType": "variable",
+          "resultText": "xs = 1, 2, 3"
+        },
+        {
+          "suite": "lists-and-punctuation",
+          "id": "L7",
+          "title": "where filter valid operator",
+          "input": "xs where >= 2=>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "2, 3"
+        },
+        {
+          "suite": "lists-and-punctuation",
+          "id": "L8",
+          "title": "where filter malformed operator accepted?",
+          "input": "xs where >== 2=>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "2, 3"
+        },
+        {
+          "suite": "lists-and-punctuation",
+          "id": "L9",
+          "title": "aggregator called with no arguments",
+          "input": "sum()=>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "0"
+        },
+        {
+          "suite": "lists-and-punctuation",
+          "id": "L10",
+          "title": "average called with no arguments",
+          "input": "avg()=>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "0"
+        },
+        {
+          "suite": "lists-and-punctuation",
+          "id": "L11",
+          "title": "aggregator with variadic scalar args",
+          "input": "sum(1,2,3)=>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "6"
+        },
+        {
+          "suite": "lists-and-punctuation",
+          "id": "L12",
+          "title": "aggregator with tuple-like list arg",
+          "input": "sum((1,2,3))=>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "6"
+        }
+      ]
+    },
+    {
+      "name": "dates-ranges-locale",
+      "setup": [],
+      "cases": [
+        {
+          "suite": "dates-ranges-locale",
+          "id": "D1",
+          "title": "descending date range with positive step",
+          "input": "2026-01-05..2026-01-01 step 1 day=>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "2026-01-05, 2026-01-04, 2026-01-03, 2026-01-02, 2026-01-01"
+        },
+        {
+          "suite": "dates-ranges-locale",
+          "id": "D2",
+          "title": "descending date range with negative step",
+          "input": "2026-01-05..2026-01-01 step -1 day=>",
+          "nodeType": "expression",
+          "resultType": "error",
+          "resultText": "2026-01-05..2026-01-01 step -1 day => ⚠️ Invalid range expression near \"2026-01-05..2026-01-01 step -1 day\""
+        },
+        {
+          "suite": "dates-ranges-locale",
+          "id": "D3",
+          "title": "descending time range with positive step",
+          "input": "09:00..08:00 step 30 min=>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "09:00, 08:30, 08:00"
+        },
+        {
+          "suite": "dates-ranges-locale",
+          "id": "D4",
+          "title": "descending time range with negative step",
+          "input": "09:00..08:00 step -30 min=>",
+          "nodeType": "expression",
+          "resultType": "error",
+          "resultText": "09:00..08:00 step -30 min => ⚠️ Invalid range expression near \"09:00..08:00 step -30 min\""
+        },
+        {
+          "suite": "dates-ranges-locale",
+          "id": "D5",
+          "title": "date step with compact hour unit",
+          "input": "2026-01-01..2026-01-03 step 25h=>",
+          "nodeType": "expression",
+          "resultType": "error",
+          "resultText": "2026-01-01..2026-01-03 step 25h => ⚠️ Date/time ranges require a duration step (e.g., step 1 day)"
+        },
+        {
+          "suite": "dates-ranges-locale",
+          "id": "D6",
+          "title": "invalid iso date literal normalization",
+          "input": "2024-02-30=>",
+          "nodeType": "error",
+          "resultType": "error",
+          "resultText": "2024-02-30=> ⚠️ Expression parse error: Invalid date/time value"
+        },
+        {
+          "suite": "dates-ranges-locale",
+          "id": "D7",
+          "title": "invalid slash date literal normalization",
+          "input": "13/13/2024=>",
+          "nodeType": "expression",
+          "resultType": "error",
+          "resultText": "13/13/2024 => ⚠️ Invalid date literal"
+        },
+        {
+          "suite": "dates-ranges-locale",
+          "id": "D8",
+          "title": "slash date locale behavior without explicit locale",
+          "input": "06/05/2024=>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "2024-06-05"
+        },
+        {
+          "suite": "dates-ranges-locale",
+          "id": "D9",
+          "title": "triple-dot typo handling",
+          "input": "1...5=>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "1, 2, 3, 4, 5"
+        }
+      ]
+    },
+    {
+      "name": "math-functions-solver",
+      "setup": [
+        {
+          "input": "f(x)=x^2",
+          "nodeType": "functionDefinition",
+          "resultType": "text",
+          "resultText": ""
+        },
+        {
+          "input": "g(x,y=2)=x*y",
+          "nodeType": "functionDefinition",
+          "resultType": "text",
+          "resultText": ""
+        },
+        {
+          "input": "distance=v*time",
+          "nodeType": "variableAssignment",
+          "resultType": "variable",
+          "resultText": "distance = v * time"
+        }
+      ],
+      "cases": [
+        {
+          "suite": "math-functions-solver",
+          "id": "M1",
+          "title": "function call without parentheses",
+          "input": "sqrt 16=>",
+          "nodeType": "expression",
+          "resultType": "error",
+          "resultText": "sqrt 16 => ⚠️ Cannot solve: no equation found for \"sqrt 16\""
+        },
+        {
+          "suite": "math-functions-solver",
+          "id": "M2",
+          "title": "trailing comma in function args",
+          "input": "round(PI,)=>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "3"
+        },
+        {
+          "suite": "math-functions-solver",
+          "id": "M3",
+          "title": "trailing comma after positional arg with default",
+          "input": "g(3,)=>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "6"
+        },
+        {
+          "suite": "math-functions-solver",
+          "id": "M4",
+          "title": "named args out of order",
+          "input": "g(y:3, x:2)=>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "6"
+        },
+        {
+          "suite": "math-functions-solver",
+          "id": "M5",
+          "title": "unknown named arg rejection",
+          "input": "g(x:2, z:3)=>",
+          "nodeType": "expression",
+          "resultType": "error",
+          "resultText": "g(x:2, z:3) => ⚠️ Unknown argument: z"
+        },
+        {
+          "suite": "math-functions-solver",
+          "id": "M6",
+          "title": "explicit solve with zero denominator",
+          "input": "solve v in distance = v * time, time=0=>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "distance / 0"
+        },
+        {
+          "suite": "math-functions-solver",
+          "id": "M7",
+          "title": "assign scalar zero for time",
+          "input": "time=0",
+          "nodeType": "variableAssignment",
+          "resultType": "variable",
+          "resultText": "time = 0"
+        },
+        {
+          "suite": "math-functions-solver",
+          "id": "M8",
+          "title": "assign unit value for distance",
+          "input": "distance=10m",
+          "nodeType": "variableAssignment",
+          "resultType": "variable",
+          "resultText": "distance = 10 m"
+        },
+        {
+          "suite": "math-functions-solver",
+          "id": "M9",
+          "title": "assign zero seconds",
+          "input": "time=0s",
+          "nodeType": "variableAssignment",
+          "resultType": "variable",
+          "resultText": "time = 0 s"
+        },
+        {
+          "suite": "math-functions-solver",
+          "id": "M10",
+          "title": "implicit solve with distance and zero time",
+          "input": "v=>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "10 m / 0 s"
+        }
+      ]
+    },
+    {
+      "name": "units-and-aliases",
+      "setup": [
+        {
+          "input": "ksec=1000s",
+          "nodeType": "variableAssignment",
+          "resultType": "variable",
+          "resultText": "ksec = 16 min 40 s"
+        },
+        {
+          "input": "speed=9m/s",
+          "nodeType": "variableAssignment",
+          "resultType": "variable",
+          "resultText": "speed = 9 m/s"
+        },
+        {
+          "input": "m=2",
+          "nodeType": "variableAssignment",
+          "resultType": "variable",
+          "resultText": "m = 2"
+        }
+      ],
+      "cases": [
+        {
+          "suite": "units-and-aliases",
+          "id": "U1",
+          "title": "conversion target with zero denominator",
+          "input": "speed to m/(0 s)=>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "0 m/(0 s)"
+        },
+        {
+          "suite": "units-and-aliases",
+          "id": "U2",
+          "title": "scaled denominator conversion target",
+          "input": "speed to m/(1000 s)=>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "9000 m/(1000 s)"
+        },
+        {
+          "suite": "units-and-aliases",
+          "id": "U3",
+          "title": "unit alias conversion (singular)",
+          "input": "1ksec to s=>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "1000 s"
+        },
+        {
+          "suite": "units-and-aliases",
+          "id": "U4",
+          "title": "unit alias conversion (plural)",
+          "input": "2 ksecs to s=>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "2000 s"
+        },
+        {
+          "suite": "units-and-aliases",
+          "id": "U5",
+          "title": "data rate conversion bytes to bits",
+          "input": "1MB/s to Mbit/s=>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "8 Mbit/s"
+        },
+        {
+          "suite": "units-and-aliases",
+          "id": "U6",
+          "title": "data rate conversion bits to bytes",
+          "input": "1Mbps to MB/s=>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "0.125 MB/s"
+        },
+        {
+          "suite": "units-and-aliases",
+          "id": "U7",
+          "title": "derived-unit conversion target rendering",
+          "input": "1N to kg*m/s^2=>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "1 N"
+        },
+        {
+          "suite": "units-and-aliases",
+          "id": "U8",
+          "title": "implicit multiplication with unit in parentheses",
+          "input": "2(3m)=>",
+          "nodeType": "expression",
+          "resultType": "error",
+          "resultText": "2(3m) => ⚠️ Unexpected token: ("
+        },
+        {
+          "suite": "units-and-aliases",
+          "id": "U9",
+          "title": "grouped implicit multiplication unit*scalar",
+          "input": "(2m)(3)=>",
+          "nodeType": "expression",
+          "resultType": "error",
+          "resultText": "(2m)(3) => ⚠️ Unexpected token: ("
+        },
+        {
+          "suite": "units-and-aliases",
+          "id": "U10",
+          "title": "grouped implicit multiplication unit*unit",
+          "input": "(2m)(3m)=>",
+          "nodeType": "expression",
+          "resultType": "error",
+          "resultText": "(2m)(3m) => ⚠️ Unexpected token: ("
+        },
+        {
+          "suite": "units-and-aliases",
+          "id": "U11",
+          "title": "alias collision with variable named m",
+          "input": "m/s=>",
+          "nodeType": "expression",
+          "resultType": "error",
+          "resultText": "m/s => ⚠️ Cannot divide number and unit: cannot divide dimensionless number by unit\n  Left operand: 2 (number)\n  Right operand: 1 s (unit)"
+        }
+      ]
+    },
+    {
+      "name": "cross-feature-chaining",
+      "setup": [
+        {
+          "input": "costs=10,20,30 to $",
+          "nodeType": "variableAssignment",
+          "resultType": "variable",
+          "resultText": "costs = $10, $20, $30"
+        },
+        {
+          "input": "tax=8%",
+          "nodeType": "variableAssignment",
+          "resultType": "variable",
+          "resultText": "tax = 8%"
+        },
+        {
+          "input": "r=2m,4m,6m",
+          "nodeType": "variableAssignment",
+          "resultType": "variable",
+          "resultText": "r = 2 m, 4 m, 6 m"
+        },
+        {
+          "input": "f(x)=x*2",
+          "nodeType": "functionDefinition",
+          "resultType": "text",
+          "resultText": ""
+        }
+      ],
+      "cases": [
+        {
+          "suite": "cross-feature-chaining",
+          "id": "X1",
+          "title": "nested where inside aggregator",
+          "input": "sum(costs where > $15)=>",
+          "nodeType": "expression",
+          "resultType": "error",
+          "resultText": "sum(costs where > $15) => ⚠️ where() expects a list, got number"
+        },
+        {
+          "suite": "cross-feature-chaining",
+          "id": "X2",
+          "title": "percentage-on over aggregator result",
+          "input": "tax on sum(costs)=>",
+          "nodeType": "expression",
+          "resultType": "mathResult",
+          "resultText": "tax on sum(costs)"
+        },
+        {
+          "suite": "cross-feature-chaining",
+          "id": "X3",
+          "title": "nested function + list conversion + sum",
+          "input": "f(sum(r to cm))=>",
+          "nodeType": "expression",
+          "resultType": "error",
+          "resultText": "f(sum(r to cm)) => ⚠️ Error in f: Missing argument: x"
+        },
+        {
+          "suite": "cross-feature-chaining",
+          "id": "X4",
+          "title": "parenthesized range annotation then conversion",
+          "input": "(1..5 to m) to cm=>",
+          "nodeType": "expression",
+          "resultType": "error",
+          "resultText": "(1..5 to m) to cm => ⚠️ Invalid range expression near \"(1..5 to m) to cm\""
+        },
+        {
+          "suite": "cross-feature-chaining",
+          "id": "X5",
+          "title": "parenthesized range annotation then where filter",
+          "input": "(1..5 to m) where > 2m=>",
+          "nodeType": "expression",
+          "resultType": "error",
+          "resultText": "(1..5 to m) where > 2m => ⚠️ Invalid range expression near \"(1..5 to m) where > 2m\""
+        }
+      ]
+    }
+  ]
+}

@@ -2745,3 +2745,158 @@
     *   Reviewed repository operating manuals and reliability/todo policies to align the proposed process with existing SmartPad workflows.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-24-24
+
+*   Timestamp: 2026-02-24 02:08:58 CET / 2026-02-24 01:08:58 UTC
+*   Summary:
+    *   Ran an autonomous syntax bug-hunt pass in an isolated clean-main worktree/branch (`codex/bughunt-syntax-20260224-01`) across lists, dates/ranges, math, solver, functions, aliases, units, and mixed chaining.
+    *   Added a reproducible exploratory sweep runner (`scripts/run-bughunt-syntax.js`) and generated evidence artifacts (`bug-hunt-sweep` JSON/Markdown + concise decision brief).
+    *   Identified and classified high-confidence findings into `BUG`, `SPEC_DIVERGENCE`, and `EMERGENT_FEATURE`, with severity/confidence/repro/recommendation and proposed regression tests.
+*   User directives:
+    *   Start from the most recent clean `main` branch and execute the bug-hunting prompt autonomously.
+*   Decisions:
+    *   Preserve existing branch changes by creating a separate clean-main worktree under `/tmp/SmartPad-bughunt`.
+    *   Keep product code unchanged during discovery; collect reproducible evidence first.
+    *   Add follow-up backlog item to track disposition of high-priority findings (`T-2026-02-24-01`).
+*   Artifacts:
+    *   `scripts/run-bughunt-syntax.js` (new exploratory sweep runner)
+    *   `artifacts/bug-hunt-sweep-2026-02-24T01-07-28-923Z.json`
+    *   `artifacts/bug-hunt-sweep-2026-02-24T01-07-28-923Z.md`
+    *   `artifacts/bug-hunt-brief-2026-02-24T01-08-02Z.md`
+    *   `aidocs/TODO_BACKLOG.md` (added `T-2026-02-24-01`)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   ✅ `node scripts/run-temporary-edge-tests.js` -> `50/50` pass
+    *   ✅ `npm run test:unit -- tests/unit/list.test.ts tests/unit/dateRange.test.ts tests/unit/functions.test.ts tests/unit/solve.test.ts tests/unit/unitAliasEdgeCases.test.ts` -> `5/5` suites pass (`104` tests)
+    *   ✅ `node scripts/run-bughunt-syntax.js` -> generated 47-case exploratory sweep (`none:3`, `mathResult:25`, `variable:4`, `error:15`)
+*   Pending items:
+    *   `T-2026-02-24-01` (Owner: Assistant, Due: 2026-02-26, Status: todo) — triage and disposition high-priority bug-hunt findings with fix/spec decisions and linked regression coverage.
+*   Risks/blockers:
+    *   None blocking discovery/report delivery; implementation decisions remain pending for findings classified as spec/policy divergences.
+
+## Entry J-2026-02-24-25
+
+*   Timestamp: 2026-02-24 23:48:51 CET / 2026-02-24 22:48:51 UTC
+*   Summary:
+    *   Reformatted the syntax bug-hunt brief so every finding's repro is copy-paste friendly in standalone SmartPad code blocks.
+    *   Kept findings unchanged; only presentation was updated for faster manual validation.
+*   User directives:
+    *   Update report so repro syntax is on its own lines for direct SmartPad copy/paste.
+*   Decisions:
+    *   Use fenced `smartpad` blocks under each `Minimal repro` section (including multi-line setup + execute sequences).
+*   Artifacts:
+    *   `artifacts/bug-hunt-brief-2026-02-24T01-08-02Z.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Verified all `Minimal repro` entries now render as dedicated blocks (`14` entries).
+*   Risks/blockers:
+    *   None.
+
+## Entry J-2026-02-24-26
+
+*   Timestamp: 2026-02-24 23:56:41 CET / 2026-02-24 22:56:41 UTC
+*   Summary:
+    *   Created a compact bug-hunt template file containing all findings (`BH-001`..`BH-014`) in short decision-ready format.
+    *   Kept each finding to minimal repro + expected + impact + recommendation, with copy-paste SmartPad code blocks.
+*   User directives:
+    *   Create a new short template with all bugs in concise format.
+*   Decisions:
+    *   Use one section per finding with inline confidence/severity/classification header and standalone repro blocks.
+*   Artifacts:
+    *   `artifacts/bug-hunt-short-template-2026-02-24.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Verified all 14 findings are present with copy-paste repro syntax.
+*   Risks/blockers:
+    *   None.
+
+## Entry J-2026-02-24-27
+
+*   Timestamp: 2026-02-25 00:18:17 CET / 2026-02-24 23:18:17 UTC
+*   Summary:
+    *   Reviewed user feedback on BH-002/BH-003/BH-012 and refined interpretation notes for bug-hunt triage.
+    *   Added two new backlog items based on explicit user direction: track trailing-comma policy (BH-013) and enforce triple-dot range error behavior (BH-014).
+*   User directives:
+    *   "let's add thinking about this as a todo" (BH-013)
+    *   "let's error this" (BH-014)
+*   Decisions:
+    *   Treat BH-013 as a policy/spec decision task first, then implementation+tests.
+    *   Treat BH-014 as a concrete parser/evaluator bug fix with regression coverage.
+*   Artifacts:
+    *   `aidocs/TODO_BACKLOG.md` (added `T-2026-02-24-02`, `T-2026-02-24-03`)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Confirmed both new todo rows include explicit deliverables, verification steps, and done criteria per todo quality rules.
+*   Risks/blockers:
+    *   None.
+
+## Entry J-2026-02-24-28
+
+*   Timestamp: 2026-02-25 00:22:12 CET / 2026-02-24 23:22:12 UTC
+*   Summary:
+    *   Applied disposition labels to the short bug-hunt template: all agreed findings + discussed remaining items marked `TO_FIX`, with BH-013 retained as `DECIDE_POLICY`.
+    *   Added concrete execution todos for BH-002 (conversion suffix parse leak) and BH-012 (temporal step-direction policy + messaging/spec alignment).
+*   User directives:
+    *   Mark agreed findings and the remaining 3 discussed findings as fixes.
+    *   Provide recommendation for BH-002 and BH-012 handling.
+*   Decisions:
+    *   BH-002 tracked as parser/evaluator hard-guard fix (no fallback alias leakage after invalid `to|in` target).
+    *   BH-012 tracked with explicit temporal policy: direction inferred from endpoints, positive duration steps only, clearer negative-step error copy and spec/test alignment.
+*   Artifacts:
+    *   `artifacts/bug-hunt-short-template-2026-02-24.md`
+    *   `aidocs/TODO_BACKLOG.md` (added `T-2026-02-24-04`, `T-2026-02-24-05`)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Confirmed disposition snapshot includes all `BH-001..BH-014` entries.
+    *   Confirmed new todo items meet scope/next/verification quality rules.
+*   Risks/blockers:
+    *   None.
+
+## Entry J-2026-02-24-29
+
+*   Timestamp: 2026-02-25 00:44:53 CET / 2026-02-24 23:44:53 UTC
+*   Summary:
+    *   Implemented the first full bug-fix pass for bug-hunt findings in isolated branch `codex/bughunt-syntax-20260224-01`.
+    *   Fixed BH-001, BH-002, BH-003, BH-004, BH-005, BH-006, BH-007, BH-008, BH-009, BH-010, BH-011, BH-012, and BH-014 behaviors; BH-013 remains a policy decision task.
+    *   Added dedicated regression coverage and updated specs for changed list/range/date contracts.
+*   User directives:
+    *   Treat `to/in` as sacred conversion operators.
+    *   Fix bugs one-by-one and mark agreed items as to-fix.
+*   Decisions:
+    *   Enforced hard-stop conversion error for dangling `to|in` targets to prevent fallback leaks.
+    *   Enforced explicit triple-dot range rejection (`1...5`).
+    *   Adopted temporal step policy: endpoint direction inference with positive duration magnitudes; negative temporal steps error explicitly.
+*   Artifacts:
+    *   Code:
+        *   `src/eval/expressionEvaluatorV2.ts`
+        *   `src/eval/percentageEvaluatorV2.ts`
+        *   `src/eval/solveEvaluator.ts`
+        *   `src/parsing/astParser.ts`
+        *   `src/parsing/expressionComponents.ts`
+        *   `src/units/unitsnetAstEvaluator.ts`
+        *   `src/utils/conversionSuffix.ts`
+        *   `src/utils/rangeExpression.ts`
+    *   Tests:
+        *   `tests/unit/bugHuntRegression.test.ts` (new)
+        *   `tests/unit/list.test.ts` (updated expectations)
+    *   Specs/docs:
+        *   `docs/Specs/Lists.spec.md`
+        *   `docs/Specs/Locale.spec.md`
+        *   `docs/Specs/Ranges.spec.md`
+    *   Tracking:
+        *   `aidocs/TODO_BACKLOG.md` (BH task statuses updated)
+        *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+        *   `artifacts/temporary-edge-test-report.md` (refreshed)
+*   Validation:
+    *   ✅ `npm run test:unit -- tests/unit/bugHuntRegression.test.ts tests/unit/list.test.ts tests/unit/dateRange.test.ts tests/unit/functions.test.ts tests/unit/solve.test.ts tests/unit/unitAliasEdgeCases.test.ts`
+    *   ✅ `node scripts/run-temporary-edge-tests.js` -> `50/50` pass
+    *   ✅ `npm run docs:map`
+    *   ✅ `npm run docs:drift`
+    *   ✅ `npm run spec:test`
+    *   ✅ `npm run spec:trust`
+    *   ✅ `npm run verify:changed`
+*   Pending items:
+    *   `T-2026-02-24-02` remains open for BH-013 trailing-comma policy decision.
+*   Risks/blockers:
+    *   No blockers for this fix batch.

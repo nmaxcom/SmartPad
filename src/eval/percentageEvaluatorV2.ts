@@ -192,6 +192,13 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
           context.lineNumber
         );
       }
+      if (SemanticValueTypes.isSymbolic(result) && this.containsPercentageSyntax(expression)) {
+        return this.createErrorNode(
+          "Could not evaluate percentage expression",
+          expression,
+          context.lineNumber
+        );
+      }
       
       // Create render node
       if (isExpr) {
@@ -629,6 +636,17 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     const parsed = this.parseLiteral(normalized);
     if (parsed) {
       return parsed;
+    }
+
+    // Try to evaluate as arithmetic expression
+    try {
+      const components = parseExpressionComponents(normalized);
+      const componentValue = SimpleExpressionParser.parseComponents(components, context);
+      if (componentValue) {
+        return componentValue;
+      }
+    } catch {
+      // Fall through to existing arithmetic parser.
     }
 
     // Try to evaluate as arithmetic expression

@@ -1064,7 +1064,16 @@ export class SolveEvaluator implements NodeEvaluator {
     const value = this.evaluateExpression(expressionText, context, localValues);
     if (SemanticValueTypes.isError(value)) {
       const containsIdentifier = /[a-zA-Z]/.test(expressionText);
-      if (containsIdentifier) {
+      const errorMessage = (value as ErrorValue).getMessage();
+      const unresolvedSymbolError =
+        /Undefined variable|Undefined function|not defined|Cannot resolve expression|Unknown function|unsupported function/i.test(
+          errorMessage
+        );
+      const hardRuntimeError =
+        /Division by zero/i.test(
+          errorMessage
+        );
+      if (containsIdentifier && (unresolvedSymbolError || !hardRuntimeError)) {
         const substituted = this.substituteKnownValues(expressionText, context, localValues, displayOptions);
         return this.createMathResultNode(
           node.expression,
@@ -1072,7 +1081,7 @@ export class SolveEvaluator implements NodeEvaluator {
           context.lineNumber
         );
       }
-      return this.createErrorNode((value as ErrorValue).getMessage(), node.expression, context.lineNumber);
+      return this.createErrorNode(errorMessage, node.expression, context.lineNumber);
     }
 
     let resolved = value as SemanticValue;

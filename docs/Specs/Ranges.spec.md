@@ -64,6 +64,12 @@ This also aligns with slicing syntax `xs[1..3]` (span semantics).
 <start>..<end> step <step>
 ```
 
+Triple-dot typos are invalid and must not be auto-corrected:
+
+```text
+1...5 => ⚠️ Invalid range expression near "1...5"
+```
+
 ### Postfix `to` behavior (unit annotation or conversion)
 
 ```text

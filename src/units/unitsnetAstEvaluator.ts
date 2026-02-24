@@ -413,6 +413,19 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     const displayOptions = this.getDisplayOptions(context);
 
     try {
+      const invalidConversionTargetError = this.getInvalidScaledConversionTargetError(
+        node.expression
+      );
+      if (invalidConversionTargetError) {
+        return {
+          type: "error",
+          error: invalidConversionTargetError,
+          errorType: "runtime" as const,
+          displayText: `${node.expression} => ⚠️ ${invalidConversionTargetError}`,
+          line: context.lineNumber,
+          originalRaw: node.expression,
+        } as ErrorRenderNode;
+      }
       if (this.containsDateVariable(node.components, context)) {
         return null;
       }
@@ -857,11 +870,23 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     if (!rawTarget) return null;
     const parsed = parseUnitTargetWithScale(rawTarget);
     if (!parsed || parsed.scale === 1) return null;
+    if (!Number.isFinite(parsed.scale) || parsed.scale <= 0) return null;
 
     const displayValue = value.getNumericValue() / parsed.scale;
     const precision = displayOptions.precision ?? 6;
     const displayQuantity = new SmartPadQuantity(displayValue, parsed.displayUnit);
     return displayQuantity.toString(precision, { ...displayOptions, forceUnit: true });
+  }
+
+  private getInvalidScaledConversionTargetError(expression: string): string | null {
+    const conversion = extractConversionSuffix(expression);
+    if (!conversion) return null;
+    const parsed = parseUnitTargetWithScale(conversion.target.trim());
+    if (!parsed) return null;
+    if (!Number.isFinite(parsed.scale) || parsed.scale <= 0) {
+      return "Invalid conversion target: denominator must be non-zero";
+    }
+    return null;
   }
 
   private resolveUnitsPrecision(unit: string, value: number, defaultPlaces: number): number {

@@ -54,7 +54,10 @@ import { rewriteLocaleDateLiterals } from "../utils/localeDateNormalization";
 import { containsRangeOperatorOutsideString } from "../utils/rangeExpression";
 import { parseUnitTargetWithScale } from "../units/unitConversionTarget";
 import { attemptPerUnitConversion } from "./unitConversionUtils";
-import { extractConversionSuffix } from "../utils/conversionSuffix";
+import {
+  extractConversionSuffix,
+  findDanglingConversionKeyword,
+} from "../utils/conversionSuffix";
 import { defaultUnitRegistry } from "../units/definitions";
 
 function applyAbsToSemanticValue(value: SemanticValue): SemanticValue {
@@ -403,7 +406,7 @@ export class SimpleExpressionParser {
 
       let resolved = value;
       if (pendingUnary === "-") {
-        resolved = SemanticArithmetic.multiply(new NumberValue(-1), resolved);
+        resolved = this.negateSemanticValue(resolved);
         if (SemanticValueTypes.isError(resolved)) {
           return resolved;
         }
@@ -433,6 +436,52 @@ export class SimpleExpressionParser {
     }
 
     return values[0];
+  }
+
+  private static negateSemanticValue(value: SemanticValue): SemanticValue {
+    if (!value.isNumeric()) {
+      return ErrorValue.semanticError(
+        `Cannot negate non-numeric value of type ${value.getType()}`
+      );
+    }
+
+    switch (value.getType()) {
+      case "number":
+        return NumberValue.from(-value.getNumericValue());
+      case "unit": {
+        const unitValue = value as UnitValue;
+        return UnitValue.fromValueAndUnit(
+          -unitValue.getNumericValue(),
+          unitValue.getUnit()
+        );
+      }
+      case "duration": {
+        const durationValue = value as DurationValue;
+        return DurationValue.fromSeconds(-durationValue.getTotalSeconds());
+      }
+      case "currency": {
+        const currency = value as CurrencyValue;
+        return new CurrencyValue(
+          currency.getSymbol(),
+          -currency.getNumericValue()
+        );
+      }
+      case "currencyUnit": {
+        const currencyUnit = value as CurrencyUnitValue;
+        return new CurrencyUnitValue(
+          currencyUnit.getSymbol() as CurrencySymbol,
+          -currencyUnit.getNumericValue(),
+          currencyUnit.getUnit(),
+          currencyUnit.isPerUnit()
+        );
+      }
+      case "percentage": {
+        const percent = value as PercentageValue;
+        return new PercentageValue(-percent.getDisplayPercentage(), percent.getContext());
+      }
+      default:
+        return NumberValue.from(-value.getNumericValue());
+    }
   }
 
   private static applyExponentUnitSuffix(left: SemanticValue, right: SemanticValue): SemanticValue | null {
@@ -466,6 +515,13 @@ export class SimpleExpressionParser {
       case "resultReference": {
         const variable = context.variableContext.get(component.value);
         if (!variable) {
+          const converted = this.resolveVariableConversionReference(
+            component.value,
+            context
+          );
+          if (converted) {
+            return converted;
+          }
           if (
             context.implicitUnitSymbols !== false &&
             defaultUnitRegistry.isBuiltinSymbol(component.value)
@@ -558,6 +614,87 @@ export class SimpleExpressionParser {
       default:
         return ErrorValue.semanticError(`Unsupported component: "${component.type}"`);
     }
+  }
+
+  private static resolveVariableConversionReference(
+    expression: string,
+    context: EvaluationContext
+  ): SemanticValue | null {
+    const conversion = extractConversionSuffix(expression);
+    if (!conversion) {
+      return null;
+    }
+    const variable = context.variableContext.get(conversion.baseExpression.trim());
+    if (!variable) {
+      return null;
+    }
+    const parsed = parseUnitTargetWithScale(conversion.target.trim());
+    if (!parsed) {
+      return ErrorValue.semanticError(`Expected unit after '${conversion.keyword}'`);
+    }
+    if (!Number.isFinite(parsed.scale) || parsed.scale <= 0) {
+      return ErrorValue.semanticError("Invalid conversion target: denominator must be non-zero");
+    }
+
+    const rawValue = (variable as any).value;
+    const baseValue =
+      rawValue instanceof SemanticValue
+        ? rawValue
+        : typeof rawValue === "number"
+          ? NumberValue.from(rawValue)
+          : null;
+    if (!baseValue) {
+      return null;
+    }
+
+    const convertSingle = (value: SemanticValue): SemanticValue => {
+      if (value.getType() === "unit") {
+        try {
+          const converted = (value as UnitValue).convertTo(parsed.unit);
+          if (parsed.scale !== 1) {
+            return new UnitValueWithDisplay(
+              converted,
+              converted.getNumericValue() / parsed.scale,
+              parsed.displayUnit
+            );
+          }
+          return converted;
+        } catch (error) {
+          return ErrorValue.semanticError(
+            error instanceof Error ? error.message : String(error)
+          );
+        }
+      }
+      if (value.getType() === "number") {
+        if (parsed.scale !== 1) {
+          const baseUnit = UnitValue.fromValueAndUnit(
+            value.getNumericValue() * parsed.scale,
+            parsed.unit
+          );
+          return new UnitValueWithDisplay(
+            baseUnit,
+            value.getNumericValue(),
+            parsed.displayUnit
+          );
+        }
+        return UnitValue.fromValueAndUnit(value.getNumericValue(), parsed.unit);
+      }
+      return ErrorValue.semanticError("Cannot convert non-unit value");
+    };
+
+    if (SemanticValueTypes.isList(baseValue)) {
+      const convertedItems: SemanticValue[] = [];
+      for (const item of (baseValue as ListValue).getItems()) {
+        const converted = convertSingle(item);
+        if (SemanticValueTypes.isError(converted)) {
+          return converted;
+        }
+        convertedItems.push(converted);
+      }
+      return buildListValue(convertedItems);
+    }
+
+    return convertSingle(baseValue);
   }
 
   private static evaluateFunctionArgs(
@@ -1032,7 +1169,7 @@ function collectListFunctionValues(
   allowSingleScalar = false
 ): ListFunctionResolution | ErrorValue {
   if (values.length === 0) {
-    return { values: [], containsNestedList: false };
+    return ErrorValue.semanticError(`${functionName}() expects a list, got nothing`);
   }
   if (values.length === 1 && !SemanticValueTypes.isList(values[0])) {
     if (allowSingleScalar) {
@@ -1341,10 +1478,6 @@ const evaluateDateRange = (
     return ensured;
   }
   const step = ensured;
-
-  if (!start.hasTimeComponent() && TIME_ONLY_DURATION_UNITS.has(step.unit)) {
-    return ErrorValue.semanticError(DATE_RANGE_STEP_ERROR);
-  }
 
   return buildDateRangeList(start, end, step, direction);
 };
@@ -1782,6 +1915,9 @@ function parseWherePredicate(predicate: string): WherePredicate | ErrorValue {
   }
   const prefixMatch = trimmed.match(comparatorPrefixRegex);
   if (prefixMatch) {
+    if (/^[=<>!]/.test(prefixMatch[2].trim())) {
+      return ErrorValue.semanticError("Unsupported where predicate");
+    }
     return {
       comparator: prefixMatch[1],
       otherExpression: prefixMatch[2].trim(),
@@ -1790,6 +1926,9 @@ function parseWherePredicate(predicate: string): WherePredicate | ErrorValue {
   }
   const suffixMatch = trimmed.match(comparatorSuffixRegex);
   if (suffixMatch) {
+    if (/[=<>!]$/.test(suffixMatch[1].trim())) {
+      return ErrorValue.semanticError("Unsupported where predicate");
+    }
     return {
       comparator: suffixMatch[2],
       otherExpression: suffixMatch[1].trim(),
@@ -1880,7 +2019,11 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       return true;
     }
 
-    if (/\bwhere\b/i.test(expr)) {
+    if (this.findTopLevelWhere(expr)) {
+      return true;
+    }
+
+    if (splitTopLevelCommas(expr).length > 1) {
       return true;
     }
 
@@ -1934,13 +2077,40 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
         context.lineNumber
       );
     }
+    const danglingConversion = findDanglingConversionKeyword(normalized.expression);
+    if (danglingConversion) {
+      return this.createErrorNode(
+        `Expected unit after '${danglingConversion.keyword}'`,
+        exprNode.expression,
+        context.lineNumber
+      );
+    }
     const conversion = this.extractConversionSuffix(normalized.expression);
     const expression = conversion ? conversion.baseExpression : normalized.expression;
-    const whereMatch = expression.match(/(.+?)\bwhere\b(.+)/i);
+    const nestedWhereFunction = this.tryEvaluateListFunctionWithWhere(
+      expression,
+      context
+    );
+    if (nestedWhereFunction) {
+      if (SemanticValueTypes.isError(nestedWhereFunction)) {
+        return this.createErrorNode(
+          (nestedWhereFunction as ErrorValue).getMessage(),
+          exprNode.expression,
+          context.lineNumber
+        );
+      }
+      return this.createMathResultNode(
+        exprNode.expression,
+        nestedWhereFunction,
+        context.lineNumber,
+        this.getDisplayOptions(context)
+      );
+    }
+    const whereMatch = this.findTopLevelWhere(expression);
     if (whereMatch) {
       const filtered = this.evaluateWhereExpression(
-        whereMatch[1].trim(),
-        whereMatch[2].trim(),
+        whereMatch.left.trim(),
+        whereMatch.right.trim(),
         context
       );
       if (SemanticValueTypes.isError(filtered)) {
@@ -2181,6 +2351,110 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
     return /\[[^\]]+\]/.test(expr);
   }
 
+  private findTopLevelWhere(
+    expression: string
+  ): { left: string; right: string } | null {
+    let depth = 0;
+    let inString: string | null = null;
+    for (let idx = 0; idx < expression.length; idx += 1) {
+      const char = expression[idx];
+      if (inString) {
+        if (char === "\\" && idx + 1 < expression.length) {
+          idx += 1;
+          continue;
+        }
+        if (char === inString) {
+          inString = null;
+        }
+        continue;
+      }
+      if (char === '"' || char === "'") {
+        inString = char;
+        continue;
+      }
+      if (char === "(" || char === "[" || char === "{") {
+        depth += 1;
+        continue;
+      }
+      if (char === ")" || char === "]" || char === "}") {
+        depth = Math.max(0, depth - 1);
+        continue;
+      }
+      if (depth > 0) {
+        continue;
+      }
+      if (!expression.slice(idx).toLowerCase().startsWith("where")) {
+        continue;
+      }
+      const before = expression[idx - 1] ?? " ";
+      const after = expression[idx + 5] ?? " ";
+      if (/[a-z0-9_]/i.test(before) || /[a-z0-9_]/i.test(after)) {
+        continue;
+      }
+      return {
+        left: expression.slice(0, idx),
+        right: expression.slice(idx + 5),
+      };
+    }
+    return null;
+  }
+
+  private tryEvaluateListFunctionWithWhere(
+    expression: string,
+    context: EvaluationContext
+  ): SemanticValue | null {
+    const callMatch = expression.match(
+      /^\s*(sum|total|avg|mean|median|count|stddev|min|max|range)\s*\((.*)\)\s*$/i
+    );
+    if (!callMatch) {
+      return null;
+    }
+    const functionName = callMatch[1].toLowerCase();
+    const argExpression = callMatch[2].trim();
+    const whereMatch = this.findTopLevelWhere(argExpression);
+    if (!whereMatch) {
+      return null;
+    }
+
+    const filtered = this.evaluateWhereExpression(
+      whereMatch.left.trim(),
+      whereMatch.right.trim(),
+      context
+    );
+    if (SemanticValueTypes.isError(filtered)) {
+      return filtered;
+    }
+    if (!SemanticValueTypes.isList(filtered)) {
+      return ErrorValue.semanticError(
+        `${functionName}() expects a list, got ${canonicalTypeName(filtered)}`
+      );
+    }
+
+    const values = (filtered as ListValue).getItems();
+    switch (functionName) {
+      case "sum":
+      case "total":
+        return sumSemanticValues(values, context);
+      case "avg":
+      case "mean":
+        return averageSemanticValues(values, context);
+      case "median":
+        return medianSemanticValues(values);
+      case "count":
+        return NumberValue.from(values.length);
+      case "stddev":
+        return standardDeviation(values, context);
+      case "min":
+        return extremumSemanticValue(values, (next, current) => next < current);
+      case "max":
+        return extremumSemanticValue(values, (next, current) => next > current);
+      case "range":
+        return rangeSemanticValues(values);
+      default:
+        return null;
+    }
+  }
+
   private extractConversionSuffix(
     expression: string
   ): { baseExpression: string; target: string; keyword: string } | null {
@@ -2216,6 +2490,9 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
     const parsed = this.parseConversionTarget(target);
     if (!parsed) {
       return ErrorValue.semanticError(`Expected unit after '${keyword}'`);
+    }
+    if (!Number.isFinite(parsed.scale) || parsed.scale <= 0) {
+      return ErrorValue.semanticError("Invalid conversion target: denominator must be non-zero");
     }
 
     if (value.getType() === "unit") {

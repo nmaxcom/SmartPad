@@ -25,6 +25,37 @@ export const findRangeOperatorOutsideString = (expression: string): number => {
 export const containsRangeOperatorOutsideString = (expression: string): boolean =>
   findRangeOperatorOutsideString(expression) >= 0;
 
+const containsTripleDotOutsideString = (expression: string): boolean => {
+  let inSingle = false;
+  let inDouble = false;
+  for (let idx = 0; idx < expression.length - 2; idx += 1) {
+    const char = expression[idx];
+    if (char === "\\" && (inSingle || inDouble)) {
+      idx += 1;
+      continue;
+    }
+    if (char === '"' && !inSingle) {
+      inDouble = !inDouble;
+      continue;
+    }
+    if (char === "'" && !inDouble) {
+      inSingle = !inSingle;
+      continue;
+    }
+    if (inSingle || inDouble) {
+      continue;
+    }
+    if (
+      expression[idx] === "." &&
+      expression[idx + 1] === "." &&
+      expression[idx + 2] === "."
+    ) {
+      return true;
+    }
+  }
+  return false;
+};
+
 const findKeywordOutsideString = (expression: string, keyword: string): number => {
   let inSingle = false;
   let inDouble = false;
@@ -64,6 +95,9 @@ export const isValidRangeExpressionCandidate = (expression: string): boolean => 
   const rangeIndex = findRangeOperatorOutsideString(expression);
   if (rangeIndex < 0) {
     return true;
+  }
+  if (containsTripleDotOutsideString(expression)) {
+    return false;
   }
 
   const left = expression.slice(0, rangeIndex).trim();
