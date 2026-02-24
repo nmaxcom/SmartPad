@@ -2774,3 +2774,21 @@
     *   `T-2026-02-24-01` (Owner: Assistant, Due: 2026-02-26, Status: todo) — triage and disposition high-priority bug-hunt findings with fix/spec decisions and linked regression coverage.
 *   Risks/blockers:
     *   None blocking discovery/report delivery; implementation decisions remain pending for findings classified as spec/policy divergences.
+
+## Entry J-2026-02-24-25
+
+*   Timestamp: 2026-02-24 23:48:51 CET / 2026-02-24 22:48:51 UTC
+*   Summary:
+    *   Reformatted the syntax bug-hunt brief so every finding's repro is copy-paste friendly in standalone SmartPad code blocks.
+    *   Kept findings unchanged; only presentation was updated for faster manual validation.
+*   User directives:
+    *   Update report so repro syntax is on its own lines for direct SmartPad copy/paste.
+*   Decisions:
+    *   Use fenced `smartpad` blocks under each `Minimal repro` section (including multi-line setup + execute sequences).
+*   Artifacts:
+    *   `artifacts/bug-hunt-brief-2026-02-24T01-08-02Z.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Verified all `Minimal repro` entries now render as dedicated blocks (`14` entries).
+*   Risks/blockers:
+    *   None.
