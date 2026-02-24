@@ -2725,3 +2725,23 @@
     *   ✅ `npm run verify:changed`
 *   Risks/blockers:
     *   `verify:changed` range remains `HEAD~1...HEAD`; targeted tests above are the authoritative validation for this unstaged change-set.
+
+## Entry J-2026-02-24-23
+
+*   Timestamp: 2026-02-24 01:42:25 CET / 2026-02-24 00:42:25 UTC
+*   Summary:
+    *   Prepared a dedicated AI bug-hunting process for syntax-based SmartPad features (lists, dates, math, solver, functions, aliases) with strict branch isolation and reproducible triage.
+    *   Defined a concise decision-ready report format that classifies findings as bug, spec divergence, or potential feature opportunity.
+    *   Drafted a reusable high-signal prompt to run an autonomous exploratory bug-hunt pass.
+*   User directives:
+    *   Requested a process and prompt for an AI dev to creatively discover unknown edge cases and unexpected feature behaviors, with a concise report for decision-makers.
+*   Decisions:
+    *   Recommend a matrix-plus-fuzz workflow combining spec-derived checks, mutation/adversarial inputs, and cross-feature interaction sweeps.
+    *   Require one isolated `codex/` bug-hunting branch per run and scoped commits with reproducible evidence.
+    *   Standardize output into one-line triage entries with severity, confidence, repro, expected vs actual, and recommendation.
+*   Artifacts:
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Reviewed repository operating manuals and reliability/todo policies to align the proposed process with existing SmartPad workflows.
+*   Risks/blockers:
+    *   None.
