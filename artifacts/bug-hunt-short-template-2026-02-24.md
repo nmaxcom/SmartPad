@@ -1,5 +1,22 @@
 # SmartPad Bug Hunt Short Template
 
+## Disposition Snapshot
+
+- BH-001: TO_FIX
+- BH-002: TO_FIX
+- BH-003: TO_FIX
+- BH-004: TO_FIX
+- BH-005: TO_FIX
+- BH-006: TO_FIX
+- BH-007: TO_FIX
+- BH-008: TO_FIX
+- BH-009: TO_FIX
+- BH-010: TO_FIX
+- BH-011: TO_FIX
+- BH-012: TO_FIX
+- BH-013: DECIDE_POLICY
+- BH-014: TO_FIX
+
 ## BH-001 | 95% | P1 | BUG
 Minimal repro:
 ```smartpad

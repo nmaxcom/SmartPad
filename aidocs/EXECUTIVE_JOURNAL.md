@@ -2830,3 +2830,25 @@
     *   Confirmed both new todo rows include explicit deliverables, verification steps, and done criteria per todo quality rules.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-24-28
+
+*   Timestamp: 2026-02-25 00:22:12 CET / 2026-02-24 23:22:12 UTC
+*   Summary:
+    *   Applied disposition labels to the short bug-hunt template: all agreed findings + discussed remaining items marked `TO_FIX`, with BH-013 retained as `DECIDE_POLICY`.
+    *   Added concrete execution todos for BH-002 (conversion suffix parse leak) and BH-012 (temporal step-direction policy + messaging/spec alignment).
+*   User directives:
+    *   Mark agreed findings and the remaining 3 discussed findings as fixes.
+    *   Provide recommendation for BH-002 and BH-012 handling.
+*   Decisions:
+    *   BH-002 tracked as parser/evaluator hard-guard fix (no fallback alias leakage after invalid `to|in` target).
+    *   BH-012 tracked with explicit temporal policy: direction inferred from endpoints, positive duration steps only, clearer negative-step error copy and spec/test alignment.
+*   Artifacts:
+    *   `artifacts/bug-hunt-short-template-2026-02-24.md`
+    *   `aidocs/TODO_BACKLOG.md` (added `T-2026-02-24-04`, `T-2026-02-24-05`)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Confirmed disposition snapshot includes all `BH-001..BH-014` entries.
+    *   Confirmed new todo items meet scope/next/verification quality rules.
+*   Risks/blockers:
+    *   None.
