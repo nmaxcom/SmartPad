@@ -2745,3 +2745,32 @@
     *   Reviewed repository operating manuals and reliability/todo policies to align the proposed process with existing SmartPad workflows.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-24-24
+
+*   Timestamp: 2026-02-24 02:08:58 CET / 2026-02-24 01:08:58 UTC
+*   Summary:
+    *   Ran an autonomous syntax bug-hunt pass in an isolated clean-main worktree/branch (`codex/bughunt-syntax-20260224-01`) across lists, dates/ranges, math, solver, functions, aliases, units, and mixed chaining.
+    *   Added a reproducible exploratory sweep runner (`scripts/run-bughunt-syntax.js`) and generated evidence artifacts (`bug-hunt-sweep` JSON/Markdown + concise decision brief).
+    *   Identified and classified high-confidence findings into `BUG`, `SPEC_DIVERGENCE`, and `EMERGENT_FEATURE`, with severity/confidence/repro/recommendation and proposed regression tests.
+*   User directives:
+    *   Start from the most recent clean `main` branch and execute the bug-hunting prompt autonomously.
+*   Decisions:
+    *   Preserve existing branch changes by creating a separate clean-main worktree under `/tmp/SmartPad-bughunt`.
+    *   Keep product code unchanged during discovery; collect reproducible evidence first.
+    *   Add follow-up backlog item to track disposition of high-priority findings (`T-2026-02-24-01`).
+*   Artifacts:
+    *   `scripts/run-bughunt-syntax.js` (new exploratory sweep runner)
+    *   `artifacts/bug-hunt-sweep-2026-02-24T01-07-28-923Z.json`
+    *   `artifacts/bug-hunt-sweep-2026-02-24T01-07-28-923Z.md`
+    *   `artifacts/bug-hunt-brief-2026-02-24T01-08-02Z.md`
+    *   `aidocs/TODO_BACKLOG.md` (added `T-2026-02-24-01`)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   ✅ `node scripts/run-temporary-edge-tests.js` -> `50/50` pass
+    *   ✅ `npm run test:unit -- tests/unit/list.test.ts tests/unit/dateRange.test.ts tests/unit/functions.test.ts tests/unit/solve.test.ts tests/unit/unitAliasEdgeCases.test.ts` -> `5/5` suites pass (`104` tests)
+    *   ✅ `node scripts/run-bughunt-syntax.js` -> generated 47-case exploratory sweep (`none:3`, `mathResult:25`, `variable:4`, `error:15`)
+*   Pending items:
+    *   `T-2026-02-24-01` (Owner: Assistant, Due: 2026-02-26, Status: todo) — triage and disposition high-priority bug-hunt findings with fix/spec decisions and linked regression coverage.
+*   Risks/blockers:
+    *   None blocking discovery/report delivery; implementation decisions remain pending for findings classified as spec/policy divergences.
