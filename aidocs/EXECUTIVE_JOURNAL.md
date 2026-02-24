@@ -2852,3 +2852,51 @@
     *   Confirmed new todo items meet scope/next/verification quality rules.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-24-29
+
+*   Timestamp: 2026-02-25 00:44:53 CET / 2026-02-24 23:44:53 UTC
+*   Summary:
+    *   Implemented the first full bug-fix pass for bug-hunt findings in isolated branch `codex/bughunt-syntax-20260224-01`.
+    *   Fixed BH-001, BH-002, BH-003, BH-004, BH-005, BH-006, BH-007, BH-008, BH-009, BH-010, BH-011, BH-012, and BH-014 behaviors; BH-013 remains a policy decision task.
+    *   Added dedicated regression coverage and updated specs for changed list/range/date contracts.
+*   User directives:
+    *   Treat `to/in` as sacred conversion operators.
+    *   Fix bugs one-by-one and mark agreed items as to-fix.
+*   Decisions:
+    *   Enforced hard-stop conversion error for dangling `to|in` targets to prevent fallback leaks.
+    *   Enforced explicit triple-dot range rejection (`1...5`).
+    *   Adopted temporal step policy: endpoint direction inference with positive duration magnitudes; negative temporal steps error explicitly.
+*   Artifacts:
+    *   Code:
+        *   `src/eval/expressionEvaluatorV2.ts`
+        *   `src/eval/percentageEvaluatorV2.ts`
+        *   `src/eval/solveEvaluator.ts`
+        *   `src/parsing/astParser.ts`
+        *   `src/parsing/expressionComponents.ts`
+        *   `src/units/unitsnetAstEvaluator.ts`
+        *   `src/utils/conversionSuffix.ts`
+        *   `src/utils/rangeExpression.ts`
+    *   Tests:
+        *   `tests/unit/bugHuntRegression.test.ts` (new)
+        *   `tests/unit/list.test.ts` (updated expectations)
+    *   Specs/docs:
+        *   `docs/Specs/Lists.spec.md`
+        *   `docs/Specs/Locale.spec.md`
+        *   `docs/Specs/Ranges.spec.md`
+    *   Tracking:
+        *   `aidocs/TODO_BACKLOG.md` (BH task statuses updated)
+        *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+        *   `artifacts/temporary-edge-test-report.md` (refreshed)
+*   Validation:
+    *   ✅ `npm run test:unit -- tests/unit/bugHuntRegression.test.ts tests/unit/list.test.ts tests/unit/dateRange.test.ts tests/unit/functions.test.ts tests/unit/solve.test.ts tests/unit/unitAliasEdgeCases.test.ts`
+    *   ✅ `node scripts/run-temporary-edge-tests.js` -> `50/50` pass
+    *   ✅ `npm run docs:map`
+    *   ✅ `npm run docs:drift`
+    *   ✅ `npm run spec:test`
+    *   ✅ `npm run spec:trust`
+    *   ✅ `npm run verify:changed`
+*   Pending items:
+    *   `T-2026-02-24-02` remains open for BH-013 trailing-comma policy decision.
+*   Risks/blockers:
+    *   No blockers for this fix batch.

@@ -923,7 +923,7 @@ function buildRangeReplacement(
   const replacementParts = [
     wrapEndpoint(left.text),
     wrapEndpoint(right.text),
-    stepExpr?.text,
+    stepExpr ? wrapEndpoint(stepExpr.text) : undefined,
   ].filter(Boolean);
   const replacement = `__rangeLiteral(${replacementParts.join(", ")})`;
   return {

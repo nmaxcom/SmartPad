@@ -74,10 +74,11 @@ describe("List & statistical helpers", () => {
     expect((result as any).result).toBe("11 m");
   });
 
-  test("empty argument average returns zero", () => {
+  test("empty argument average returns list contract error", () => {
     const context = createContext();
     const result = evaluateLine("mean() =>", context, 1);
-    expect((result as any).result).toBe("0");
+    expect(result?.type).toBe("error");
+    expect((result as any).displayText).toContain("mean() expects a list");
   });
 
   test("non-numeric noise ignored in total", () => {

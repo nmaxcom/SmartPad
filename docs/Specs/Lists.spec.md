@@ -90,6 +90,14 @@ expenses = rent, utilities
 sum(expenses) => ⚠️ Cannot sum: 1200, 1200, 200, 200 contains a nested list
 ```
 
+Zero-argument aggregate calls are invalid:
+
+```text
+sum() => ⚠️ sum() expects a list, got nothing
+avg() => ⚠️ avg() expects a list, got nothing
+mean() => ⚠️ mean() expects a list, got nothing
+```
+
 #### Literal list of currency
 
 ```text
@@ -143,6 +151,13 @@ If users don’t trust what a list “is”, they won’t use it. These rules pr
 ```text
 xs = 1, 2, 3
 xs => 1, 2, 3
+```
+
+Malformed list separators (empty members) must fail explicitly:
+
+```text
+1,,2 => ⚠️ Cannot create list: empty value
+1, ,2 => ⚠️ Cannot create list: empty value
 ```
 
 #### Ambiguity: “comma means list” vs “thousands separator”
@@ -254,6 +269,16 @@ When the last element has a unit and earlier elements do not, assume the unit ap
 ```text
 speeds = 10, 20, 30 km/h
 speeds => 10 km/h, 20 km/h, 30 km/h
+```
+
+### `where` filters
+
+Comparator tokens must be valid (`>`, `<`, `>=`, `<=`, `=`, `==`, `!=`).
+Malformed comparator chains are rejected:
+
+```text
+xs = 1,2,3
+xs where >== 2 => ⚠️ Unsupported where predicate
 ```
 
 ### List-to-list unit alignment

@@ -187,6 +187,19 @@ period = 2026-01-01..2026-01-05 step 2 =>⚠️ Invalid range step: expected dur
 xs = 1..10 step 1 day =>⚠️ Invalid range step: expected integer, got duration
 ```
 
+Temporal ranges infer direction from endpoints and require a **positive** duration magnitude:
+
+```text
+2026-01-05..2026-01-01 step 1 day =>2026-01-05, 2026-01-04, 2026-01-03, 2026-01-02, 2026-01-01
+2026-01-05..2026-01-01 step -1 day =>⚠️ Invalid range step: expected a positive duration
+```
+
+Compact duration tokens are valid temporal steps:
+
+```text
+2026-01-01..2026-01-03 step 25h =>2026-01-01, 2026-01-02
+```
+
 ### Inclusivity rule
 
 A range includes the end value only if it aligns exactly on the step sequence.

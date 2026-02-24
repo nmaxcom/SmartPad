@@ -30,6 +30,7 @@ import { parseExpressionComponents } from "./expressionComponents";
 import { looksLikeDateExpression } from "../date/dateMath";
 import { containsRangeOperatorOutsideString } from "../utils/rangeExpression";
 import { splitTopLevelCommas } from "../utils/listExpression";
+import { extractConversionSuffix } from "../utils/conversionSuffix";
 
 /**
  * Parse a single line of text into an AST node
@@ -390,8 +391,12 @@ function createExpressionNode(expression: string, raw: string, line: number): Ex
       components,
     };
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    if (/invalid date\/time value/i.test(message)) {
+      return createErrorNode("Invalid date literal", "parse", raw, line);
+    }
     return createErrorNode(
-      `Expression parse error: ${error instanceof Error ? error.message : "Unknown error"}`,
+      `Expression parse error: ${message}`,
       "parse",
       raw,
       line
@@ -493,12 +498,11 @@ function createErrorNode(
 }
 
 function stripConversionSuffix(expression: string): string {
-  const match = expression.match(/\b(to|in)\b\s+.+$/i);
-  if (!match || match.index === undefined) {
+  const conversion = extractConversionSuffix(expression);
+  if (!conversion) {
     return expression;
   }
-  const base = expression.slice(0, match.index).trim();
-  return base || expression;
+  return conversion.baseExpression || expression;
 }
 
 function normalizeExponentUnitSuffix(expression: string): string {

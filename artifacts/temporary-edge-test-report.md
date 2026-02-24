@@ -1,6 +1,6 @@
 # Temporary Edge Exploration Report
 
-- Generated at: 2026-02-24T01:05:18.552Z
+- Generated at: 2026-02-24T23:44:13.339Z
 - Total cases: 50
 - Passed: 50
 - Failed: 0
@@ -51,7 +51,7 @@
 | 34 | Business-day subtraction compact | `2024-12-02-1 business day=>` | PASS |  | 2024-11-29 |
 | 35 | Time plus duration compact | `19:30+5h20min3s=>` | PASS |  | 00:50:03 (+1 day) |
 | 36 | Time minus duration compact | `00:10-45min=>` | PASS |  | 23:25 (-1 day) |
-| 37 | Today keyword compact spacing | `today+10 days=>` | PASS |  | 2026-03-06 |
+| 37 | Today keyword compact spacing | `today+10 days=>` | PASS |  | 2026-03-07 |
 | 38 | Relative weekday lowercase | `next monday+2 weeks=>` | PASS |  | 2026-03-16 |
 | 39 | Date range explicit duration step | `2026-01-01..2026-01-05 step 1 day=>` | PASS |  | 2026-01-01, 2026-01-02, 2026-01-03, 2026-01-04, 2026-01-05 |
 | 40 | Time range explicit duration step | `09:00..11:00 step 30 min=>` | PASS | T-2026-02-23-24 | 09:00, 09:30, 10:00, 10:30, 11:00 |
