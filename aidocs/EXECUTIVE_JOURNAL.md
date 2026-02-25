@@ -2935,3 +2935,20 @@
     *   Confirmed this discussion maps to active feature todo `T-2026-02-24-04`.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-26-01
+
+*   Timestamp: 2026-02-26 00:17:51 CET
+*   Summary:
+    *   User challenged explicit-`=>` as a sole strong-intent signal and raised the risk of false math detection inside normal prose sentences.
+    *   User requested deeper threat analysis on balancing strictness vs looseness, especially around syntax-error messaging versus silent prose fallback.
+*   User directives:
+    *   Explore threats/pitfalls and tradeoffs before implementation so the fix is robust.
+*   Decisions:
+    *   Provide a risk model that separates classification, highlighting, evaluation, and error surfacing, with confidence tiers instead of binary behavior.
+*   Artifacts:
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Confirmed discussion remains scoped to active feature task `T-2026-02-24-04`.
+*   Risks/blockers:
+    *   None.
