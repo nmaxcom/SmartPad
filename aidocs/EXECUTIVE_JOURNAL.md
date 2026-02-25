@@ -2900,3 +2900,19 @@
     *   `T-2026-02-24-02` remains open for BH-013 trailing-comma policy decision.
 *   Risks/blockers:
     *   No blockers for this fix batch.
+
+## Entry J-2026-02-25-04
+
+*   Timestamp: 2026-02-25 23:43:21 CET
+*   Summary:
+    *   User requested product-direction guidance for `T-2026-02-24-04` (markdown fidelity + prose-safe behavior), including look-and-feel and execution plan.
+*   User directives:
+    *   "give me your best ideas or advice as to how it should all look and feel, and how are you planning to approach this"
+*   Decisions:
+    *   Provide a concrete UX contract proposal first, then implementation sequencing and validation plan before coding.
+*   Artifacts:
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Confirmed active backlog item reference: `T-2026-02-24-04`.
+*   Risks/blockers:
+    *   None.
