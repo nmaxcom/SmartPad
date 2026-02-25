@@ -2916,3 +2916,22 @@
     *   Confirmed active backlog item reference: `T-2026-02-24-04`.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-25-05
+
+*   Timestamp: 2026-02-25 23:55:10 CET
+*   Summary:
+    *   User clarified markdown scope: keep styling limited to titles and normal text for now, while preserving a calculation-first sheet experience.
+    *   Main product risk identified is phrase-vs-variable ambiguity, especially for plain phrases that could be variable names.
+*   User directives:
+    *   Keep markdown styling to titles and text only.
+    *   Ensure non-spec phrase patterns (example: "3 or 4 things") remain regular text and do not trigger syntax/highlight/live result.
+*   Decisions:
+    *   Provide a strict intent-detection policy recommendation that treats unsupported grammar as prose by default.
+    *   Recommend symbol-table-aware gating for bare phrase references (evaluate only if variable already exists).
+*   Artifacts:
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Confirmed this discussion maps to active feature todo `T-2026-02-24-04`.
+*   Risks/blockers:
+    *   None.
