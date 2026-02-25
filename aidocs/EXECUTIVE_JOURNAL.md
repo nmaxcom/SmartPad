@@ -2952,3 +2952,23 @@
     *   Confirmed discussion remains scoped to active feature task `T-2026-02-24-04`.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-26-02
+
+*   Timestamp: 2026-02-26 00:32:48 CET (2026-02-25 23:32:48 UTC)
+*   Summary:
+    *   User requested improvement ideas for the default Quick Tour template before first external demos.
+    *   User feedback: current tour feels too long/boring yet still undersells key features.
+*   User directives:
+    *   Include plotting in the tour.
+    *   Mention number scrubbing.
+    *   Mention drag-and-drop live result behavior.
+    *   Reduce overuse of explicit `=>` now that live results exist.
+*   Decisions:
+    *   Prepare a concise, narrative-first tour concept with fewer explicit triggers and stronger feature sequencing.
+*   Artifacts:
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Reviewed current template source and related plotting/live-result docs to align recommendations with shipped syntax.
+*   Risks/blockers:
+    *   None.
