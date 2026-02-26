@@ -50,14 +50,16 @@ test.describe("Grouped numeric input and date display settings", () => {
       const after = window.getComputedStyle(el, "::after");
       return {
         cursor: style.cursor,
-        backgroundColor: style.backgroundColor,
         borderColor: style.borderTopColor,
+        borderRadius: style.borderTopLeftRadius,
+        boxShadow: style.boxShadow,
         afterContent: after.content,
       };
     });
     expect(hoverStyles.cursor).toBe("text");
-    expect(hoverStyles.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
     expect(hoverStyles.borderColor).not.toBe("rgba(0, 0, 0, 0)");
+    expect(parseFloat(hoverStyles.borderRadius)).toBeGreaterThanOrEqual(6);
+    expect(hoverStyles.boxShadow).not.toBe("none");
     expect(hoverStyles.afterContent).toContain("↔");
 
     const box = await number.boundingBox();

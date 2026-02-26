@@ -3129,3 +3129,34 @@
     *   Next: Reproduce with trace and align fixture/expectation baseline.
 *   Risks/blockers:
     *   None for this change; pending unrelated e2e baseline issue remains tracked.
+
+## Entry J-2026-02-26-09
+
+*   Timestamp: 2026-02-26 04:13:36 CET (2026-02-26 03:13:36 UTC)
+*   Summary:
+    *   User requested a more modern visual look for number scrubbing affordance.
+    *   Updated scrubbable-number hover/drag styling to an elevated glass-chip treatment with cleaner motion and refined `↔` badge.
+*   User directives:
+    *   Try a more modern look.
+*   Decisions:
+    *   Keep interaction model and cursor behavior unchanged (`text`) while modernizing only visual affordance.
+    *   Keep spec/test sync by updating mapped spec wording and strengthening hover-affordance e2e assertions.
+*   Artifacts:
+    *   `src/components/Editor.css`
+    *   `tests/e2e/grouped-input-and-date-settings.spec.ts`
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   `npx playwright test tests/e2e/grouped-input-and-date-settings.spec.ts -g "hover affordance without overriding text cursor"` (pass)
+    *   `npm run verify:changed` (pass; includes docs:map, docs:drift, spec:test, spec:trust, related tests, build)
+*   Pending items:
+    *   ID: P-2026-02-26-01
+    *   Task: Investigate flaky/broken precondition in currency scrubbing e2e test (`user-issues-fixed.spec.ts`), unrelated to current visual-affordance iteration.
+    *   Owner: Assistant
+    *   Created: 2026-02-26
+    *   Due: TBD
+    *   Status: todo
+    *   Context: Existing test can fail before scrub interaction begins.
+    *   Next: Reproduce with trace and align fixture/expectation baseline.
+*   Risks/blockers:
+    *   None for this change set.
