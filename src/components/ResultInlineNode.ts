@@ -53,20 +53,52 @@ export const ResultInlineNode = Node.create({
       resultClasses.push("semantic-result-flash");
     }
 
-    const contentNode: any[] = [
-      "span",
-      {
-        class: resultClasses.join(" "),
-        "data-result": value,
-        "data-source-line-id": sourceLineId,
-        "data-source-line": sourceLine > 0 ? String(sourceLine) : "",
-        "data-source-label": sourceLabel,
-        title: value,
-        "aria-label": value,
-        draggable: "true",
-      },
-      0,
-    ];
+    const contentNode: any[] = isError
+      ? [
+          "span",
+          {
+            class: resultClasses.join(" "),
+            "data-result": value,
+            "data-source-line-id": sourceLineId,
+            "data-source-line": sourceLine > 0 ? String(sourceLine) : "",
+            "data-source-label": sourceLabel,
+            title: value,
+            "aria-label": value,
+            draggable: "true",
+          },
+          0,
+        ]
+      : [
+          "span",
+          {
+            class: resultClasses.join(" "),
+            "data-result": value,
+            "data-result-value": value,
+            "data-chip-kind": "trigger",
+            "data-source-line-id": sourceLineId,
+            "data-source-line": sourceLine > 0 ? String(sourceLine) : "",
+            "data-source-label": sourceLabel,
+            title: value,
+            "aria-label": value,
+            draggable: "true",
+          },
+          ["span", { class: "semantic-result-value" }, 0],
+          [
+            "span",
+            { class: "semantic-result-actions" },
+            [
+              "button",
+              {
+                class: "semantic-result-action semantic-result-copy",
+                type: "button",
+                draggable: "false",
+                "aria-label": "Copy result value",
+                title: "Copy value",
+              },
+              "",
+            ],
+          ],
+        ];
 
     return [
       "span",

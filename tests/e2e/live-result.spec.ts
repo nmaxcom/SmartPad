@@ -185,6 +185,28 @@ test.describe("Live Result", () => {
     expect(clipboardText.trim()).toBe("12");
   });
 
+  test("triggered result chips share hover copy affordance and copied feedback", async ({ page }) => {
+    await page.context().grantPermissions(["clipboard-write", "clipboard-read"]);
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      editor.commands.setContent("3*4=>");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    const triggerChip = page.locator(".ProseMirror p").first().locator(".semantic-result-display");
+    await expect(triggerChip).toBeVisible();
+    await triggerChip.hover();
+    await page.waitForTimeout(220);
+
+    const copyButton = triggerChip.locator(".semantic-result-copy");
+    await expect(copyButton).toBeVisible();
+    await copyButton.click();
+
+    const clipboardText = await page.evaluate(async () => navigator.clipboard.readText());
+    expect(clipboardText.trim()).toBe("12");
+  });
+
   test("keeps live-result rows visually aligned without changing row height", async ({
     page,
   }) => {

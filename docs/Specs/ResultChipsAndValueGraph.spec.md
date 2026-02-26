@@ -180,20 +180,21 @@ Guardrails:
 2. Normal line/multi-line copy must keep native editor behavior (no single-chip clipboard hijack).
 3. Pasting rich SmartPad content with chips should preserve chips and linked behavior.
 
-### 5.4 Live result hover actions
+### 5.4 Result-chip hover actions (live + trigger)
 
 Flow:
 
-1. Hover a live result chip.
+1. Hover a live or trigger result chip.
 2. Chip extends to the right and reveals a single inline copy-value icon.
 3. Copy icon click copies the rendered value and briefly sets copied feedback state on the chip.
 4. Dragging the chip itself still starts result-reference drag/drop.
 
 Guardrails:
 
-1. Hover actions apply only to live result chips, not blocked/error chips.
+1. Hover actions apply to live and trigger result chips, not blocked/error chips.
 2. Value used for copy/drag payload must remain the result value (icons must not pollute chip text payload).
 3. Copy icon click must not trigger drag session start.
+4. Live and trigger chips must share the same interaction capability contract (copy, drag/drop insert, visual affordances), differing only by surfacing source metadata.
 
 ---
 

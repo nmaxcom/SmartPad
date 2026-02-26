@@ -19,7 +19,8 @@ const REF_TRACE_API_INSTALLED = "__SP_REF_TRACE_API_INSTALLED";
 const REF_TRACE_MAX_ENTRIES = 600;
 const RESULT_DRAG_ACTIVE_WINDOW_FLAG = "__SP_RESULT_CHIP_DRAG_ACTIVE";
 const DROP_TARGET_AFTER_CLASS = "sp-chip-drop-target-after";
-const DROP_BOUNDARY_BAND_PX = 14;
+const DROP_INLINE_CARET_CLASS = "sp-chip-drop-inline-caret";
+const DROP_BOUNDARY_BAND_PX = 18;
 const LAST_LINE_DROP_EXTRA_PX = 56;
 const COPY_FEEDBACK_MS = 800;
 
@@ -486,6 +487,14 @@ const resolveBoundaryDropTarget = (view: any, event: DragEvent): LineBoundaryDro
   return candidates[0].target;
 };
 
+const resolveInlineDropPos = (view: any, event: DragEvent): number | null => {
+  const coords = view.posAtCoords({ left: event.clientX, top: event.clientY });
+  if (typeof coords?.pos !== "number") {
+    return null;
+  }
+  return Math.max(1, Math.min(coords.pos, view.state.doc.content.size));
+};
+
 const normalizeChipText = (value: string): string => String(value || "").replace(/\s+/g, " ").trim();
 
 const resolveDisplayedResultValue = (target: HTMLElement): string => {
@@ -773,6 +782,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
     let clearHighlightTimer: ReturnType<typeof setTimeout> | null = null;
     let activeDragPayload: ReferencePayload | null = null;
     let activeBoundaryDropTarget: LineBoundaryDropTarget | null = null;
+    let activeInlineDropPos: number | null = null;
     const clearDropTargetIndicator = (view: any) => {
       view.dom
         .querySelectorAll(`p.${DROP_TARGET_AFTER_CLASS}`)
@@ -787,6 +797,23 @@ export const ResultReferenceInteractionExtension = Extension.create({
       if (!paragraph) return;
       paragraph.classList.add(DROP_TARGET_AFTER_CLASS);
       activeBoundaryDropTarget = target;
+    };
+    const setInlineDropIndicator = (view: any, pos: number | null) => {
+      const normalizedPos =
+        typeof pos === "number" && Number.isFinite(pos)
+          ? Math.max(1, Math.min(pos, view.state.doc.content.size))
+          : null;
+      if (activeInlineDropPos === normalizedPos) {
+        return;
+      }
+      activeInlineDropPos = normalizedPos;
+      const tr = view.state.tr;
+      tr.setMeta(HIGHLIGHT_REFRESH_META, Date.now());
+      tr.setMeta("addToHistory", false);
+      view.dispatch(tr);
+    };
+    const clearInlineDropIndicator = (view: any) => {
+      setInlineDropIndicator(view, null);
     };
     const clearDragSession = () => {
       activeDragPayload = null;
@@ -885,9 +912,27 @@ export const ResultReferenceInteractionExtension = Extension.create({
             clearHighlightedSource(view);
           };
 
-            const handleReferenceClickHighlight = (event: Event) => {
+          const handleReferenceClickHighlight = (event: Event) => {
             const target = getEventElement(event.target);
-            const referenceEl = target?.closest(REFERENCE_SELECTOR) as HTMLElement | null;
+            if (!target) return;
+            const copyAction = target.closest(
+              ".semantic-result-copy, .semantic-live-result-copy"
+            ) as HTMLElement | null;
+            if (copyAction) {
+              const resultEl = resolveResultElementFromTarget(copyAction);
+              if (resultEl) {
+                const copyValue = resolveDisplayedResultValue(resultEl);
+                void writeTextToClipboard(copyValue).then((copied) => {
+                  if (copied || !!copyValue) {
+                    showCopyFeedback(resultEl);
+                  }
+                });
+              }
+              event.preventDefault();
+              event.stopPropagation();
+              return;
+            }
+            const referenceEl = target.closest(REFERENCE_SELECTOR) as HTMLElement | null;
             if (!referenceEl) return;
             const sourceLineId = String(
               referenceEl.getAttribute("data-source-line-id") || ""
@@ -913,26 +958,47 @@ export const ResultReferenceInteractionExtension = Extension.create({
               }
               clearDragSession();
               clearDropTargetIndicator(view);
+              clearInlineDropIndicator(view);
               clearHighlightedSource(view);
             },
           };
         },
         props: {
           decorations: (state) => {
-            if (!highlightedSource) {
+            const decorations: Decoration[] = [];
+            if (highlightedSource) {
+              const sourceLineId = String(highlightedSource.sourceLineId || "").trim() || null;
+              const sourceLine = Number(highlightedSource.sourceLine || 0);
+              const range = getSourceHighlightRange(state.doc, sourceLineId, sourceLine);
+              if (range) {
+                decorations.push(
+                  Decoration.node(range.from, range.to, {
+                    class: SOURCE_LINE_HIGHLIGHT_CLASS,
+                  })
+                );
+              }
+            }
+
+            if (typeof activeInlineDropPos === "number") {
+              const inlinePos = Math.max(1, Math.min(activeInlineDropPos, state.doc.content.size));
+              decorations.push(
+                Decoration.widget(
+                  inlinePos,
+                  () => {
+                    const caret = document.createElement("span");
+                    caret.className = DROP_INLINE_CARET_CLASS;
+                    caret.setAttribute("aria-hidden", "true");
+                    return caret;
+                  },
+                  { side: -1 }
+                )
+              );
+            }
+
+            if (decorations.length === 0) {
               return null;
             }
-            const sourceLineId = String(highlightedSource.sourceLineId || "").trim() || null;
-            const sourceLine = Number(highlightedSource.sourceLine || 0);
-            const range = getSourceHighlightRange(state.doc, sourceLineId, sourceLine);
-            if (!range) {
-              return null;
-            }
-            return DecorationSet.create(state.doc, [
-              Decoration.node(range.from, range.to, {
-                class: SOURCE_LINE_HIGHLIGHT_CLASS,
-              }),
-            ]);
+            return DecorationSet.create(state.doc, decorations);
           },
           handleTextInput: (view, _from, _to, text) => {
             const range = getReferenceRangeInSelection(view.state);
@@ -1011,7 +1077,19 @@ export const ResultReferenceInteractionExtension = Extension.create({
             mousedown: (view, event) => {
               const target = getEventElement(event.target);
               if (!target) return false;
-              if (target.closest(".semantic-live-result-copy")) {
+              const copyAction = target.closest(
+                ".semantic-result-copy, .semantic-live-result-copy"
+              ) as HTMLElement | null;
+              if (copyAction) {
+                const resultEl = resolveResultElementFromTarget(copyAction);
+                if (resultEl) {
+                  const copyValue = resolveDisplayedResultValue(resultEl);
+                  void writeTextToClipboard(copyValue).then((copied) => {
+                    if (copied || !!copyValue) {
+                      showCopyFeedback(resultEl);
+                    }
+                  });
+                }
                 event.preventDefault();
                 event.stopPropagation();
                 return true;
@@ -1059,13 +1137,15 @@ export const ResultReferenceInteractionExtension = Extension.create({
             click: (view, event) => {
               const target = getEventElement(event.target);
               if (!target) return false;
-              const copyAction = target.closest(".semantic-live-result-copy") as HTMLElement | null;
+              const copyAction = target.closest(
+                ".semantic-result-copy, .semantic-live-result-copy"
+              ) as HTMLElement | null;
               if (copyAction) {
                 const resultEl = resolveResultElementFromTarget(copyAction);
                 if (!resultEl) return false;
                 const copyValue = resolveDisplayedResultValue(resultEl);
                 void writeTextToClipboard(copyValue).then((copied) => {
-                  if (copied) {
+                  if (copied || !!copyValue) {
                     showCopyFeedback(resultEl);
                   }
                 });
@@ -1183,26 +1263,47 @@ export const ResultReferenceInteractionExtension = Extension.create({
               const dragEvent = event as DragEvent;
               if (!dragEvent.dataTransfer && !activeDragPayload) return false;
               const dragTypes = Array.from(dragEvent.dataTransfer?.types || []);
-              const isResultDrag = dragTypes.includes(DND_MIME) || !!activeDragPayload;
+              const hasMimePayload = Boolean(dragEvent.dataTransfer?.getData(DND_MIME));
+              const windowDragActive =
+                typeof window !== "undefined" &&
+                Boolean((window as any)[RESULT_DRAG_ACTIVE_WINDOW_FLAG]);
+              const isResultDrag =
+                dragTypes.includes(DND_MIME) ||
+                hasMimePayload ||
+                !!activeDragPayload ||
+                windowDragActive;
               if (!isResultDrag) {
                 clearDropTargetIndicator(view);
+                clearInlineDropIndicator(view);
                 return false;
               }
               dragEvent.preventDefault();
               dragEvent.dataTransfer.dropEffect = "copy";
-              const target = resolveBoundaryDropTarget(view, dragEvent);
-              applyDropTargetIndicator(view, target);
+              const boundaryTarget = resolveBoundaryDropTarget(view, dragEvent);
+              const inlinePos = resolveInlineDropPos(view, dragEvent);
+              if (boundaryTarget && activeInlineDropPos === null) {
+                clearInlineDropIndicator(view);
+                applyDropTargetIndicator(view, boundaryTarget);
+              } else if (typeof inlinePos === "number") {
+                clearDropTargetIndicator(view);
+                setInlineDropIndicator(view, inlinePos);
+              } else if (!boundaryTarget) {
+                clearDropTargetIndicator(view);
+                clearInlineDropIndicator(view);
+              }
               return false;
             },
             dragleave: (view, event) => {
               const dragEvent = event as DragEvent;
               const types = Array.from(dragEvent.dataTransfer?.types || []);
-              if (!types.includes(DND_MIME) && !activeDragPayload) {
+              const hasMimePayload = Boolean(dragEvent.dataTransfer?.getData(DND_MIME));
+              if (!types.includes(DND_MIME) && !hasMimePayload && !activeDragPayload) {
                 return false;
               }
               const related = getEventElement((event as any).relatedTarget || null);
               if (!related || !view.dom.contains(related)) {
                 clearDropTargetIndicator(view);
+                clearInlineDropIndicator(view);
               }
               // Keep the drag payload alive until `drop`/`dragend`.
               // `dragleave` often fires with null relatedTarget while still inside the editor.
@@ -1210,14 +1311,17 @@ export const ResultReferenceInteractionExtension = Extension.create({
             },
             dragend: (view) => {
               clearDropTargetIndicator(view);
+              clearInlineDropIndicator(view);
               clearDragSession();
               return false;
             },
             drop: (view, event) => {
               if (!event.dataTransfer && !activeDragPayload) return false;
+              const inlineDropPos = activeInlineDropPos;
               const boundaryTarget =
                 activeBoundaryDropTarget || resolveBoundaryDropTarget(view, event as DragEvent);
               clearDropTargetIndicator(view);
+              clearInlineDropIndicator(view);
               const raw = event.dataTransfer?.getData(DND_MIME) || "";
               try {
                 const payload = raw
@@ -1228,16 +1332,16 @@ export const ResultReferenceInteractionExtension = Extension.create({
                   return false;
                 }
                 const insertMode = getChipInsertMode();
-                const insertedCursor = boundaryTarget
-                  ? insertReferenceAfterBoundary(view, payload, boundaryTarget, insertMode)
-                  : (() => {
-                      const coords = view.posAtCoords({
-                        left: event.clientX,
-                        top: event.clientY,
-                      });
-                      const insertionPos = coords?.pos ?? view.state.selection.from;
-                      return insertReferenceAt(view, payload, insertionPos, insertMode);
-                    })();
+                const insertedCursor =
+                  typeof inlineDropPos === "number"
+                    ? insertReferenceAt(view, payload, inlineDropPos, insertMode)
+                    : boundaryTarget
+                      ? insertReferenceAfterBoundary(view, payload, boundaryTarget, insertMode)
+                      : (() => {
+                          const inlinePos = resolveInlineDropPos(view, event as DragEvent);
+                          const insertionPos = inlinePos ?? view.state.selection.from;
+                          return insertReferenceAt(view, payload, insertionPos, insertMode);
+                        })();
                 if (typeof insertedCursor === "number") {
                   postInsertCursor = insertedCursor;
                   consumeResultClick = true;

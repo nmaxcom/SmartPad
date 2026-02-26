@@ -11,6 +11,7 @@ const dispatchResultDrop = async (
     dropWellBelowLastLine?: boolean;
     dropAfterLineIndex?: number;
     stripTargetLineId?: boolean;
+    phase?: "dragover" | "drop" | "both";
   } = {}
 ) => {
   await page.evaluate(
@@ -22,6 +23,7 @@ const dispatchResultDrop = async (
       dropWellBelowLastLine,
       dropAfterLineIndex,
       stripTargetLineId,
+      phase,
     }) => {
     const paragraphs = Array.from(document.querySelectorAll(".ProseMirror p")) as HTMLElement[];
     const sourceLine = paragraphs[sourceLineIndex || 0] || paragraphs[0];
@@ -61,7 +63,7 @@ const dispatchResultDrop = async (
       const rect = afterLine.getBoundingClientRect();
       dropTarget = afterLine;
       clientX = Math.max(rect.left + 24, rect.right - 10);
-      clientY = rect.bottom + 8;
+      clientY = rect.bottom + 2;
     } else if (dropNearLastLineBottom) {
       const lastLine = paragraphs[paragraphs.length - 1];
       if (!lastLine) return;
@@ -86,24 +88,45 @@ const dispatchResultDrop = async (
       clientY = rect.top + Math.max(8, rect.height * 0.5);
     }
 
-    dropTarget.dispatchEvent(
-      new DragEvent("dragover", {
+    const resolvedPhase = phase || "both";
+    (window as any).__SP_RESULT_CHIP_DRAG_ACTIVE = true;
+    chip.dispatchEvent(
+      new DragEvent("dragstart", {
         bubbles: true,
         cancelable: true,
         dataTransfer: dt,
-        clientX,
-        clientY,
       })
     );
-    dropTarget.dispatchEvent(
-      new DragEvent("drop", {
+    if (resolvedPhase === "dragover" || resolvedPhase === "both") {
+      dropTarget.dispatchEvent(
+        new DragEvent("dragover", {
+          bubbles: true,
+          cancelable: true,
+          dataTransfer: dt,
+          clientX,
+          clientY,
+        })
+      );
+    }
+    if (resolvedPhase === "drop" || resolvedPhase === "both") {
+      dropTarget.dispatchEvent(
+        new DragEvent("drop", {
+          bubbles: true,
+          cancelable: true,
+          dataTransfer: dt,
+          clientX,
+          clientY,
+        })
+      );
+    }
+    chip.dispatchEvent(
+      new DragEvent("dragend", {
         bubbles: true,
         cancelable: true,
         dataTransfer: dt,
-        clientX,
-        clientY,
       })
     );
+    (window as any).__SP_RESULT_CHIP_DRAG_ACTIVE = false;
     },
     options
   );

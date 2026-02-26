@@ -86,6 +86,18 @@
   z-index: 5;
 }
 
+.editor-content .sp-chip-drop-inline-caret {
+  display: inline-block;
+  width: 0;
+  height: 1.16em;
+  margin: -0.04em 1px;
+  vertical-align: text-bottom;
+  border-left: 3px solid rgba(255, 255, 255, 0.96);
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.28);
+  pointer-events: none;
+}
+
 .editor-content p.semantic-source-line-highlight {
   background: color-mix(in srgb, var(--syntax-result-bg) 72%, transparent);
   border-radius: 6px;
@@ -353,11 +365,13 @@ body.number-scrubbing * {
     box-shadow 0.16s ease;
 }
 
+.semantic-result-value,
 .semantic-live-result-value {
   display: inline-block;
   min-width: 0;
 }
 
+.semantic-result-actions,
 .semantic-live-result-actions {
   display: inline-flex;
   align-items: center;
@@ -376,6 +390,8 @@ body.number-scrubbing * {
     transform 0.18s ease;
 }
 
+.semantic-result-display:hover .semantic-result-actions,
+.semantic-result-display:focus-within .semantic-result-actions,
 .semantic-live-result-display:hover .semantic-live-result-actions,
 .semantic-live-result-display:focus-within .semantic-live-result-actions {
   max-width: 24px;
@@ -385,6 +401,7 @@ body.number-scrubbing * {
   pointer-events: auto;
 }
 
+.semantic-result-action,
 .semantic-live-result-action {
   border: 0;
   width: 18px;
@@ -400,17 +417,27 @@ body.number-scrubbing * {
   background: transparent;
 }
 
+.semantic-result-action::before,
+.semantic-live-result-action::before {
+  content: "⧉";
+  font-size: 15px;
+  line-height: 1;
+}
+
+.semantic-result-copy,
 .semantic-live-result-copy {
   cursor: pointer;
   padding: 0;
   pointer-events: auto;
 }
 
+.semantic-result-copy:hover,
 .semantic-live-result-copy:hover {
   color: var(--color-text-primary);
   background: transparent;
 }
 
+.semantic-result-display[data-copy-state="copied"] .semantic-result-copy,
 .semantic-live-result-display[data-copy-state="copied"] .semantic-live-result-copy {
   color: var(--color-teal);
   background: transparent;

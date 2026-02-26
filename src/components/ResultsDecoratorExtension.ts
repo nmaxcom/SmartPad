@@ -194,6 +194,7 @@ export const ResultsDecoratorExtension = Extension.create({
                         span.setAttribute("contenteditable", "false");
                         span.setAttribute("data-result", liveText);
                         span.setAttribute("data-result-value", liveText);
+                        span.setAttribute("data-chip-kind", "live");
                         span.setAttribute("data-source-line-id", info.lineId || "");
                         span.setAttribute("data-source-line", String(i));
                         span.setAttribute("data-source-label", sourceLabel);
@@ -201,19 +202,20 @@ export const ResultsDecoratorExtension = Extension.create({
                         span.setAttribute("aria-label", liveText);
                         span.setAttribute("draggable", "true");
                         const value = document.createElement("span");
-                        value.className = "semantic-live-result-value";
+                        value.className = "semantic-result-value semantic-live-result-value";
                         value.textContent = liveText;
 
                         const actions = document.createElement("span");
-                        actions.className = "semantic-live-result-actions";
+                        actions.className = "semantic-result-actions semantic-live-result-actions";
 
                         const copyButton = document.createElement("button");
-                        copyButton.className = "semantic-live-result-action semantic-live-result-copy";
+                        copyButton.className =
+                          "semantic-result-action semantic-result-copy semantic-live-result-action semantic-live-result-copy";
                         copyButton.type = "button";
                         copyButton.setAttribute("draggable", "false");
-                        copyButton.setAttribute("aria-label", "Copy live result value");
+                        copyButton.setAttribute("aria-label", "Copy result value");
                         copyButton.setAttribute("title", "Copy value");
-                        copyButton.textContent = "⧉";
+                        copyButton.textContent = "";
 
                         actions.appendChild(copyButton);
                         span.appendChild(value);

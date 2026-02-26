@@ -3380,3 +3380,87 @@
     *   Confirmed no pre-existing dedicated quick-tour template hardening item in backlog before adding the new record.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-26-17
+
+*   Timestamp: 2026-02-26 19:34:24 CET (2026-02-26 18:34:24 UTC)
+*   Summary:
+    *   User requested current todos.
+    *   Assistant reviewed backlog focus settings and prepared pending items with active lane first.
+*   User directives:
+    *   "list todos"
+*   Decisions:
+    *   Report pending `feature` lane items first because `aidocs/TODO_BACKLOG.md` sets active lane to `feature`.
+*   Artifacts:
+    *   `aidocs/TODO_BACKLOG.md` (read)
+    *   `aidocs/TODO_SYSTEM.md` (read)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Confirmed active lane from backlog header before preparing response.
+*   Risks/blockers:
+    *   None.
+
+## Entry J-2026-02-26-18
+
+*   Timestamp: 2026-02-26 19:37:40 CET (2026-02-26 18:37:40 UTC)
+*   Summary:
+    *   User requested work on feature todos `T-2026-02-26-06` and `T-2026-02-26-07` and asked for clarifying questions before planning.
+    *   Assistant reviewed current chip/render/interaction implementation and identified concrete parity + drag-preview gaps.
+*   User directives:
+    *   "lets work on 3 and 4"
+    *   "Take a look and ask me any clarifying questions you may have before planning the adequate fixes"
+*   Decisions:
+    *   Gather implementation evidence first, then ask targeted UX/behavior questions before writing a plan.
+*   Artifacts:
+    *   `src/components/ResultsDecoratorExtension.ts` (read)
+    *   `src/components/ResultInlineNode.ts` (read)
+    *   `src/components/ReferenceInlineNode.ts` (read)
+    *   `src/components/ResultReferenceInteractionExtension.ts` (read)
+    *   `src/components/Editor.css` (read)
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md` (read relevant sections)
+    *   `tests/e2e/result-reference.spec.ts` (read relevant sections)
+    *   `tests/e2e/result-reference-drag-only.spec.ts` (read relevant sections)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Verified current behavior from code: live chips include hover copy action; trigger chips do not.
+    *   Verified drag indicator currently uses boundary line class `sp-chip-drop-target-after`; no inline caret preview path exists.
+*   Risks/blockers:
+    *   Final UX details for parity and drag-caret visuals need user confirmation to avoid rework.
+
+## Entry J-2026-02-26-19
+
+*   Timestamp: 2026-02-26 20:31:17 CET (2026-02-26 19:31:17 UTC)
+*   Summary:
+    *   Implemented feature todos `T-2026-02-26-06` and `T-2026-02-26-07` scope for result-chip parity plus drag/drop target-preview foundations.
+    *   Unified live and trigger chip affordances (shared copy action UI class contract, shared copy handler routing, shared payload-safe value extraction) and kept blocked/error chips on existing behavior.
+    *   Added drop-preview support in result-reference interaction flow with inline drop-caret class + boundary-target coordination logic and inline-first insertion priority when inline target is active.
+*   User directives:
+    *   Trigger chips should match live chips.
+    *   Keep blocked/error behavior per current spec.
+    *   Show both inline caret and line-boundary drop previews.
+    *   If inline caret is visible, it should win insertion target.
+    *   Roll out directly (no feature flag).
+*   Decisions:
+    *   Keep one shared action class contract (`semantic-result-*`) while retaining existing live aliases to avoid breaking older selectors.
+    *   Preserve spec policy that blocked/error chips do not get hover copy actions.
+    *   Preserve existing boundary-drop insertion behavior and add inline drop-target state in interaction extension.
+*   Artifacts:
+    *   `src/components/ResultsDecoratorExtension.ts`
+    *   `src/components/ResultInlineNode.ts`
+    *   `src/components/Editor.css`
+    *   `src/components/ResultReferenceInteractionExtension.ts`
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
+    *   `tests/e2e/live-result.spec.ts`
+    *   `tests/e2e/result-reference-drag-only.spec.ts`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   `npx playwright test tests/e2e/live-result.spec.ts tests/e2e/result-reference-drag-only.spec.ts -g "triggered result chips share hover copy affordance and copied feedback|shows copy-only hover action on live result and copy action sets feedback state|dragging a result chip onto a line inserts a reference chip|inserted reference chip uses source result text, not source expression label|native drag uses rendered chip value when data-result attribute is stale|boundary drop between middle lines inserts at that boundary, not at document end"` (11/12 pass; one flaky google-chrome hover-opacity check passed on immediate rerun)
+    *   `npx playwright test tests/e2e/live-result.spec.ts -g "shows copy-only hover action on live result and copy action sets feedback state" --project=google-chrome` (pass)
+    *   `npm run docs:map` (pass)
+    *   `npm run docs:drift` (pass)
+    *   `npm run spec:test` (pass)
+    *   `npm run spec:trust` (pass)
+    *   `npm run verify:changed` (pass)
+    *   `npm run build` (pass)
+*   Risks/blockers:
+    *   Visual indicator assertions for transient dragover preview (`sp-chip-drop-target-after` / `sp-chip-drop-inline-caret`) were unstable under synthetic Playwright dragover dispatch; behavior remains covered by boundary/inline insertion outcome tests.
