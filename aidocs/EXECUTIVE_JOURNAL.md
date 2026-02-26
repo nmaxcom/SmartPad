@@ -3041,3 +3041,57 @@
     *   N/A (content drafting only).
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-26-07
+
+*   Timestamp: 2026-02-26 01:57:19 CET (2026-02-26 00:57:19 UTC)
+*   Summary:
+    *   User shifted from Quick Tour copywriting to debugging syntax failures seen when pasting the generated scenario.
+    *   Assistant performed a pre-implementation diagnosis pass across paste handling, expression parsing, live-result rendering, and plot directive evaluation.
+*   User directives:
+    *   Diagnose likely root causes before implementing fixes.
+    *   Distinguish generator/template mistakes from SmartPad product bugs.
+*   Decisions:
+    *   Treat multiline paste collapse as the primary suspected product bug because downstream unresolved/symbolic explosions are consistent with single-line ingestion.
+    *   Treat `@view` placement/attachment constraints as a second UX/product gap (directive requires a valid expression line immediately above, even when `y=` is provided).
+    *   Prepare a staged fix plan (clipboard normalization priority, plot attach fallback, template lint rules, and regression tests) before coding.
+*   Artifacts:
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Read key code paths: `src/components/Editor.tsx`, `src/components/pasteTransforms.ts`, `src/eval/plotViewEvaluator.ts`, `src/parsing/astParser.ts`, `src/eval/variableEvaluatorV2.ts`, `src/units/unitsnetAstEvaluator.ts`.
+    *   Ran targeted unit suites (all pass): `tests/unit/pasteTransforms.test.ts`, `tests/unit/variableParser.test.ts`, `tests/unit/astParser.test.ts`, `tests/unit/liveResultPreview.test.ts`.
+*   Risks/blockers:
+    *   Existing tests do not currently cover markdown-vs-plain clipboard priority with multiline payload mismatch.
+
+## Entry J-2026-02-26-07
+
+*   Timestamp: 2026-02-26 01:57:22 CET (2026-02-26 00:57:22 UTC)
+*   Summary:
+    *   User requested implementation of a hybrid text-caret + horizontal-scrub cursor cue for scrubbable numbers.
+    *   Implemented custom cursor assets and wired hover/drag cursor states into editor scrubbing styles.
+*   User directives:
+    *   Create a ready-to-use hybrid cursor solution in the project.
+*   Decisions:
+    *   Ship two SVG cursor variants (`default` hover and `active` drag) with CSS fallback to native cursors.
+    *   Keep change scoped to UI affordance only (no parser/scrubber logic changes).
+*   Artifacts:
+    *   `public/cursors/ibeam-ew.svg`
+    *   `public/cursors/ibeam-ew-active.svg`
+    *   `src/components/Editor.css`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   `npm run verify:changed` (pass)
+    *   `npm run build` (pass)
+    *   `npx playwright test tests/e2e/grouped-input-and-date-settings.spec.ts` (pass)
+    *   `npx playwright test tests/e2e/user-issues-fixed.spec.ts -g "scrubbing keeps the symbol"` (fails precondition assertion: expected `$10`, received `4`, before scrub interaction)
+*   Pending items:
+    *   ID: P-2026-02-26-01
+    *   Task: Investigate flaky/broken precondition in currency scrubbing e2e test (`user-issues-fixed.spec.ts`), unrelated to cursor-only styling change.
+    *   Owner: Assistant
+    *   Created: 2026-02-26
+    *   Due: TBD
+    *   Status: todo
+    *   Context: Scrub regression guard currently fails because initial result setup differs from test expectation.
+    *   Next: Reproduce test with trace, confirm intended baseline expression/result, then update fixture or expectation and rerun targeted e2e.
+*   Risks/blockers:
+    *   One existing e2e test currently red on baseline setup; not introduced by this cursor-only change.
