@@ -92,6 +92,21 @@ Do this automatically; user should not have to request it.
 - Treat unrelated modified/untracked files as expected in multi-agent workflows; do not ask for permission solely because the repo is dirty.
 - Stage explicitly by file path (no broad staging commands) so only assistant-authored changes for the active task are committed.
 
+## Strict Commit Scope Policy
+- Always commit only assistant-authored files for the current task.
+- Never use broad staging or commit flags:
+  - forbidden: `git add .`
+  - forbidden: `git add -A`
+  - forbidden: `git commit -a`
+- Always stage explicit file paths only.
+- Ignore unrelated modified/untracked files by default and continue execution.
+- Do not ask for permission solely due to unrelated dirty files.
+- Ask the user only when:
+  - destructive action is required, or
+  - same-hunk conflicts in a required file cannot be resolved safely.
+- If unexpected files appear, exclude them from staging unless explicitly requested.
+- In final reports, include committed file list and state that unrelated workspace changes were intentionally not staged.
+
 ## Concurrent Agent Worktree Policy
 - Do not block on unrelated dirty files or untracked files.
 - Continue execution by scoping edits, tests, and git operations to files touched for the active task.

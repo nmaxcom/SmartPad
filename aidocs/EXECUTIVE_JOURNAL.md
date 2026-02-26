@@ -3315,3 +3315,30 @@
     *   Next: Reproduce with trace and align fixture/expectation baseline.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-26-15
+
+*   Timestamp: 2026-02-26 18:07:01 CET (2026-02-26 17:07:01 UTC)
+*   Summary:
+    *   User approved adding a stricter repository rule to enforce path-scoped commits only.
+    *   Added an explicit `Strict Commit Scope Policy` section to `AGENTS.md`.
+*   User directives:
+    *   Apply the proposed repo rule changes.
+*   Decisions:
+    *   Forbid broad staging/commit commands and require explicit path staging for all assistant commits.
+*   Artifacts:
+    *   `AGENTS.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Documentation-only policy update; no runtime behavior changes.
+*   Pending items:
+    *   ID: P-2026-02-26-01
+    *   Task: Investigate flaky/broken precondition in currency scrubbing e2e test (`user-issues-fixed.spec.ts`), unrelated to current policy update.
+    *   Owner: Assistant
+    *   Created: 2026-02-26
+    *   Due: TBD
+    *   Status: todo
+    *   Context: Existing test can fail before scrub interaction begins.
+    *   Next: Reproduce with trace and align fixture/expectation baseline.
+*   Risks/blockers:
+    *   None.
