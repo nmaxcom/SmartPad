@@ -3342,3 +3342,23 @@
     *   Next: Reproduce with trace and align fixture/expectation baseline.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-26-16
+
+*   Timestamp: 2026-02-26 18:11:50 CET (2026-02-26 17:11:50 UTC)
+*   Summary:
+    *   User requested two new todos focused on result-chip UX parity and drag-drop insertion visibility.
+    *   Added one feature task for live-result vs trigger-result chip equivalence and one feature task for explicit drag caret preview while dropping.
+*   User directives:
+    *   Live-result and trigger-result chips must be indistinguishable in features/looks (copy, drag/drop, insert, all shared actions), differing only by trigger reason.
+    *   Spec and test coverage must make this explicit, including visual testing.
+    *   Dragging chips must show a caret/indicator for exact insertion location to avoid blind drops.
+*   Decisions:
+    *   Track parity and drop-caret visibility as separate high-priority feature tasks with explicit spec + visual verification requirements.
+*   Artifacts:
+    *   `aidocs/TODO_BACKLOG.md` (added `T-2026-02-26-06`, `T-2026-02-26-07`)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Confirmed both new todos include concrete end-state scope, explicit deliverables, and at least one verification step.
+*   Risks/blockers:
+    *   None.
