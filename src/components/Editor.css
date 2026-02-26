@@ -345,6 +345,82 @@ body.number-scrubbing * {
 .semantic-live-result-display {
   margin-left: 1ch;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  gap: 0;
+  transition:
+    padding-right 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.semantic-live-result-value {
+  display: inline-block;
+  min-width: 0;
+}
+
+.semantic-live-result-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 3px;
+  max-width: 0;
+  margin-left: 0;
+  opacity: 0;
+  transform: translateX(-6px);
+  pointer-events: none;
+  overflow: hidden;
+  transition:
+    max-width 0.18s ease,
+    margin-left 0.18s ease,
+    opacity 0.12s ease,
+    transform 0.18s ease;
+}
+
+.semantic-live-result-display:hover .semantic-live-result-actions,
+.semantic-live-result-display:focus-within .semantic-live-result-actions {
+  max-width: 42px;
+  margin-left: 6px;
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.semantic-live-result-action {
+  border: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  background: color-mix(in srgb, var(--color-surface) 72%, transparent 28%);
+}
+
+.semantic-live-result-copy {
+  cursor: pointer;
+  padding: 0;
+  pointer-events: auto;
+}
+
+.semantic-live-result-copy:hover {
+  color: var(--color-text-primary);
+  background: color-mix(in srgb, var(--color-accent-soft) 55%, var(--color-surface) 45%);
+}
+
+.semantic-live-result-drag {
+  cursor: grab;
+  user-select: none;
+  pointer-events: none;
+  letter-spacing: -0.02em;
+}
+
+.semantic-live-result-display[data-copy-state="copied"] .semantic-live-result-copy {
+  color: var(--color-teal);
+  background: color-mix(in srgb, var(--color-teal-soft) 60%, var(--color-surface) 40%);
 }
 
 .semantic-live-blocked-display {

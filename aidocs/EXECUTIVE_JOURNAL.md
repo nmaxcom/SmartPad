@@ -3248,3 +3248,37 @@
     *   `npm run verify:changed` (pass)
 *   Risks/blockers:
     *   Paste heuristic currently optimizes newline fidelity; richer markdown fidelity rules (lists/tables emphasis) can be tuned later if needed.
+
+## Entry J-2026-02-26-13
+
+*   Timestamp: 2026-02-26 14:24:04 CET (2026-02-26 13:24:04 UTC)
+*   Summary:
+    *   User requested live-result hover UI update: chip should extend right and show copy + drag icons.
+    *   Implemented hover actions on live result chips, added copy-value click behavior, and preserved drag-to-reference behavior.
+*   User directives:
+    *   Extend live result chip bg on hover and show two icons (copy value and drag intent).
+*   Decisions:
+    *   Render action cluster inside live-result chip with animated reveal on hover/focus.
+    *   Handle copy icon in result interaction extension so copy click does not start drag.
+    *   Preserve drag payload fidelity by prioritizing explicit result-value attributes over visible text that now includes icons.
+*   Artifacts:
+    *   `src/components/ResultsDecoratorExtension.ts`
+    *   `src/components/ResultReferenceInteractionExtension.ts`
+    *   `src/components/Editor.css`
+    *   `tests/e2e/live-result.spec.ts`
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   `npx playwright test tests/e2e/live-result.spec.ts -g "hover actions on live result and copy action sets feedback state"` (pass)
+    *   `npm run verify:changed` run before commit referenced earlier range and failed for unrelated committed files; rerun required after this commit.
+*   Pending items:
+    *   ID: P-2026-02-26-01
+    *   Task: Investigate flaky/broken precondition in currency scrubbing e2e test (`user-issues-fixed.spec.ts`), unrelated to current live-result hover-action work.
+    *   Owner: Assistant
+    *   Created: 2026-02-26
+    *   Due: TBD
+    *   Status: todo
+    *   Context: Existing test can fail before scrub interaction begins.
+    *   Next: Reproduce with trace and align fixture/expectation baseline.
+*   Risks/blockers:
+    *   None.

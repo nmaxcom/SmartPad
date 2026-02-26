@@ -131,6 +131,49 @@ test.describe("Live Result", () => {
     expect(marginLeftPx).toBeGreaterThan(0);
   });
 
+  test("shows hover actions on live result and copy action sets feedback state", async ({ page }) => {
+    await page.context().grantPermissions(["clipboard-write", "clipboard-read"]);
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("3*4");
+    await waitForUIRenderComplete(page);
+
+    const liveChip = page.locator(".semantic-live-result-display").first();
+    await expect(liveChip).toBeVisible();
+
+    const actionsBeforeHover = await liveChip.locator(".semantic-live-result-actions").evaluate((el) => {
+      const style = window.getComputedStyle(el as HTMLElement);
+      return {
+        opacity: Number.parseFloat(style.opacity || "0"),
+        maxWidth: Number.parseFloat(style.maxWidth || "0"),
+      };
+    });
+    expect(actionsBeforeHover.opacity).toBeLessThan(0.2);
+    expect(actionsBeforeHover.maxWidth).toBeLessThan(1);
+
+    await liveChip.hover();
+    await page.waitForTimeout(220);
+    const copyButton = liveChip.locator(".semantic-live-result-copy");
+    const dragIcon = liveChip.locator(".semantic-live-result-drag");
+    await expect(copyButton).toBeVisible();
+    await expect(dragIcon).toBeVisible();
+
+    const actionsAfterHover = await liveChip.locator(".semantic-live-result-actions").evaluate((el) => {
+      const style = window.getComputedStyle(el as HTMLElement);
+      return {
+        opacity: Number.parseFloat(style.opacity || "0"),
+        maxWidth: Number.parseFloat(style.maxWidth || "0"),
+      };
+    });
+    expect(actionsAfterHover.opacity).toBeGreaterThan(0.5);
+    expect(actionsAfterHover.maxWidth).toBeGreaterThan(20);
+
+    await copyButton.click();
+    await expect(liveChip).toHaveAttribute("data-copy-state", "copied");
+    const clipboardText = await page.evaluate(async () => navigator.clipboard.readText());
+    expect(clipboardText.trim()).toBe("12");
+  });
+
   test("keeps live-result rows visually aligned without changing row height", async ({
     page,
   }) => {

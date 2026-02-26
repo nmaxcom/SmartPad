@@ -21,6 +21,7 @@ const RESULT_DRAG_ACTIVE_WINDOW_FLAG = "__SP_RESULT_CHIP_DRAG_ACTIVE";
 const DROP_TARGET_AFTER_CLASS = "sp-chip-drop-target-after";
 const DROP_BOUNDARY_BAND_PX = 14;
 const LAST_LINE_DROP_EXTRA_PX = 56;
+const COPY_FEEDBACK_MS = 800;
 
 interface ReferencePayload {
   sourceLineId: string;
@@ -488,6 +489,12 @@ const resolveBoundaryDropTarget = (view: any, event: DragEvent): LineBoundaryDro
 const normalizeChipText = (value: string): string => String(value || "").replace(/\s+/g, " ").trim();
 
 const resolveDisplayedResultValue = (target: HTMLElement): string => {
+  const explicitResultValue = normalizeChipText(String(target.getAttribute("data-result-value") || ""));
+  if (explicitResultValue) return explicitResultValue;
+  const attributeResult = normalizeChipText(String(target.getAttribute("data-result") || ""));
+  if (attributeResult && target.classList.contains("semantic-live-result-display")) {
+    return attributeResult;
+  }
   // Prefer the literal rendered chip text so inserted references match exactly
   // what the user sees, even if attributes are stale.
   const visibleText = normalizeChipText(target.innerText || target.textContent || "");
@@ -497,6 +504,49 @@ const resolveDisplayedResultValue = (target: HTMLElement): string => {
   const titleValue = normalizeChipText(String(target.getAttribute("title") || ""));
   if (titleValue) return titleValue;
   return normalizeChipText(String(target.getAttribute("data-result") || ""));
+};
+
+const writeTextToClipboard = async (value: string): Promise<boolean> => {
+  const text = String(value || "");
+  if (!text) return false;
+  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {}
+  }
+  if (typeof document === "undefined") return false;
+  try {
+    const fallback = document.createElement("textarea");
+    fallback.value = text;
+    fallback.setAttribute("readonly", "true");
+    fallback.style.position = "fixed";
+    fallback.style.opacity = "0";
+    fallback.style.pointerEvents = "none";
+    document.body.appendChild(fallback);
+    fallback.focus();
+    fallback.select();
+    const copied = document.execCommand("copy");
+    fallback.remove();
+    return copied;
+  } catch {
+    return false;
+  }
+};
+
+const copyFeedbackTimers = new WeakMap<HTMLElement, number>();
+const showCopyFeedback = (resultEl: HTMLElement) => {
+  if (typeof window === "undefined") return;
+  const existing = copyFeedbackTimers.get(resultEl);
+  if (typeof existing === "number") {
+    window.clearTimeout(existing);
+  }
+  resultEl.setAttribute("data-copy-state", "copied");
+  const timer = window.setTimeout(() => {
+    resultEl.removeAttribute("data-copy-state");
+    copyFeedbackTimers.delete(resultEl);
+  }, COPY_FEEDBACK_MS);
+  copyFeedbackTimers.set(resultEl, timer);
 };
 
 const resolveResultElementFromTarget = (target: HTMLElement | null): HTMLElement | null => {
@@ -961,6 +1011,11 @@ export const ResultReferenceInteractionExtension = Extension.create({
             mousedown: (view, event) => {
               const target = getEventElement(event.target);
               if (!target) return false;
+              if (target.closest(".semantic-live-result-copy")) {
+                event.preventDefault();
+                event.stopPropagation();
+                return true;
+              }
               const referenceEl = target.closest(REFERENCE_SELECTOR) as HTMLElement | null;
               if (referenceEl) {
                 const payload = payloadFromElement(referenceEl);
@@ -1004,6 +1059,20 @@ export const ResultReferenceInteractionExtension = Extension.create({
             click: (view, event) => {
               const target = getEventElement(event.target);
               if (!target) return false;
+              const copyAction = target.closest(".semantic-live-result-copy") as HTMLElement | null;
+              if (copyAction) {
+                const resultEl = resolveResultElementFromTarget(copyAction);
+                if (!resultEl) return false;
+                const copyValue = resolveDisplayedResultValue(resultEl);
+                void writeTextToClipboard(copyValue).then((copied) => {
+                  if (copied) {
+                    showCopyFeedback(resultEl);
+                  }
+                });
+                event.preventDefault();
+                event.stopPropagation();
+                return true;
+              }
 
               const referenceEl = target.closest(REFERENCE_SELECTOR) as HTMLElement | null;
               if (referenceEl) {
