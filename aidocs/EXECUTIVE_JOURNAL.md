@@ -3494,3 +3494,38 @@
     *   `npm run build` (pass)
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-27-01
+
+*   Timestamp: 2026-02-27 00:03:04 CET (2026-02-26 23:03:04 UTC)
+*   Summary:
+    *   User reported post-fix regressions: drag caret not appearing in real usage, spotty drop insertion, and trigger-result chips selecting text instead of dragging.
+    *   User requested a research-first executive summary with decision-ready options, and reiterated that live and trigger result chips must remain twin behavior/appearance with only activation reason differing.
+    *   Assistant reviewed drag/drop event path, chip DOM/CSS interaction constraints, clipboard/export serializers, and existing test strategy to identify root causes and reliable validation strategy upgrades.
+*   User directives:
+    *   Improve testing reliability (current testing considered weak/defective).
+    *   Evaluate spec change to include visible computed results in exported/copied plain text using parenthesized suffixes.
+    *   Ensure copy-back into SmartPad strips suffix and re-evaluates normally.
+    *   Keep both chip types twins in looks and functionality.
+*   Decisions:
+    *   Root-cause assessment: full-chip drag initiation conflicts with text selection in contenteditable context; this is why trigger chips often select text and fail to start semantic drag.
+    *   Recommended architecture direction: introduce explicit drag handle affordance on both chip types while keeping value text selectable/copyable; preserve identical style/interaction contract across live+trigger chips.
+    *   Testing direction: replace synthetic-only drag tests with pointer-real drag tests (native mouse drag path) plus lightweight runtime drag-state assertions and visual snapshots for indicator visibility.
+    *   Plain-text export/import decision prep: parenthesized readable result suffix is feasible, but deterministic strip-back needs a stricter emitted pattern to avoid removing user-authored parentheses.
+*   Artifacts:
+    *   `src/components/ResultReferenceInteractionExtension.ts` (analysis)
+    *   `src/components/ResultsDecoratorExtension.ts` (analysis)
+    *   `src/components/ResultInlineNode.ts` (analysis)
+    *   `src/components/Editor.tsx` (clipboard serializer analysis)
+    *   `src/components/editorText.ts` (export text analysis)
+    *   `src/App.tsx` (download/export path analysis)
+    *   `src/components/Editor.css` (selection/drag affordance analysis)
+    *   `tests/e2e/result-reference-drag-only.spec.ts` (test strategy analysis)
+    *   `tests/e2e/live-result.spec.ts` (test strategy analysis)
+    *   `tests/e2e/user-issues-fixed.spec.ts` (clipboard behavior analysis)
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md` (spec constraints analysis)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   No code/runtime changes in this research pass; evidence gathered from implementation and test suite behavior mapping.
+*   Risks/blockers:
+    *   If parenthesized export suffix is not encoded with a deterministic marker pattern, paste sanitization can incorrectly strip intentional user-authored parentheses.
