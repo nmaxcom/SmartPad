@@ -96,6 +96,38 @@ const resolveSeriesExpression = (
   return { label, expression: label };
 };
 
+const resolveNearestExpressionNode = (
+  astNodes: ASTNode[] | undefined,
+  line: number
+): ExpressionNode | null => {
+  if (!astNodes || line <= 1) {
+    return null;
+  }
+
+  for (let index = line - 2; index >= 0; index -= 1) {
+    const candidate = astNodes[index];
+    if (!candidate) continue;
+    if (isExpressionNode(candidate)) {
+      return candidate;
+    }
+    if (isCombinedAssignmentNode(candidate)) {
+      return buildExpressionNode(candidate);
+    }
+    if (isVariableAssignmentNode(candidate)) {
+      const rawExpression = candidate.rawValue?.trim();
+      if (!rawExpression) {
+        continue;
+      }
+      const parsed = buildExpressionNodeFromText(rawExpression, candidate.line);
+      if (parsed) {
+        return parsed;
+      }
+    }
+  }
+
+  return null;
+};
+
 export class PlotViewEvaluator implements NodeEvaluator {
   canHandle(node: ASTNode): boolean {
     return isViewDirectiveNode(node);
@@ -103,56 +135,6 @@ export class PlotViewEvaluator implements NodeEvaluator {
 
   evaluate(node: ASTNode, context: EvaluationContext): PlotViewRenderNode | null {
     if (!isViewDirectiveNode(node)) return null;
-
-    const astNodes = context.astNodes;
-    if (!astNodes || node.line <= 1) {
-      return {
-        type: "plotView",
-        line: node.line,
-        originalRaw: node.raw,
-        kind: normalizeKind(node.kind),
-        size: normalizeSize(node.params.size),
-        status: "disconnected",
-        message: "No expression to attach to",
-      };
-    }
-
-    const targetNode = astNodes[node.line - 2];
-    if (!targetNode) {
-      return {
-        type: "plotView",
-        line: node.line,
-        originalRaw: node.raw,
-        kind: normalizeKind(node.kind),
-        size: normalizeSize(node.params.size),
-        status: "disconnected",
-        message: "Expression missing",
-      };
-    }
-
-    let expressionNode: ExpressionNode | null = null;
-    if (isExpressionNode(targetNode)) {
-      expressionNode = targetNode;
-    } else if (isCombinedAssignmentNode(targetNode)) {
-      expressionNode = buildExpressionNode(targetNode);
-    } else if (isVariableAssignmentNode(targetNode)) {
-      const rawExpression = targetNode.rawValue?.trim();
-      if (rawExpression) {
-        expressionNode = buildExpressionNodeFromText(rawExpression, targetNode.line);
-      }
-    }
-
-    if (!expressionNode) {
-      return {
-        type: "plotView",
-        line: node.line,
-        originalRaw: node.raw,
-        kind: normalizeKind(node.kind),
-        size: normalizeSize(node.params.size),
-        status: "disconnected",
-        message: "Expression unavailable",
-      };
-    }
 
     const kind = normalizeKind(node.kind);
     const size = normalizeSize(node.params.size);
@@ -163,11 +145,34 @@ export class PlotViewEvaluator implements NodeEvaluator {
     const yDomain = yDomainRaw ? parsePlotRange(yDomainRaw) || undefined : undefined;
     const yView = yViewRaw ? parsePlotRange(yViewRaw) || undefined : undefined;
     const seriesParam = parseSeriesList(node.params.y);
+    const expressionNode = seriesParam.length
+      ? null
+      : resolveNearestExpressionNode(context.astNodes, node.line);
+    if (!expressionNode && seriesParam.length === 0) {
+      return {
+        type: "plotView",
+        line: node.line,
+        originalRaw: node.raw,
+        kind,
+        size,
+        status: "disconnected",
+        message: "Expression unavailable. Add y=... or define an expression above.",
+        yDomain,
+        yView,
+      };
+    }
+    const resolvedExpressionNode = expressionNode;
+
     const seriesDefinitions = seriesParam.length
       ? seriesParam.map((entry) => resolveSeriesExpression(entry, context))
-      : [{ label: expressionNode.expression, expression: expressionNode.expression }];
+      : [
+          {
+            label: resolvedExpressionNode!.expression,
+            expression: resolvedExpressionNode!.expression,
+          },
+        ];
     const seriesNodes = seriesDefinitions.map((entry) =>
-      buildExpressionNodeFromText(entry.expression, expressionNode.line)
+      buildExpressionNodeFromText(entry.expression, expressionNode?.line || node.line)
     );
     const missingSeries = seriesNodes.findIndex((entry) => !entry);
     if (missingSeries !== -1) {
@@ -188,7 +193,9 @@ export class PlotViewEvaluator implements NodeEvaluator {
     const x =
       xParam ||
       findFirstVariable(safeSeriesNodes[0].components) ||
-      findFirstVariable(expressionNode.components) ||
+      (resolvedExpressionNode
+        ? findFirstVariable(resolvedExpressionNode.components)
+        : null) ||
       undefined;
     const plotSettings = {
       decimalPlaces: context.decimalPlaces,
@@ -243,8 +250,8 @@ export class PlotViewEvaluator implements NodeEvaluator {
         kind,
         x,
         size,
-        expression: safeSeriesNodes[0]?.expression || expressionNode.expression,
-        targetLine: expressionNode.line,
+        expression: safeSeriesNodes[0]?.expression || resolvedExpressionNode?.expression,
+        targetLine: resolvedExpressionNode?.line,
         status: "disconnected",
         message: failedResult?.message || firstResult?.message || "Expression unavailable",
         yDomain,
@@ -259,14 +266,14 @@ export class PlotViewEvaluator implements NodeEvaluator {
       kind,
       x,
       size,
-      expression: safeSeriesNodes[0]?.expression || expressionNode.expression,
+      expression: safeSeriesNodes[0]?.expression || resolvedExpressionNode?.expression,
       series: seriesDefinitions.map((entry, index) => ({
         label: entry.label,
         expression: safeSeriesNodes[index]?.expression || entry.expression,
         data: plotResults[index]?.data,
         currentY: plotResults[index]?.currentY,
       })),
-      targetLine: expressionNode.line,
+      targetLine: resolvedExpressionNode?.line,
       status: firstResult.status,
       message: firstResult.message,
       domain: firstResult.domain,

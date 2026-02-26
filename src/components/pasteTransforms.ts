@@ -18,6 +18,39 @@ export function normalizePastedHTML(html: string): string {
   }
 }
 
+export function selectPastePayload(markdown: string, text: string): string {
+  const normalizedMarkdown = normalizeClipboardText(markdown);
+  const normalizedText = normalizeClipboardText(text);
+
+  if (!normalizedMarkdown) {
+    return normalizedText;
+  }
+  if (!normalizedText) {
+    return normalizedMarkdown;
+  }
+
+  const markdownLineCount = countLogicalLines(normalizedMarkdown);
+  const textLineCount = countLogicalLines(normalizedText);
+  const markdownLooksFlattened = markdownLineCount <= 1 && textLineCount > 1;
+
+  if (markdownLooksFlattened) {
+    return normalizedText;
+  }
+
+  return normalizedMarkdown;
+}
+
+function normalizeClipboardText(value: string): string {
+  return (value || "").replace(/\r\n?/g, "\n");
+}
+
+function countLogicalLines(value: string): number {
+  if (!value) {
+    return 0;
+  }
+  return value.split("\n").length;
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")

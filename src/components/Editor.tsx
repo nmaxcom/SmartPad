@@ -25,7 +25,7 @@ import {
 import { NumberScrubberExtension } from "./NumberScrubberExtension";
 import { ResultsDecoratorExtension } from "./ResultsDecoratorExtension";
 import { VariableHoverExtension } from "./VariableHoverExtension";
-import { normalizePastedHTML } from "./pasteTransforms";
+import { normalizePastedHTML, selectPastePayload } from "./pasteTransforms";
 import { ResultInlineNode } from "./ResultInlineNode";
 import { ReferenceInlineNode } from "./ReferenceInlineNode";
 import { ResultInteractionExtension } from "./ResultInteractionExtension";
@@ -1043,7 +1043,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
           return false;
         }
 
-        const payload = markdown || text || "";
+        const payload = selectPastePayload(markdown, text);
         if (!payload) {
           return false;
         }

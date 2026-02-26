@@ -3214,3 +3214,37 @@
     *   Next: Reproduce with trace and align fixture/expectation baseline.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-26-08
+
+*   Timestamp: 2026-02-26 14:22:34 CET (2026-02-26 13:22:34 UTC)
+*   Summary:
+    *   Implemented two production fixes from the syntax diagnostics thread:
+        * multiline paste now prefers plain text when markdown clipboard data is flattened,
+        * `@view` no longer requires immediate previous-line anchoring and can resolve via explicit `y=` or nearest prior expression fallback.
+*   User directives:
+    *   Proceed with proposed fixes and remove the `@view` anchor rule.
+*   Decisions:
+    *   Added `selectPastePayload()` heuristic in paste transforms and wired editor paste handling to use it.
+    *   Refactored `PlotViewEvaluator` to:
+        * support standalone/unanchored `@view` when `y=` is present,
+        * resolve nearest prior plottable expression when `y` is omitted,
+        * return actionable disconnected guidance when neither source exists.
+    *   Added targeted unit coverage for both behaviors.
+*   Artifacts:
+    *   `src/components/pasteTransforms.ts`
+    *   `src/components/Editor.tsx`
+    *   `src/eval/plotViewEvaluator.ts`
+    *   `tests/unit/pasteTransforms.test.ts`
+    *   `tests/unit/plotViewEvaluator.test.ts` (new)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/pasteTransforms.test.ts tests/unit/plotViewEvaluator.test.ts --runInBand` (pass)
+    *   `npm run build` (pass)
+    *   `npm run docs:map` (pass)
+    *   `npm run docs:drift` (pass)
+    *   `npm run spec:test` (pass)
+    *   `npm run spec:trust` (pass)
+    *   `npm run verify:changed` (pass)
+*   Risks/blockers:
+    *   Paste heuristic currently optimizes newline fidelity; richer markdown fidelity rules (lists/tables emphasis) can be tuned later if needed.

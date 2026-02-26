@@ -1,4 +1,4 @@
-import { normalizePastedHTML } from "../../src/components/pasteTransforms";
+import { normalizePastedHTML, selectPastePayload } from "../../src/components/pasteTransforms";
 
 describe("normalizePastedHTML", () => {
   test("converts pre blocks into paragraphs", () => {
@@ -24,5 +24,21 @@ describe("normalizePastedHTML", () => {
     const result = normalizePastedHTML(html);
 
     expect(result).toBe(html);
+  });
+});
+
+describe("selectPastePayload", () => {
+  test("prefers plain text when markdown collapses multiline input", () => {
+    const markdown = "# line 1 line 2 line 3";
+    const text = "line 1\nline 2\nline 3";
+
+    expect(selectPastePayload(markdown, text)).toBe(text);
+  });
+
+  test("keeps markdown when it already preserves line breaks", () => {
+    const markdown = "# line 1\nline 2";
+    const text = "line 1\nline 2";
+
+    expect(selectPastePayload(markdown, text)).toBe(markdown);
   });
 });
