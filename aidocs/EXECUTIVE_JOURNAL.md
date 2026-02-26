@@ -3187,3 +3187,30 @@
     *   Next: Reproduce with trace and align fixture/expectation baseline.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-26-12
+
+*   Timestamp: 2026-02-26 14:16:37 CET (2026-02-26 13:16:37 UTC)
+*   Summary:
+    *   User requested a full rollback so number scrubbing matches the pre-experiment baseline.
+    *   Reverted all three scrub-affordance commits and resolved journal merge conflicts by keeping existing journal history.
+*   User directives:
+    *   Leave scrubbing as it was before any requested visual changes.
+*   Decisions:
+    *   Use explicit reverts for `9b7ecb02`, `17635a89`, and `e482edb5` to restore baseline behavior.
+*   Artifacts:
+    *   Revert commits: `9d5c7fcb`, `35d889f5`, `cb31cd39`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Verified `src/components/Editor.css` returned to baseline scrub styles (simple hover background + global `ew-resize` while scrubbing).
+*   Pending items:
+    *   ID: P-2026-02-26-01
+    *   Task: Investigate flaky/broken precondition in currency scrubbing e2e test (`user-issues-fixed.spec.ts`), unrelated to rolled-back styling experiments.
+    *   Owner: Assistant
+    *   Created: 2026-02-26
+    *   Due: TBD
+    *   Status: todo
+    *   Context: Existing test can fail before scrub interaction begins.
+    *   Next: Reproduce with trace and align fixture/expectation baseline.
+*   Risks/blockers:
+    *   None.
