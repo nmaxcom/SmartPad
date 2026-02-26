@@ -215,14 +215,7 @@ export const ResultsDecoratorExtension = Extension.create({
                         copyButton.setAttribute("title", "Copy value");
                         copyButton.textContent = "⧉";
 
-                        const dragHint = document.createElement("span");
-                        dragHint.className = "semantic-live-result-action semantic-live-result-drag";
-                        dragHint.setAttribute("aria-hidden", "true");
-                        dragHint.setAttribute("title", "Drag result chip");
-                        dragHint.textContent = "⋮⋮";
-
                         actions.appendChild(copyButton);
-                        actions.appendChild(dragHint);
                         span.appendChild(value);
                         span.appendChild(actions);
                         container.appendChild(span);

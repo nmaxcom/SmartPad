@@ -131,7 +131,9 @@ test.describe("Live Result", () => {
     expect(marginLeftPx).toBeGreaterThan(0);
   });
 
-  test("shows hover actions on live result and copy action sets feedback state", async ({ page }) => {
+  test("shows copy-only hover action on live result and copy action sets feedback state", async ({
+    page,
+  }) => {
     await page.context().grantPermissions(["clipboard-write", "clipboard-read"]);
     const editor = page.locator('[data-testid="smart-pad-editor"]');
     await editor.click();
@@ -154,9 +156,8 @@ test.describe("Live Result", () => {
     await liveChip.hover();
     await page.waitForTimeout(220);
     const copyButton = liveChip.locator(".semantic-live-result-copy");
-    const dragIcon = liveChip.locator(".semantic-live-result-drag");
     await expect(copyButton).toBeVisible();
-    await expect(dragIcon).toBeVisible();
+    await expect(liveChip.locator(".semantic-live-result-drag")).toHaveCount(0);
 
     const actionsAfterHover = await liveChip.locator(".semantic-live-result-actions").evaluate((el) => {
       const style = window.getComputedStyle(el as HTMLElement);
@@ -166,7 +167,17 @@ test.describe("Live Result", () => {
       };
     });
     expect(actionsAfterHover.opacity).toBeGreaterThan(0.5);
-    expect(actionsAfterHover.maxWidth).toBeGreaterThan(20);
+    expect(actionsAfterHover.maxWidth).toBeGreaterThan(10);
+
+    const copyButtonStyles = await copyButton.evaluate((el) => {
+      const style = window.getComputedStyle(el as HTMLElement);
+      return {
+        fontSize: style.fontSize,
+        backgroundColor: style.backgroundColor,
+      };
+    });
+    expect(copyButtonStyles.fontSize).toBe("15px");
+    expect(copyButtonStyles.backgroundColor).toBe("rgba(0, 0, 0, 0)");
 
     await copyButton.click();
     await expect(liveChip).toHaveAttribute("data-copy-state", "copied");

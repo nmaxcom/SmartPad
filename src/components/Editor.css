@@ -378,7 +378,7 @@ body.number-scrubbing * {
 
 .semantic-live-result-display:hover .semantic-live-result-actions,
 .semantic-live-result-display:focus-within .semantic-live-result-actions {
-  max-width: 42px;
+  max-width: 24px;
   margin-left: 6px;
   opacity: 1;
   transform: translateX(0);
@@ -387,17 +387,17 @@ body.number-scrubbing * {
 
 .semantic-live-result-action {
   border: 0;
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
   font-family: var(--font-family-mono);
-  font-size: 11px;
+  font-size: 15px;
   color: var(--color-text-secondary);
-  background: color-mix(in srgb, var(--color-surface) 72%, transparent 28%);
+  background: transparent;
 }
 
 .semantic-live-result-copy {
@@ -408,19 +408,12 @@ body.number-scrubbing * {
 
 .semantic-live-result-copy:hover {
   color: var(--color-text-primary);
-  background: color-mix(in srgb, var(--color-accent-soft) 55%, var(--color-surface) 45%);
-}
-
-.semantic-live-result-drag {
-  cursor: grab;
-  user-select: none;
-  pointer-events: none;
-  letter-spacing: -0.02em;
+  background: transparent;
 }
 
 .semantic-live-result-display[data-copy-state="copied"] .semantic-live-result-copy {
   color: var(--color-teal);
-  background: color-mix(in srgb, var(--color-teal-soft) 60%, var(--color-surface) 40%);
+  background: transparent;
 }
 
 .semantic-live-blocked-display {

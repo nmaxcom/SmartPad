@@ -3282,3 +3282,36 @@
     *   Next: Reproduce with trace and align fixture/expectation baseline.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-26-14
+
+*   Timestamp: 2026-02-26 18:02:38 CET (2026-02-26 17:02:38 UTC)
+*   Summary:
+    *   User asked to simplify live-result hover actions to copy-only.
+    *   Removed drag hint icon, kept copy icon, and restyled copy action to transparent background with 15px icon size.
+*   User directives:
+    *   Keep only copy action; make its background transparent and font size 15px.
+    *   Ignore unrelated untracked file and commit only this task's files.
+*   Decisions:
+    *   Preserve existing chip-drag behavior from the chip itself while removing the drag hint from hover UI.
+    *   Update e2e assertions and spec text to reflect copy-only affordance.
+*   Artifacts:
+    *   `src/components/ResultsDecoratorExtension.ts`
+    *   `src/components/Editor.css`
+    *   `tests/e2e/live-result.spec.ts`
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   `npx playwright test tests/e2e/live-result.spec.ts -g "copy-only hover action on live result and copy action sets feedback state"` (pass)
+    *   `npm run verify:changed` pending rerun after commit for the new range.
+*   Pending items:
+    *   ID: P-2026-02-26-01
+    *   Task: Investigate flaky/broken precondition in currency scrubbing e2e test (`user-issues-fixed.spec.ts`), unrelated to live-result hover-action changes.
+    *   Owner: Assistant
+    *   Created: 2026-02-26
+    *   Due: TBD
+    *   Status: todo
+    *   Context: Existing test can fail before scrub interaction begins.
+    *   Next: Reproduce with trace and align fixture/expectation baseline.
+*   Risks/blockers:
+    *   None.

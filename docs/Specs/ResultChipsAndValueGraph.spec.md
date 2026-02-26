@@ -185,11 +185,9 @@ Guardrails:
 Flow:
 
 1. Hover a live result chip.
-2. Chip extends to the right and reveals two inline action icons:
-   - copy value
-   - drag hint
+2. Chip extends to the right and reveals a single inline copy-value icon.
 3. Copy icon click copies the rendered value and briefly sets copied feedback state on the chip.
-4. Drag icon is visual guidance; dragging the chip itself still starts result-reference drag/drop.
+4. Dragging the chip itself still starts result-reference drag/drop.
 
 Guardrails:
 
