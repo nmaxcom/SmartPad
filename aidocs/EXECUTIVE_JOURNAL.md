@@ -3160,3 +3160,34 @@
     *   Next: Reproduce with trace and align fixture/expectation baseline.
 *   Risks/blockers:
     *   None for this change set.
+
+## Entry J-2026-02-26-10
+
+*   Timestamp: 2026-02-26 04:16:01 CET (2026-02-26 03:16:01 UTC)
+*   Summary:
+    *   User asked for a stronger visual shift: remove rectangle-border feel and emphasize icon affordance.
+    *   Updated scrubber hover visuals to icon-first cue with larger animated `↔` badge and lighter text-only hover treatment.
+*   User directives:
+    *   Go without rectangle border and make the icon more prominent.
+*   Decisions:
+    *   Keep text cursor behavior unchanged.
+    *   Make `↔` badge the primary cue (larger size, stronger contrast/shadow, pulse animation) and remove bordered chip framing from number hover.
+*   Artifacts:
+    *   `src/components/Editor.css`
+    *   `tests/e2e/grouped-input-and-date-settings.spec.ts`
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   `npx playwright test tests/e2e/grouped-input-and-date-settings.spec.ts -g "hover affordance without overriding text cursor"` (pass)
+    *   `npm run verify:changed` pending post-commit rerun for this change set.
+*   Pending items:
+    *   ID: P-2026-02-26-01
+    *   Task: Investigate flaky/broken precondition in currency scrubbing e2e test (`user-issues-fixed.spec.ts`), unrelated to current visual-affordance work.
+    *   Owner: Assistant
+    *   Created: 2026-02-26
+    *   Due: TBD
+    *   Status: todo
+    *   Context: Existing test can fail before scrub interaction begins.
+    *   Next: Reproduce with trace and align fixture/expectation baseline.
+*   Risks/blockers:
+    *   None.

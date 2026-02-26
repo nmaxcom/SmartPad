@@ -185,8 +185,9 @@ Guardrails:
 Flow:
 
 1. Hovering a scrubbable number highlights the literal with a visible pill background and border.
-   The hover treatment should read as a modern, elevated chip (soft gradient + depth), not a flat block.
-2. Hovering a scrubbable number shows a compact horizontal hint badge (`↔`) near the literal.
+   Hover treatment should stay lightweight and avoid heavy rectangle framing around the number.
+2. Hovering a scrubbable number shows a prominent horizontal hint badge (`↔`) near the literal.
+   The icon badge is the primary scrub cue (strong contrast and clear depth).
 3. Pointer cursor remains text-oriented while hovering and dragging so editing intent stays clear.
 
 Guardrails:

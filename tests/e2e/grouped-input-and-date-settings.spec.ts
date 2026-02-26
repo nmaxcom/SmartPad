@@ -50,17 +50,19 @@ test.describe("Grouped numeric input and date display settings", () => {
       const after = window.getComputedStyle(el, "::after");
       return {
         cursor: style.cursor,
-        borderColor: style.borderTopColor,
-        borderRadius: style.borderTopLeftRadius,
-        boxShadow: style.boxShadow,
+        textShadow: style.textShadow,
         afterContent: after.content,
+        afterFontSize: after.fontSize,
+        afterBackgroundImage: after.backgroundImage,
+        afterBoxShadow: after.boxShadow,
       };
     });
     expect(hoverStyles.cursor).toBe("text");
-    expect(hoverStyles.borderColor).not.toBe("rgba(0, 0, 0, 0)");
-    expect(parseFloat(hoverStyles.borderRadius)).toBeGreaterThanOrEqual(6);
-    expect(hoverStyles.boxShadow).not.toBe("none");
+    expect(hoverStyles.textShadow).not.toBe("none");
     expect(hoverStyles.afterContent).toContain("↔");
+    expect(parseFloat(hoverStyles.afterFontSize)).toBeGreaterThanOrEqual(11);
+    expect(hoverStyles.afterBackgroundImage).not.toBe("none");
+    expect(hoverStyles.afterBoxShadow).not.toBe("none");
 
     const box = await number.boundingBox();
     expect(box).not.toBeNull();
