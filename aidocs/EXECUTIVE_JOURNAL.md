@@ -3581,3 +3581,21 @@
     *   `npm run verify:changed` (pass)
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-27-02
+
+*   Timestamp: 2026-02-27 00:15:42 CET (2026-02-26 23:15:42 UTC)
+*   Summary:
+    *   User established a stricter completion policy: assistant must not mark work complete until all spec/docs/reliability/test/build gates are green and user provides explicit human confirmation.
+*   User directives:
+    *   "only mark complete when all of that is green and I have been given my human confirmation"
+*   Decisions:
+    *   Treat completion as a two-stage gate:
+        1. machine validation gate: `docs:map`, `docs:drift`, `spec:test`, `spec:trust`, `verify:changed`, targeted tests, and build all green.
+        2. human confirmation gate: explicit user confirmation required before declaring completion.
+*   Artifacts:
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Policy update only.
+*   Risks/blockers:
+    *   None.
