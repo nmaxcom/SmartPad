@@ -3362,3 +3362,21 @@
     *   Confirmed both new todos include concrete end-state scope, explicit deliverables, and at least one verification step.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-26-09
+
+*   Timestamp: 2026-02-26 18:13:27 CET (2026-02-26 17:13:27 UTC)
+*   Summary:
+    *   User asked whether the current quick-tour syntax-hardening effort is tracked as a todo and requested creating one if missing for later follow-up.
+*   User directives:
+    *   Ensure this work is explicitly tracked; do not execute it now.
+*   Decisions:
+    *   Added a new `feature` lane item for first-load Quick Tour mission-template hardening and validation.
+    *   Scoped the task with concrete end-state and explicit verification steps (parse/eval sanity, multiline paste smoke, end-to-end render checks).
+*   Artifacts:
+    *   `aidocs/TODO_BACKLOG.md` (added `T-2026-02-26-08`)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Confirmed no pre-existing dedicated quick-tour template hardening item in backlog before adding the new record.
+*   Risks/blockers:
+    *   None.
