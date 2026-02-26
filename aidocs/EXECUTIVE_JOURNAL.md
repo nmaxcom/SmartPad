@@ -2989,3 +2989,23 @@
     *   N/A (advisory iteration, no code behavior change yet).
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-02-26-04
+
+*   Timestamp: 2026-02-26 01:38:05 CET (2026-02-26 00:38:05 UTC)
+*   Summary:
+    *   User requested deeper, product-grade quick tour direction based on specs and other templates (not only current Quick Tour content).
+    *   Assistant reviewed template inventory plus core specs (Live Result, Result Chips, Plotting, Currency/FX, Lists, Date/Time) to build a denser onboarding structure.
+*   User directives:
+    *   Raise the UX/product bar.
+    *   Keep broad feature coverage but present it in fewer, smarter examples.
+*   Decisions:
+    *   Recommend a mission-based quick tour narrative with compressed multi-feature lines and explicit interaction prompts (scrub, chip insert/drag, plot).
+    *   Prioritize robust shipped interactions in first-load flow; keep deep edge-cases in specialist templates.
+*   Artifacts:
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Audited all template definitions in `src/components/VariablePanel/TemplatePanel.tsx`.
+    *   Quantified current quick tour density: 112 non-empty lines, 61 `=>` lines (~54.5%).
+*   Risks/blockers:
+    *   Plotting is referenced as proposed in trust registry; onboarding copy should frame plotting as exploration mode and keep fallback-ready.
