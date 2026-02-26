@@ -3095,3 +3095,37 @@
     *   Next: Reproduce test with trace, confirm intended baseline expression/result, then update fixture or expectation and rerun targeted e2e.
 *   Risks/blockers:
     *   One existing e2e test currently red on baseline setup; not introduced by this cursor-only change.
+
+## Entry J-2026-02-26-08
+
+*   Timestamp: 2026-02-26 04:08:12 CET (2026-02-26 03:08:12 UTC)
+*   Summary:
+    *   User rejected the custom hybrid cursor visuals and requested a cleaner alternative.
+    *   Replaced cursor-based affordance with a stronger hover/drag pill style and a compact `↔` hint badge while keeping text cursor behavior.
+*   User directives:
+    *   Try the non-cursor visual affordance approach.
+*   Decisions:
+    *   Remove custom cursor assets and revert global scrub cursor override to text.
+    *   Document scrub affordance behavior in spec and add an e2e test assertion for hover cue + cursor behavior.
+*   Artifacts:
+    *   `src/components/Editor.css`
+    *   `public/cursors/ibeam-ew.svg` (deleted)
+    *   `public/cursors/ibeam-ew-active.svg` (deleted)
+    *   `tests/e2e/grouped-input-and-date-settings.spec.ts`
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   `npx playwright test tests/e2e/grouped-input-and-date-settings.spec.ts -g "hover affordance without overriding text cursor"` (pass)
+    *   `npx playwright test tests/e2e/grouped-input-and-date-settings.spec.ts` (pass)
+    *   `npm run verify:changed` currently reports previous HEAD range; rerun after new commit to validate this change set.
+*   Pending items:
+    *   ID: P-2026-02-26-01
+    *   Task: Investigate flaky/broken precondition in currency scrubbing e2e test (`user-issues-fixed.spec.ts`), unrelated to this visual-affordance change.
+    *   Owner: Assistant
+    *   Created: 2026-02-26
+    *   Due: TBD
+    *   Status: todo
+    *   Context: Existing test fails before scrub interaction begins.
+    *   Next: Reproduce with trace and align fixture/expectation baseline.
+*   Risks/blockers:
+    *   None for this change; pending unrelated e2e baseline issue remains tracked.

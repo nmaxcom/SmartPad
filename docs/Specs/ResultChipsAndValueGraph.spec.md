@@ -180,6 +180,19 @@ Guardrails:
 2. Normal line/multi-line copy must keep native editor behavior (no single-chip clipboard hijack).
 3. Pasting rich SmartPad content with chips should preserve chips and linked behavior.
 
+### 5.4 Number scrubbing affordance
+
+Flow:
+
+1. Hovering a scrubbable number highlights the literal with a visible pill background and border.
+2. Hovering a scrubbable number shows a compact horizontal hint badge (`↔`) near the literal.
+3. Pointer cursor remains text-oriented while hovering and dragging so editing intent stays clear.
+
+Guardrails:
+
+1. Hover affordance must apply only to scrubbable literals, not grouped-number text that is explicitly non-scrubbable.
+2. Date-part numeric tokens (`semantic-date-part`) must not render the `↔` hover badge.
+
 ---
 
 ## 6) Broken Dependency UX (Requested "tax" case)

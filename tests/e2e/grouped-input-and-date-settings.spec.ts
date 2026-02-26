@@ -33,6 +33,47 @@ test.describe("Grouped numeric input and date display settings", () => {
     await expect(line.locator(".semantic-number", { hasText: "2,000" })).toHaveCount(1);
   });
 
+  test("scrubbable numbers show hover affordance without overriding text cursor", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await waitForEditorReady(page);
+    await clearEditor(page);
+    await setLine(page, "value = 20");
+
+    const number = page.locator(".semantic-scrubbableNumber", { hasText: "20" }).first();
+    await expect(number).toBeVisible();
+    await number.hover();
+
+    const hoverStyles = await number.evaluate((el) => {
+      const style = window.getComputedStyle(el);
+      const after = window.getComputedStyle(el, "::after");
+      return {
+        cursor: style.cursor,
+        backgroundColor: style.backgroundColor,
+        borderColor: style.borderTopColor,
+        afterContent: after.content,
+      };
+    });
+    expect(hoverStyles.cursor).toBe("text");
+    expect(hoverStyles.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+    expect(hoverStyles.borderColor).not.toBe("rgba(0, 0, 0, 0)");
+    expect(hoverStyles.afterContent).toContain("↔");
+
+    const box = await number.boundingBox();
+    expect(box).not.toBeNull();
+    if (!box) return;
+
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width / 2 + 12, box.y + box.height / 2);
+
+    const bodyCursorDuringDrag = await page.evaluate(() => window.getComputedStyle(document.body).cursor);
+    expect(bodyCursorDuringDrag).toBe("text");
+
+    await page.mouse.up();
+  });
+
   test("date display format setting updates existing result chips", async ({ page }) => {
     await page.addInitScript(() => {
       window.localStorage.setItem(
