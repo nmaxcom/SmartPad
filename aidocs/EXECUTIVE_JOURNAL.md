@@ -3529,3 +3529,22 @@
     *   No code/runtime changes in this research pass; evidence gathered from implementation and test suite behavior mapping.
 *   Risks/blockers:
     *   If parenthesized export suffix is not encoded with a deterministic marker pattern, paste sanitization can incorrectly strip intentional user-authored parentheses.
+
+## Entry J-2026-02-27-02
+
+*   Timestamp: 2026-02-27 00:03:28 CET (2026-02-26 23:03:28 UTC)
+*   Summary:
+    *   User requested current todos via `todos`.
+    *   Assistant loaded operating docs and extracted pending items from the active backlog lane (`feature`) as the default reporting scope.
+*   User directives:
+    *   `todos`
+*   Decisions:
+    *   Follow lane-focus policy: report pending `feature` items first and offer full cross-lane expansion on request.
+*   Assistant commitments:
+    *   Keep lane-first todo responses for shorthand status requests unless user asks for all lanes.
+*   Artifacts:
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Verified active lane from `aidocs/TODO_BACKLOG.md` (`feature`) and filtered non-done `feature` items for response.
+*   Risks/blockers:
+    *   None.
