@@ -224,7 +224,6 @@
   border-radius: 3px;
   transition: background-color 0.2s ease-in-out;
   user-select: none;
-  cursor: text;
 }
 
 .semantic-scrubbableNumber.semantic-date-part {
@@ -238,30 +237,20 @@
 
 .semantic-scrubbableNumber:hover {
   background-color: var(--color-surface-light);
-  cursor:
-    url("/cursors/ibeam-ew.svg") 16 16,
-    ew-resize;
 }
 
 .semantic-scrubbableNumber.dragging {
   background-color: var(--color-surface-light);
-  cursor:
-    url("/cursors/ibeam-ew-active.svg") 16 16,
-    grabbing;
 }
 
 /* Global cursor change during number scrubbing */
 body.number-scrubbing {
-  cursor:
-    url("/cursors/ibeam-ew-active.svg") 16 16,
-    grabbing !important;
+  cursor: ew-resize !important;
   user-select: none !important;
 }
 
 body.number-scrubbing * {
-  cursor:
-    url("/cursors/ibeam-ew-active.svg") 16 16,
-    grabbing !important;
+  cursor: ew-resize !important;
   user-select: none !important;
 }
 
