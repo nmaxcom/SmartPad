@@ -3160,3 +3160,30 @@
     *   Next: Reproduce with trace and align fixture/expectation baseline.
 *   Risks/blockers:
     *   None for this change set.
+
+## Entry J-2026-02-26-11
+
+*   Timestamp: 2026-02-26 04:46:47 CET (2026-02-26 03:46:47 UTC)
+*   Summary:
+    *   User requested to undo the latest icon-first scrub affordance iteration.
+    *   Reverted commit `df54b5ca` to restore previous scrub styling state.
+*   User directives:
+    *   Undo latest visual attempt and pause this direction.
+*   Decisions:
+    *   Use git revert for safe, explicit rollback without touching unrelated workspace changes.
+*   Artifacts:
+    *   Revert commit: `8ff225b1`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Confirmed revert commit applied cleanly.
+*   Pending items:
+    *   ID: P-2026-02-26-01
+    *   Task: Investigate flaky/broken precondition in currency scrubbing e2e test (`user-issues-fixed.spec.ts`), unrelated to current styling direction.
+    *   Owner: Assistant
+    *   Created: 2026-02-26
+    *   Due: TBD
+    *   Status: todo
+    *   Context: Existing test can fail before scrub interaction begins.
+    *   Next: Reproduce with trace and align fixture/expectation baseline.
+*   Risks/blockers:
+    *   None.
