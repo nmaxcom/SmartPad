@@ -20,7 +20,7 @@ const REF_TRACE_MAX_ENTRIES = 600;
 const RESULT_DRAG_ACTIVE_WINDOW_FLAG = "__SP_RESULT_CHIP_DRAG_ACTIVE";
 const DROP_TARGET_AFTER_CLASS = "sp-chip-drop-target-after";
 const DROP_INLINE_CARET_CLASS = "sp-chip-drop-inline-caret";
-const DROP_BOUNDARY_BAND_PX = 18;
+const DROP_BOUNDARY_BAND_PX = 28;
 const LAST_LINE_DROP_EXTRA_PX = 56;
 const COPY_FEEDBACK_MS = 800;
 
@@ -246,16 +246,51 @@ const createReferenceNode = (state: any, payload: ReferencePayload) => {
   });
 };
 
+const resolveLineIdByLineNumber = (doc: any, sourceLine: number): string => {
+  if (!Number.isFinite(sourceLine) || sourceLine <= 0) {
+    return "";
+  }
+  let line = 0;
+  let matchedLineId = "";
+  doc.descendants((node: any) => {
+    if (!node?.isTextblock) {
+      return true;
+    }
+    line += 1;
+    if (line !== sourceLine) {
+      return true;
+    }
+    matchedLineId = String((node as any).attrs?.lineId || "").trim();
+    return false;
+  });
+  return matchedLineId;
+};
+
+const resolvePayloadLineIdentity = (state: any, payload: ReferencePayload): ReferencePayload => {
+  if (payload.sourceLineId) {
+    return payload;
+  }
+  const resolvedLineId = resolveLineIdByLineNumber(state.doc, payload.sourceLine);
+  if (!resolvedLineId) {
+    return payload;
+  }
+  return {
+    ...payload,
+    sourceLineId: resolvedLineId,
+  };
+};
+
 const insertReferenceAt = (
   view: any,
   payload: ReferencePayload,
   pos: number,
   mode: "reference" | "value" = "reference"
 ): number | null => {
-  if (!payload.sourceLineId) return null;
   const { state } = view;
+  const resolvedPayload = resolvePayloadLineIdentity(state, payload);
+  if (!resolvedPayload.sourceLineId) return null;
   const insertTextValue = String(payload.sourceValue || payload.sourceLabel || "value");
-  const referenceNode = mode === "reference" ? createReferenceNode(state, payload) : null;
+  const referenceNode = mode === "reference" ? createReferenceNode(state, resolvedPayload) : null;
   if (mode === "reference" && !referenceNode) return null;
   try {
     const insertionPos = Math.max(0, Math.min(pos, state.doc.content.size));
@@ -299,27 +334,27 @@ const insertReferenceAt = (
       selectionPos,
       beforeSelection: state.selection.from,
       afterSelection: view.state.selection.from,
-      sourceLineId: payload.sourceLineId,
+      sourceLineId: resolvedPayload.sourceLineId,
     });
     appendRefTrace("insertReferenceAt", {
       mode,
       insertionPos,
       cursor,
       selectionPos,
-      sourceLineId: payload.sourceLineId,
-      sourceLine: payload.sourceLine,
-      sourceValue: payload.sourceValue,
+      sourceLineId: resolvedPayload.sourceLineId,
+      sourceLine: resolvedPayload.sourceLine,
+      sourceValue: resolvedPayload.sourceValue,
     });
     return cursor;
   } catch {
     logRefDebug("insertReferenceAt failed", {
-      sourceLineId: payload.sourceLineId,
+      sourceLineId: resolvedPayload.sourceLineId,
       pos,
     });
     appendRefTrace("insertReferenceAtFailed", {
       mode,
-      sourceLineId: payload.sourceLineId,
-      sourceLine: payload.sourceLine,
+      sourceLineId: resolvedPayload.sourceLineId,
+      sourceLine: resolvedPayload.sourceLine,
       pos,
     });
     return null;
@@ -574,12 +609,20 @@ const payloadFromElement = (target: HTMLElement): ReferencePayload | null => {
   ) {
     return null;
   }
-  const fallbackLineId = String(
-    target.closest("p[data-line-id]")?.getAttribute("data-line-id") || ""
-  ).trim();
+  const fallbackParagraph = target.closest("p") as HTMLElement | null;
+  const fallbackLineId = String(fallbackParagraph?.getAttribute("data-line-id") || "").trim();
+  const fallbackSourceLine =
+    fallbackParagraph && fallbackParagraph.parentElement
+      ? Math.max(
+          0,
+          Array.from(fallbackParagraph.parentElement.querySelectorAll("p")).indexOf(
+            fallbackParagraph
+          ) + 1
+        )
+      : 0;
   const lineId = String(target.getAttribute("data-source-line-id") || fallbackLineId).trim();
-  const sourceLine = Number(target.getAttribute("data-source-line") || 0);
-  if (!lineId) return null;
+  const sourceLine = Number(target.getAttribute("data-source-line") || 0) || fallbackSourceLine;
+  if (!lineId && sourceLine <= 0) return null;
   const label =
     String(target.getAttribute("data-source-label") || "").trim() ||
     String(target.getAttribute("aria-label") || "").trim();

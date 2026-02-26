@@ -11,6 +11,7 @@ const dispatchResultDrop = async (
     dropWellBelowLastLine?: boolean;
     dropAfterLineIndex?: number;
     stripTargetLineId?: boolean;
+    stripSourceLineId?: boolean;
     phase?: "dragover" | "drop" | "both";
   } = {}
 ) => {
@@ -23,10 +24,14 @@ const dispatchResultDrop = async (
       dropWellBelowLastLine,
       dropAfterLineIndex,
       stripTargetLineId,
+      stripSourceLineId,
       phase,
     }) => {
     const paragraphs = Array.from(document.querySelectorAll(".ProseMirror p")) as HTMLElement[];
     const sourceLine = paragraphs[sourceLineIndex || 0] || paragraphs[0];
+    if (stripSourceLineId && sourceLine) {
+      sourceLine.removeAttribute("data-line-id");
+    }
     const chip = (sourceLine?.querySelector(
       ".semantic-live-result-display, .semantic-result-display"
     ) ||
@@ -503,6 +508,32 @@ test.describe("Result references (drag-only)", () => {
     );
     await expect(page.locator(".ProseMirror p").last().locator(".semantic-reference-chip")).toHaveCount(
       0
+    );
+  });
+
+  test("triggered result drag/drop still inserts when source paragraph line-id is missing", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("100 + 20 =>");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("tax = ");
+    await waitForUIRenderComplete(page);
+
+    const targetLine = page.locator(".ProseMirror p").nth(1);
+    await dispatchResultDrop(page, {
+      sourceLineIndex: 0,
+      targetLineIndex: 1,
+      stripSourceLineId: true,
+    });
+    await page.keyboard.type("/2 =>");
+    await waitForUIRenderComplete(page);
+
+    await expect(targetLine.locator(".semantic-reference-chip")).toHaveCount(1);
+    await expect(targetLine.locator(".semantic-result-display").last()).toHaveAttribute(
+      "data-result",
+      "60"
     );
   });
 });

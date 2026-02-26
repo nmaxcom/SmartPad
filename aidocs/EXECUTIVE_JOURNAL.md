@@ -3464,3 +3464,33 @@
     *   `npm run build` (pass)
 *   Risks/blockers:
     *   Visual indicator assertions for transient dragover preview (`sp-chip-drop-target-after` / `sp-chip-drop-inline-caret`) were unstable under synthetic Playwright dragover dispatch; behavior remains covered by boundary/inline insertion outcome tests.
+
+## Entry J-2026-02-26-20
+
+*   Timestamp: 2026-02-26 21:49:52 CET (2026-02-26 20:49:52 UTC)
+*   Summary:
+    *   User reported two regressions after prior parity/drag work: weak/absent between-line drop indicator and non-functional trigger-chip drag/drop.
+    *   Assistant reinforced boundary drop-band visibility and hardened trigger-chip drag identity resolution when source line metadata is incomplete.
+*   User directives:
+    *   Restore the thick visual line for between-line drop/newline insertion affordance.
+    *   Make trigger-result chips drag/drop the same as live-result chips.
+*   Decisions:
+    *   Increase boundary-band tolerance and visual prominence (`sp-chip-drop-target-after`) to improve drop-zone discoverability.
+    *   Resolve missing `sourceLineId` from `sourceLine` at insertion time and infer source line number from nearest paragraph when chip attrs are incomplete.
+    *   Add regression e2e coverage for dragging from a source paragraph with missing `data-line-id`.
+*   Artifacts:
+    *   `src/components/ResultReferenceInteractionExtension.ts`
+    *   `src/components/Editor.css`
+    *   `tests/e2e/result-reference-drag-only.spec.ts`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   `npx playwright test tests/e2e/result-reference-drag-only.spec.ts -g "dragging a result chip onto a line inserts a reference chip|boundary drop between middle lines inserts at that boundary, not at document end|boundary drop still works when target paragraph is missing data-line-id|triggered result drag/drop still inserts when source paragraph line-id is missing"` (pass)
+    *   `npx playwright test tests/e2e/live-result.spec.ts -g "shows copy-only hover action on live result and copy action sets feedback state|triggered result chips share hover copy affordance and copied feedback"` (pass)
+    *   `npm run docs:map` (pass)
+    *   `npm run docs:drift` (pass)
+    *   `npm run spec:test` (pass)
+    *   `npm run spec:trust` (pass)
+    *   `npm run verify:changed` (pass)
+    *   `npm run build` (pass)
+*   Risks/blockers:
+    *   None.
