@@ -111,6 +111,7 @@ Map user commands to executable actions:
 - Never revert unrelated user changes.
 - Ask before destructive actions.
 - Keep commits scoped and readable.
+- Never use rm or rmdir command. Use instead trash. eg: "trash index.ts" or "trash dst"
 
 ## Command Approval Policy
 - Treat this repository root as pre-approved for normal operations.
