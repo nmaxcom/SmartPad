@@ -3599,3 +3599,21 @@
     *   Policy update only.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-03-01-01
+
+*   Timestamp: 2026-03-01 05:04:13 CET (2026-03-01 04:04:13 UTC)
+*   Summary:
+    *   User clarified that `EXECUTIVE_JOURNAL` is not an instruction source and requested durable instruction-level memory.
+    *   Assistant encoded completion policy directly in `AGENTS.md` as a formal `Completion Gate` section.
+*   User directives:
+    *   Journal is not meant to instruct; policy should live in instruction surface.
+*   Decisions:
+    *   Added explicit dual-gate completion rule (machine checks green + explicit user confirmation) to `AGENTS.md`.
+*   Artifacts:
+    *   `AGENTS.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry)
+*   Validation:
+    *   Policy/documentation update only.
+*   Risks/blockers:
+    *   None.

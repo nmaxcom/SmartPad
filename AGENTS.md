@@ -60,6 +60,21 @@ Before finalizing implementation changes:
 
 If tests fail, do not present work as complete. Provide failure summary and next fix step.
 
+## Completion Gate
+Do not mark work as complete until both gates pass:
+1. Machine gate is fully green:
+   - `npm run docs:map`
+   - `npm run docs:drift`
+   - `npm run spec:test`
+   - `npm run spec:trust`
+   - `npm run verify:changed`
+   - targeted tests for touched behavior
+   - build check when deploy-impacting
+2. Human gate is explicit:
+   - User confirms completion in plain language.
+
+If machine checks are green but user has not confirmed, report status as "ready for review/confirmation", not complete.
+
 ## Spec-First Sync Policy
 Specs are source-of-truth for behavior.
 
