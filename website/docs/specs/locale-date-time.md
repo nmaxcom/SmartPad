@@ -1,47 +1,56 @@
 ---
 title: "Locale Date and Time"
-description: "Parse and format dates predictably across locale-specific inputs and outputs."
+description: "Parse locale-friendly dates and route temporal ranges reliably."
+sidebar_position: 15
 ---
 
 import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 <div className="doc-hero">
-<p className="doc-hero__kicker">Data and Collections</p>
+<p className="doc-hero__kicker">Feature Contract</p>
 <h2>Locale Date and Time</h2>
-<p>Parse and format dates predictably across locale-specific inputs and outputs.</p>
+<p>Parse locale-friendly dates and route temporal ranges reliably.</p>
 </div>
 
-## Why this matters
+## What this feature gives you
 
-Cross-region workflows fail unless date interpretation is deterministic.
+- Locale-aware parsing handles real-world date input
+- Range routing prevents parser misclassification
+- Errors normalize to clear, range-specific user messages
 
-## Use it when
+## Syntax and usage contract
 
-- You want faster iteration without switching contexts.
-- You need readable formulas that teammates can follow.
-- You want reliable behavior under real user inputs.
+- In `es-ES`, `DD-MM-YYYY` and `DD/MM/YYYY` are accepted date literals.
+- Temporal ranges require `step` duration (`step 30 min`, `step 1 day`).
+- Month stepping uses anchored day-of-month with clamp semantics.
 
-## Try it in SmartPad
+## Runnable examples
 
-<ExamplePlayground title={"Locale Date and Time: quick win"} description={"Run this interactive example and tweak values immediately."} code={"slots = 01-02-2023 09:00..14-02-2023 11:00 step 64 min =>"} />
+<ExamplePlayground title={"Locale-aware literal parsing"} description={"es-ES style date inputs resolve deterministically."} code={"d = 01-02-2023\nd =>\ndt = 01-02-2023 09:30\ndt =>"} />
 
-<ExamplePlayground title={"Locale Date and Time: edge behavior"} description={"Use this to understand guardrails and failure modes."} code={"period = 2026-01-01..2026-01-05 =>⚠️ Date/time ranges require a duration step (e.g., step 1 day)"} />
+<ExamplePlayground title={"Time slot generation"} description={"Temporal ranges with explicit duration step."} code={"09:00..11:00 step 30 min =>\n2026-01-01..2026-01-05 step 1 day =>"} />
 
-## What this feature guarantees
+<ExamplePlayground title={"Month-end anchored stepping"} description={"Anchor day is preserved with clamp-to-month-end behavior."} code={"2026-01-31..2026-05-31 step 1 month =>"} />
 
-- Range Expression Routing (must happen before date-math and solver)
-- Range Grammar (natural “step” suffix, not named args)
-- Locale-Aware Date/Datetime Input Parsing (es-ES)
-- Date/Time/Datetime Range Semantics
-- Guardrails (must be a user setting)
-- Error Normalization (no raw parser leaks for `..`)
-- Output Formatting (Timezone label + compact display)
-- Reference Test Set (focused on the reported failures)
+## Guardrail examples
 
-## Common mistakes
+<ExamplePlayground title={"Missing temporal step"} description={"Date/time ranges require explicit duration steps."} code={"2026-01-01..2026-01-05 =>\n09:00..11:00 =>"} />
 
-- Use exact SmartPad syntax first, then optimize for brevity.
-- Check edge and guardrail behavior before scaling your sheet.
-- Treat formatted display as presentation, not implicit conversion logic.
+<ExamplePlayground title={"Invalid locale date"} description={"Bad literals should produce targeted date errors."} code={"d = 32-02-2023 =>"} />
+
+## Critical behavior rules
+
+- guardrails and user-facing error normalization
+- If range parsing fails → surface a **range-specific error**, not a date-math or solver error.
+- Numeric ranges: step must be an integer number (unitless)
+- Date/Time/Datetime ranges: step must be a duration (e.g., `30 min`, `1 day`, `2 weeks`, `1 month`)
+- any unrelated internal parse errors
+- the computed list (if within guardrail)
+
+## Power-user checklist
+
+- Set locale intentionally before entering slash/dash-heavy dates.
+- Add explicit temporal steps to avoid hidden assumptions.
+- Treat timezone labels as part of result interpretation.
 
 <p className="doc-footnote">Authoritative spec: <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/Locale.spec.md">docs/Specs/Locale.spec.md</a></p>

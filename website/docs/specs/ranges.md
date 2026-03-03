@@ -1,49 +1,56 @@
 ---
 title: "Ranges"
-description: "Generate numeric and date ranges for plans, projections, and schedules."
+description: "Generate numeric/date/time lists with predictable `..` span semantics."
+sidebar_position: 14
 ---
 
 import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 <div className="doc-hero">
-<p className="doc-hero__kicker">Data and Collections</p>
+<p className="doc-hero__kicker">Feature Contract</p>
 <h2>Ranges</h2>
-<p>Generate numeric and date ranges for plans, projections, and schedules.</p>
+<p>Generate numeric/date/time lists with predictable `..` span semantics.</p>
 </div>
 
-## Why this matters
+## What this feature gives you
 
-Range generation removes repetitive manual input and keeps models editable.
+- `..` builds sequences faster than manual list typing
+- Step semantics are explicit, directional, and guardrailed
+- Range outputs compose with list math and conversions
 
-## Use it when
+## Syntax and usage contract
 
-- You model repeated values or time windows quickly.
-- You need aggregates and filtering without exporting to another tool.
-- You want the sheet to stay editable while logic grows.
+- Numeric: `<start>..<end>` or `<start>..<end> step <step>`.
+- Temporal ranges require explicit duration step.
+- `to <unit>` annotates/converts range-produced lists under list rules.
 
-## Try it in SmartPad
+## Runnable examples
 
-<ExamplePlayground title={"Ranges: quick win"} description={"Run this interactive example and tweak values immediately."} code={"<start>..<end>\n<start>..<end> step <step>"} />
+<ExamplePlayground title={"Numeric scenarios"} description={"Build sensitivity ranges with custom step size."} code={"1..5 =>\n0..10 step 2 =>\n(1..5) * 2 =>\nsum(1..5) =>"} />
 
-<ExamplePlayground title={"Ranges: edge behavior"} description={"Use this to understand guardrails and failure modes."} code={"0..10 step 0 =>⚠️ step cannot be 0"} />
+<ExamplePlayground title={"Descending ranges"} description={"Default step follows direction when omitted."} code={"6..2 =>\n10..0 step -2 =>"} />
 
-## What this feature guarantees
+<ExamplePlayground title={"Range + unit annotation"} description={"Annotate generated unitless ranges with target units."} code={"1..5 to kg =>\n0..10 step 2 to m/s =>"} />
 
-- Overview: what range-generated lists are and why they matter
-- Design decision: use `..` (not `to`) for range generation
-- Scope
-- Syntax
-- Semantics & rules (Numeric ranges)
-- Postfix `to` on lists (Unit annotation vs conversion)
-- Maximum list size guardrail (Setting)
-- Composition with existing features
-- Proposed extension: date and time ranges
-- Minimal test suite summary (Numeric v1 + unit postfix)
+## Guardrail examples
 
-## Common mistakes
+<ExamplePlayground title={"Invalid triple-dot typo"} description={"`...` is rejected instead of silently auto-corrected."} code={"1...5 =>"} />
 
-- Use exact SmartPad syntax first, then optimize for brevity.
-- Check edge and guardrail behavior before scaling your sheet.
-- Keep context explicit (units, currencies, locale) when composing formulas.
+<ExamplePlayground title={"Step direction mismatch"} description={"Step sign must match range direction."} code={"0..10 step -2 =>\n10..0 step 2 =>"} />
+
+## Critical behavior rules
+
+- Date/time endpoints in range literals (this spec includes a proposed extension below)
+- If `start < end`, default `step = 1`
+- If `start > end`, default `step = -1`
+- Keep guardrails and inclusivity rules consistent
+- `time` is local-time by default
+- Guardrail as a setting (readable by evaluator)
+
+## Power-user checklist
+
+- Use `step` explicitly when sequence size matters for performance.
+- Check max generated list size when exploring large spans.
+- Prefer `..` for generation and reserve `to/in` for conversions.
 
 <p className="doc-footnote">Authoritative spec: <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/Ranges.spec.md">docs/Specs/Ranges.spec.md</a></p>

@@ -3,52 +3,21 @@ import type { SidebarsConfig } from "@docusaurus/plugin-content-docs";
 const sidebars: SidebarsConfig = {
   docsSidebar: [
     "intro",
-    {
-      type: "category",
-      label: "Start Here",
-      items: [
-        "guides/getting-started",
-        "guides/syntax-playbook",
-        "guides/units-reference",
-        "guides/examples-gallery",
-        "guides/troubleshooting",
-        "guides/feature-map",
-      ],
-    },
+    "guides/getting-started",
+    "guides/syntax-playbook",
+    "guides/everyday-calculations",
+    "guides/privacy-and-portability",
+    "guides/troubleshooting",
     "specs/index",
-    {
-      type: "category",
-      label: "Core Experience",
-      items: [
-        "specs/live-results",
-        "specs/result-chips-and-references",
-        "specs/plotting-and-dependency-views",
-      ],
-    },
-    {
-      type: "category",
-      label: "Math and Units",
-      items: [
-        "specs/currency-and-fx",
-        "specs/duration-and-time-values",
-      ],
-    },
-    {
-      type: "category",
-      label: "Data and Collections",
-      items: [
-        "specs/lists",
-        "specs/ranges",
-        "specs/locale-date-time",
-      ],
-    },
-    {
-      type: "category",
-      label: "Workspace",
-      items: [
-        "specs/file-management",
-      ],
-    },
+    "specs/live-results",
+    "specs/result-chips-and-references",
+    "specs/plotting-and-dependency-views",
+    "specs/currency-and-fx",
+    "specs/duration-and-time-values",
+    "specs/lists",
+    "specs/ranges",
+    "specs/locale-date-time",
+    "specs/file-management",
   ],
 };
 

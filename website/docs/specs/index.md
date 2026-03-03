@@ -1,50 +1,26 @@
 ---
-sidebar_position: 6
-title: Feature Guides
+title: "Feature Contracts"
+sidebar_position: 7
+description: "Deep behavior guarantees for every major SmartPad feature."
 ---
 
-<div className="doc-hero doc-hero--wide">
-<p className="doc-hero__kicker">SmartPad Docs</p>
-<h2>One language for ideas, math, and decisions</h2>
-<p>Explore guided features with live interactive examples and clear behavior contracts.</p>
-</div>
+# Feature Contracts
 
-## Explore by path
+Each page below translates the authoritative spec into a practical guide with runnable examples and guardrail scenarios.
 
-<div className="journey-grid">
-<a className="journey-card" href="../guides/getting-started"><strong>Start Fast</strong><span>From blank sheet to meaningful output in minutes.</span></a>
-<a className="journey-card" href="../guides/syntax-playbook"><strong>Master Syntax</strong><span>Write formulas that stay readable as complexity grows.</span></a>
-<a className="journey-card" href="../guides/units-reference"><strong>Units Reference</strong><span>Browse all supported unit families and currency symbols.</span></a>
-<a className="journey-card" href="../guides/examples-gallery"><strong>Real Examples</strong><span>Use production-style snippets you can run immediately.</span></a>
-<a className="journey-card" href="../guides/troubleshooting"><strong>Fix Fast</strong><span>Diagnose and resolve common issues quickly.</span></a>
-</div>
+## Read in order
 
-## Core Experience
+1. [Live Results](./live-results) - See valid results while typing, without adding `=>` on every line.
+2. [Result Chips and References](./result-chips-and-references) - Reuse results as draggable, copyable chips with stable dependency links.
+3. [Plotting and Dependency Views](./plotting-and-dependency-views) - Turn expressions into exploratory views with `@view` directives.
+4. [Currency and FX](./currency-and-fx) - Treat currency as first-class units with live FX + manual overrides.
+5. [Duration and Time Values](./duration-and-time-values) - Work with duration literals, time-of-day math, and datetime arithmetic.
+6. [Lists](./lists) - Model repeated values with aggregation, mapping, filtering, and zip math.
+7. [Ranges](./ranges) - Generate numeric/date/time lists with predictable `..` span semantics.
+8. [Locale Date and Time](./locale-date-time) - Parse locale-friendly dates and route temporal ranges reliably.
+9. [File Management](./file-management) - Local-first sheet durability with autosave, trash, import, and export.
 
-<div className="feature-grid">
-<a className="feature-card" href="./live-results"><strong>Live Results</strong><span>See valid results while typing and keep the editing flow uninterrupted.</span></a>
-<a className="feature-card" href="./result-chips-and-references"><strong>Result Chips and References</strong><span>Reuse computed values safely with chips, hidden references, and dependency awareness.</span></a>
-<a className="feature-card" href="./plotting-and-dependency-views"><strong>Plotting and Dependency Views</strong><span>Visualize behavior from expressions, dependencies, and exploratory model changes.</span></a>
-</div>
+## Source of truth
 
-## Math and Units
-
-<div className="feature-grid">
-<a className="feature-card" href="./currency-and-fx"><strong>Currency and FX</strong><span>Model money with robust unit behavior, conversion syntax, and FX source rules.</span></a>
-<a className="feature-card" href="./duration-and-time-values"><strong>Duration and Time Values</strong><span>Work with durations, time-of-day values, and datetime arithmetic safely.</span></a>
-</div>
-
-## Data and Collections
-
-<div className="feature-grid">
-<a className="feature-card" href="./lists"><strong>Lists</strong><span>Aggregate, map, filter, sort, and index data with unit-aware operations.</span></a>
-<a className="feature-card" href="./ranges"><strong>Ranges</strong><span>Generate numeric and date ranges for plans, projections, and schedules.</span></a>
-<a className="feature-card" href="./locale-date-time"><strong>Locale Date and Time</strong><span>Parse and format dates predictably across locale-specific inputs and outputs.</span></a>
-</div>
-
-## Workspace
-
-<div className="feature-grid">
-<a className="feature-card" href="./file-management"><strong>File Management</strong><span>Ensure durable sheets with autosave, import/export, trash, and tab sync behavior.</span></a>
-</div>
+Canonical spec documents live under `docs/Specs/*.spec.md` in the repository.
 

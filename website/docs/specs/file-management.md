@@ -1,39 +1,52 @@
 ---
 title: "File Management"
-description: "Ensure durable sheets with autosave, import/export, trash, and tab sync behavior."
+description: "Local-first sheet durability with autosave, trash, import, and export."
+sidebar_position: 16
 ---
 
 import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 <div className="doc-hero">
-<p className="doc-hero__kicker">Workspace</p>
+<p className="doc-hero__kicker">Feature Contract</p>
 <h2>File Management</h2>
-<p>Ensure durable sheets with autosave, import/export, trash, and tab sync behavior.</p>
+<p>Local-first sheet durability with autosave, trash, import, and export.</p>
 </div>
 
-## Why this matters
+## What this feature gives you
 
-Data durability is part of product trust, not a secondary concern.
+- No-save-button workflow via debounced persistence
+- Flat sidebar navigation with fast rename/trash/export actions
+- Safe recovery paths through trash view and restore
 
-## Use it when
+## Syntax and usage contract
 
-- You need confidence that work is saved and recoverable.
-- You collaborate across tabs or import/export workflows.
-- You want predictable behavior for trash and restoration.
+- Sheets are plain Markdown; title inferred from first heading.
+- Autosave commits after 1500ms idle typing by default.
+- Drag-and-drop import supports `.md` and `.zip` bundles.
 
-## Try it in SmartPad
+## Runnable examples
 
-Examples for this feature are being backfilled. Add examples in the source spec and regenerate docs.
+<ExamplePlayground title={"Markdown-first sheet"} description={"A sheet remains plain text and portable."} code={"# Weekly planning\nhours = 38\nrate = $95/hour\nweekly pay = hours * rate =>"} />
 
-## What this feature guarantees
+<ExamplePlayground title={"Import-ready notebook"} description={"Structure sheets so zip/md imports stay clean and conflict-resistant."} code={"# Trip budget\nhotel = EUR 240\nmeals = EUR 180\ntotal = hotel + meals =>"} />
 
-- Objective
-- Technical Architecture
-- User Experience & UI Flow
-- Functional Requirements
+<ExamplePlayground title={"Multi-tab safe editing"} description={"Behavioral expectation: updates synchronize across tabs."} code={"# Shared plan\nbaseline = 1200\ntax = 8%\ntotal = baseline + baseline * tax =>"} />
 
-## Common mistakes
+## Guardrail examples
 
-- Build complex formulas from named intermediate lines for reliability.
+<ExamplePlayground title={"Title collision import"} description={"Conflicting names should be suffixed instead of overwritten."} code={"# Budget\nrent = $1250\nutilities = $185\nsum(rent, utilities) =>"} />
+
+<ExamplePlayground title={"Trash safety workflow"} description={"Deletion should move to trash first, not hard delete by default."} code={"# Notes\nbackup = 1"} />
+
+## Critical behavior rules
+
+- `is_trashed`: Boolean (Default: `false`).
+- No proprietary metadata should be injected into the text. The title should be inferred from the content, not stored separately in the file text.
+
+## Power-user checklist
+
+- Treat sheet headings as the public names you expect to export/share.
+- Use `Download All` before major migrations or browser profile changes.
+- Check Trash before assuming data loss in deletion scenarios.
 
 <p className="doc-footnote">Authoritative spec: <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/FileManagement.spec.md">docs/Specs/FileManagement.spec.md</a></p>

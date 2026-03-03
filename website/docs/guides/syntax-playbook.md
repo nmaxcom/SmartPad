@@ -1,35 +1,38 @@
 ---
-title: Syntax Playbook
-sidebar_position: 2
+title: "Syntax Playbook"
+sidebar_position: 3
+description: "Write SmartPad syntax that remains readable and robust as models grow."
 ---
 
 import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 # Syntax Playbook
 
-<div className="doc-hero">
-<p className="doc-hero__kicker">Writing Style</p>
-<h2>Write formulas that scale with your thinking</h2>
-<p>These patterns keep your sheets understandable even as models grow.</p>
-</div>
+## Reliable expression patterns
 
-<ExamplePlayground title="Core syntax patterns" description="Reliable defaults for day-to-day SmartPad work." code={`subtotal = $128\ntax = 8.5%\ntotal = subtotal + (subtotal * tax) => $138.88\n\ndistance = 42 km\ndistance in mi => 26.1 mi\n\nplan = [120, 140, 155, 170]\navg(plan) => 146.25`} />
+- Attach units/currency directly to values (`$85/hour`, `9 L/min`).
+- Use `to` / `in` for explicit conversions.
+- Use lists (`a, b, c`) and ranges (`1..10`) instead of manual repetition.
+- Use phrase operators for business math (`tax on`, `discount off`, `as %`).
 
-## Rules that prevent surprises
+<ExamplePlayground title={"Syntax essentials"} description={"Common patterns you will use daily."} code={"subtotal = $128\ntax = 8.5%\ntotal = subtotal + subtotal * tax =>\ndistance = 42 km\ndistance in mi =>\nscores = 71, 77, 84, 90, 94\navg(scores) =>"} />
 
-- Prefer explicit conversions with `to` / `in`.
-- Keep units and currencies attached to actual values.
-- Use named intermediate lines before compacting formulas.
+## Prevent avoidable mistakes
 
-## Units and rates model
+- Do not use `->` for conversions; use `to`/`in`.
+- Keep list lengths aligned for pairwise operations.
+- Add explicit `step` for temporal ranges.
+- Prefer `min` for minutes when `m` could mean meters.
 
-- SmartPad treats canonical units as first-class symbols and supports compound expressions with `*`, `/`, and exponents.
-- Rate expressions like `Mbit/s` are compounds (`Mbit` divided by `s`), not special one-off unit types.
-- Any compatible unit can be expressed as `/s`, `/day`, `/month`, `/year`, etc.
+<ExamplePlayground title={"Guardrail sampler"} description={"Examples that should fail clearly."} code={"1...5 =>\na = 1, 2, 3\nb = 10, 20\na + b =>\n2026-01-01..2026-01-05 =>"} />
 
-## Base unit families
+## Units and rates reference
 
-Total canonical symbols documented: **48**
+SmartPad treats units and currencies as semantic value types. Conversions and operations stay type-aware instead of string-based.
+
+### Currency symbols/codes
+
+`$`, `€`, `£`, `¥`, `₹`, `₿`, `CHF`, `CAD`, `AUD`, `USD`, `EUR`, `GBP`, `JPY`, `INR`, `BTC`, `ETH`, `USDT`, `USDC`, `BNB`, `XRP`, `SOL`, `ADA`, `DOGE`, `LTC`, `DOT`, `AVAX`, `MATIC`, `TRX`, `LINK`
 
 ### Length
 
@@ -149,24 +152,26 @@ Total canonical symbols documented: **48**
 | `GiB` | gibibyte | gibibyte, gibibytes |
 | `TiB` | tebibyte | tebibyte, tebibytes |
 
-## Compound units and rate patterns
+### Information Rate
+
+| Symbol | Name | Aliases |
+| --- | --- | --- |
+| `bit/s` | bits per second | bps |
+| `kbit/s` | kilobits per second | kbps, Kb/s |
+| `Mbit/s` | megabits per second | Mbps, Mb/s |
+| `Gbit/s` | gigabits per second | Gbps, Gb/s |
+| `Tbit/s` | terabits per second | Tbps, Tb/s |
+| `B/s` | bytes per second | Bps |
+| `KB/s` | kilobytes per second | KBps |
+| `MB/s` | megabytes per second | MBps |
+| `GB/s` | gigabytes per second | GBps |
+| `TB/s` | terabytes per second | TBps |
+
+### Rate patterns
 
 ```smartpad
 download = 6 Mbit/s * 2 h =>
 download to MB =>
-throughput = 250 unit/day
-throughput to unit/month =>
-```
-
-## Currency as units
-
-SmartPad supports currency symbols/codes as unit-like value types and rate compounds.
-
-Supported symbols/codes: `$`, `€`, `£`, `¥`, `₹`, `₿`, `CHF`, `CAD`, `AUD`, `USD`, `EUR`, `GBP`, `JPY`, `INR`, `BTC`, `ETH`, `USDT`, `USDC`, `BNB`, `XRP`, `SOL`, `ADA`, `DOGE`, `LTC`, `DOT`, `AVAX`, `MATIC`, `TRX`, `LINK`
-
-```smartpad
-plan = $95/hour
-monthly = plan * 160 h =>
 egress = $0.09/GB
 traffic = 12 TB/month
 cost = egress * (traffic in GB/month) =>

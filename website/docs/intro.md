@@ -1,32 +1,46 @@
 ---
+title: "Start Here"
+description: "Understand what SmartPad is, why it is local-first, and how to learn it in a practical order."
 sidebar_position: 1
 slug: /
 ---
 
 import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
-# SmartPad Documentation
+# Start Here
 
 <div className="doc-hero doc-hero--wide">
-<p className="doc-hero__kicker">SmartPad Docs</p>
-<h2>One coherent language for ideas, math, and decisions</h2>
-<p>SmartPad combines plain text writing with live computation so teams can think faster and trust the results.</p>
+<p className="doc-hero__kicker">SmartPad in one minute</p>
+<h2>Plain-text thinking with live, trustworthy math</h2>
+<p>SmartPad is a text-native calculation workspace. You write normal lines, get semantic results immediately, and keep everything as portable Markdown you control.</p>
 </div>
 
-## Experience it immediately
+## Why people pick SmartPad
 
-<ExamplePlayground title="Quick wow moment" description="Edit this interactive block and watch SmartPad respond in real time." code={`team size = 8
-velocity = 27 points/sprint
-capacity = team size * velocity => 216
+- **Local-first by default**: your sheets persist in browser storage on your machine, not in a forced cloud backend.
+- **Plain-text portability**: files remain human-readable Markdown (`.md`), so your data stays future-proof.
+- **Semantic math**: units, currencies, durations, lists, ranges, and locale-aware dates behave like real values.
+- **Explorable models**: chips, references, and `@view` directives turn static notes into interactive decision tools.
 
-feature load = [34, 55, 89, 21]
-needed = sum(feature load) => 199
-buffer = capacity - needed => 17`} />
+## First 90-second win
 
-## Start paths
+<ExamplePlayground title={"Personal weekly plan"} description={"Type naturally, then nudge values to explore options."} code={"hours = 38\nrate = $95/hour\nweekly pay = hours * rate =>\ntax = 8.5% on weekly pay =>\ntake home = weekly pay - tax =>\ntake home in EUR =>"} />
 
-- [Getting Started](./guides/getting-started)
-- [Syntax Playbook](./guides/syntax-playbook)
-- [Units Reference](./guides/units-reference)
-- [Examples Gallery](./guides/examples-gallery)
-- [Feature Guides](./specs)
+## Learn in this order
+
+1. **[Getting Started](./guides/getting-started)**: core mental model + first useful workflows.
+2. **[Syntax Playbook](./guides/syntax-playbook)**: write robust expressions and avoid common pitfalls.
+3. **[Everyday Calculations](./guides/everyday-calculations)**: practical examples for budgeting, planning, and analysis.
+4. **[Privacy and Portability](./guides/privacy-and-portability)**: understand durability, export, and local ownership.
+5. **[Feature Contracts](./specs)**: deep behavior guarantees for each major capability.
+
+## What SmartPad is not
+
+- It is not a brittle formula grid where meaning is hidden in cell addresses.
+- It is not cloud-only lock-in requiring proprietary exports.
+- It is not a throwaway calculator where context gets lost.
+
+## Next
+
+Continue with [Getting Started](./guides/getting-started).
+

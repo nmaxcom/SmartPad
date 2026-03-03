@@ -1,43 +1,60 @@
 ---
 title: "Duration and Time Values"
-description: "Work with durations, time-of-day values, and datetime arithmetic safely."
+description: "Work with duration literals, time-of-day math, and datetime arithmetic."
+sidebar_position: 12
 ---
 
 import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 <div className="doc-hero">
-<p className="doc-hero__kicker">Math and Units</p>
+<p className="doc-hero__kicker">Feature Contract</p>
 <h2>Duration and Time Values</h2>
-<p>Work with durations, time-of-day values, and datetime arithmetic safely.</p>
+<p>Work with duration literals, time-of-day math, and datetime arithmetic.</p>
 </div>
 
-## Why this matters
+## What this feature gives you
 
-Time math breaks quickly unless syntax and precedence are consistent.
+- Duration is a first-class value with flexible literal forms
+- Time-of-day arithmetic supports rollovers with clear hints
+- DateTime +/- duration expressions accept natural duration phrases
 
-## Use it when
+## Syntax and usage contract
 
-- You want faster iteration without switching contexts.
-- You need readable formulas that teammates can follow.
-- You want reliable behavior under real user inputs.
+- Accept `2hours 1min`, `2 h 1 min`, and mixed spacing.
+- Duration conversions use `to`/`in` (`3h 7min 12s to min`).
+- `Time + Time` is invalid; use `Time - Time` for durations.
 
-## Try it in SmartPad
+## Runnable examples
 
-Examples for this feature are being backfilled. Add examples in the source spec and regenerate docs.
+<ExamplePlayground title={"Duration conversion"} description={"Convert composite durations into scalar target units."} code={"prep = 3h 7min 12s\nprep to min =>\nprep to s =>"} />
 
-## What this feature guarantees
+<ExamplePlayground title={"Time-of-day rollover"} description={"Time plus duration wraps with day context."} code={"start = 19:30\nduration = 5h 20min 3s\nfinish = start + duration =>"} />
 
-- New concept: `Duration` is a first-class value (not just “unit math”)
-- Time-of-day values: support `Time` as distinct from `DateTime`
-- Conversions: `to` should work for Duration and Time
-- DateTime + Duration parsing: accept “duration phrases” without punctuation
-- Disambiguation + safety rules (stuff that will bite you later)
-- Concrete expected outputs for your 3 failing lines
-- Extra examples you probably want tests for (high value)
+<ExamplePlayground title={"Datetime with natural duration"} description={"Subtract duration phrases directly from datetime literals."} code={"meeting = 01/04/2025 19:30\ntravel back = meeting - 2hours 1min =>"} />
 
-## Common mistakes
+## Guardrail examples
 
-- Use exact SmartPad syntax first, then optimize for brevity.
-- Keep context explicit (units, currencies, locale) when composing formulas.
+<ExamplePlayground title={"Invalid unit target"} description={"Duration cannot convert to incompatible dimensions."} code={"elapsed = 3h 7min 12s\nelapsed to kg =>"} />
+
+<ExamplePlayground title={"Invalid time math"} description={"Adding two clock times is intentionally rejected."} code={"first = 19:30\nsecond = 18:00\nfirst + second =>"} />
+
+## Critical behavior rules
+
+- durations should still be their own “time duration” unit family, so they can convert to `s/min/h/d` etc reliably.
+- Optional seconds with `s` suffix should remain duration, not time-of-day.
+- Result is a `Time`, but computation must be done modulo 24h.
+- Default display: show time only **plus** a rollover hint when non-zero.
+- `19:30 + 18:00 => error: cannot add two clock times; did you mean a duration?`
+- `01/04/2025 19:30` must parse as `2025-04-01 19:30` (local timezone unless specified)
+- DateTime arithmetic must accept any `Duration` form (spaced or unspaced).
+- Crossing DST: if you support timezone-aware DateTimes, the difference must reflect the actual elapsed seconds in that zone.
+- `19:30 * 2 =>` **error** (multiplying a clock time is nonsense)
+- Error: “Cannot add two clock times. Did you mean `19:30 - 18:00` or `19:30 + 18h`?”
+
+## Power-user checklist
+
+- Prefer `min` over bare `m` when you mean minutes.
+- Use explicit timezone-aware datetime literals for cross-region planning.
+- Keep mixed-sign duration math explicit with `+`/`-` operators.
 
 <p className="doc-footnote">Authoritative spec: <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/duration.spec.md">docs/Specs/duration.spec.md</a></p>

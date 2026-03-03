@@ -3617,3 +3617,44 @@
     *   Policy/documentation update only.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-03-03-01
+
+*   Timestamp: 2026-03-03 03:08:05 CET / 2026-03-03 02:08:05 UTC
+*   Summary:
+    *   User requested an urgent docs overhaul before posting the app publicly: flattened onboarding order, richer content depth, and valid spec-grounded examples.
+    *   Rebuilt the Docusaurus docs generation pipeline to output a single linear sidebar, “Start Here” onboarding flow, expanded guides, and richer per-feature contract pages.
+    *   Validated with docs build/publish pipeline, full machine gates, and targeted Playwright docs IA + visual sanity checks.
+*   Decisions:
+    *   Make generated docs intentionally linear (no sidebar subcategories) so newcomers can follow one obvious exploration path.
+    *   Use spec-derived contracts plus curated runnable/guardrail snippets per feature to eliminate invented syntax and sparse pages.
+    *   Keep docs validation enforceable via both pipeline build checks and dedicated Playwright regression coverage.
+*   User directives:
+    *   Fix docs hierarchy/completeness issues immediately.
+    *   Expand content depth with stronger examples grounded in official specs.
+    *   Run robust tests including Playwright-based checks before reporting completion.
+*   Assistant commitments:
+    *   Maintain flat onboarding IA and richer generated content as the default docs output.
+    *   Keep docs validation (machine gates + Playwright IA test) in future docs changes.
+    *   Do not mark complete until user confirmation after green machine checks.
+*   Artifacts:
+    *   `scripts/generate-docusaurus-docs.js` (rewritten)
+    *   `website/sidebars.ts` (flat ordered sidebar)
+    *   `website/docs/intro.md`
+    *   `website/docs/guides/getting-started.md`
+    *   `website/docs/guides/syntax-playbook.md`
+    *   `website/docs/guides/everyday-calculations.md` (new)
+    *   `website/docs/guides/privacy-and-portability.md` (new)
+    *   `website/docs/guides/troubleshooting.md`
+    *   `website/docs/specs/index.md`
+    *   `website/docs/specs/*.md` generated feature pages (renamed/cleaned canonical slugs)
+    *   `public/docs/**` regenerated static docs output
+    *   `tests/e2e/docs-ia.spec.ts` (new)
+    *   `aidocs/TODO_BACKLOG.md` (updated statuses)
+*   Pending updates:
+    *   `T-2026-02-13-02` marked `done`.
+    *   `T-2026-02-14-05` marked `done`.
+    *   `T-2026-02-14-09` remains `in_progress` (phase-2 premium docs enhancements).
+*   Risks/blockers:
+    *   No blocking machine failures remain in this change set.
+    *   Direct Playwright CLI screenshot capture outside test runner hit local sandbox/browser launch constraints; equivalent visual sanity coverage is enforced via Playwright test assertions in `tests/e2e/docs-ia.spec.ts`.
