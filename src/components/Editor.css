@@ -941,7 +941,7 @@ body.number-scrubbing * {
 }
 
 .plot-details-off .plot-view-body {
-  margin-top: 0;
+  margin: 10px 25px;
 }
 
 .plot-view-chart {

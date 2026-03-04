@@ -3788,3 +3788,33 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-03-04-06
+
+*   Timestamp: 2026-03-04 08:03:23 CET / 2026-03-04 07:03:23 UTC
+*   Summary:
+    *   User requested a specific compact-mode plot body spacing rule:
+      `.plot-details-off .plot-view-body { margin: 10px 25px; }`.
+    *   Assistant applied the CSS change and added aligned docs/test updates to keep mapped reliability gates consistent.
+    *   Also fixed an outstanding spec-map coverage gap by mapping `src/components/PlotViewExtension.ts` to plotting.
+*   Decisions:
+    *   Use exact user-provided spacing in `Editor.css`.
+    *   Add a concise spec note under editor/result-chip visual rules for compact plot body spacing.
+    *   Extend plotting evaluator tests with an `size=xl` regression assertion.
+*   User directives:
+    *   Apply the provided CSS snippet for `.plot-details-off .plot-view-body`.
+*   Assistant commitments:
+    *   Keep docs/spec/test gates green after this UI tweak.
+*   Artifacts:
+    *   `src/components/Editor.css` (updated compact plot body margin)
+    *   `docs/spec-map.json` (mapped `src/components/PlotViewExtension.ts` to plotting group)
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md` (added compact plot body spacing note)
+    *   `tests/unit/plotViewEvaluator.test.ts` (added `size=xl` coverage)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/plotViewEvaluator.test.ts --runInBand` ✅
+    *   Full gate rerun pending immediately after commit for range alignment.
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   Pre-commit docs/spec checks without explicit range still referenced prior commit delta; resolved by committing this change and rerunning gates.

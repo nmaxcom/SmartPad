@@ -114,4 +114,22 @@ describe("PlotViewEvaluator", () => {
       expect(result.size).toBe("md");
     }
   });
+
+  test("supports xl size token", () => {
+    const astNodes = [
+      parseLine("x = 2", 1),
+      parseLine("x^2 =>", 2),
+      parseLine("@view plot x=x size=xl domain=0..5", 3),
+    ];
+    const variables = new Map<string, Variable>([["x", createVariable("x", 2)]]);
+    const evaluator = new PlotViewEvaluator();
+
+    const result = evaluator.evaluate(astNodes[2], createContext(astNodes, variables));
+
+    expect(result?.type).toBe("plotView");
+    if (result?.type === "plotView") {
+      expect(result.status).toBe("connected");
+      expect(result.size).toBe("xl");
+    }
+  });
 });

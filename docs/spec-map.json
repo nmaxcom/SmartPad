@@ -93,7 +93,11 @@
     },
     {
       "name": "Plotting And Visualization",
-      "specPrefixes": ["src/plotting/", "docs/Specs/Plotting.spec.md"],
+      "specPrefixes": [
+        "src/plotting/",
+        "src/components/PlotViewExtension.ts",
+        "docs/Specs/Plotting.spec.md"
+      ],
       "docPrefixes": ["docs/Specs/Plotting.spec.md", "public/docs/"],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
     },

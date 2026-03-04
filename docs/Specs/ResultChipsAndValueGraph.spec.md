@@ -118,6 +118,14 @@ No behavior change, layout only.
 Plain explanation:
 These micro-states make the feature feel intentional and tactile.
 
+### 4.4 Compact Plot Body Spacing
+
+When plot controls are hidden (`.plot-details-off` mode), the plot body keeps a compact but readable inset:
+
+1. Vertical margin: `10px`
+2. Horizontal margin: `25px`
+3. This spacing applies to the plot body container, not the chart canvas itself.
+
 ---
 
 ## 5) Interaction Model
