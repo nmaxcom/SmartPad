@@ -426,6 +426,45 @@ test.describe("User Issues Fixed", () => {
     expect(clipboardInfo.text).not.toContain("\n\n");
   });
 
+  test("copying selected live-result lines includes inline => values and pastes back cleanly", async ({
+    page,
+  }) => {
+    await page.context().grantPermissions(["clipboard-write", "clipboard-read"]);
+
+    const pm = page.locator(".ProseMirror");
+    await pm.click();
+    await page.keyboard.press("ControlOrMeta+a");
+    await page.keyboard.press("Delete");
+
+    await pm.type("known = 5");
+    await page.keyboard.press("Enter");
+    await pm.type("known*3");
+    await page.keyboard.press("Enter");
+    await pm.type("2+2=>");
+    await waitForUIRenderComplete(page);
+
+    await page.keyboard.press("ControlOrMeta+a");
+    await page.keyboard.press("ControlOrMeta+c");
+
+    const clipboardText = await page.evaluate(async () => navigator.clipboard.readText());
+    expect(clipboardText).toMatch(/known\*3\s*=>\s*15/);
+    expect(clipboardText).toMatch(/2\+2\s*=>\s*4/);
+
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("ControlOrMeta+v");
+    await waitForUIRenderComplete(page);
+
+    const pastedText = await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      return editor ? editor.getText() : "";
+    });
+
+    expect(pastedText).toContain("known*3");
+    expect(pastedText).toContain("2+2=> 4");
+    await expect(page.locator(".semantic-error-result")).toHaveCount(0);
+  });
+
   test("single numeric input remains deletable with backspace", async ({ page }) => {
     const pm = page.locator(".ProseMirror");
     await pm.click();

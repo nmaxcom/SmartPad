@@ -4222,3 +4222,36 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-03-04-14
+
+*   Timestamp: 2026-03-04 23:56:35 CET / 2026-03-04 22:56:35 UTC
+*   Summary:
+    *   User reported copy behavior mismatch: explicit `=>` results can be copied with text selection, but live-result chips were omitted from Cmd+C clipboard content.
+    *   Assistant updated clipboard serialization to include live-result values for non-trigger lines as inline SmartPad-safe text (`line => value`) so copied snippets remain contextual and paste-compatible.
+    *   Added Playwright coverage to validate end-to-end Cmd+C clipboard text now includes live-result lines with values and that paste-back remains error-free.
+*   Decisions:
+    *   Use `=>` inline export format for live-result copy instead of parentheses to preserve SmartPad parse compatibility on paste.
+    *   Source live-result copy data from latest evaluated per-line status keyed by `lineId`.
+*   User directives:
+    *   Include live results in copy output in a contextual form (not floating numbers).
+    *   Ensure SmartPad paste remains valid.
+    *   Validate behavior with Playwright.
+*   Assistant commitments:
+    *   Keep explicit result/reference clipboard behavior unchanged while augmenting live-result serialization.
+*   Artifacts:
+    *   `src/components/Editor.tsx` (clipboard serializer now merges live-result statuses)
+    *   `tests/e2e/user-issues-fixed.spec.ts` (new Playwright copy/paste regression)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npx playwright test tests/e2e/user-issues-fixed.spec.ts -g "clipboard text includes results without extra blank lines|copying selected live-result lines includes inline => values and pastes back cleanly" -c playwright.3201.config.ts` ✅ (run against temporary Vite server on `127.0.0.1:3201`)
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run verify:changed` ✅
+    *   `npm run build` ✅
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   None.
