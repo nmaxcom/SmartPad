@@ -4081,6 +4081,31 @@
 *   Risks/blockers:
     *   None.
 
+## Entry J-2026-03-04-15
+
+*   Timestamp: 2026-03-05 00:42:11 CET / 2026-03-04 23:42:11 UTC
+*   Summary:
+    *   User requested an audit of actual `=>` trigger capabilities vs current live-result + solve behavior.
+    *   Assistant traced parser/evaluator/decorator flow (`astParser`, `Editor`, `SolveEvaluator`, trigger normalization/tests) and validated behavior with targeted unit suites.
+    *   Assistant confirmed key trigger-only paths (explicit error surfacing, explicit solve reliability) and identified parser ambiguity where some no-trigger `solve ...` forms are parsed as variable assignments.
+*   Decisions:
+    *   Use code + tests as source-of-truth for capability breakdown before proposing doc/spec updates.
+    *   Treat `solve` without `=>` as unreliable in current parser heuristics for specific equation forms.
+*   User directives:
+    *   First produce an exact breakdown of what trigger can do today (beyond simple value display).
+*   Assistant commitments:
+    *   Deliver a precise capability matrix: trigger-only, trigger-optional, and known caveats.
+    *   Follow up with concrete docs/spec drift fixes after user confirms desired policy.
+*   Artifacts:
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/solve.test.ts tests/unit/liveResultPreview.test.ts tests/unit/templateTriggerNormalization.test.ts tests/unit/variableUnitAmbiguity.test.ts tests/unit/bugHuntRegression.test.ts` ✅
+    *   Direct parser/evaluator probes via `node` + `ts-node/register` for `solve`/`=>` edge parsing and dispatch behavior ✅
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   Docs/spec wording is currently mixed around when `=>` is required vs optional; alignment pass still pending after capability confirmation.
+
 ## Entry J-2026-03-04-11
 
 *   Timestamp: 2026-03-04 23:09:18 CET / 2026-03-04 22:09:18 UTC
