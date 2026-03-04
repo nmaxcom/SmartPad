@@ -3713,3 +3713,26 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-03-04-03
+
+*   Timestamp: 2026-03-04 01:32:55 CET / 2026-03-04 00:32:55 UTC
+*   Summary:
+    *   Added an extra regression test for uppercase `@view` kind token normalization.
+    *   Confirmed targeted plot-view unit tests pass with the new case.
+    *   Noted that default `verify:changed` still reflects only the previous docs-only commit until this test update is committed.
+*   Decisions:
+    *   Commit the new test update so default verification (`HEAD~1...HEAD`) can run against a test-bearing commit.
+*   User directives:
+    *   No additional directive; this is validation hardening to satisfy completion gates.
+*   Assistant commitments:
+    *   Finalize with a green verify run and report readiness for user confirmation.
+*   Artifacts:
+    *   `tests/unit/plotViewEvaluator.test.ts` (added kind normalization regression test)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/plotViewEvaluator.test.ts --runInBand` ✅
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   None.
