@@ -1,5 +1,6 @@
 import React from "react";
 import { QUICK_TOUR_TEMPLATE } from "../../templates/quickTourTemplate";
+import { CAPABILITY_SPRINT_TEMPLATE } from "../../templates/capabilitySprintTemplate";
 import { useSheetContext } from "../../state/SheetContext";
 import { normalizeTemplateTriggers } from "./templateTriggerNormalization";
 import "./TemplatePanel.css";
@@ -11,6 +12,12 @@ const templates = [
     emoji: "✨",
     name: "Quick Tour",
     content: QUICK_TOUR_TEMPLATE,
+  },
+  {
+    id: "capability-sprint",
+    emoji: "🚀",
+    name: "Capability Sprint",
+    content: CAPABILITY_SPRINT_TEMPLATE,
   },
   {
     id: "unit-aliases",

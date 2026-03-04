@@ -3883,3 +3883,38 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   No functional blockers; e2e quick-tour spec text expectation was updated to align with new template line content.
+
+## Entry J-2026-03-04-09
+
+*   Timestamp: 2026-03-04 22:07:29 CET / 2026-03-04 21:07:29 UTC
+*   Summary:
+    *   User requested a new condensed template (target 40-80 lines) to stress-test tour generation while showcasing nearly all SmartPad capabilities.
+    *   Assistant added a new `Capability Sprint` template and wired it into the template panel.
+    *   Added a dedicated unit test to enforce line-count bounds and no parse/runtime failures after trigger normalization; iterated template lines until test was green.
+*   Decisions:
+    *   Keep `=>` usage minimal in the new template, using it only for explicit solve behavior.
+    *   Use practical, compact sections (currency/percentages, lists/aggregates/filtering/ranges, date math, units/rates, plot view, solve) instead of one long scenario.
+*   User directives:
+    *   Create a new template with condensed real-life examples, refresh from specs/tests, and validate proposals before finalizing.
+*   Assistant commitments:
+    *   Keep the new template executable end-to-end and preserve sheet-insertion behavior from template clicks.
+*   Artifacts:
+    *   `src/templates/capabilitySprintTemplate.ts` (new template content)
+    *   `src/components/VariablePanel/TemplatePanel.tsx` (new template card wiring)
+    *   `tests/unit/capabilitySprintTemplate.test.ts` (new validation tests)
+    *   `docs/spec-map.json` (mapped `src/templates/capabilitySprintTemplate.ts` under UI Panels And Settings)
+    *   `docs/ABOUT.md` (added note for new Capability Sprint template)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/capabilitySprintTemplate.test.ts --runInBand` ✅
+    *   `npm run test:unit -- tests/unit/quickTourTemplate.test.ts tests/unit/templatePanelSheetCreation.test.tsx tests/unit/templateTriggerNormalization.test.ts --runInBand` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run verify:changed` ✅
+    *   `npm run build` ✅
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   None.

@@ -13,6 +13,7 @@ Recent template updates:
 - Grouped numeric input in assignments is explicitly unsupported (`2,000` should be entered as `2000`).
 - Clicking a quick template now opens it in a new sheet and makes that new sheet active, preserving the current sheet content.
 - The `Quick Tour` template was condensed into practical mini-scenarios and now starts with a short scrubbing primer.
+- Added a new `Capability Sprint` template (40-80 lines) that compactly showcases currency, lists, ranges, dates, units, plotting, and solve patterns with minimal trigger usage.
 
 These are some examples of its syntax:
 # Quick Tour: a guided walkthrough

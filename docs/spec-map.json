@@ -134,6 +134,7 @@
         "src/state/settingsStore.ts",
         "src/state/SettingsContext.tsx",
         "src/templates/quickTourTemplate.ts",
+        "src/templates/capabilitySprintTemplate.ts",
         "src/App.css",
         "src/styles/",
         "src/App.tsx",
