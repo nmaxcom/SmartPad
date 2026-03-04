@@ -4267,3 +4267,35 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   Verification scripts default to `HEAD~1...HEAD`; when previous commit touched unrelated mapped files, docs-drift/verify may fail until rerun against the assistant's own commit range.
+
+## Entry J-2026-03-05-02
+
+*   Timestamp: 2026-03-05 00:16:00 CET / 2026-03-04 23:16:00 UTC
+*   Summary:
+    *   Assistant completed scoped commits for solve/trigger spec+docs+template work and resolved a post-commit mapping gap (`docs/Specs/implemented/index.md` not covered by spec-map governance prefixes).
+    *   All required machine gates are now green, including `verify:changed`.
+*   Decisions:
+    *   Extend `Spec Governance` mapping prefixes to include `docs/Specs/implemented/` so implemented index/card updates are first-class mapped artifacts.
+*   User directives:
+    *   None new; execution continued on prior solve/trigger alignment request.
+*   Assistant commitments:
+    *   Present task status as ready for user review/confirmation (not auto-closed).
+*   Artifacts:
+    *   Commit `7a0f7d3f` — `docs(spec): formalize solve and explicit trigger contracts`
+    *   Commit `73d351f2` — `docs(spec-map): include implemented specs in governance mapping`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/capabilitySprintTemplate.test.ts tests/unit/solve.test.ts tests/unit/templateTriggerNormalization.test.ts` ✅
+    *   `npm run docs:map -- HEAD~2...HEAD` ✅
+    *   `npm run docs:drift -- HEAD~2...HEAD` ✅
+    *   `npm run spec:test -- HEAD~2...HEAD` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run verify:changed -- HEAD~2...HEAD` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run verify:changed` ✅
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   None.
