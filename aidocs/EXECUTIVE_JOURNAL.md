@@ -3982,3 +3982,36 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   `docs:drift` is range-sensitive to latest commit pair; requires rerun post-commit.
+
+## Entry J-2026-03-04-12
+
+*   Timestamp: 2026-03-04 23:03:35 CET / 2026-03-04 22:03:35 UTC
+*   Summary:
+    *   User requested Templates panel priority in the right sidebar when other panels are open.
+    *   Assistant implemented deterministic sidebar ordering that pins `Quick Templates` to the top whenever another sidebar panel is visible.
+    *   Added unit coverage for the ordering rules and updated docs note.
+*   Decisions:
+    *   Encapsulate panel-order behavior in a pure utility (`getSidebarPanelOrder`) to keep `App.tsx` render logic simple and testable.
+    *   Preserve current order for non-template configurations (`Variable`, then `Settings`).
+*   User directives:
+    *   "make the templates panel at the top if others are open"
+*   Assistant commitments:
+    *   Keep behavior stable across all visibility combinations, not only the all-panels-open case.
+*   Artifacts:
+    *   `src/components/Layout/sidebarPanelOrder.ts` (new panel order utility)
+    *   `src/App.tsx` (sidebar render order now driven by utility)
+    *   `tests/unit/sidebarPanelOrder.test.ts` (ordering regression tests)
+    *   `docs/ABOUT.md` (behavior note update)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/sidebarPanelOrder.test.ts tests/unit/templatePanelSheetCreation.test.tsx` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run build` ✅
+    *   `npm run verify:changed` ✅
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   None.

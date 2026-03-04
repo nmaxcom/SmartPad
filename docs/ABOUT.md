@@ -12,6 +12,7 @@ Recent template updates:
 - The template now includes time-slot ranges (`09:00..11:00 step 30 min`) and deferred dependency examples (`total deferred = price*qty` before defining `qty`).
 - Grouped numeric input in assignments is explicitly unsupported (`2,000` should be entered as `2000`).
 - Clicking a quick template now opens it in a new sheet and makes that new sheet active, preserving the current sheet content.
+- When multiple right-side panels are open, the `Quick Templates` panel is pinned at the top for faster access.
 - The `Quick Tour` template was condensed into practical mini-scenarios and now starts with a short scrubbing primer.
 - Added a new `Capability Sprint` template (40-80 lines) that compactly showcases currency, lists, ranges, dates, units, plotting, and solve patterns with minimal trigger usage.
 

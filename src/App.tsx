@@ -5,6 +5,7 @@ import { VariableProvider } from "./state";
 import { SettingsProvider, useSettingsContext } from "./state/SettingsContext";
 import { SheetProvider, useSheetContext } from "./state/SheetContext";
 import AppHeader from "./components/Layout/AppHeader";
+import { getSidebarPanelOrder, SidebarPanelKey } from "./components/Layout/sidebarPanelOrder";
 import VariablePanel from "./components/VariablePanel/VariablePanel";
 import TemplatePanel from "./components/VariablePanel/TemplatePanel";
 import { SettingsModal } from "./components/ui/SettingsModal";
@@ -122,6 +123,24 @@ function AppContent() {
     settings.showErrorBackground ? "errors-bg-on" : "errors-bg-off",
     settings.showPlotDetails ? "plot-details-on" : "plot-details-off",
   ].join(" ");
+  const sidebarPanelOrder = getSidebarPanelOrder({
+    showVariablePanel: settings.showVariablePanel,
+    showTemplatePanel: settings.showTemplatePanel,
+    showSettingsPanel: settings.showSettingsPanel,
+  });
+
+  const renderSidebarPanel = (panel: SidebarPanelKey) => {
+    switch (panel) {
+      case "template":
+        return <TemplatePanel key="template" />;
+      case "variable":
+        return <VariablePanel key="variable" />;
+      case "settings":
+        return <SettingsPanel key="settings" />;
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className={appClassName}>
@@ -149,13 +168,7 @@ function AppContent() {
               {!runtimeParams.embed && showSidebar && (
                 <aside className="right-panel">
                   <div className="sidebar-container">
-                  {settings.showVariablePanel && (
-                    <>
-                      <VariablePanel />
-                    </>
-                  )}
-                    {settings.showTemplatePanel && <TemplatePanel />}
-                    {settings.showSettingsPanel && <SettingsPanel />}
+                    {sidebarPanelOrder.map((panel) => renderSidebarPanel(panel))}
                   </div>
                 </aside>
               )}
