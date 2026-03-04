@@ -3736,3 +3736,31 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-03-04-04
+
+*   Timestamp: 2026-03-04 01:36:13 CET / 2026-03-04 00:36:13 UTC
+*   Summary:
+    *   User requested changing local dev port from `3000` to `3200` because `3000` is already in use.
+    *   Assistant updated Vite dev server port and aligned the `npm run dev` guard script to check/report the same port.
+*   Decisions:
+    *   Set canonical dev port to `3200` in both config and boot-check script.
+    *   Keep strict port behavior unchanged (`strictPort: true`).
+*   User directives:
+    *   Change port 3000 to 3200.
+*   Assistant commitments:
+    *   Keep local dev boot behavior consistent between config and guard script.
+*   Artifacts:
+    *   `vite.config.ts` (server port updated to 3200)
+    *   `scripts/npm_run_dev_server_check.js` (port guard updated to 3200)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run verify:changed` ✅
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   None.

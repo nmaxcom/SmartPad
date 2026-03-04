@@ -2,20 +2,22 @@
 
 const { spawn, exec } = require("child_process");
 
-function checkPort3000() {
+const DEV_PORT = 3200;
+
+function checkDevPort() {
   return new Promise((resolve) => {
-    exec("lsof -ti:3000", (error, stdout) => {
+    exec(`lsof -ti:${DEV_PORT}`, (error, stdout) => {
       resolve(stdout.trim() !== ""); // Returns true if port is in use
     });
   });
 }
 
 async function startDevServer() {
-  const portInUse = await checkPort3000();
+  const portInUse = await checkDevPort();
 
   if (portInUse) {
     console.error(
-      'The Vite dev server is already up and running at 3000, no need to run dev server! (if you want to re-run it anyway, kill the process running on port 3000 and run "npm run dev" again)\n\n'
+      `The Vite dev server is already up and running at ${DEV_PORT}, no need to run dev server! (if you want to re-run it anyway, kill the process running on port ${DEV_PORT} and run "npm run dev" again)\n\n`
     );
     process.exit(1);
   }
