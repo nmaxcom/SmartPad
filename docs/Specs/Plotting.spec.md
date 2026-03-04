@@ -208,6 +208,12 @@ Where:
 * `<kind>` defaults to `plot` if omitted
 * `<params>` are key=value pairs (space-separated)
 
+Parser tolerance rules (v1 implementation):
+
+* Keys accept optional spaces around `=`, so both `size=lg` and `size = lg` are valid.
+* `kind` and `size` are case-insensitive (`plot`, `PLOT`, `lg`, `LG`).
+* `size` may include trailing punctuation from inline editing (for example `size=lg,`) and is normalized.
+
 ---
 
 ### 5.2 Supported fields (v1)

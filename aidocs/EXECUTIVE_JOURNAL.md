@@ -3689,3 +3689,27 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   None identified for this patch.
+
+## Entry J-2026-03-04-02
+
+*   Timestamp: 2026-03-04 01:31:47 CET / 2026-03-04 00:31:47 UTC
+*   Summary:
+    *   Post-commit `verify:changed` on the code patch failed `docs:drift` because changed parser/evaluator files were mapped to the Expression Engine group and required accompanying docs changes.
+    *   Assistant updated mapping/docs to reflect plotting-related parsing behavior and reran full validation across both commits.
+*   Decisions:
+    *   Include `docs/Specs/Plotting.spec.md` in Expression Engine `docPrefixes` so plot-view parser/evaluator changes can satisfy docs drift with the relevant spec.
+    *   Clarify Plotting spec grammar tolerance for `@view` params (`size = lg`, case-insensitive values, trailing punctuation normalization).
+*   User directives:
+    *   No new directives; this was completion-gate follow-through for the reported size bug fix.
+*   Assistant commitments:
+    *   Keep verify gate fully green for the complete change range before handoff.
+*   Artifacts:
+    *   `docs/spec-map.json` (updated Expression Engine doc mapping)
+    *   `docs/Specs/Plotting.spec.md` (updated parser tolerance notes)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run verify:changed -- HEAD~2...HEAD` ✅
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   None.

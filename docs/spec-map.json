@@ -13,6 +13,7 @@
       "docPrefixes": [
         "docs/Specs/LiveResult.spec.md",
         "docs/Specs/implemented/live-results.md",
+        "docs/Specs/Plotting.spec.md",
         "docs/Specs/Lists.spec.md",
         "docs/Specs/implemented/lists.md",
         "docs/Specs/Locale.spec.md",
