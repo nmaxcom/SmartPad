@@ -222,7 +222,7 @@ function parseViewDirective(
 
     const params: Record<string, string> = {};
     const remainder = parts.slice(paramStart).join(" ");
-    const keyRegex = /(\w+)=/g;
+    const keyRegex = /(\w+)\s*=\s*/g;
     const matches = Array.from(remainder.matchAll(keyRegex));
     for (let i = 0; i < matches.length; i++) {
       const match = matches[i];

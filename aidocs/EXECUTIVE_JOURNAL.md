@@ -3658,3 +3658,34 @@
 *   Risks/blockers:
     *   No blocking machine failures remain in this change set.
     *   Direct Playwright CLI screenshot capture outside test runner hit local sandbox/browser launch constraints; equivalent visual sanity coverage is enforced via Playwright test assertions in `tests/e2e/docs-ia.spec.ts`.
+
+## Entry J-2026-03-04-01
+
+*   Timestamp: 2026-03-04 01:30:19 CET / 2026-03-04 00:30:19 UTC
+*   Summary:
+    *   User reported that `@view ... size=` values (`lg`, `md`, etc.) appeared to have no effect.
+    *   Assistant traced the `@view` parse/evaluate/render path and implemented a parsing/normalization hardening fix for size handling.
+    *   Added unit regression coverage for explicit and tolerant `size` formats.
+*   Decisions:
+    *   Accept optional whitespace around `=` in `@view` params so `size = lg` parses.
+    *   Normalize `kind` and `size` tokens (`trim`, lowercase) and accept trailing punctuation for `size`.
+*   User directives:
+    *   Investigate why plot `size=` values did not resize as expected.
+*   Assistant commitments:
+    *   Keep plot sizing behavior aligned with `docs/Specs/Plotting.spec.md` and guarded by tests.
+*   Artifacts:
+    *   `src/parsing/astParser.ts` (updated `@view` key/value regex to support spaces around `=`)
+    *   `src/eval/plotViewEvaluator.ts` (normalized `kind`/`size` parsing for robust size resolution)
+    *   `tests/unit/plotViewEvaluator.test.ts` (added size regression tests)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/plotViewEvaluator.test.ts --runInBand` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run verify:changed` ✅ (repo default range `HEAD~1...HEAD`)
+    *   `npm run build` ✅
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   None identified for this patch.

@@ -59,4 +59,40 @@ describe("PlotViewEvaluator", () => {
       expect(result.targetLine).toBe(2);
     }
   });
+
+  test("applies supported plot sizes from @view params", () => {
+    const astNodes = [
+      parseLine("x = 2", 1),
+      parseLine("x^2 =>", 2),
+      parseLine("@view plot x=x size=lg domain=0..5", 3),
+    ];
+    const variables = new Map<string, Variable>([["x", createVariable("x", 2)]]);
+    const evaluator = new PlotViewEvaluator();
+
+    const result = evaluator.evaluate(astNodes[2], createContext(astNodes, variables));
+
+    expect(result?.type).toBe("plotView");
+    if (result?.type === "plotView") {
+      expect(result.status).toBe("connected");
+      expect(result.size).toBe("lg");
+    }
+  });
+
+  test("normalizes size with whitespace, case, and trailing punctuation", () => {
+    const astNodes = [
+      parseLine("x = 2", 1),
+      parseLine("x^2 =>", 2),
+      parseLine("@view plot x=x size = LG, domain=0..5", 3),
+    ];
+    const variables = new Map<string, Variable>([["x", createVariable("x", 2)]]);
+    const evaluator = new PlotViewEvaluator();
+
+    const result = evaluator.evaluate(astNodes[2], createContext(astNodes, variables));
+
+    expect(result?.type).toBe("plotView");
+    if (result?.type === "plotView") {
+      expect(result.status).toBe("connected");
+      expect(result.size).toBe("lg");
+    }
+  });
 });

@@ -17,15 +17,20 @@ const SUPPORTED_KINDS: PlotKind[] = ["plot", "scatter", "hist", "box", "auto"];
 const SUPPORTED_SIZES: PlotSize[] = ["sm", "md", "lg", "xl"];
 
 const normalizeKind = (kind?: string): PlotKind => {
-  if (kind && SUPPORTED_KINDS.includes(kind as PlotKind)) {
-    return kind as PlotKind;
+  const normalized = kind?.trim().toLowerCase();
+  if (normalized && SUPPORTED_KINDS.includes(normalized as PlotKind)) {
+    return normalized as PlotKind;
   }
   return "plot";
 };
 
 const normalizeSize = (size?: string): PlotSize | undefined => {
-  if (size && SUPPORTED_SIZES.includes(size as PlotSize)) {
-    return size as PlotSize;
+  const normalized = size
+    ?.trim()
+    .toLowerCase()
+    .replace(/[;,]+$/, "");
+  if (normalized && SUPPORTED_SIZES.includes(normalized as PlotSize)) {
+    return normalized as PlotSize;
   }
   return undefined;
 };
