@@ -17,7 +17,7 @@ test.describe("Quick Tour template", () => {
     await expect(errorWidgets).toHaveCount(0);
 
     await expect(page.locator(".ProseMirror")).toContainText(
-      "@view plot x=x y=base + bump*x domain=0..8"
+      "@view plot x=x y=ticket net + bump*x domain=0..10 size=md"
     );
   });
 });

@@ -1,52 +1,41 @@
-export const QUICK_TOUR_TEMPLATE = `# Quick Tour: run a pop-up night in 3 minutes
-# This sheet is a compact 360: variables, live sync, percentages, units, lists, ranges, chips, and plot.
+export const QUICK_TOUR_TEMPLATE = `# Quick Tour: SmartPad in 3 minutes
+# Scrubbing: hover any number and drag left/right to change it.
+# Start by scrubbing attendees base or ticket list and watch the whole sheet react.
 
-guests base = 120
+# 1) Workshop launch: currency + percentages + conversion + chart
+attendees base = 140
 walk ins = 18
-show up rate = 78%
-guests total = guests base * show up rate + walk ins =>
-
-# Try this first: scrub guests base or show up rate and watch guests total react.
-
-ticket list = $24
+attendees total = attendees base + walk ins =>
+ticket list = $32
 promo = 12%
 service fee = 3.5%
 ticket after promo = promo off ticket list =>
 ticket net = service fee on ticket after promo =>
-gross sales = guests total * ticket net =>
-
-drink per guest = 0.55 L
-drink total = guests total * drink per guest =>
+gross sales = attendees total * ticket net =>
+drink per attendee = 0.4 L
+drink total = attendees total * drink per attendee =>
 drink total to gal =>
-ice blocks = 7
-ice per block = 5 kg
-ice total = ice blocks * ice per block =>
-ice total to lb =>
+x = 0
+bump = 4
+@view plot x=x y=ticket net + bump*x domain=0..10 size=md
 
-staff count = 6
-shift hours = 4
-staff rate = $22
-labor cost = staff count * shift hours * staff rate =>
-snacks = $45, $32, $28, $30
-snacks total = sum(snacks) =>
-snack avg = avg(snacks) =>
-ops cost = labor cost + snacks total =>
-profit = gross sales - ops cost =>
+# 2) Cost planning: lists + aggregates
+vendor quotes = $1800, $2100, $1950, $2050
+best quote = min(vendor quotes) =>
+average quote = avg(vendor quotes) =>
+staff hours = 6, 5.5, 7, 6
+total staff hours = sum(staff hours) =>
 
-checkpoints = 18:00..21:00 step 30 min =>
+# 3) Schedule and dates: ranges + date math
+setup slots = 16:00..19:00 step 30 min =>
+launch date = 2026-05-14
+launch date + 21 days =>
+launch date - 2026-05-01 =>
 
-# Chip moves: click or drag any result chip into a new line to reuse it as a live reference.
+# 4) Back-solve a gap
+revenue goal = total(6500, 4200, gap)
+revenue goal => 15000
+gap =>
 
-base = 120
-bump = 18
-@view plot x=x y=base + bump*x domain=0..8
-
-target total = total(500, 300, delta)
-target total => 1200
-delta =>
-
-# Quick loop:
-# 1) scrub a number
-# 2) drop a chip into a new formula
-# 3) change guests base and watch everything stay in sync
+# Tip: click or drag any result chip into a new line to reuse it as a live dependency.
 `;

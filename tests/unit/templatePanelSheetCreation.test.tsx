@@ -21,7 +21,7 @@ describe("TemplatePanel", () => {
     expect(createSheetFromContent).toHaveBeenCalledTimes(1);
     const [content, title, makeActive] = createSheetFromContent.mock.calls[0];
     expect(typeof content).toBe("string");
-    expect(content).toContain("guests base = 120");
+    expect(content).toContain("attendees base = 140");
     expect(title).toBe("Quick Tour");
     expect(makeActive).toBe(true);
   });

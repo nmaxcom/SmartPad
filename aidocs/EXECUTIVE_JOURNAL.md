@@ -3850,3 +3850,36 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-03-04-08
+
+*   Timestamp: 2026-03-04 21:52:41 CET / 2026-03-04 20:52:41 UTC
+*   Summary:
+    *   User requested improving the `Quick Tour` template to be condensed, practical, and to explain scrubbing briefly at the top.
+    *   Assistant rewrote the template into compact real-life mini-scenarios covering core capabilities (currency/percentages, unit conversion, charting, lists, ranges, date math, and solve).
+    *   Updated dependent tests and docs note to match the new quick-tour content.
+*   Decisions:
+    *   Keep the tour short and operational with sectioned examples instead of long monolithic walkthrough text.
+    *   Preserve plot coverage in template via explicit `@view` line and maintain no-error template execution constraints.
+*   User directives:
+    *   Improve quick tour with scrubbing intro and condensed useful examples spanning features.
+*   Assistant commitments:
+    *   Keep template runnable without parse/runtime errors and keep docs/tests in sync.
+*   Artifacts:
+    *   `src/templates/quickTourTemplate.ts` (rewritten quick tour content)
+    *   `tests/e2e/quick-tour-template.spec.ts` (updated expected plot line)
+    *   `tests/unit/templatePanelSheetCreation.test.tsx` (updated quick-tour content assertion)
+    *   `docs/ABOUT.md` (added quick-tour update note)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/quickTourTemplate.test.ts tests/unit/templatePanelSheetCreation.test.tsx --runInBand` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run verify:changed` ✅ (default range)
+    *   `npm run build` ✅
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   No functional blockers; e2e quick-tour spec text expectation was updated to align with new template line content.
