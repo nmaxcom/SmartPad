@@ -3764,3 +3764,27 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-03-04-05
+
+*   Timestamp: 2026-03-04 01:38:27 CET / 2026-03-04 00:38:27 UTC
+*   Summary:
+    *   User reported plot `size=` still appeared ignored after prior parser/evaluator fixes.
+    *   Assistant identified a render-layer issue: plot widget key omitted `size`, so size-only edits could reuse old DOM and not repaint dimensions.
+    *   Updated widget key derivation to include `kind`, `size`, and x variable identity.
+*   Decisions:
+    *   Force plot widget recreation when `size=` changes by including size in decoration key.
+*   User directives:
+    *   Fix remaining `size=` behavior issue.
+*   Assistant commitments:
+    *   Keep size changes visually deterministic for persistent/transient plot widgets.
+*   Artifacts:
+    *   `src/components/PlotViewExtension.ts` (updated widget key derivation)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/plotViewEvaluator.test.ts --runInBand` ✅
+    *   `npm run verify:changed` ✅ (includes docs/spec checks and build)
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   None.

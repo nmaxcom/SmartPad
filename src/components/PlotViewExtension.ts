@@ -293,6 +293,9 @@ const buildPlotModel = (
 
 const buildPlotKey = (model: PlotViewModel, fallbackLine?: number): string => {
   const line = model.targetLine ?? fallbackLine ?? 0;
+  const kindKey = model.kind || "plot";
+  const sizeKey = model.size || "md";
+  const xVarKey = model.x || "x";
   const xKey = model.currentX !== undefined ? Math.round(model.currentX * 1000) : "na";
   const yKey =
     model.currentY !== undefined && model.currentY !== null
@@ -305,7 +308,7 @@ const buildPlotKey = (model: PlotViewModel, fallbackLine?: number): string => {
   const viewKey = model.view ? `${model.view.min}:${model.view.max}` : "auto";
   const yDomainKey = model.yDomain ? `${model.yDomain.min}:${model.yDomain.max}` : "auto";
   const yViewKey = model.yView ? `${model.yView.min}:${model.yView.max}` : "auto";
-  return `plot-${model.source}-${line}-${xKey}-${yKey}-${seriesKey}-${domainKey}-${viewKey}-${yDomainKey}-${yViewKey}`;
+  return `plot-${model.source}-${line}-${kindKey}-${sizeKey}-${xVarKey}-${xKey}-${yKey}-${seriesKey}-${domainKey}-${viewKey}-${yDomainKey}-${yViewKey}`;
 };
 
 const deriveYDomain = (data?: PlotPoint[]): PlotRange | undefined => {
