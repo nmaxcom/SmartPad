@@ -3951,3 +3951,34 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   None; no failing checks after patch.
+
+## Entry J-2026-03-04-11
+
+*   Timestamp: 2026-03-04 23:00:13 CET / 2026-03-04 22:00:13 UTC
+*   Summary:
+    *   User reported semantic-highlighting inconsistency: `where` appearing as variable color in filter expressions and asked whether `on` keyword coloring is expected.
+    *   Assistant added context-aware `where` keyword tokenization for filter/solve clause usage, while preserving explicit variable references named `where`.
+    *   Added tokenizer regressions and updated spec/docs mapping notes for the highlighting rule.
+*   Decisions:
+    *   Keep `on`/`off` as keyword tokens in percentage phrases.
+    *   Classify `where` as keyword only in operator contexts (`where > ...`, `where x = ...`) to avoid breaking legitimate `where` variable references.
+*   User directives:
+    *   Fix highlighting behavior and clarify whether `on` should be red/keyword.
+*   Assistant commitments:
+    *   Maintain backward-compatible variable highlighting when a variable is literally named `where`.
+*   Artifacts:
+    *   `src/components/SemanticHighlightExtension.ts` (context-aware `where` keyword handling; live-expression keyword signal alignment)
+    *   `tests/unit/semanticHighlightTokenization.test.ts` (new regression tests for `where` and `on` tokenization)
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md` (semantic highlighting keyword rule note)
+    *   `docs/spec-map.json` (mapped `src/types/NumberValue.ts` under Expression Engine)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/semanticHighlightTokenization.test.ts` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ⚠️ failed pre-commit due previous commit range (`HEAD~1...HEAD`) missing docs updates for prior Expression Engine changes; to be rerun after this commit advances HEAD.
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   `docs:drift` is range-sensitive to latest commit pair; requires rerun post-commit.

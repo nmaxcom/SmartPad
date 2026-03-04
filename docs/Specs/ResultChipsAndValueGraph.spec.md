@@ -346,7 +346,13 @@ By default SmartPad keeps references alive when copying/exporting text, so paste
 4. While user is in incomplete comparator/trigger states (e.g. trailing `=` before typing `>`), live result is suppressed to avoid placeholder gibberish/noise.
 5. Phrase-based percentage expressions (e.g. `discount off base price`, `tax on final price`) bypass unresolved-identifier pre-check and are evaluated directly.
 
-### 8.8 Current SmartPad Touchpoints (Implementation map)
+### 8.8 Semantic Highlighting Keyword Rules
+
+1. `on`/`off` are highlighted as keywords in percentage phrases (for example `service fee on ticket list`).
+2. `where` is highlighted as a keyword when used as a filter/solve clause operator (for example `list where > 10` or `solve x where y = 2`).
+3. A user-defined variable named `where` still highlights as a variable in normal variable-reference positions (for example `where + 1`).
+
+### 8.9 Current SmartPad Touchpoints (Implementation map)
 
 Expected primary touchpoints in current codebase:
 

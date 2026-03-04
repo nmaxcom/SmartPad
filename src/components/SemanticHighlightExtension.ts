@@ -23,7 +23,7 @@ import {
   isFunctionDefinitionNode,
 } from "../parsing/ast";
 
-const LIVE_HIGHLIGHT_KEYWORD_REGEX = /\b(to|in|of|on|off|as|is|per)\b/i;
+const LIVE_HIGHLIGHT_KEYWORD_REGEX = /\b(to|in|of|on|off|as|is|per|where|asc|desc)\b/i;
 const SCRUBBABLE_NUMBER_LITERAL_REGEX = /^[-+]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/;
 const GROUPED_NUMBER_LITERAL_PREFIX_REGEX =
   /^[+-]?\d{1,3}(?:,\d{3})+(?:\.\d+)?(?:[eE][+-]?\d+)?/;
@@ -530,6 +530,7 @@ export function tokenizeExpression(
   const currencySymbolRegex = /^[\$€£¥₹₿]/;
   const currencyCodeRegex = /^(CHF|CAD|AUD)\b/;
   const keywordRegex = /^(to|in|of|on|off|as|is|per)\b/;
+  const whereKeywordRegex = /^where\b/i;
   const constantRegex = /^(PI|E)\b/;
 
   // Get all variable names sorted by length (longest first for greedy matching)
@@ -606,6 +607,20 @@ export function tokenizeExpression(
             break;
           }
         }
+      }
+    }
+
+    if (!matched) {
+      const whereMatch = expr.substring(pos).match(whereKeywordRegex);
+      if (whereMatch && shouldTreatWhereAsKeyword(expr, pos)) {
+        pushToken({
+          type: "keyword",
+          start: baseOffset + pos,
+          end: baseOffset + pos + whereMatch[0].length,
+          text: whereMatch[0],
+        });
+        pos += whereMatch[0].length;
+        matched = true;
       }
     }
 
@@ -898,4 +913,23 @@ function matchDateLiteralTokens(
   }
 
   return null;
+}
+
+function shouldTreatWhereAsKeyword(expr: string, whereStart: number): boolean {
+  let cursor = whereStart + "where".length;
+  while (cursor < expr.length && /\s/.test(expr[cursor])) {
+    cursor += 1;
+  }
+
+  if (cursor >= expr.length) {
+    return false;
+  }
+
+  const remainder = expr.slice(cursor);
+  if (/^(>=|<=|==|!=|=|>|<)/.test(remainder)) {
+    return true;
+  }
+
+  // Support solve where-clauses like: solve x where y = 2
+  return /^[a-zA-Z_][a-zA-Z0-9_\s]*\s*=/.test(remainder);
 }

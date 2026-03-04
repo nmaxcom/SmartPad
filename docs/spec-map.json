@@ -7,6 +7,7 @@
         "src/parsing/",
         "src/lowering/",
         "src/math/",
+        "src/types/NumberValue.ts",
         "docs/Specs/LiveResult.spec.md",
         "docs/Specs/implemented/live-results.md"
       ],
