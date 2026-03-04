@@ -3918,3 +3918,36 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-03-04-10
+
+*   Timestamp: 2026-03-04 22:54:58 CET / 2026-03-04 21:54:58 UTC
+*   Summary:
+    *   User reported bugs in the new Capability Sprint template where percentage chaining and duration math rendered unresolved symbolic expressions.
+    *   Assistant fixed evaluator behavior for nested parenthesized `% on/off` expressions in variable assignments and for `number * duration` multiplication ordering.
+    *   Added unit regressions for both reported bugs.
+*   Decisions:
+    *   Keep template content unchanged and fix root evaluation behavior in semantic evaluators.
+    *   Reuse percentage evaluator logic as a guarded fallback inside variable assignment evaluation when parse output is symbolic/parse-error and expression resembles percentage syntax.
+*   User directives:
+    *   Fix the bugs shown in screenshots.
+*   Assistant commitments:
+    *   Preserve existing phrase-variable behavior while resolving nested percentage and duration-ordering regressions.
+*   Artifacts:
+    *   `src/eval/percentageEvaluatorV2.ts` (public percentage-value evaluator entrypoint, parenthesis-normalized subexpression handling)
+    *   `src/eval/variableEvaluatorV2.ts` (percentage fallback for symbolic/parse-error assignment expressions)
+    *   `src/types/NumberValue.ts` (`number * duration` delegation to duration arithmetic)
+    *   `tests/unit/bugHuntRegression.test.ts` (new regression coverage for both bug reports)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/bugHuntRegression.test.ts` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run build` ✅
+    *   `npm run verify:changed` ✅
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   None; no failing checks after patch.

@@ -117,8 +117,13 @@ export class NumberValue extends SemanticValue {
       return new NumberValue(this.value * percentValue);
     }
     
-    if (other.getType() === 'currency' || other.getType() === 'unit' || other.getType() === 'currencyUnit') {
-      // Let the other type handle this (currency/unit/currencyUnit * number)
+    if (
+      other.getType() === 'currency' ||
+      other.getType() === 'unit' ||
+      other.getType() === 'currencyUnit' ||
+      other.getType() === 'duration'
+    ) {
+      // Let the other type handle this (currency/unit/currencyUnit/duration * number)
       return other.multiply(this);
     }
     

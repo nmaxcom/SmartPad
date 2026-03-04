@@ -148,4 +148,33 @@ describe("Bug-hunt regression fixes", () => {
       "Invalid range step: expected a positive duration"
     );
   });
+
+  test("evaluates nested percentage on/off assignments with parenthesized bases", () => {
+    const context = createContext();
+    evaluateLine("ticket list = $28", context, 1);
+    evaluateLine("promo = 10%", context, 2);
+    evaluateLine("service fee = 3%", context, 3);
+
+    const netResult = evaluateLine(
+      "ticket net = service fee on (promo off ticket list)",
+      context,
+      4
+    );
+    expect(netResult?.type).toBe("variable");
+
+    const ticketNet = context.variableStore.getVariable("ticket net");
+    expect(ticketNet?.value.getType()).toBe("currency");
+    expect(ticketNet?.value.getNumericValue()).toBeCloseTo(25.956, 3);
+  });
+
+  test("supports number-left duration multiplication in assignments", () => {
+    const context = createContext();
+    evaluateLine("shift = 8 h", context, 1);
+    const weeklyHours = evaluateLine("weekly hours = 5 * shift", context, 2);
+
+    expect(weeklyHours?.type).toBe("variable");
+    const value = context.variableStore.getVariable("weekly hours")?.value;
+    expect(value?.getType()).toBe("duration");
+    expect(value?.getNumericValue()).toBe(40 * 60 * 60);
+  });
 });

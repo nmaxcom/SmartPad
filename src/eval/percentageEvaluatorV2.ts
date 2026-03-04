@@ -121,6 +121,22 @@ class PercentageExpressionParser {
  * Uses parsed SemanticValues instead of string parsing
  */
 export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
+  public evaluateExpressionValue(
+    expression: string,
+    context: EvaluationContext
+  ): SemanticValue | null {
+    if (this.shouldSkipDueToPhraseVariable(expression, context)) {
+      return null;
+    }
+
+    const directValue = this.resolveDirectVariableReference(expression, context);
+    if (directValue) {
+      return directValue;
+    }
+
+    return this.evaluatePercentageExpression(expression, context);
+  }
+
   /**
    * Check if this evaluator can handle the node
    * Now much simpler - just look for percentage-related patterns
@@ -159,11 +175,7 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
         ? (node as ExpressionNode).expression
         : (node as CombinedAssignmentNode).expression;
 
-      if (this.shouldSkipDueToPhraseVariable(expression, context)) {
-        return null;
-      }
-
-      const directValue = this.resolveDirectVariableReference(expression, context);
+      const directValue = this.evaluateExpressionValue(expression, context);
       if (directValue) {
         if (SemanticValueTypes.isError(directValue)) {
           return this.createErrorNode(
@@ -177,7 +189,7 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
           : this.createCombinedNode(node as CombinedAssignmentNode, directValue, context);
       }
       
-      const result = this.evaluatePercentageExpression(expression, context);
+      const result = this.evaluateExpressionValue(expression, context);
       if (!result) {
         if (!this.containsPercentageSyntax(expression)) {
           return null;
@@ -599,7 +611,9 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     context: EvaluationContext,
     options: { skipPercentVariableChain?: boolean } = {}
   ): SemanticValue {
-    const normalized = expr.replace(/\s+/g, " ").trim();
+    const normalized = this.stripEnclosingParentheses(
+      expr.replace(/\s+/g, " ").trim()
+    );
 
     if (!options.skipPercentVariableChain) {
       const percentVariableResult = this.evaluatePercentVariableChain(normalized, context);
@@ -657,6 +671,37 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     
     // If we can't resolve it, return an error
     return ErrorValue.semanticError(`Cannot resolve expression: "${expr}"`);
+  }
+
+  private stripEnclosingParentheses(input: string): string {
+    let value = input.trim();
+    while (
+      value.startsWith("(") &&
+      value.endsWith(")") &&
+      this.hasMatchingOuterParentheses(value)
+    ) {
+      value = value.slice(1, -1).trim();
+    }
+    return value;
+  }
+
+  private hasMatchingOuterParentheses(input: string): boolean {
+    let depth = 0;
+    for (let i = 0; i < input.length; i += 1) {
+      const char = input[i];
+      if (char === "(") {
+        depth += 1;
+      } else if (char === ")") {
+        depth -= 1;
+        if (depth === 0 && i < input.length - 1) {
+          return false;
+        }
+      }
+      if (depth < 0) {
+        return false;
+      }
+    }
+    return depth === 0;
   }
 
   private evaluatePercentVariableChain(

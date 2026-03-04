@@ -37,6 +37,7 @@ import type { DurationUnit } from "../types/DurationValue";
 import { parseAndEvaluateExpression } from "../parsing/expressionParser";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
 import { SimpleExpressionParser } from "./expressionEvaluatorV2";
+import { PercentageExpressionEvaluatorV2 } from "./percentageEvaluatorV2";
 import { expressionContainsUnitsNet } from "../units/unitsnetEvaluator";
 import { inferListDelimiter } from "../utils/listExpression";
 import { rewriteLocaleDateLiterals } from "../utils/localeDateNormalization";
@@ -83,6 +84,8 @@ const normalizeDurationVariableName = (name: string): string =>
 
 const isBareNumberLiteral = (value: string): boolean =>
   /^\s*[+-]?\d+(?:\.\d+)?\s*$/.test(value);
+
+const percentageFallbackEvaluator = new PercentageExpressionEvaluatorV2();
 
 /**
  * Semantic-aware variable evaluator
@@ -197,6 +200,12 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
         // If this looks like a non-literal expression, try evaluating it numerically
         if (errorValue.getErrorType() === "parse" && expressionRawValue) {
           let resolvedValue: import("../types").SemanticValue | null = null;
+
+          const percentageFallback =
+            this.tryEvaluateWithPercentageFallback(expressionRawValue, parseContext);
+          if (percentageFallback) {
+            resolvedValue = percentageFallback;
+          }
 
           let listValue = this.evaluateListLiteralExpressions(
             expressionRawValue,
@@ -317,6 +326,16 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
         }
       }
       
+      if (SemanticValueTypes.isSymbolic(semanticValue) && expressionRawValue) {
+        const percentageFallback = this.tryEvaluateWithPercentageFallback(
+          expressionRawValue,
+          parseContext
+        );
+        if (percentageFallback) {
+          semanticValue = percentageFallback;
+        }
+      }
+
       if (SemanticValueTypes.isSymbolic(semanticValue)) {
         const identifier = semanticValue.toString().trim();
         if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(identifier)) {
@@ -868,6 +887,39 @@ export class VariableEvaluatorV2 implements NodeEvaluator {
       return null;
     }
     return evaluated;
+  }
+
+  private tryEvaluateWithPercentageFallback(
+    expression: string,
+    context: EvaluationContext
+  ): SemanticValue | null {
+    const normalized = expression.replace(/\s+/g, " ").trim();
+    if (!this.looksLikePercentageExpression(normalized)) {
+      return null;
+    }
+
+    const candidate = percentageFallbackEvaluator.evaluateExpressionValue(
+      normalized,
+      context
+    );
+    if (!candidate) {
+      return null;
+    }
+    if (SemanticValueTypes.isError(candidate) || SemanticValueTypes.isSymbolic(candidate)) {
+      return null;
+    }
+    return candidate;
+  }
+
+  private looksLikePercentageExpression(expression: string): boolean {
+    return (
+      /%/.test(expression) ||
+      /\bof\b/i.test(expression) ||
+      /\bon\b/i.test(expression) ||
+      /\boff\b/i.test(expression) ||
+      /\bis\s+%\b/i.test(expression) ||
+      /\bas\s+%\b/i.test(expression)
+    );
   }
 }
 
