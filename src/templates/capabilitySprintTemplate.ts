@@ -1,6 +1,6 @@
 export const CAPABILITY_SPRINT_TEMPLATE = `# Capability Sprint: 4 real-life problems in one compact sheet
 # Scrubbing: hover a number and drag left/right to change it live.
-# Tip: you usually do not need => unless you want explicit output or solve syntax.
+# Tip: you usually do not need => unless you want an explicit output chip.
 
 # 1) Pop-up coffee stand margin check (currency + percentages + lists)
 cups sold = 180
@@ -30,7 +30,7 @@ arrival estimate = depart + 4 h + charge time
 arrival estimate in +02:00
 break slots = 09:00..12:00 step 30 min
 
-# 3) Commute cost crossover (multi-line plot + intersection solve)
+# 3) Commute cost crossover (multi-line plot + break-even unknown)
 x = 0
 taxi base = 7
 taxi rate = 1.1
@@ -39,12 +39,14 @@ metro rate = 2
 taxi total = taxi base + taxi rate*x
 metro total = metro base + metro rate*x
 @view plot x=x y=taxi total,metro total domain=0..12 size=xl
-solve break_even_km in taxi base - metro base = (metro rate - taxi rate)*break_even_km =>
+break even fare gap = taxi base - metro base
+break even fare gap = (metro rate - taxi rate)*break even km
+break even km =>
 sample commute = 9
 taxi at sample = taxi base + taxi rate*sample commute
 metro at sample = metro base + metro rate*sample commute
 
-# 4) Lab dilution and dosing (scientific solve + SI to generic units)
+# 4) Lab dilution and dosing (scientific unknown + SI to generic units)
 stock molarity = 2.5 mol/L
 target molarity = 0.08 mol/L
 reactor volume = 750 L
@@ -56,5 +58,7 @@ stock volume direct in carboy
 NaCl molar mass = 58.44 g/mol
 salt mass = moles target * NaCl molar mass
 salt mass to kg
-solve stock_volume in moles target = stock molarity * stock_volume =>
+moles target = stock molarity * required stock volume
+required stock volume =>
+required stock volume in carboy
 `;

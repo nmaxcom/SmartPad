@@ -14,7 +14,7 @@ Recent template updates:
 - Clicking a quick template now opens it in a new sheet and makes that new sheet active, preserving the current sheet content.
 - When multiple right-side panels are open, the `Quick Templates` panel is pinned at the top for faster access.
 - The `Quick Tour` template was condensed into practical mini-scenarios and now starts with a short scrubbing primer.
-- The `Capability Sprint` template now demonstrates four realistic mini-problems, including a multi-series crossover plot with solve-based intersection and a scientific SI-to-generic unit workflow.
+- The `Capability Sprint` template now demonstrates four realistic mini-problems, including a multi-series crossover plot with unknown-based break-even (`=>`) and a scientific SI-to-generic unit workflow.
 
 These are some examples of its syntax:
 # Quick Tour: a guided walkthrough

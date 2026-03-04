@@ -4133,3 +4133,35 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   None after commit-range realignment.
+
+## Entry J-2026-03-04-12
+
+*   Timestamp: 2026-03-04 23:14:59 CET / 2026-03-04 22:14:59 UTC
+*   Summary:
+    *   User flagged that explicit `solve` keyword syntax should not be used in SmartPad examples and called out example validity concerns.
+    *   Assistant removed all explicit `solve` usage from `Capability Sprint` and rewrote unknown-solving lines to equation + `unknown =>` patterns.
+    *   The commute crossover and scientific dilution scenarios were preserved, now using implicit unknown solving flows.
+*   Decisions:
+    *   Keep template examples aligned with user-preferred solving style: no `solve` keyword, rely on `=>` for unknowns.
+    *   Update docs note to describe break-even unknown solving, not solve-keyword syntax.
+*   User directives:
+    *   Treat explicit `solve` keyword as invalid for these examples.
+*   Assistant commitments:
+    *   Keep capability tour examples aligned with spec-tested everyday syntax conventions.
+*   Artifacts:
+    *   `src/templates/capabilitySprintTemplate.ts` (removed explicit solve lines, added equation + unknown `=>`)
+    *   `docs/ABOUT.md` (updated wording)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/capabilitySprintTemplate.test.ts --runInBand` ✅
+    *   `npm run test:unit -- tests/unit/templatePanelSheetCreation.test.tsx tests/unit/templateTriggerNormalization.test.ts --runInBand` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run verify:changed` ✅
+    *   `npm run build` ✅
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   None.
