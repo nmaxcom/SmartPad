@@ -4080,3 +4080,24 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-03-04-11
+
+*   Timestamp: 2026-03-04 23:09:18 CET / 2026-03-04 22:09:18 UTC
+*   Summary:
+    *   User confirmed concurrent edits from another agent and directed assistant to continue by committing only assistant-authored task files.
+    *   Assistant proceeded with strict file-scoped staging for the capability template update.
+*   Decisions:
+    *   Preserve concurrent-agent modifications by excluding non-task files from staging.
+*   User directives:
+    *   Commit only exact assistant modifications when other agents are editing in parallel.
+*   Assistant commitments:
+    *   Keep all future commits explicitly path-scoped in this workspace.
+*   Artifacts:
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   Prior machine gate status for this task already green (`verify:changed` and targeted tests passed before commit).
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   None.
