@@ -9,7 +9,6 @@ These entries are intentionally **not treated as fully shipped contracts**.
 | Unit Alias and Ratio | `docs/Specs/proposed/unit-aliases-and-ratio.md` | `docs/Specs/proposed/unit-aliases-and-ratio.md` | `proposed` |
 | Unit Decision Forks | `docs/Specs/proposed/unit-decision-forks.md` | `docs/Specs/proposed/unit-decision-forks.md` | `proposed` |
 | Date Keywords, Timezones, and Business Days | `docs/Specs/proposed/date-keywords-timezones-business-days.md` | `docs/Specs/proposed/date-keywords-timezones-business-days.md` | `proposed` |
-| Solve and Symbolic Capabilities | `docs/Specs/proposed/solve-symbolic-capabilities.md` | `docs/Specs/proposed/solve-symbolic-capabilities.md` | `proposed` |
 | UX and Feature Ideas Backlog | `docs/Specs/proposed/ux-feature-ideas-backlog.md` | `docs/Specs/proposed/ux-feature-ideas-backlog.md` | `proposed` |
 
 To promote an item to implemented:

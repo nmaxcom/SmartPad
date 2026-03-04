@@ -41,6 +41,7 @@ rideshare total = rideshare base + rideshare rate*x
 @view plot x=x y=taxi total,rideshare total domain=0..12 size=xl
 crossover balance = taxi base - rideshare base - (rideshare rate - taxi rate)*break_even_km
 crossover balance => 0
+solve break_even_km in crossover balance = taxi base - rideshare base - (rideshare rate - taxi rate)*break_even_km, crossover balance = 0 =>
 break_even_km =>
 short trip = 4
 taxi at short = taxi base + taxi rate*short trip
@@ -62,6 +63,7 @@ NaCl molar mass = 58.44 g/mol
 salt mass = moles target * NaCl molar mass
 salt mass to kg
 moles target = stock molarity * required stock volume
+solve required stock volume in moles target = stock molarity * required stock volume =>
 required stock volume =>
 required stock volume in carboy
 `;

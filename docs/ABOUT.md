@@ -17,7 +17,8 @@ Recent template updates:
 
 These are some examples of its syntax:
 # Quick Tour: a guided walkthrough
-# Core idea: write a line and add "=> " to evaluate
+# Core idea: write naturally; live results preview most valid lines.
+# Use "=>" for explicit intent, explicit errors, and solve/equation workflows.
 
 2 + 3 => 5
 sqrt(16) + 2.5 => 6.5
@@ -147,6 +148,14 @@ x => 0
 price=3
 total = price * qty => 3 * qty
 qty => total / 3
+solve qty in total = price * qty =>
+
+# Explicit solve with inline assumptions
+taxi base = 6
+taxi rate = 0.85
+rideshare base = 2
+rideshare rate = 1.45
+solve break_even_km in taxi base + taxi rate*break_even_km = rideshare base + rideshare rate*break_even_km =>
 
 # Date Math: calendar-aware calculations
 

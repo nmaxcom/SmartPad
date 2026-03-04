@@ -4222,3 +4222,48 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-03-05-01
+
+*   Timestamp: 2026-03-05 00:15:57 CET / 2026-03-04 23:15:57 UTC
+*   Summary:
+    *   User requested full solve/`=>` alignment: canonical specs, panel-template examples, and docs cleanup for trigger dissonance.
+    *   Assistant promoted solve from proposed legacy note to implemented source+canonical spec, added a new explicit-trigger source+canonical spec, and updated trust/map/index registries.
+    *   Capability Sprint now includes explicit `solve ... =>` examples alongside implicit unknown solving; user-facing docs were updated to clarify when `=>` is optional vs required.
+*   Decisions:
+    *   Treat `solve` as implemented/contracted behavior with dedicated source spec (`docs/Specs/Solve.spec.md`).
+    *   Treat explicit trigger `=>` as its own implemented contract (`docs/Specs/ExplicitTrigger.spec.md`) instead of only being implied by live-result docs.
+    *   Keep proposed solve capability matrix as legacy context only, superseded by the new canonical solve contract.
+*   User directives:
+    *   Ensure `solve` is spec'd and documented.
+    *   Add solve examples to the best-fitting template panel entry.
+    *   Correct dissonance around `=>` and ensure `=>` is spec'd.
+*   Assistant commitments:
+    *   Run required gates and report exact pass/fail state.
+    *   Keep commit scope restricted to assistant-authored files only.
+*   Artifacts:
+    *   `docs/Specs/Solve.spec.md` (new)
+    *   `docs/Specs/ExplicitTrigger.spec.md` (new)
+    *   `docs/Specs/implemented/solve-and-symbolic-math.md` (new)
+    *   `docs/Specs/implemented/explicit-trigger.md` (new)
+    *   `docs/spec-trust.json` (updated)
+    *   `docs/spec-map.json` (updated)
+    *   `docs/Specs/implemented/index.md` (updated)
+    *   `docs/Specs/proposed/index.md` (updated)
+    *   `docs/Specs/proposed/solve-symbolic-capabilities.md` (superseded note)
+    *   `src/templates/capabilitySprintTemplate.ts` (added explicit solve examples)
+    *   `tests/unit/capabilitySprintTemplate.test.ts` (added explicit-solve assertions)
+    *   `docs/ABOUT.md`, `about.MD` (trigger/solve wording alignment)
+    *   `website/docs/guides/getting-started.md`, `website/docs/specs/index.md`, `website/docs/specs/solve-and-symbolic-math.md`, `website/docs/specs/explicit-trigger.md`, `website/sidebars.ts` (user docs updates)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/capabilitySprintTemplate.test.ts tests/unit/solve.test.ts tests/unit/templateTriggerNormalization.test.ts` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ⚠️ failed on `HEAD~1...HEAD` due prior commit range containing unrelated `src/components/Editor.tsx` change.
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run verify:changed` ⚠️ failed for the same prior-commit range reason; rerun planned after scoped commit.
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   Verification scripts default to `HEAD~1...HEAD`; when previous commit touched unrelated mapped files, docs-drift/verify may fail until rerun against the assistant's own commit range.

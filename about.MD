@@ -7,6 +7,8 @@
 
 Similar projects: parsify.app, figr.app, aybo.app, calca.io, numi.app, Soulver 3, notepadcalculator.com, mathnotepad.com, bbodi.github.io/notecalc3, numbat.dev, hissab.io, numpad.io, antinote
 
+> Note: this file is historical product context. Current behavior contracts live in `docs/Specs/*.spec.md`.
+
 ## Project Overview
 
 The SmartPad is a text-based web application that combines the simplicity of a plain text editor with the power of real-time mathematical interpretation and calculation. It allows users to write regular notes, define variables, and perform calculations seamlessly within a single text document. It's meant to work like an advanced version of a "back-of-the-envelope calculation".
@@ -45,12 +47,13 @@ Future features include:
 
 ### 2\. Expressions and Calculations
 
-*   Syntax: `EXPRESSION =>`
-*   Example: `2 * price =>`
+*   Syntax: `EXPRESSION` (live result when valid) or `EXPRESSION =>` (explicit trigger).
+*   Examples: `2 * price` and `2 * price =>`
 *   Rules:
     *   Must be on a single line.
-    *   The `=>` symbol indicates that the preceding expression should be evaluated.
-    *   The application replaces anything to the right of `=>` with the calculated result.
+    *   Live results can evaluate many valid lines without `=>`.
+    *   The `=>` symbol indicates explicit evaluation intent and explicit error surfacing.
+    *   `=>` is required for explicit `solve ... =>` workflows.
     *   If the expression is invalid, an error is indicated (see Error Handling).
 
 ### 3\. Unit Handling
@@ -73,13 +76,15 @@ Future features include:
 *   Each line is processed independently.
 *   Lines are categorized as:
     *   Variable assignment (contains `=`)
-    *   Expression to be evaluated (contains `=>`)
+    *   Live-evaluable expression (no `=>`, shown only when valid and complete)
+    *   Explicit expression (contains `=>`)
     *   Plain text (any other line)
 
 ### 6\. Real-time Updates
 
 *   Any change in the document triggers a re-evaluation of all expressions.
 *   Results are updated immediately after any variable assignment or modification.
+*   Explicit `=>` lines remain the authoritative path for intentional solve and explicit error output.
 
 ### 7\. Error Handling
 

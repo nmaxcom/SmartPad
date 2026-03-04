@@ -1,5 +1,9 @@
 # Solve & Symbolic Capability Matrix (Legacy Delta)
 
+Superseded by:
+- Source spec: `docs/Specs/Solve.spec.md`
+- Canonical implemented card: `docs/Specs/implemented/solve-and-symbolic-math.md`
+
 Status: proposed
 Source: extracted from legacy `docs/MATH_CAPABILITIES.md`.
 

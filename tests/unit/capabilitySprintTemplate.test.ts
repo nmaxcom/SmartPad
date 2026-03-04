@@ -91,25 +91,49 @@ describe("Capability Sprint template", () => {
       5
     );
     evaluateLine("crossover balance => 0", context, 6);
+    const explicitBreakEven = evaluateLine(
+      "solve break_even_km in crossover balance = taxi base - rideshare base - (rideshare rate - taxi rate)*break_even_km, crossover balance = 0 =>",
+      context,
+      7
+    );
+    expect(explicitBreakEven?.type).toBe("mathResult");
+    expect(parseFloat((explicitBreakEven as any).result)).toBeCloseTo(6.666667, 5);
 
-    const breakEven = evaluateLine("break_even_km =>", context, 7);
+    const breakEven = evaluateLine("break_even_km =>", context, 8);
     expect(breakEven?.type).toBe("mathResult");
     expect(parseFloat((breakEven as any).result)).toBeCloseTo(6.666667, 5);
 
-    const taxiShort = evaluateLine("taxi base + taxi rate*4 =>", context, 8);
-    const rideshareShort = evaluateLine("rideshare base + rideshare rate*4 =>", context, 9);
+    const taxiShort = evaluateLine("taxi base + taxi rate*4 =>", context, 9);
+    const rideshareShort = evaluateLine("rideshare base + rideshare rate*4 =>", context, 10);
     expect(parseFloat((taxiShort as any).result)).toBeCloseTo(9.4, 5);
     expect(parseFloat((rideshareShort as any).result)).toBeCloseTo(7.8, 5);
     expect(parseFloat((taxiShort as any).result)).toBeGreaterThan(
       parseFloat((rideshareShort as any).result)
     );
 
-    const taxiLong = evaluateLine("taxi base + taxi rate*9 =>", context, 10);
-    const rideshareLong = evaluateLine("rideshare base + rideshare rate*9 =>", context, 11);
+    const taxiLong = evaluateLine("taxi base + taxi rate*9 =>", context, 11);
+    const rideshareLong = evaluateLine("rideshare base + rideshare rate*9 =>", context, 12);
     expect(parseFloat((taxiLong as any).result)).toBeCloseTo(13.65, 5);
     expect(parseFloat((rideshareLong as any).result)).toBeCloseTo(15.05, 5);
     expect(parseFloat((taxiLong as any).result)).toBeLessThan(
       parseFloat((rideshareLong as any).result)
     );
+  });
+
+  test("lab dilution section explicit solve matches required stock volume", () => {
+    const context = createContext();
+
+    evaluateLine("stock molarity = 2.5 mol/L", context, 1);
+    evaluateLine("target molarity = 0.08 mol/L", context, 2);
+    evaluateLine("reactor volume = 750 L", context, 3);
+    evaluateLine("moles target = target molarity * reactor volume", context, 4);
+
+    const explicitSolve = evaluateLine(
+      "solve required stock volume in moles target = stock molarity * required stock volume =>",
+      context,
+      5
+    );
+    expect(explicitSolve?.type).toBe("mathResult");
+    expect(parseFloat((explicitSolve as any).result)).toBeCloseTo(24, 5);
   });
 });

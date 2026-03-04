@@ -10,6 +10,8 @@ const sidebars: SidebarsConfig = {
     "guides/troubleshooting",
     "specs/index",
     "specs/live-results",
+    "specs/explicit-trigger",
+    "specs/solve-and-symbolic-math",
     "specs/result-chips-and-references",
     "specs/plotting-and-dependency-views",
     "specs/currency-and-fx",

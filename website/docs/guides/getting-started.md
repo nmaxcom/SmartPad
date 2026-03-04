@@ -32,6 +32,7 @@ SmartPad works best when you treat each line like a thought you can compute, not
 - Final outputs you plan to share or screenshot.
 - Lines where explicit trigger improves readability for reviewers.
 - Guardrail checks where you want intentional error surfacing.
+- Any solve workflow (`target =>` back-solving or `solve ... =>`).
 
 ## Continue
 

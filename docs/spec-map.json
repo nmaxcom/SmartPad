@@ -9,17 +9,20 @@
         "src/math/",
         "src/types/NumberValue.ts",
         "docs/Specs/LiveResult.spec.md",
-        "docs/Specs/implemented/live-results.md"
+        "docs/Specs/implemented/live-results.md",
+        "docs/Specs/ExplicitTrigger.spec.md",
+        "docs/Specs/implemented/explicit-trigger.md"
       ],
       "docPrefixes": [
         "docs/Specs/LiveResult.spec.md",
         "docs/Specs/implemented/live-results.md",
+        "docs/Specs/ExplicitTrigger.spec.md",
+        "docs/Specs/implemented/explicit-trigger.md",
         "docs/Specs/Plotting.spec.md",
         "docs/Specs/Lists.spec.md",
         "docs/Specs/implemented/lists.md",
         "docs/Specs/Locale.spec.md",
         "docs/Specs/implemented/locale-date-time.md",
-        "docs/Specs/proposed/solve-symbolic-capabilities.md",
         "public/docs/"
       ],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
@@ -85,9 +88,15 @@
     },
     {
       "name": "Solve And Symbolic Math",
-      "specPrefixes": ["src/solve/", "src/types/SymbolicValue.ts"],
+      "specPrefixes": [
+        "src/solve/",
+        "src/types/SymbolicValue.ts",
+        "docs/Specs/Solve.spec.md",
+        "docs/Specs/implemented/solve-and-symbolic-math.md"
+      ],
       "docPrefixes": [
-        "docs/Specs/proposed/solve-symbolic-capabilities.md",
+        "docs/Specs/Solve.spec.md",
+        "docs/Specs/implemented/solve-and-symbolic-math.md",
         "public/docs/"
       ],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
