@@ -187,7 +187,6 @@ Guardrails:
 1. Copy interception must apply only when a reference chip node itself is selected.
 2. Normal line/multi-line copy must keep native editor behavior (no single-chip clipboard hijack).
 3. Pasting rich SmartPad content with chips should preserve chips and linked behavior.
-4. Plain-text copy of lines with live-result decorations must include context as `expression => value` (not value-only), so pasted snippets remain valid SmartPad input.
 
 ### 5.4 Result-chip hover actions (live + trigger)
 
