@@ -4255,3 +4255,25 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-03-04-15
+
+*   Timestamp: 2026-03-04 23:57:26 CET / 2026-03-04 22:57:26 UTC
+*   Summary:
+    *   Post-commit `verify:changed` flagged docs drift for `src/components/Editor.tsx` under the Editor And Result Chips mapping.
+    *   Assistant added a spec guardrail clarifying plain-text copy behavior for live-result lines (`expression => value`) to align docs with implementation.
+*   Decisions:
+    *   Keep this behavior documented in `ResultChipsAndValueGraph.spec.md` under copy/paste guardrails.
+*   User directives:
+    *   None new; this was required reliability follow-through for the implemented clipboard change.
+*   Assistant commitments:
+    *   Keep docs drift green for clipboard behavior changes.
+*   Artifacts:
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md` (added live-result plain-text copy guardrail)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   Pending rerun after committing docs sync: `docs:drift`, `spec:test`, `spec:trust`, `verify:changed`.
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   None.
