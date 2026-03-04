@@ -73,4 +73,27 @@ describe("Semantic highlight tokenization", () => {
       false
     );
   });
+
+  test("keeps on/off/where as keywords in operator positions even if similarly named variables exist", () => {
+    const tokens = tokenizeExpression(
+      "service fee on (promo off ticket list) + supply quotes where > $1900",
+      0,
+      makeContext([
+        "service fee",
+        "promo",
+        "ticket list",
+        "supply quotes",
+        "on",
+        "off",
+        "where",
+      ]) as any
+    );
+
+    const onToken = tokens.find((token) => token.text.toLowerCase() === "on");
+    const offToken = tokens.find((token) => token.text.toLowerCase() === "off");
+    const whereToken = tokens.find((token) => token.text.toLowerCase() === "where");
+    expect(onToken?.type).toBe("keyword");
+    expect(offToken?.type).toBe("keyword");
+    expect(whereToken?.type).toBe("keyword");
+  });
 });

@@ -4101,3 +4101,35 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-03-04-14
+
+*   Timestamp: 2026-03-04 23:10:39 CET / 2026-03-04 22:10:39 UTC
+*   Summary:
+    *   User reported that `on/off/where` were now highlighted as variables (green) in operator contexts.
+    *   Assistant identified that variable-name matching can consume reserved operator words when similarly named variables exist in context.
+    *   Assistant added a normalization pass that reclassifies reserved words to `keyword` in operator contexts and added a regression covering the exact mixed expression pattern.
+*   Decisions:
+    *   Preserve explicit variable usage for `where` when used as a standalone variable (`where + 1`).
+    *   Force `on/off/where` to remain keyword tokens in phrase-operator contexts, even if variables named `on/off/where` exist.
+*   User directives:
+    *   Fix highlighting regression where phrase operators became green variable tokens.
+*   Assistant commitments:
+    *   Keep function highlighting behavior intact while preventing reserved-word/operator misclassification.
+*   Artifacts:
+    *   `src/components/SemanticHighlightExtension.ts` (reserved keyword reclassification pass in token output)
+    *   `tests/unit/semanticHighlightTokenization.test.ts` (regression for `on/off/where` with similarly named variables in context)
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md` (semantic highlighting keyword-rule clarifications)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/semanticHighlightTokenization.test.ts` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run build` ✅
+    *   `npm run verify:changed` ⚠️ failed before commit due latest-commit range pointing to unrelated committed template changes; rerun required after this commit.
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   None after commit-range realignment.

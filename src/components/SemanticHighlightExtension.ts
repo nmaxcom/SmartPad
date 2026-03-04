@@ -844,7 +844,7 @@ export function tokenizeExpression(
     }
   }
 
-  return tokens;
+  return normalizeReservedKeywordTokens(tokens, expr, baseOffset);
 }
 
 function matchDateLiteralTokens(
@@ -947,4 +947,65 @@ function shouldTreatWhereAsKeyword(expr: string, whereStart: number): boolean {
 
   // Support solve where-clauses like: solve x where y = 2
   return /^[a-zA-Z_][a-zA-Z0-9_\s]*\s*=/.test(remainder);
+}
+
+function normalizeReservedKeywordTokens(
+  tokens: Token[],
+  expr: string,
+  baseOffset: number
+): Token[] {
+  const normalized = [...tokens];
+  const reservedWordOperators = new Set(["to", "in", "of", "on", "off", "as", "is", "per"]);
+
+  for (let i = 0; i < normalized.length; i += 1) {
+    const token = normalized[i];
+    if (token.type !== "variable") {
+      continue;
+    }
+    const lower = token.text.toLowerCase();
+    if (lower === "where") {
+      const whereStart = token.start - baseOffset;
+      if (shouldTreatWhereAsKeyword(expr, whereStart)) {
+        normalized[i] = { ...token, type: "keyword" };
+      }
+      continue;
+    }
+    if (!reservedWordOperators.has(lower)) {
+      continue;
+    }
+    if (isPhraseOperatorContext(normalized, i)) {
+      normalized[i] = { ...token, type: "keyword" };
+    }
+  }
+
+  return normalized;
+}
+
+function isPhraseOperatorContext(tokens: Token[], index: number): boolean {
+  const previous = tokens[index - 1];
+  const next = tokens[index + 1];
+  if (!previous || !next) {
+    return false;
+  }
+
+  const leftIsValue =
+    previous.type === "variable" ||
+    previous.type === "scrubbableNumber" ||
+    previous.type === "number" ||
+    previous.type === "unit" ||
+    previous.type === "currency" ||
+    previous.type === "constant" ||
+    (previous.type === "operator" && (previous.text === ")" || previous.text === "]"));
+
+  const rightStartsExpression =
+    next.type === "variable" ||
+    next.type === "scrubbableNumber" ||
+    next.type === "number" ||
+    next.type === "unit" ||
+    next.type === "currency" ||
+    next.type === "constant" ||
+    next.type === "function" ||
+    (next.type === "operator" && (next.text === "(" || next.text === "["));
+
+  return leftIsValue && rightStartsExpression;
 }
