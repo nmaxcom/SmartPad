@@ -161,18 +161,21 @@
       "name": "Spec Governance",
       "specPrefixes": [
         "docs/Specs/README.md",
+        "docs/Specs/implemented/",
         "docs/Specs/proposed/",
         "docs/spec-trust.json",
         "docs/Unit.spec.md"
       ],
       "docPrefixes": [
         "docs/Specs/README.md",
+        "docs/Specs/implemented/",
         "docs/Specs/proposed/",
         "docs/spec-trust.json",
         "docs/Unit.spec.md"
       ],
       "testPrefixes": [
         "docs/Specs/README.md",
+        "docs/Specs/implemented/",
         "docs/Specs/proposed/",
         "docs/spec-trust.json",
         "docs/Unit.spec.md"
