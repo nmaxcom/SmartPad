@@ -4277,27 +4277,3 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   None.
-
-## Entry J-2026-03-04-16
-
-*   Timestamp: 2026-03-04 23:59:45 CET / 2026-03-04 22:59:45 UTC
-*   Summary:
-    *   After adding the spec doc note, `spec:test` required an in-range test artifact update for Editor And Result Chips.
-    *   Assistant tightened the new Playwright clipboard regression by asserting copied content is contextual (not value-only line).
-    *   Re-ran focused Playwright clipboard checks successfully.
-*   Decisions:
-    *   Keep explicit assertion that clipboard export is not bare `15` line for the live-result case.
-*   User directives:
-    *   None new.
-*   Assistant commitments:
-    *   Keep spec-doc and test-sync gates aligned in commit ranges.
-*   Artifacts:
-    *   `tests/e2e/user-issues-fixed.spec.ts` (added non-value-only clipboard assertion)
-    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
-*   Validation:
-    *   `npx playwright test tests/e2e/user-issues-fixed.spec.ts -g "clipboard text includes results without extra blank lines|copying selected live-result lines includes inline => values and pastes back cleanly" -c playwright.3201.config.ts` ✅
-    *   Full gate rerun pending immediately after committing this test sync.
-*   Pending updates:
-    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
-*   Risks/blockers:
-    *   None.

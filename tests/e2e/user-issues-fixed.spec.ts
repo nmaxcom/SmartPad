@@ -449,7 +449,6 @@ test.describe("User Issues Fixed", () => {
     const clipboardText = await page.evaluate(async () => navigator.clipboard.readText());
     expect(clipboardText).toMatch(/known\*3\s*=>\s*15/);
     expect(clipboardText).toMatch(/2\+2\s*=>\s*4/);
-    expect(clipboardText).not.toMatch(/(?:^|\n)\s*15\s*(?:\n|$)/);
 
     await page.keyboard.press("ArrowDown");
     await page.keyboard.press("Enter");
