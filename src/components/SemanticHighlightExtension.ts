@@ -532,6 +532,19 @@ export function tokenizeExpression(
   const keywordRegex = /^(to|in|of|on|off|as|is|per)\b/;
   const whereKeywordRegex = /^where\b/i;
   const constantRegex = /^(PI|E)\b/;
+  const reservedKeywordLikeIdentifiers = new Set([
+    "to",
+    "in",
+    "of",
+    "on",
+    "off",
+    "as",
+    "is",
+    "per",
+    "where",
+    "asc",
+    "desc",
+  ]);
 
   // Get all variable names sorted by length (longest first for greedy matching)
   const variableNames = Array.from(variableContext.keys()).sort((a, b) => b.length - a.length);
@@ -561,28 +574,30 @@ export function tokenizeExpression(
     const funcMatch = expr.substring(pos).match(functionRegex);
     if (funcMatch) {
       const funcName = funcMatch[1];
-      tokens.push({
-        type: "function",
-        start: baseOffset + pos,
-        end: baseOffset + pos + funcName.length,
-        text: funcName,
-      });
-      pos += funcName.length;
-      // Skip whitespace between function name and parenthesis
-      while (pos < expr.length && /\s/.test(expr[pos])) {
-        pos++;
-      }
-      // Add the opening parenthesis as an operator
-      if (pos < expr.length && expr[pos] === "(") {
+      if (!reservedKeywordLikeIdentifiers.has(funcName.toLowerCase())) {
         tokens.push({
-          type: "operator",
+          type: "function",
           start: baseOffset + pos,
-          end: baseOffset + pos + 1,
-          text: "(",
+          end: baseOffset + pos + funcName.length,
+          text: funcName,
         });
-        pos++;
+        pos += funcName.length;
+        // Skip whitespace between function name and parenthesis
+        while (pos < expr.length && /\s/.test(expr[pos])) {
+          pos++;
+        }
+        // Add the opening parenthesis as an operator
+        if (pos < expr.length && expr[pos] === "(") {
+          tokens.push({
+            type: "operator",
+            start: baseOffset + pos,
+            end: baseOffset + pos + 1,
+            text: "(",
+          });
+          pos++;
+        }
+        matched = true;
       }
-      matched = true;
     }
 
     // Check for variables (longest match first)

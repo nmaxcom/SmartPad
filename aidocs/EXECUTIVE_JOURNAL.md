@@ -4015,3 +4015,68 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-03-04-10
+
+*   Timestamp: 2026-03-04 23:05:19 CET / 2026-03-04 22:05:19 UTC
+*   Summary:
+    *   User requested a stronger capability tour: section 5 plot needed multiple functions with a meaningful intersection, section 6 needed a more scientific solve using SI-to-generic unit arithmetic.
+    *   Assistant rewrote the `Capability Sprint` into 4 compact real-life problem blocks while preserving the 40-80 line target.
+    *   Iterated one solve equation after test feedback (`variable appears on both sides`) to a solver-compatible equivalent.
+*   Decisions:
+    *   Keep trigger usage minimal in examples and reserve explicit `=>` where solving/output is the point.
+    *   Use one multi-series commute-cost plot (`taxi` vs `metro`) plus an explicit solve for break-even distance.
+    *   Use a lab dilution scenario for scientific solve with SI conversions (`L`, `m^3`, `g`, `kg`) and a generic unit alias (`carboy`).
+*   User directives:
+    *   Make plotting example richer with multiple lines/functions and a meaningful real-life intersection.
+    *   Make solve example more scientific and include SI-to-generic unit arithmetic.
+    *   Provide 4 real-life calculations that demonstrate SmartPad features.
+*   Assistant commitments:
+    *   Keep the template executable line-by-line under normalization and maintain condensed tutorial density.
+*   Artifacts:
+    *   `src/templates/capabilitySprintTemplate.ts` (rewritten into 4 real-life problems)
+    *   `docs/ABOUT.md` (updated template note)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/capabilitySprintTemplate.test.ts --runInBand` ✅
+    *   `npm run test:unit -- tests/unit/templatePanelSheetCreation.test.tsx tests/unit/templateTriggerNormalization.test.ts --runInBand` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run verify:changed` ✅
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   None.
+
+## Entry J-2026-03-04-13
+
+*   Timestamp: 2026-03-04 23:06:15 CET / 2026-03-04 22:06:15 UTC
+*   Summary:
+    *   User clarified a syntax-highlighting inconsistency: `on` rendered pink while other phrase operators rendered yellow.
+    *   Assistant identified root cause in highlighter tokenization order (`on (` matched function pattern before keyword pattern).
+    *   Assistant patched reserved operator words (`on/off/where/...`) to never tokenize as function names and added regression coverage.
+*   Decisions:
+    *   Keep percentage phrase operators styled as keywords (yellow), including when followed by parentheses.
+    *   Prevent reserved operator words from function token classification rather than changing theme colors.
+*   User directives:
+    *   Explain/fix why `on` color differs from other phrase operators.
+*   Assistant commitments:
+    *   Preserve function highlighting for real function calls while preventing reserved-word false positives.
+*   Artifacts:
+    *   `src/components/SemanticHighlightExtension.ts` (reserved keyword-like identifiers excluded from function-token branch)
+    *   `tests/unit/semanticHighlightTokenization.test.ts` (new regression for `on (` classification)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/semanticHighlightTokenization.test.ts` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run build` ✅
+    *   `npm run verify:changed` ✅
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   None.

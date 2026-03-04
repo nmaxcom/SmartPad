@@ -60,4 +60,17 @@ describe("Semantic highlight tokenization", () => {
     const onToken = tokens.find((token) => token.text.toLowerCase() === "on");
     expect(onToken?.type).toBe("keyword");
   });
+
+  test("does not classify keyword-like operators as function names before parens", () => {
+    const tokens = tokenizeExpression(
+      "service fee on (promo off ticket list)",
+      0,
+      makeContext(["service fee", "promo", "ticket list"]) as any
+    );
+    const onToken = tokens.find((token) => token.text.toLowerCase() === "on");
+    expect(onToken?.type).toBe("keyword");
+    expect(tokens.some((token) => token.type === "function" && token.text.toLowerCase() === "on")).toBe(
+      false
+    );
+  });
 });
