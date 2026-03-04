@@ -30,21 +30,24 @@ arrival estimate = depart + 4 h + charge time
 arrival estimate in +02:00
 break slots = 09:00..12:00 step 30 min
 
-# 3) Commute cost crossover (multi-line plot + break-even unknown)
+# 3) Taxi vs rideshare crossover (multi-line plot + break-even unknown)
 x = 0
-taxi base = 7
-taxi rate = 1.1
-metro base = 1
-metro rate = 2
+taxi base = 6
+taxi rate = 0.85
+rideshare base = 2
+rideshare rate = 1.45
 taxi total = taxi base + taxi rate*x
-metro total = metro base + metro rate*x
-@view plot x=x y=taxi total,metro total domain=0..12 size=xl
-break even fare gap = taxi base - metro base
-break even fare gap = (metro rate - taxi rate)*break even km
-break even km =>
-sample commute = 9
-taxi at sample = taxi base + taxi rate*sample commute
-metro at sample = metro base + metro rate*sample commute
+rideshare total = rideshare base + rideshare rate*x
+@view plot x=x y=taxi total,rideshare total domain=0..12 size=xl
+crossover balance = taxi base - rideshare base - (rideshare rate - taxi rate)*break_even_km
+crossover balance => 0
+break_even_km =>
+short trip = 4
+taxi at short = taxi base + taxi rate*short trip
+rideshare at short = rideshare base + rideshare rate*short trip
+long trip = 9
+taxi at long = taxi base + taxi rate*long trip
+rideshare at long = rideshare base + rideshare rate*long trip
 
 # 4) Lab dilution and dosing (scientific unknown + SI to generic units)
 stock molarity = 2.5 mol/L

@@ -4165,3 +4165,35 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-03-04-13
+
+*   Timestamp: 2026-03-04 23:27:22 CET / 2026-03-04 22:27:22 UTC
+*   Summary:
+    *   User requested reverting the `docs/ABOUT.md` change and flagged that the taxi crossover example structure/results were not credible.
+    *   Assistant removed the capability-sprint bullet from `docs/ABOUT.md` and rewrote example 3 to a coherent taxi-vs-rideshare breakdown with a single balance equation + `=>` target flow.
+    *   Added explicit Jest validation of the taxi scenario outputs (break-even and short/long trip comparisons) to ensure the example is both executable and sensible.
+*   Decisions:
+    *   Keep docs unchanged unless directly requested; removed the ABOUT addition entirely.
+    *   Validate narrative examples with numeric assertions, not just parse/no-error checks.
+*   User directives:
+    *   Undo `ABOUT.md` change.
+    *   Run the taxi example through SmartPad (Jest) and verify result realism.
+*   Assistant commitments:
+    *   Keep tutorial examples grounded in realistic SmartPad workflows and validate expected outcomes.
+*   Artifacts:
+    *   `src/templates/capabilitySprintTemplate.ts` (rewrote example 3 equation flow)
+    *   `tests/unit/capabilitySprintTemplate.test.ts` (added numeric taxi-crossover assertions)
+    *   `docs/ABOUT.md` (removed capability-sprint bullet)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/capabilitySprintTemplate.test.ts --runInBand` ✅
+    *   `npm run test:unit -- tests/unit/templatePanelSheetCreation.test.tsx tests/unit/templateTriggerNormalization.test.ts --runInBand` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run spec:test` ⚠️ pre-commit default range (`HEAD~1...HEAD`) mismatch; rerun planned after commit via `verify:changed`.
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   None.

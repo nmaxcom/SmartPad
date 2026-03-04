@@ -25,6 +25,15 @@ const syncVariables = (context: EvaluationContext) => {
   });
 };
 
+const evaluateLine = (line: string, context: EvaluationContext, lineNumber: number) => {
+  const node = parseLine(line, lineNumber);
+  context.lineNumber = lineNumber;
+  const result = defaultRegistry.evaluate(node, context);
+  recordEquationFromNode(node, context.equationStore ?? []);
+  syncVariables(context);
+  return result;
+};
+
 describe("Capability Sprint template", () => {
   test("stays within the condensed 40-80 line target", () => {
     const lineCount = CAPABILITY_SPRINT_TEMPLATE.split("\n").length;
@@ -67,5 +76,40 @@ describe("Capability Sprint template", () => {
     const selected = selectPastePayload(flattenedMarkdown, CAPABILITY_SPRINT_TEMPLATE);
 
     expect(selected).toBe(CAPABILITY_SPRINT_TEMPLATE);
+  });
+
+  test("taxi crossover example yields sensible break-even and trip comparisons", () => {
+    const context = createContext();
+
+    evaluateLine("taxi base = 6", context, 1);
+    evaluateLine("taxi rate = 0.85", context, 2);
+    evaluateLine("rideshare base = 2", context, 3);
+    evaluateLine("rideshare rate = 1.45", context, 4);
+    evaluateLine(
+      "crossover balance = taxi base - rideshare base - (rideshare rate - taxi rate)*break_even_km",
+      context,
+      5
+    );
+    evaluateLine("crossover balance => 0", context, 6);
+
+    const breakEven = evaluateLine("break_even_km =>", context, 7);
+    expect(breakEven?.type).toBe("mathResult");
+    expect(parseFloat((breakEven as any).result)).toBeCloseTo(6.666667, 5);
+
+    const taxiShort = evaluateLine("taxi base + taxi rate*4 =>", context, 8);
+    const rideshareShort = evaluateLine("rideshare base + rideshare rate*4 =>", context, 9);
+    expect(parseFloat((taxiShort as any).result)).toBeCloseTo(9.4, 5);
+    expect(parseFloat((rideshareShort as any).result)).toBeCloseTo(7.8, 5);
+    expect(parseFloat((taxiShort as any).result)).toBeGreaterThan(
+      parseFloat((rideshareShort as any).result)
+    );
+
+    const taxiLong = evaluateLine("taxi base + taxi rate*9 =>", context, 10);
+    const rideshareLong = evaluateLine("rideshare base + rideshare rate*9 =>", context, 11);
+    expect(parseFloat((taxiLong as any).result)).toBeCloseTo(13.65, 5);
+    expect(parseFloat((rideshareLong as any).result)).toBeCloseTo(15.05, 5);
+    expect(parseFloat((taxiLong as any).result)).toBeLessThan(
+      parseFloat((rideshareLong as any).result)
+    );
   });
 });
