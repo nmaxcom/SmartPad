@@ -11,6 +11,7 @@ Recent template updates:
 - The same template now includes compact no-space rate-duration arithmetic (`9L/min*18min`).
 - The template now includes time-slot ranges (`09:00..11:00 step 30 min`) and deferred dependency examples (`total deferred = price*qty` before defining `qty`).
 - Grouped numeric input in assignments is explicitly unsupported (`2,000` should be entered as `2000`).
+- Clicking a quick template now opens it in a new sheet and makes that new sheet active, preserving the current sheet content.
 
 These are some examples of its syntax:
 # Quick Tour: a guided walkthrough

@@ -1,6 +1,6 @@
 import React from "react";
-import { useEditorContext } from "../Editor";
 import { QUICK_TOUR_TEMPLATE } from "../../templates/quickTourTemplate";
+import { useSheetContext } from "../../state/SheetContext";
 import { normalizeTemplateTriggers } from "./templateTriggerNormalization";
 import "./TemplatePanel.css";
 
@@ -748,14 +748,14 @@ tax =
 ];
 
 function TemplatePanel() {
-  const { setSmartPadContent } = useEditorContext();
+  const { createSheetFromContent } = useSheetContext();
 
   const handleTemplateClick = (template: (typeof templates)[0]) => {
-    setSmartPadContent(normalizeTemplateTriggers(template.id, template.content));
-    // Ensure evaluation runs after insertion
-    try {
-      window.dispatchEvent(new Event('forceEvaluation'));
-    } catch {}
+    createSheetFromContent(
+      normalizeTemplateTriggers(template.id, template.content),
+      template.name,
+      true
+    ).catch(() => {});
   };
 
   return (

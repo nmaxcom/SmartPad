@@ -3818,3 +3818,35 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   Pre-commit docs/spec checks without explicit range still referenced prior commit delta; resolved by committing this change and rerunning gates.
+
+## Entry J-2026-03-04-07
+
+*   Timestamp: 2026-03-04 21:45:54 CET / 2026-03-04 20:45:54 UTC
+*   Summary:
+    *   User requested template clicks to open in a new sheet instead of replacing the current sheet.
+    *   Assistant changed template click behavior to call `createSheetFromContent(..., makeActive=true)`.
+    *   Added regression coverage with a focused unit test and expanded template e2e coverage.
+*   Decisions:
+    *   Route template actions through sheet context API (new sheet + activate) rather than direct editor content replacement.
+    *   Persist docs note in `docs/ABOUT.md` to reflect new template behavior.
+*   User directives:
+    *   Templates should open as a new sheet and preserve current sheet content.
+*   Assistant commitments:
+    *   Keep template loading non-destructive to current sheet content.
+*   Artifacts:
+    *   `src/components/VariablePanel/TemplatePanel.tsx` (use `createSheetFromContent` with `makeActive=true`)
+    *   `tests/unit/templatePanelSheetCreation.test.tsx` (new regression test)
+    *   `tests/e2e/template-basic-functionality.spec.ts` (new non-destructive template flow test)
+    *   `docs/ABOUT.md` (behavior note update)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/templatePanelSheetCreation.test.tsx tests/unit/plotViewEvaluator.test.ts --runInBand` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run verify:changed` ✅
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   None.

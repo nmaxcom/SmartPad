@@ -102,4 +102,31 @@ test.describe("Template Basic Functionality", () => {
       .count();
     expect(oldStyleResults).toBe(0);
   });
+
+  test("Template click creates a new sheet instead of replacing current content", async ({
+    page,
+  }) => {
+    const marker = `Origin Sheet ${Date.now()}`;
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.press("Control+a");
+    await page.keyboard.type(`${marker}\nx = 2\nx =>`);
+    await waitForUIRenderComplete(page);
+
+    await expect(page.locator(".sheet-title-text", { hasText: marker })).toHaveCount(1);
+    const beforeCount = await page.locator(".sheet-item").count();
+
+    await page.click('button[title="Rent Calculator"]');
+    await waitForUIRenderComplete(page);
+
+    const afterCount = await page.locator(".sheet-item").count();
+    expect(afterCount).toBe(beforeCount + 1);
+    await expect(page.locator(".sheet-item.active .sheet-title-text")).toHaveText(
+      "Rent Calculator"
+    );
+
+    await page.locator(".sheet-item", { hasText: marker }).first().click();
+    await waitForUIRenderComplete(page);
+    await expect(page.locator(".ProseMirror")).toContainText(marker);
+  });
 });
