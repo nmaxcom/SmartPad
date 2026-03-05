@@ -4345,3 +4345,31 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-03-05-05
+
+*   Timestamp: 2026-03-05 14:26:08 CET / 2026-03-05 13:26:08 UTC
+*   Summary:
+    *   User requested a full audit for hidden features and undocumented feature characteristics across code/specs/tests before deciding next fixes.
+    *   Assistant performed repository-wide feature tracing and validated key capability areas with targeted unit suites.
+    *   Audit found a critical solve/trigger contract mismatch and additional under-documented implemented capabilities.
+*   Decisions:
+    *   Treat `solve ...` without `=>` behavior as an implementation/spec dissonance requiring explicit product decision.
+    *   Treat user-defined functions and modulo as implemented capabilities lacking dedicated canonical spec/trust coverage.
+*   User directives:
+    *   Go over code/specs/tests and identify hidden features like solve and undocumented characteristics.
+*   Assistant commitments:
+    *   Deliver a concrete mismatch matrix with file-backed evidence and validation status.
+*   Artifacts:
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run test:unit -- tests/unit/solve.test.ts tests/unit/functions.test.ts tests/unit/modulo.test.ts tests/unit/plotViewEvaluator.test.ts tests/unit/semanticHighlightTokenization.test.ts tests/unit/dateRange.test.ts tests/unit/durationMath.test.ts tests/unit/templateTriggerNormalization.test.ts` ✅
+    *   `node -r ts-node/register/transpile-only -e "...parseLine('solve x in y = 2 * x')..."` ✅ (confirmed no-`=>` solve execution path)
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+    *   `T-2026-03-05-01` remains `todo` (docs examples correction backlog item).
+*   Risks/blockers:
+    *   Contract ambiguity remains unresolved for whether explicit solve must require `=>` or may run in live mode without trigger.
