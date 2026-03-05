@@ -21,7 +21,8 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 ## Syntax and usage contract
 
 - Implicit solve: `target =>` (example: `qty =>`).
-- Explicit solve: `solve target in equation =>`.
+- Explicit solve (deterministic): `solve target in equation =>`.
+- Live-mode explicit solve: `solve target in equation` (setting-dependent).
 - Explicit solve can include inline assumptions: `solve v in distance = v * time, time = 2 s =>`.
 - `where` clauses are accepted syntax in explicit solve lines.
 
@@ -33,6 +34,8 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 <ExamplePlayground title={"Standalone equation solve"} description={"Use plain equations without assignment syntax."} code={"3 * x + 2 = 0\nx =>"} />
 
+<ExamplePlayground title={"Aggregate solve expansion"} description={"`total(...)`/`sum(...)` can be solved as additive equations."} code={"goal = total(50, 20, x)\ngoal => 100\nx =>"} />
+
 ## Guardrail examples
 
 <ExamplePlayground title={"No equation found"} description={"Solve target must exist in a valid equation above or inline."} code={"missing_target =>"} />
@@ -43,7 +46,8 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 - Solve only looks upward in the sheet (no equations below the current solve line).
 - The closest compatible equation above is preferred.
-- Explicit solve must include `=>`.
+- `solve ... =>` is deterministic across settings.
+- `solve ...` without `=>` may evaluate only as live preview when Live Results is enabled.
 - Unsupported inversions return explicit `Cannot solve: ...` errors.
 
 ## Power-user checklist

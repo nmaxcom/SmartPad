@@ -26,7 +26,7 @@ Behavior:
 - If the target variable already has a concrete value, SmartPad returns that value.
 - Otherwise SmartPad searches prior equations and attempts to isolate the target.
 
-### 1.2 Explicit solve trigger
+### 1.2 Explicit solve trigger (deterministic path)
 
 - Syntax: `solve <target> in <equation>[, <assignment>, ...][ where <clause>] =>`
 - Examples:
@@ -35,8 +35,18 @@ Behavior:
   - `solve r in area = PI * r^2 where r > 0 =>`
 
 Notes:
-- Explicit solve requires `=>`.
+- Explicit solve with `=>` is the deterministic path and works even when live previews are off.
 - `where` is accepted syntactically and preserved as part of explicit solve input, but does not currently alter solve algebra.
+
+### 1.3 Live-mode explicit solve (no trigger)
+
+- Syntax: `solve <target> in <equation>[, <assignment>, ...][ where <clause>]`
+- Current behavior:
+  - When `liveResultEnabled = true`, this line can evaluate as a live expression.
+  - When `liveResultEnabled = false`, this line is visually suppressed unless `=>` is present.
+
+Recommendation:
+- Keep `=>` on shared/reviewed solve lines for deterministic behavior across settings.
 
 ---
 
@@ -85,6 +95,8 @@ Supported isolation patterns include:
 4. Special-case ratio inversion:
    - `y = ln(x / (1 - x))` -> `x = exp(y) / (1 + exp(y))`
 5. Nested expression isolation across grouped operations.
+6. Aggregator expansion for solve algebra:
+   - `sum(...)` / `total(...)` are expanded to additive forms during solve parsing.
 
 ---
 
@@ -123,3 +135,9 @@ Solve returns explicit errors for invalid or unsupported cases, including:
    - `3 * x + 2 = 0`
    - `x =>`
    - Result: `-0.666667`
+
+5. Solve with aggregate expansion:
+   - `goal = total(50, 20, x)`
+   - `goal => 100`
+   - `x =>`
+   - Result: `30`

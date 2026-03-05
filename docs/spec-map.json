@@ -11,13 +11,21 @@
         "docs/Specs/LiveResult.spec.md",
         "docs/Specs/implemented/live-results.md",
         "docs/Specs/ExplicitTrigger.spec.md",
-        "docs/Specs/implemented/explicit-trigger.md"
+        "docs/Specs/implemented/explicit-trigger.md",
+        "docs/Specs/Functions.spec.md",
+        "docs/Specs/implemented/functions-and-user-defined-formulas.md",
+        "docs/Specs/Modulo.spec.md",
+        "docs/Specs/implemented/modulo-operator.md"
       ],
       "docPrefixes": [
         "docs/Specs/LiveResult.spec.md",
         "docs/Specs/implemented/live-results.md",
         "docs/Specs/ExplicitTrigger.spec.md",
         "docs/Specs/implemented/explicit-trigger.md",
+        "docs/Specs/Functions.spec.md",
+        "docs/Specs/implemented/functions-and-user-defined-formulas.md",
+        "docs/Specs/Modulo.spec.md",
+        "docs/Specs/implemented/modulo-operator.md",
         "docs/Specs/Plotting.spec.md",
         "docs/Specs/Lists.spec.md",
         "docs/Specs/implemented/lists.md",
@@ -106,9 +114,14 @@
       "specPrefixes": [
         "src/plotting/",
         "src/components/PlotViewExtension.ts",
-        "docs/Specs/Plotting.spec.md"
+        "docs/Specs/Plotting.spec.md",
+        "docs/Specs/implemented/plotting-and-dependency-views.md"
       ],
-      "docPrefixes": ["docs/Specs/Plotting.spec.md", "public/docs/"],
+      "docPrefixes": [
+        "docs/Specs/Plotting.spec.md",
+        "docs/Specs/implemented/plotting-and-dependency-views.md",
+        "public/docs/"
+      ],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
     },
     {

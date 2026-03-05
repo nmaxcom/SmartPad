@@ -4,7 +4,6 @@ These entries are intentionally **not treated as fully shipped contracts**.
 
 | Feature | Canonical card | Source spec | Status |
 |---|---|---|---|
-| Plotting and Dependency Views | `docs/Specs/proposed/plotting-and-dependency-views.md` | `docs/Specs/Plotting.spec.md` | `proposed` |
 | Feature Vision | `docs/Specs/proposed/feature-vision.md` | `docs/Specs/proposed/feature-vision.md` | `proposed` |
 | Unit Alias and Ratio | `docs/Specs/proposed/unit-aliases-and-ratio.md` | `docs/Specs/proposed/unit-aliases-and-ratio.md` | `proposed` |
 | Unit Decision Forks | `docs/Specs/proposed/unit-decision-forks.md` | `docs/Specs/proposed/unit-decision-forks.md` | `proposed` |

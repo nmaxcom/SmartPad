@@ -4373,3 +4373,51 @@
     *   `T-2026-03-05-01` remains `todo` (docs examples correction backlog item).
 *   Risks/blockers:
     *   Contract ambiguity remains unresolved for whether explicit solve must require `=>` or may run in live mode without trigger.
+
+## Entry J-2026-03-05-06
+
+*   Timestamp: 2026-03-05 20:33:21 CET / 2026-03-05 19:33:21 UTC
+*   Summary:
+    *   User requested live-results-era spec alignment so solve is not documented as requiring `=>` when implementation can execute without it in live mode.
+    *   Assistant completed spec/docs trust sync for explicit trigger + solve behavior, and added missing canonical/spec docs for user-defined functions and modulo.
+    *   Assistant promoted plotting trust status to implemented and reconciled registries/indexes accordingly.
+*   Decisions:
+    *   Keep `solve ... =>` documented as deterministic path across settings.
+    *   Document `solve ...` without `=>` as live-mode-capable but setting-dependent behavior.
+*   User directives:
+    *   Update pre-live-results specs to current behavior.
+    *   Create missing specs/docs and fix dissonances from discovered hidden features.
+*   Assistant commitments:
+    *   Leave docs/spec map/trust state internally consistent and validated by machine checks.
+*   Artifacts:
+    *   `docs/Specs/ExplicitTrigger.spec.md`
+    *   `docs/Specs/Solve.spec.md`
+    *   `docs/Specs/Functions.spec.md` (new)
+    *   `docs/Specs/Modulo.spec.md` (new)
+    *   `docs/Specs/implemented/functions-and-user-defined-formulas.md` (new)
+    *   `docs/Specs/implemented/modulo-operator.md` (new)
+    *   `docs/Specs/implemented/plotting-and-dependency-views.md` (new)
+    *   `docs/Specs/implemented/index.md`
+    *   `docs/Specs/proposed/index.md`
+    *   `docs/spec-map.json`
+    *   `docs/spec-trust.json`
+    *   `website/docs/specs/explicit-trigger.md`
+    *   `website/docs/specs/solve-and-symbolic-math.md`
+    *   `website/docs/specs/functions-and-user-defined-formulas.md` (new)
+    *   `website/docs/specs/modulo-operator.md` (new)
+    *   `website/docs/specs/index.md`
+    *   `website/sidebars.ts`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run verify:changed` ✅
+    *   `npm run test:unit -- tests/unit/solve.test.ts tests/unit/templateTriggerNormalization.test.ts tests/unit/functions.test.ts tests/unit/modulo.test.ts tests/unit/plotViewEvaluator.test.ts tests/unit/semanticHighlightTokenization.test.ts` ✅
+    *   `npm run build` ✅
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+    *   `T-2026-03-05-01` remains `todo` (docs examples correction backlog item).
+*   Risks/blockers:
+    *   None.

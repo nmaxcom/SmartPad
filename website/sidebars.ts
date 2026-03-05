@@ -12,6 +12,8 @@ const sidebars: SidebarsConfig = {
     "specs/live-results",
     "specs/explicit-trigger",
     "specs/solve-and-symbolic-math",
+    "specs/functions-and-user-defined-formulas",
+    "specs/modulo-operator",
     "specs/result-chips-and-references",
     "specs/plotting-and-dependency-views",
     "specs/currency-and-fx",

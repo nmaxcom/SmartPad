@@ -8,7 +8,10 @@ Source of truth for enforcement: `docs/spec-trust.json`.
 |---|---|---|---|
 | Live Results | `docs/Specs/implemented/live-results.md` | `docs/Specs/LiveResult.spec.md` | `tests/e2e/live-result.spec.ts`, `tests/unit/liveResultPreview.test.ts` |
 | Explicit Trigger (`=>`) | `docs/Specs/implemented/explicit-trigger.md` | `docs/Specs/ExplicitTrigger.spec.md` | `tests/unit/expressionParser.test.ts`, `tests/unit/templateTriggerNormalization.test.ts`, `tests/unit/solve.test.ts` |
+| Functions and User-Defined Formulas | `docs/Specs/implemented/functions-and-user-defined-formulas.md` | `docs/Specs/Functions.spec.md` | `tests/unit/functions.test.ts`, `tests/unit/astParser.test.ts` |
+| Modulo Operator | `docs/Specs/implemented/modulo-operator.md` | `docs/Specs/Modulo.spec.md` | `tests/unit/modulo.test.ts`, `tests/unit/expressionParser.test.ts` |
 | Result Chips and References | `docs/Specs/implemented/result-chips-and-references.md` | `docs/Specs/ResultChipsAndValueGraph.spec.md` | `tests/e2e/result-reference.spec.ts`, `tests/e2e/results-decorator-regression.spec.ts` |
+| Plotting and Dependency Views | `docs/Specs/implemented/plotting-and-dependency-views.md` | `docs/Specs/Plotting.spec.md` | `tests/unit/plotViewEvaluator.test.ts`, `tests/unit/capabilitySprintTemplate.test.ts` |
 | Currency and FX | `docs/Specs/implemented/currency-and-fx.md` | `docs/Specs/Currency.spec.md` | `tests/unit/currency-expression-evaluator.test.ts`, `tests/unit/currencyFx.test.ts` |
 | Lists | `docs/Specs/implemented/lists.md` | `docs/Specs/Lists.spec.md` | `tests/unit/list.test.ts`, `tests/unit/listSpecExamples.test.ts` |
 | Ranges | `docs/Specs/implemented/ranges.md` | `docs/Specs/Ranges.spec.md` | `tests/unit/range.test.ts` |

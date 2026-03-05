@@ -28,6 +28,28 @@
       ]
     },
     {
+      "id": "functions-and-user-defined-formulas",
+      "status": "implemented",
+      "sourceSpec": "docs/Specs/Functions.spec.md",
+      "canonicalSpec": "docs/Specs/implemented/functions-and-user-defined-formulas.md",
+      "mappedGroups": ["Expression Engine"],
+      "testRefs": [
+        "tests/unit/functions.test.ts",
+        "tests/unit/astParser.test.ts"
+      ]
+    },
+    {
+      "id": "modulo-operator",
+      "status": "implemented",
+      "sourceSpec": "docs/Specs/Modulo.spec.md",
+      "canonicalSpec": "docs/Specs/implemented/modulo-operator.md",
+      "mappedGroups": ["Expression Engine"],
+      "testRefs": [
+        "tests/unit/modulo.test.ts",
+        "tests/unit/expressionParser.test.ts"
+      ]
+    },
+    {
       "id": "result-chips-and-references",
       "status": "implemented",
       "sourceSpec": "docs/Specs/ResultChipsAndValueGraph.spec.md",
@@ -107,11 +129,14 @@
     },
     {
       "id": "plotting-and-dependency-views",
-      "status": "proposed",
+      "status": "implemented",
       "sourceSpec": "docs/Specs/Plotting.spec.md",
-      "canonicalSpec": "docs/Specs/proposed/plotting-and-dependency-views.md",
+      "canonicalSpec": "docs/Specs/implemented/plotting-and-dependency-views.md",
       "mappedGroups": ["Plotting And Visualization"],
-      "testRefs": []
+      "testRefs": [
+        "tests/unit/plotViewEvaluator.test.ts",
+        "tests/unit/capabilitySprintTemplate.test.ts"
+      ]
     },
     {
       "id": "feature-vision",
