@@ -4299,3 +4299,24 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-03-05-03
+
+*   Timestamp: 2026-03-05 03:02:00 CET / 2026-03-05 02:02:00 UTC
+*   Summary:
+    *   User requested a new todo for wrong documentation examples.
+    *   Assistant added a concrete `project` backlog item with explicit deliverables, verification commands, and done criteria.
+*   Decisions:
+    *   Track docs-example correction as a dedicated project-lane execution item (`T-2026-03-05-01`).
+*   User directives:
+    *   Add todo to fix incorrect documentation examples.
+*   Assistant commitments:
+    *   Keep this as an actionable queued item and execute when requested/focused.
+*   Artifacts:
+    *   `aidocs/TODO_BACKLOG.md` (added `T-2026-03-05-01`)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+    *   `T-2026-03-05-01` created with status `todo`.
+*   Risks/blockers:
+    *   None.
