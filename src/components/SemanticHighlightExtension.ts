@@ -521,6 +521,7 @@ export function tokenizeExpression(
   // Regular expressions for different token types
   const numberRegex = /^[-+]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/;
   const functionRegex = /^([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/;
+  const solveKeywordRegex = /^solve\b/i;
   const operatorRegex = /^[\+\-\*\/\^\%]/;
   const parenRegex = /^[\(\)]/;
   const bracketRegex = /^[\[\]]/;
@@ -544,6 +545,7 @@ export function tokenizeExpression(
     "where",
     "asc",
     "desc",
+    "solve",
   ]);
 
   // Get all variable names sorted by length (longest first for greedy matching)
@@ -568,6 +570,21 @@ export function tokenizeExpression(
 
     if (matched) {
       continue;
+    }
+
+    // Check for solve command keyword at expression start
+    if (!matched && pos === 0) {
+      const solveMatch = expr.substring(pos).match(solveKeywordRegex);
+      if (solveMatch) {
+        pushToken({
+          type: "keyword",
+          start: baseOffset + pos,
+          end: baseOffset + pos + solveMatch[0].length,
+          text: solveMatch[0],
+        });
+        pos += solveMatch[0].length;
+        matched = true;
+      }
     }
 
     // Check for functions
@@ -819,6 +836,13 @@ export function tokenizeExpression(
             lookahead++;
           }
           if (lookahead < expr.length && /[a-zA-Z0-9_]/.test(expr[lookahead])) {
+            const nextWordMatch = expr.substring(lookahead).match(/^[a-zA-Z_][a-zA-Z0-9_]*/);
+            if (
+              nextWordMatch &&
+              reservedKeywordLikeIdentifiers.has(nextWordMatch[0].toLowerCase())
+            ) {
+              break;
+            }
             value += " ";
             pos = lookahead;
             continue;

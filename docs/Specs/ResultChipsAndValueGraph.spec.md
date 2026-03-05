@@ -351,8 +351,9 @@ By default SmartPad keeps references alive when copying/exporting text, so paste
 1. `on`/`off` are highlighted as keywords in percentage phrases (for example `service fee on ticket list`).
 2. `where` is highlighted as a keyword when used as a filter/solve clause operator (for example `list where > 10` or `solve x where y = 2`).
 3. A user-defined variable named `where` still highlights as a variable in normal variable-reference positions (for example `where + 1`).
-4. Reserved operator words (`to/in/of/on/off/as/is/per/where`) must not be tokenized as function names just because `(` follows; for example `service fee on (promo off ticket list)` keeps `on`/`off` as keyword tokens.
-5. If variables named `on`, `off`, or `where` exist, keyword/operator positions still render them as keywords (for example `a on (b off c)` and `list where > 10`).
+4. `solve` is highlighted as a keyword command token at the start of explicit solve expressions (for example `solve break_even_km in ...`), not as a variable or function name.
+5. Reserved operator/command words (`solve/to/in/of/on/off/as/is/per/where`) must not be tokenized as function names just because `(` follows.
+6. If variables named `on`, `off`, or `where` exist, keyword/operator positions still render them as keywords (for example `a on (b off c)` and `list where > 10`).
 
 ### 8.9 Current SmartPad Touchpoints (Implementation map)
 

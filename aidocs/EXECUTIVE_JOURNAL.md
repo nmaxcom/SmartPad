@@ -4320,3 +4320,28 @@
     *   `T-2026-03-05-01` created with status `todo`.
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-03-05-04
+
+*   Timestamp: 2026-03-05 03:17:20 CET / 2026-03-05 02:17:20 UTC
+*   Summary:
+    *   User questioned whether `solve` should be variable/function/operator highlighted.
+    *   Assistant confirmed tokenizer behavior and implemented `solve` command highlighting as `keyword` for explicit solve expressions.
+    *   Added regressions to prevent `solve` from being tokenized as a function and to keep solve-target and `in` clause token boundaries correct.
+*   Decisions:
+    *   `solve` is treated as a command keyword token in explicit solve syntax, not as variable/function/operator.
+*   User directives:
+    *   Clarify/fix token classification for `solve` highlighting.
+*   Assistant commitments:
+    *   Keep keyword/operator highlighting deterministic for solve DSL commands.
+*   Artifacts:
+    *   `src/components/SemanticHighlightExtension.ts` (tokenizer updates for `solve` keyword and fallback split behavior)
+    *   `tests/unit/semanticHighlightTokenization.test.ts` (new solve highlighting regressions)
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md` (semantic highlighting rule update)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/semanticHighlightTokenization.test.ts` ✅
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   None.

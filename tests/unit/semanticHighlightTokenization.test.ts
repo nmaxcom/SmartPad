@@ -96,4 +96,39 @@ describe("Semantic highlight tokenization", () => {
     expect(offToken?.type).toBe("keyword");
     expect(whereToken?.type).toBe("keyword");
   });
+
+  test("highlights solve as keyword and keeps target separated from in-clause", () => {
+    const tokens = tokenizeExpression(
+      "solve break_even_km in taxi base + taxi rate*break_even_km = rideshare base + rideshare rate*break_even_km",
+      0,
+      makeContext([
+        "taxi base",
+        "taxi rate",
+        "rideshare base",
+        "rideshare rate",
+        "break_even_km",
+      ]) as any
+    );
+
+    const solveToken = tokens.find((token) => token.text.toLowerCase() === "solve");
+    const inToken = tokens.find((token) => token.text.toLowerCase() === "in");
+    const targetToken = tokens.find((token) => token.text === "break_even_km");
+    const mergedSolveClauseToken = tokens.find(
+      (token) => token.type === "variable" && /solve\s+.+\s+in/i.test(token.text)
+    );
+
+    expect(solveToken?.type).toBe("keyword");
+    expect(inToken?.type).toBe("keyword");
+    expect(targetToken?.type).toBe("variable");
+    expect(mergedSolveClauseToken).toBeUndefined();
+  });
+
+  test("does not classify solve as a function name before parens", () => {
+    const tokens = tokenizeExpression("solve(x)", 0, makeContext(["x"]) as any);
+    const solveToken = tokens.find((token) => token.text.toLowerCase() === "solve");
+    expect(solveToken?.type).toBe("keyword");
+    expect(tokens.some((token) => token.type === "function" && token.text.toLowerCase() === "solve")).toBe(
+      false
+    );
+  });
 });
