@@ -4452,3 +4452,33 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   No functional blockers for this task; pre-commit spec-test failure appears tied to unrelated concurrent repo changes.
+
+## Entry J-2026-03-10-02
+
+*   Timestamp: 2026-03-10 14:16:37 CET / 2026-03-10 13:16:37 UTC
+*   Summary:
+    *   Follow-up validation session completed for live-result clipboard sharing behavior after docs/spec alignment commit.
+    *   Assistant added spec-map coverage for `src/components/pasteTransforms.ts` and documented parenthesized live-result copy plus paste-strip guardrails in result-chip spec.
+    *   Assistant reran full machine gate checks on the combined diff range containing both implementation and docs commits.
+*   Decisions:
+    *   Validate gates using explicit range `ac041552^...HEAD` to include code + docs commits together.
+    *   For local Playwright regression, use temporary config on `localhost:3200` because default Playwright config still targets port `3000` in this repo state.
+*   User directives:
+    *   Continue without additional permission prompts and complete implementation/validation thoroughly.
+*   Assistant commitments:
+    *   Keep commit scope strict and exclude unrelated concurrent workspace modifications.
+*   Artifacts:
+    *   `docs/spec-map.json`
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift -- ac041552^...HEAD` ✅
+    *   `npm run spec:test -- ac041552^...HEAD` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run verify:changed -- ac041552^...HEAD` ✅
+    *   `npx playwright test tests/e2e/user-issues-fixed.spec.ts -g "clipboard text includes results without extra blank lines|select-copy-paste keeps text stable when a line has live result chips" --project=chromium --config=playwright.3200.config.ts` ✅
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   None for the implemented clipboard behavior; only environmental note is default Playwright port mismatch if `3000` is occupied.
