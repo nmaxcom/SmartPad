@@ -1,4 +1,9 @@
-import { normalizePastedHTML, selectPastePayload } from "../../src/components/pasteTransforms";
+import {
+  isLikelySharedLiveExpressionSource,
+  normalizePastedHTML,
+  selectPastePayload,
+  stripSharedLiveResultSuffixes,
+} from "../../src/components/pasteTransforms";
 
 describe("normalizePastedHTML", () => {
   test("converts pre blocks into paragraphs", () => {
@@ -40,5 +45,37 @@ describe("selectPastePayload", () => {
     const text = "line 1\nline 2";
 
     expect(selectPastePayload(markdown, text)).toBe(markdown);
+  });
+});
+
+describe("stripSharedLiveResultSuffixes", () => {
+  test("strips trailing shared live-result suffixes from likely expression lines", () => {
+    const pasted = "known = 5\nknown*3 (15)\n2+2=> 4";
+
+    expect(stripSharedLiveResultSuffixes(pasted)).toBe("known = 5\nknown*3\n2+2=> 4");
+  });
+
+  test("strips assignment-line shared suffixes", () => {
+    expect(stripSharedLiveResultSuffixes("total = 20*2 (40)")).toBe("total = 20*2");
+  });
+
+  test("keeps plain text annotations unchanged", () => {
+    expect(stripSharedLiveResultSuffixes("meeting notes (4)")).toBe("meeting notes (4)");
+  });
+
+  test("keeps suffixes with non-rendered values unchanged", () => {
+    expect(stripSharedLiveResultSuffixes("known*3 (approx)")).toBe("known*3 (approx)");
+  });
+});
+
+describe("isLikelySharedLiveExpressionSource", () => {
+  test("identifies computational lines", () => {
+    expect(isLikelySharedLiveExpressionSource("known*3")).toBe(true);
+    expect(isLikelySharedLiveExpressionSource("total = price*qty")).toBe(true);
+  });
+
+  test("ignores plain prose", () => {
+    expect(isLikelySharedLiveExpressionSource("meeting notes")).toBe(false);
+    expect(isLikelySharedLiveExpressionSource("# comment")).toBe(false);
   });
 });

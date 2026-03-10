@@ -4421,3 +4421,34 @@
     *   `T-2026-03-05-01` remains `todo` (docs examples correction backlog item).
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-03-10-01
+
+*   Timestamp: 2026-03-10 04:19:31 CET / 2026-03-10 03:19:31 UTC
+*   Summary:
+    *   User requested a silent share format for live-result copy that does not alter SmartPad round-trip semantics, specifically exploring `expression (result)` suffixes.
+    *   Assistant implemented copy-time live-result annotation as `expr (result)` and paste-time stripping that only removes trailing parenthesized suffixes when the left side is a likely evaluable SmartPad expression and the marker resembles a rendered value.
+    *   Added unit and Playwright coverage to validate copy output, safe stripping on paste, and preservation of non-expression parenthetical text.
+*   Decisions:
+    *   Use conservative heuristics to avoid stripping arbitrary prose annotations: line must look computational and marker must look parseable numeric/semantic output.
+    *   Preserve existing explicit-trigger (`=>`) clipboard behavior and reference-token export behavior.
+*   User directives:
+    *   Implement the parenthesis approach and test thoroughly.
+*   Assistant commitments:
+    *   Keep copy/paste compatible with SmartPad while improving external share readability.
+*   Artifacts:
+    *   `src/components/Editor.tsx` (clipboard serializer and paste handling integration)
+    *   `src/components/pasteTransforms.ts` (shared suffix detection/stripping helpers)
+    *   `tests/unit/pasteTransforms.test.ts` (heuristic and stripping unit tests)
+    *   `tests/e2e/user-issues-fixed.spec.ts` (clipboard copy/paste flow assertion updated for parenthesized live results)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/pasteTransforms.test.ts --runInBand` ✅
+    *   `npx playwright test tests/e2e/user-issues-fixed.spec.ts -g "clipboard text includes results without extra blank lines|select-copy-paste keeps text stable when a line has live result chips" -c playwright.3201.config.ts` ✅ (run against temporary Vite server on `127.0.0.1:3201`)
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ⚠️ failed before commit due unrelated existing diff-range docs changes outside this task; will rerun after scoped commit.
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   No functional blockers for this task; pre-commit spec-test failure appears tied to unrelated concurrent repo changes.

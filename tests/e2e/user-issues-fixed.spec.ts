@@ -453,9 +453,11 @@ test.describe("User Issues Fixed", () => {
   });
 
   test("select-copy-paste keeps text stable when a line has live result chips", async ({ page }) => {
+    await page.context().grantPermissions(["clipboard-write", "clipboard-read"]);
+
     const pm = page.locator(".ProseMirror");
     await pm.click();
-    await page.keyboard.press("Control+a");
+    await page.keyboard.press("ControlOrMeta+a");
     await page.keyboard.press("Delete");
 
     await pm.type("known = 5");
@@ -465,11 +467,16 @@ test.describe("User Issues Fixed", () => {
     await pm.type("2+2=>");
     await waitForUIRenderComplete(page);
 
-    await page.keyboard.press("Control+a");
-    await page.keyboard.press("Control+c");
+    await page.keyboard.press("ControlOrMeta+a");
+    await page.keyboard.press("ControlOrMeta+c");
+
+    const copiedText = await page.evaluate(async () => navigator.clipboard.readText());
+    expect(copiedText).toContain("known*3 (15)");
+    expect(copiedText).toContain("2+2=> 4");
+
     await page.keyboard.press("ArrowDown");
     await page.keyboard.press("Enter");
-    await page.keyboard.press("Control+v");
+    await page.keyboard.press("ControlOrMeta+v");
     await waitForUIRenderComplete(page);
 
     const textSnapshot = await page.evaluate(() => {
@@ -480,6 +487,7 @@ test.describe("User Issues Fixed", () => {
 
     expect(textSnapshot).toContain("known = 5");
     expect(textSnapshot).toContain("known*3");
+    expect(textSnapshot).not.toContain("known*3 (15)");
     expect(textSnapshot).toContain("2+2=>");
   });
 

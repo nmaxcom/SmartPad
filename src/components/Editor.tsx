@@ -25,7 +25,12 @@ import {
 import { NumberScrubberExtension } from "./NumberScrubberExtension";
 import { ResultsDecoratorExtension } from "./ResultsDecoratorExtension";
 import { VariableHoverExtension } from "./VariableHoverExtension";
-import { normalizePastedHTML, selectPastePayload } from "./pasteTransforms";
+import {
+  isLikelySharedLiveExpressionSource,
+  normalizePastedHTML,
+  selectPastePayload,
+  stripSharedLiveResultSuffixes,
+} from "./pasteTransforms";
 import { ResultInlineNode } from "./ResultInlineNode";
 import { ReferenceInlineNode } from "./ReferenceInlineNode";
 import { ResultInteractionExtension } from "./ResultInteractionExtension";
@@ -124,6 +129,73 @@ interface LineResultState {
   hasError: boolean;
   errorMessage?: string;
 }
+
+interface LineResultStatus {
+  hasError: boolean;
+  errorMessage?: string;
+  display: string;
+}
+
+const SHARED_LIVE_RESULT_SUFFIX_RE = /\s+\([^()\n]+\)\s*$/;
+
+const serializeClipboardLeafNode = (
+  node: ProseMirrorNode,
+  referenceTextExportMode: "preserve" | "readable",
+  tracker: { hasResultToken: boolean }
+): string => {
+  if (node.type?.name === "resultToken") {
+    tracker.hasResultToken = true;
+    return node.textContent || node.attrs?.value || "";
+  }
+  if (node.type?.name === "referenceToken") {
+    if (referenceTextExportMode === "preserve") {
+      return node.attrs?.placeholderKey || node.attrs?.sourceValue || "value";
+    }
+    return node.attrs?.sourceValue || node.attrs?.label || "value";
+  }
+  return "";
+};
+
+const serializeSliceForClipboard = (
+  slice: Slice,
+  referenceTextExportMode: "preserve" | "readable",
+  lineResultStatusById: Map<string, LineResultStatus>
+): string => {
+  const lines: string[] = [];
+
+  slice.content.forEach((node: ProseMirrorNode) => {
+    const tracker = { hasResultToken: false };
+    const text = node.textBetween(0, node.content.size, "", (leaf) =>
+      serializeClipboardLeafNode(leaf, referenceTextExportMode, tracker)
+    );
+
+    if (!node.isTextblock) {
+      lines.push(text);
+      return;
+    }
+
+    const lineId = String((node as any).attrs?.lineId || "").trim();
+    const lineStatus = lineId ? lineResultStatusById.get(lineId) : undefined;
+    const hasExplicitTrigger = text.includes("=>");
+    const shouldAppendSharedSuffix =
+      !!lineStatus &&
+      !lineStatus.hasError &&
+      lineStatus.display.trim().length > 0 &&
+      !tracker.hasResultToken &&
+      !hasExplicitTrigger &&
+      !SHARED_LIVE_RESULT_SUFFIX_RE.test(text) &&
+      isLikelySharedLiveExpressionSource(text);
+
+    if (shouldAppendSharedSuffix) {
+      lines.push(`${text} (${lineStatus.display.trim()})`);
+      return;
+    }
+
+    lines.push(text);
+  });
+
+  return lines.join("\n");
+};
 
 const extractParagraphTextAndReferences = (node: ProseMirrorNode): {
   text: string;
@@ -239,6 +311,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
   const { replaceAllVariables } = useVariables();
   const { settings } = useSettingsContext();
   const settingsRef = useRef(settings);
+  const lineResultStatusByIdRef = useRef<Map<string, LineResultStatus>>(new Map());
   const isUpdatingRef = useRef(false);
 
   useEffect(() => {
@@ -889,6 +962,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
           (window as any).__evaluationSeq = ((window as any).__evaluationSeq || 0) + 1;
           (window as any).__liveResultMetrics = getLiveResultMetrics();
           (window as any).__lineResultStatusById = Array.from(lineResultStatusById.entries());
+          lineResultStatusByIdRef.current = new Map(lineResultStatusById);
           
           window.dispatchEvent(
             new CustomEvent("evaluationDone", { 
@@ -1038,17 +1112,24 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         const types = Array.from(clipboard.types || []);
         const hasCodeHtml = /<(pre|code)\b/i.test(html);
         const hasVscodeType = types.some((type) => type.includes("vscode"));
+        const hasStructuredClipboardInput = hasCodeHtml || !!markdown || hasVscodeType;
 
-        if (!hasCodeHtml && !markdown && !hasVscodeType) {
+        if (!hasStructuredClipboardInput && !text) {
           return false;
         }
 
-        const payload = selectPastePayload(markdown, text);
+        const payload = hasStructuredClipboardInput ? selectPastePayload(markdown, text) : text;
         if (!payload) {
           return false;
         }
+        const normalizedPayload = stripSharedLiveResultSuffixes(payload);
 
-        const lines = payload.replace(/\r\n?/g, "\n").split("\n");
+        if (!hasStructuredClipboardInput && normalizedPayload === payload) {
+          // Keep native plain-text paste behavior when no SmartPad share suffix is detected.
+          return false;
+        }
+
+        const lines = normalizedPayload.replace(/\r\n?/g, "\n").split("\n");
         const { schema } = view.state;
         const paragraphs = lines.map((line) =>
           schema.nodes.paragraph.create(
@@ -1061,18 +1142,11 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         return true;
       },
       clipboardTextSerializer: (slice: Slice) =>
-        slice.content.textBetween(0, slice.content.size, "\n", (node) => {
-          if (node.type?.name === "resultToken") {
-            return node.textContent || node.attrs?.value || "";
-          }
-          if (node.type?.name === "referenceToken") {
-            if (settingsRef.current.referenceTextExportMode === "preserve") {
-              return node.attrs?.placeholderKey || node.attrs?.sourceValue || "value";
-            }
-            return node.attrs?.sourceValue || node.attrs?.label || "value";
-          }
-          return "";
-        }),
+        serializeSliceForClipboard(
+          slice,
+          settingsRef.current.referenceTextExportMode,
+          lineResultStatusByIdRef.current
+        ),
     },
     onUpdate: ({ editor }) => {
       handleUpdateV2({ editor }); // Always use AST pipeline
