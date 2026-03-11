@@ -4510,3 +4510,28 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   Broad unit coverage is green, but this review did not rerun the full Playwright suite, so some interaction/documentation risks remain assessment-based rather than freshly browser-validated.
+
+## Entry J-2026-03-11-01
+
+*   Timestamp: 2026-03-11 05:34:44 CET / 2026-03-11 04:34:44 UTC
+*   Summary:
+    *   User responded to the review with design direction: use a hover affordance icon for plot discovery, improve all documentation quality, and propose detailed specs for five next-wave features.
+    *   Assistant reviewed current solve, plotting, list, and proposal docs to keep the new feature proposals consistent with existing SmartPad syntax and philosophy.
+    *   Assistant prepared a proposal-oriented response covering goal-seek, scenario sheets, auto-suggested plots, more human solve UX, and tables/structured collections.
+*   Decisions:
+    *   Align future plotting discovery with an explicit hover icon next to copy actions rather than overloading chip click/drag.
+    *   Draft proposal material in a human-readable spec style with realistic SmartPad examples rather than implementation details only.
+*   User directives:
+    *   Propose strong specs with great human-like examples for the requested feature areas.
+*   Assistant commitments:
+    *   Keep proposals compatible with SmartPad’s text-first model and current syntax direction.
+*   Artifacts:
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   Context refresh only; no machine validation required for proposal drafting.
+*   Pending updates:
+    *   `T-2026-02-14-06` remains `todo` (explicit plot affordance + interaction model).
+    *   `T-2026-03-05-01` remains `todo` (docs quality and example truth pass).
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   These proposals intentionally go beyond currently implemented behavior and should be reviewed before promotion into source specs or backlog execution.
