@@ -4535,3 +4535,26 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   These proposals intentionally go beyond currently implemented behavior and should be reviewed before promotion into source specs or backlog execution.
+
+## Entry J-2026-03-12-01
+
+*   Timestamp: 2026-03-12 20:31:53 CET / 2026-03-12 19:31:53 UTC
+*   Summary:
+    *   User requested a current screenshot of SmartPad using Playwright.
+    *   Assistant launched SmartPad locally on `http://127.0.0.1:3200` and captured a screenshot artifact.
+    *   Initial sandboxed Playwright browser launch failed due macOS sandbox permission limits; rerun with elevated permissions succeeded.
+*   Decisions:
+    *   Use `npx playwright screenshot` for a direct one-shot capture and save under `output/playwright/` per Playwright skill guidance.
+*   User directives:
+    *   Take a screenshot of SmartPad as-is right now with Playwright.
+*   Assistant commitments:
+    *   Keep artifact generation scoped to Playwright output folder and avoid touching unrelated workspace files.
+*   Artifacts:
+    *   `output/playwright/live-shot/smartpad-now.png`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npx playwright screenshot --device="Desktop Chrome" http://127.0.0.1:3200 output/playwright/live-shot/smartpad-now.png` ✅
+*   Pending updates:
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   None.
