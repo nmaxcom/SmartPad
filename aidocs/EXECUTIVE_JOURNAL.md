@@ -4536,6 +4536,42 @@
 *   Risks/blockers:
     *   These proposals intentionally go beyond currently implemented behavior and should be reviewed before promotion into source specs or backlog execution.
 
+## Entry J-2026-03-14-01
+
+*   Timestamp: 2026-03-14 02:15:08 CET / 2026-03-14 01:15:08 UTC
+*   Summary:
+    *   User requested repo-native proposed specs on a separate experimental branch, with stronger direction on chip-menu-based plot discovery, no-`@` goal-seek syntax, richer plot suggestions, and a public-docs writing standard.
+    *   Assistant created a new branch and added five dedicated proposed feature specs plus one docs writing standard document.
+    *   Assistant wired the new proposals into the proposed index, legacy proposal backlog links, and spec trust registry, then validated the docs/spec gates.
+*   Decisions:
+    *   Use chip menu actions rather than click-vs-drag overloading as the proposal direction for plot discovery.
+    *   Keep goal-seek proposal free of new `@` directive language and require deterministic `=>` execution.
+*   User directives:
+    *   Put these proposals on a new experimental branch and make them thorough, with syntax, UX states, edge cases, acceptance examples, and implementation/testing gates.
+*   Assistant commitments:
+    *   Keep proposal docs aligned with SmartPad’s text-first philosophy and future validation requirements.
+*   Artifacts:
+    *   `docs/Specs/proposed/goal-seek-interactions.md` (new)
+    *   `docs/Specs/proposed/scenario-comparison-sheets.md` (new)
+    *   `docs/Specs/proposed/auto-suggested-plots.md` (new)
+    *   `docs/Specs/proposed/human-first-solve-phrasing.md` (new)
+    *   `docs/Specs/proposed/tables-and-structured-collections.md` (new)
+    *   `docs/PUBLIC_DOCS_WRITING_STANDARD.md` (new)
+    *   `docs/Specs/proposed/index.md`
+    *   `docs/Specs/proposed/ux-feature-ideas-backlog.md`
+    *   `docs/spec-trust.json`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run spec:trust` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+*   Pending updates:
+    *   `T-2026-02-14-06` remains `todo` (plot interaction model still awaits implementation).
+    *   `T-2026-03-05-01` remains `todo` (public docs refresh still awaits execution against the new standard).
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   These are proposal docs only; no runtime behavior was changed in this session.
+
 ## Entry J-2026-03-12-01
 
 *   Timestamp: 2026-03-12 20:31:53 CET / 2026-03-12 19:31:53 UTC
