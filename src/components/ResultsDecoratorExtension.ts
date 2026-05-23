@@ -208,6 +208,14 @@ export const ResultsDecoratorExtension = Extension.create({
                         const actions = document.createElement("span");
                         actions.className = "semantic-result-actions semantic-live-result-actions";
 
+                        const dragButton = document.createElement("button");
+                        dragButton.className =
+                          "semantic-result-action semantic-result-drag semantic-live-result-action semantic-live-result-drag";
+                        dragButton.type = "button";
+                        dragButton.setAttribute("draggable", "true");
+                        dragButton.setAttribute("aria-label", "Drag result to reuse");
+                        dragButton.setAttribute("title", "Drag to reuse");
+
                         const copyButton = document.createElement("button");
                         copyButton.className =
                           "semantic-result-action semantic-result-copy semantic-live-result-action semantic-live-result-copy";
@@ -217,7 +225,19 @@ export const ResultsDecoratorExtension = Extension.create({
                         copyButton.setAttribute("title", "Copy value");
                         copyButton.textContent = "";
 
+                        const menuButton = document.createElement("button");
+                        menuButton.className =
+                          "semantic-result-action semantic-result-menu semantic-live-result-action semantic-live-result-menu";
+                        menuButton.type = "button";
+                        menuButton.setAttribute("draggable", "false");
+                        menuButton.setAttribute("aria-label", "Result actions");
+                        menuButton.setAttribute("title", "Result actions");
+                        menuButton.setAttribute("aria-haspopup", "menu");
+                        menuButton.setAttribute("aria-expanded", "false");
+
+                        actions.appendChild(dragButton);
                         actions.appendChild(copyButton);
+                        actions.appendChild(menuButton);
                         span.appendChild(value);
                         span.appendChild(actions);
                         container.appendChild(span);

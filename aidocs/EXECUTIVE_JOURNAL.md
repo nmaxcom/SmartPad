@@ -46,6 +46,48 @@
 *   Risks/blockers:
     *   None.
 
+## Entry J-2026-05-24-01
+
+*   Timestamp: 2026-05-24 00:06:37 CEST / 2026-05-23 22:06:42 UTC
+*   Summary:
+    *   User approved chip-UX corrections in order after confirming tables should not be part of the approved recommendations.
+    *   Assistant aligned the result-chip spec with the current direct-click no-op contract, added visible drag/copy/menu hover affordances to live and trigger chips, and implemented an explicit result action menu.
+    *   Menu now exposes real actions for `Copy value`, `Insert reference`, and `Insert value`; future `Explore dependencies` and `Plot from result` entries are visible but disabled.
+*   Decisions:
+    *   Keep direct chip click non-mutating to avoid accidental edits and selection/drag conflicts.
+    *   Use explicit menu insertion for deliberate reuse while preserving existing drag/drop reference insertion.
+    *   Exclude table feature work from this approved correction path.
+*   User directives:
+    *   Correct the chip/spec/test issues in the recommended order.
+    *   Verify actual behavior instead of assuming features from roadmap language.
+*   Assistant commitments:
+    *   Keep current vs new behavior clearly separated in spec, tests, and final report.
+*   Artifacts:
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
+    *   `src/components/Editor.css`
+    *   `src/components/ResultInlineNode.ts`
+    *   `src/components/ResultReferenceInteractionExtension.ts`
+    *   `src/components/ResultsDecoratorExtension.ts`
+    *   `tests/e2e/live-result.spec.ts`
+    *   `tests/e2e/result-reference-drag-only.spec.ts`
+    *   `/private/tmp/smartpad-result-chip-menu.png` (temporary visual verification screenshot)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run build` ✅
+    *   `npx playwright test tests/e2e/live-result.spec.ts tests/e2e/result-reference-drag-only.spec.ts tests/e2e/result-reference.spec.ts -g "shows hover actions on live result|triggered result chips share hover copy affordance|clicking a result chip does not insert|result chips expose drag handle|result chip menu inserts reference and plain value|dragging a result chip onto a line inserts|boundary drop between middle lines inserts|dragging a result chip inserts an invisible structured reference" --project=chromium --config=playwright.config.ts --workers=1` ✅
+    *   Manual Playwright shell verification on `http://localhost:3200/` confirmed visible drag/copy/menu controls and correct enabled/disabled menu actions ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run test:unit -- --runInBand` ✅
+    *   `npm run verify:changed` ✅ before commit and rerun after commit on `HEAD~1...HEAD` ✅
+*   Pending updates:
+    *   Human gate remains open: user has not yet confirmed this correction set as complete.
+    *   Full Playwright suite was not rerun; targeted e2e covered the touched chip flows.
+*   Risks/blockers:
+    *   None for the corrected chip flows; full Playwright remains broader than this targeted correction pass.
+
 ## Entry J-2026-02-11-02
 
 *   Timestamp: 2026-02-11 06:51:39 CET

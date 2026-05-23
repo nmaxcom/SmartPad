@@ -826,6 +826,8 @@ export const ResultReferenceInteractionExtension = Extension.create({
     let activeDragPayload: ReferencePayload | null = null;
     let activeBoundaryDropTarget: LineBoundaryDropTarget | null = null;
     let activeInlineDropPos: number | null = null;
+    let activeMenu: HTMLElement | null = null;
+    let activeMenuButton: HTMLElement | null = null;
     const clearDropTargetIndicator = (view: any) => {
       view.dom
         .querySelectorAll(`p.${DROP_TARGET_AFTER_CLASS}`)
@@ -863,6 +865,139 @@ export const ResultReferenceInteractionExtension = Extension.create({
       if (typeof window !== "undefined") {
         (window as any)[RESULT_DRAG_ACTIVE_WINDOW_FLAG] = false;
       }
+    };
+    const closeResultActionMenu = () => {
+      if (activeMenu?.parentElement) {
+        activeMenu.parentElement.removeChild(activeMenu);
+      }
+      if (activeMenuButton) {
+        activeMenuButton.setAttribute("aria-expanded", "false");
+      }
+      activeMenu = null;
+      activeMenuButton = null;
+    };
+    const insertMenuPayloadAtSelection = (
+      view: any,
+      resultEl: HTMLElement,
+      mode: "reference" | "value"
+    ): number | null => {
+      const payload = payloadFromElement(resultEl);
+      if (!payload) return null;
+      const selectedLineId = getSelectedTextblockLineId(view.state);
+      const resolvedPayload = resolvePayloadLineIdentity(view.state, payload);
+      const isSameLine =
+        !!selectedLineId &&
+        !!resolvedPayload.sourceLineId &&
+        selectedLineId === resolvedPayload.sourceLineId;
+      return isSameLine
+        ? insertReferenceOnNewLine(view, resolvedPayload, mode)
+        : insertReferenceAt(view, resolvedPayload, view.state.selection.from, mode);
+    };
+    const buildMenuButton = (
+      label: string,
+      action: () => void,
+      options?: { disabled?: boolean; title?: string }
+    ): HTMLButtonElement => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.setAttribute("role", "menuitem");
+      button.textContent = label;
+      if (options?.title) {
+        button.title = options.title;
+      }
+      if (options?.disabled) {
+        button.disabled = true;
+        button.setAttribute("aria-disabled", "true");
+      } else {
+        button.addEventListener("mousedown", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        });
+        button.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          action();
+        });
+      }
+      return button;
+    };
+    const positionResultActionMenu = (menu: HTMLElement, button: HTMLElement) => {
+      const rect = button.getBoundingClientRect();
+      const menuWidth = Math.max(184, menu.offsetWidth || 0);
+      const left = Math.max(8, Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - 8));
+      const top = Math.min(rect.bottom + 6, window.innerHeight - menu.offsetHeight - 8);
+      menu.style.left = `${left}px`;
+      menu.style.top = `${Math.max(8, top)}px`;
+    };
+    const openResultActionMenu = (
+      view: any,
+      resultEl: HTMLElement,
+      button: HTMLElement
+    ) => {
+      const wasOpenForButton = activeMenuButton === button;
+      closeResultActionMenu();
+      if (wasOpenForButton) {
+        return;
+      }
+
+      const menu = document.createElement("div");
+      menu.className = "semantic-result-action-menu";
+      menu.setAttribute("role", "menu");
+      menu.setAttribute("aria-label", "Result actions");
+
+      menu.appendChild(
+        buildMenuButton("Copy value", () => {
+          const copyValue = resolveDisplayedResultValue(resultEl);
+          void writeTextToClipboard(copyValue).then((copied) => {
+            if (copied || !!copyValue) {
+              showCopyFeedback(resultEl);
+            }
+          });
+          closeResultActionMenu();
+        })
+      );
+      menu.appendChild(
+        buildMenuButton("Insert reference", () => {
+          const insertedCursor = insertMenuPayloadAtSelection(view, resultEl, "reference");
+          if (typeof insertedCursor === "number") {
+            postInsertCursor = insertedCursor;
+            consumeResultClick = true;
+            view.focus();
+          }
+          closeResultActionMenu();
+        })
+      );
+      menu.appendChild(
+        buildMenuButton("Insert value", () => {
+          const insertedCursor = insertMenuPayloadAtSelection(view, resultEl, "value");
+          if (typeof insertedCursor === "number") {
+            postInsertCursor = insertedCursor;
+            consumeResultClick = true;
+            view.focus();
+          }
+          closeResultActionMenu();
+        })
+      );
+      menu.appendChild(
+        buildMenuButton("Explore dependencies", () => {}, {
+          disabled: true,
+          title: "Planned action",
+        })
+      );
+      menu.appendChild(
+        buildMenuButton("Plot from result", () => {}, {
+          disabled: true,
+          title: "Planned action",
+        })
+      );
+
+      document.body.appendChild(menu);
+      activeMenu = menu;
+      activeMenuButton = button;
+      button.setAttribute("aria-expanded", "true");
+      positionResultActionMenu(menu, button);
+      const firstAction = menu.querySelector("button:not(:disabled)") as HTMLButtonElement | null;
+      firstAction?.focus();
     };
     const refreshHighlightDecorations = (view: any) => {
       const tr = view.state.tr;
@@ -958,6 +1093,18 @@ export const ResultReferenceInteractionExtension = Extension.create({
           const handleReferenceClickHighlight = (event: Event) => {
             const target = getEventElement(event.target);
             if (!target) return;
+            const menuAction = target.closest(
+              ".semantic-result-menu, .semantic-live-result-menu"
+            ) as HTMLElement | null;
+            if (menuAction) {
+              const resultEl = resolveResultElementFromTarget(menuAction);
+              if (resultEl) {
+                openResultActionMenu(view, resultEl, menuAction);
+              }
+              event.preventDefault();
+              event.stopPropagation();
+              return;
+            }
             const copyAction = target.closest(
               ".semantic-result-copy, .semantic-live-result-copy"
             ) as HTMLElement | null;
@@ -987,6 +1134,18 @@ export const ResultReferenceInteractionExtension = Extension.create({
           view.dom.addEventListener("pointerover", handlePointerOver);
           view.dom.addEventListener("pointerout", handlePointerOut);
           view.dom.addEventListener("click", handleReferenceClickHighlight, true);
+          const handleDocumentPointerDown = (event: Event) => {
+            const target = getEventElement(event.target);
+            if (!target) {
+              closeResultActionMenu();
+              return;
+            }
+            if (activeMenu?.contains(target) || activeMenuButton?.contains(target)) {
+              return;
+            }
+            closeResultActionMenu();
+          };
+          document.addEventListener("mousedown", handleDocumentPointerDown, true);
           const hoverSyncTimer = window.setInterval(syncHoverHighlight, 80);
 
           return {
@@ -994,11 +1153,13 @@ export const ResultReferenceInteractionExtension = Extension.create({
               view.dom.removeEventListener("pointerover", handlePointerOver);
               view.dom.removeEventListener("pointerout", handlePointerOut);
               view.dom.removeEventListener("click", handleReferenceClickHighlight, true);
+              document.removeEventListener("mousedown", handleDocumentPointerDown, true);
               window.clearInterval(hoverSyncTimer);
               if (clearHighlightTimer) {
                 clearTimeout(clearHighlightTimer);
                 clearHighlightTimer = null;
               }
+              closeResultActionMenu();
               clearDragSession();
               clearDropTargetIndicator(view);
               clearInlineDropIndicator(view);
@@ -1137,6 +1298,14 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 event.stopPropagation();
                 return true;
               }
+              const menuAction = target.closest(
+                ".semantic-result-menu, .semantic-live-result-menu"
+              ) as HTMLElement | null;
+              if (menuAction) {
+                event.preventDefault();
+                event.stopPropagation();
+                return true;
+              }
               const referenceEl = target.closest(REFERENCE_SELECTOR) as HTMLElement | null;
               if (referenceEl) {
                 const payload = payloadFromElement(referenceEl);
@@ -1192,6 +1361,17 @@ export const ResultReferenceInteractionExtension = Extension.create({
                     showCopyFeedback(resultEl);
                   }
                 });
+                event.preventDefault();
+                event.stopPropagation();
+                return true;
+              }
+              const menuAction = target.closest(
+                ".semantic-result-menu, .semantic-live-result-menu"
+              ) as HTMLElement | null;
+              if (menuAction) {
+                const resultEl = resolveResultElementFromTarget(menuAction);
+                if (!resultEl) return false;
+                openResultActionMenu(view, resultEl, menuAction);
                 event.preventDefault();
                 event.stopPropagation();
                 return true;

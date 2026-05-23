@@ -89,11 +89,35 @@ export const ResultInlineNode = Node.create({
             [
               "button",
               {
+                class: "semantic-result-action semantic-result-drag",
+                type: "button",
+                draggable: "true",
+                "aria-label": "Drag result to reuse",
+                title: "Drag to reuse",
+              },
+              "",
+            ],
+            [
+              "button",
+              {
                 class: "semantic-result-action semantic-result-copy",
                 type: "button",
                 draggable: "false",
                 "aria-label": "Copy result value",
                 title: "Copy value",
+              },
+              "",
+            ],
+            [
+              "button",
+              {
+                class: "semantic-result-action semantic-result-menu",
+                type: "button",
+                draggable: "false",
+                "aria-label": "Result actions",
+                title: "Result actions",
+                "aria-haspopup": "menu",
+                "aria-expanded": "false",
               },
               "",
             ],

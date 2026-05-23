@@ -279,6 +279,59 @@ test.describe("Result references (drag-only)", () => {
     await expect(targetLine.locator(".semantic-reference-chip")).toHaveCount(0);
   });
 
+  test("result chips expose drag handle and explicit action menu", async ({ page }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("100 + 20 =>");
+    await waitForUIRenderComplete(page);
+
+    const sourceChip = page.locator(".ProseMirror p").first().locator(".semantic-result-display");
+    await sourceChip.hover();
+    await page.waitForTimeout(220);
+
+    await expect(sourceChip.locator(".semantic-result-drag")).toBeVisible();
+    await expect(sourceChip.locator(".semantic-result-copy")).toBeVisible();
+    await expect(sourceChip.locator(".semantic-result-menu")).toBeVisible();
+  });
+
+  test("result chip menu inserts reference and plain value explicitly", async ({ page }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("100 + 20 =>");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("tax = ");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("snapshot = ");
+    await waitForUIRenderComplete(page);
+
+    const sourceChip = page.locator(".ProseMirror p").first().locator(".semantic-result-display");
+    const targetLine = page.locator(".ProseMirror p").nth(1);
+    await targetLine.click({ position: { x: 80, y: 8 } });
+    await sourceChip.hover();
+    await sourceChip.locator(".semantic-result-menu").click();
+
+    const menu = page.locator(".semantic-result-action-menu");
+    await expect(menu).toBeVisible();
+    await expect(menu.getByRole("menuitem", { name: "Explore dependencies" })).toBeDisabled();
+    await expect(menu.getByRole("menuitem", { name: "Plot from result" })).toBeDisabled();
+    await menu.getByRole("menuitem", { name: "Insert reference" }).click();
+    await waitForUIRenderComplete(page);
+
+    await expect(targetLine.locator(".semantic-reference-chip")).toHaveCount(1);
+    await expect(targetLine.locator(".semantic-reference-chip").first()).toHaveText("120");
+
+    const valueLine = page.locator(".ProseMirror p").nth(2);
+    await valueLine.click({ position: { x: 120, y: 8 } });
+    await page.keyboard.press("End");
+    await sourceChip.hover();
+    await sourceChip.locator(".semantic-result-menu").click();
+    await page.locator(".semantic-result-action-menu").getByRole("menuitem", { name: "Insert value" }).click();
+    await waitForUIRenderComplete(page);
+
+    await expect(valueLine.locator(".semantic-reference-chip")).toHaveCount(0);
+    await expect(valueLine).toContainText("snapshot = 120");
+  });
+
   test("dragging a result chip onto a line inserts a reference chip", async ({ page }) => {
     const editor = page.locator('[data-testid="smart-pad-editor"]');
     await editor.click();

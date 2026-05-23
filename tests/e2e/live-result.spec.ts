@@ -131,13 +131,15 @@ test.describe("Live Result", () => {
     expect(marginLeftPx).toBeGreaterThan(0);
   });
 
-  test("shows copy-only hover action on live result and copy action sets feedback state", async ({
+  test("shows hover actions on live result and copy action sets feedback state", async ({
     page,
   }) => {
     await page.context().grantPermissions(["clipboard-write", "clipboard-read"]);
-    const editor = page.locator('[data-testid="smart-pad-editor"]');
-    await editor.click();
-    await page.keyboard.type("3*4");
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      editor.commands.setContent("<p>3*4</p>");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
     await waitForUIRenderComplete(page);
 
     const liveChip = page.locator(".semantic-live-result-display").first();
@@ -155,9 +157,12 @@ test.describe("Live Result", () => {
 
     await liveChip.hover();
     await page.waitForTimeout(220);
+    const dragButton = liveChip.locator(".semantic-live-result-drag");
     const copyButton = liveChip.locator(".semantic-live-result-copy");
+    const menuButton = liveChip.locator(".semantic-live-result-menu");
+    await expect(dragButton).toBeVisible();
     await expect(copyButton).toBeVisible();
-    await expect(liveChip.locator(".semantic-live-result-drag")).toHaveCount(0);
+    await expect(menuButton).toBeVisible();
 
     const actionsAfterHover = await liveChip.locator(".semantic-live-result-actions").evaluate((el) => {
       const style = window.getComputedStyle(el as HTMLElement);
@@ -200,7 +205,9 @@ test.describe("Live Result", () => {
     await page.waitForTimeout(220);
 
     const copyButton = triggerChip.locator(".semantic-result-copy");
+    await expect(triggerChip.locator(".semantic-result-drag")).toBeVisible();
     await expect(copyButton).toBeVisible();
+    await expect(triggerChip.locator(".semantic-result-menu")).toBeVisible();
     await copyButton.click();
 
     const clipboardText = await page.evaluate(async () => navigator.clipboard.readText());

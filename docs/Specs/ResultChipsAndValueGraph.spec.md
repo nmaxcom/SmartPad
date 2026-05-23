@@ -34,7 +34,7 @@ References are stored as structured inline reference nodes tied to stable source
 ### In scope
 
 1. Result lane alignment and spacing system.
-2. Chip interaction model (click insert, drag/drop, copy/paste as reference).
+2. Chip interaction model (explicit menu insert, drag/drop, copy/paste as reference).
 3. Hidden internal references (no visible `@L12` in SmartPad UI).
 4. Broken-source states and dependency error UX.
 5. Parser/evaluator/dependency graph integration for reference nodes.
@@ -62,7 +62,7 @@ References are stored as structured inline reference nodes tied to stable source
 | Feature | Plain explanation | Technical explanation |
 |---|---|---|
 | Result Lane | Results line up in one clean vertical lane, so scanning is instant. | Desktop editor computes a lane anchor and positions result widgets at a shared x-offset; narrow viewports collapse to inline mode. |
-| Chip as Value | You can click/drag/copy a chip into another expression to reuse it. | Interaction inserts a `resultReference` inline node with `sourceLineId`/`sourceResultId` attrs, not plain text. |
+| Chip as Value | You can drag/copy a chip, or use its explicit action menu, to reuse it in another expression. | Interaction inserts a `resultReference` inline node with `sourceLineId`/`sourceResultId` attrs, not plain text. |
 | Hidden References | Users never see raw `@L12` tokens while editing. | Internal serialization can use reference keys, but runtime editor view renders only chip nodes. |
 | Broken Source UX | If source value breaks, dependent chips show clear "broken link" state. | Resolver marks reference unresolved with cause code (`source_error`, `missing_source`, `type_mismatch`), and decorator renders stateful chip + inline warning. |
 | Type-Safe Chaining | Units/currency/list/number semantics propagate through references. | Evaluator resolves referenced semantic value before expression evaluation; no lossy string interpolation. |
@@ -130,14 +130,28 @@ When plot controls are hidden (`.plot-details-off` mode), the plot body keeps a 
 
 ## 5) Interaction Model
 
-### 5.1 Click to insert reference
+### 5.1 Direct click behavior
+
+Flow:
+
+1. User clicks a source result chip.
+2. SmartPad must not insert a reference from the direct chip click.
+3. The click may focus/select the chip surface or reveal affordances, but it must not mutate the document.
+
+Rationale:
+
+Direct click previously conflicted with value selection, copy, drag start, and future plot/menu entry points. Current behavior is intentionally drag/menu-only for insertion so accidental edits are avoided.
+
+### 5.2 Menu action to insert reference or value
 
 Flow:
 
 1. User places caret in expression.
-2. User clicks a source result chip.
-3. SmartPad inserts a reference chip token at caret.
-4. If caret is on the same source line as the clicked live result, SmartPad creates a new line and inserts the chip there (prevents self-reference loops).
+2. User opens the source result chip action menu.
+3. User chooses `Insert reference` or `Insert value`.
+4. `Insert reference` inserts a structured reference chip at the caret.
+5. `Insert value` inserts the current plain value snapshot at the caret.
+6. If the caret is on the same source line as the source result, SmartPad creates a new line before inserting (prevents self-reference loops).
 
 User sees:
 
@@ -151,7 +165,7 @@ User does not see:
 tax = @L12 * 0.15
 ```
 
-### 5.2 Drag chip into expression
+### 5.3 Drag chip into expression
 
 Flow:
 
@@ -172,7 +186,7 @@ Guardrails:
 3. Bottom drop affordance must remain visible near the end of the document, including last-line drop for newline insertion.
 4. Every inter-line boundary should expose a reliable mouse hit-zone; dropping in a shown boundary must not insert at document end.
 
-### 5.3 Copy/paste chip as reference
+### 5.4 Copy/paste chip as reference
 
 Flow:
 
@@ -190,14 +204,18 @@ Guardrails:
 4. Live-result plain-text copy should serialize as `expression (result)` to keep context when shared outside SmartPad.
 5. SmartPad paste should strip that trailing parenthesized suffix only when the left side looks like a real SmartPad expression and the marker looks like a rendered value.
 
-### 5.4 Result-chip hover actions (live + trigger)
+### 5.5 Result-chip hover actions (live + trigger)
 
 Flow:
 
 1. Hover a live or trigger result chip.
-2. Chip extends to the right and reveals a single inline copy-value icon.
+2. Chip extends to the right and reveals:
+   - a drag handle for reuse by drag/drop,
+   - a copy-value icon,
+   - an action menu icon.
 3. Copy icon click copies the rendered value and briefly sets copied feedback state on the chip.
-4. Dragging the chip itself still starts result-reference drag/drop.
+4. Dragging the chip itself or the drag handle starts result-reference drag/drop.
+5. The action menu exposes current supported commands (`Copy value`, `Insert reference`, `Insert value`) and may show disabled planned commands when they are not implemented yet.
 
 Guardrails:
 
@@ -205,6 +223,7 @@ Guardrails:
 2. Value used for copy/drag payload must remain the result value (icons must not pollute chip text payload).
 3. Copy icon click must not trigger drag session start.
 4. Live and trigger chips must share the same interaction capability contract (copy, drag/drop insert, visual affordances), differing only by surfacing source metadata.
+5. Disabled planned actions must be visually disabled and must not pretend a feature is currently available.
 
 ---
 
@@ -332,7 +351,7 @@ Reference insertion/removal must be atomic editor transactions.
 Add:
 
 1. `resultLaneEnabled` (default: true desktop, auto-collapse on narrow widths).
-2. `chipInsertMode` (default: click inserts reference).
+2. `chipInsertMode` (controls drag/drop insertion mode; default: reference chip).
 3. `referenceTextExportMode` with values:
    - `preserve` (default): keep SmartPad stable-ID reference tokens in text copy/export.
    - `readable`: flatten references to current visible values.
@@ -474,7 +493,7 @@ Interpretation goals:
 
 ### Phase 2: Reference insertion
 
-1. Click/drag/paste creates hidden reference nodes.
+1. Explicit menu insert, drag/drop, and paste create hidden reference nodes.
 2. Basic dependency graph links.
 
 ### Phase 3: Broken-link resilience
@@ -492,7 +511,7 @@ Interpretation goals:
 ## 14) Acceptance Criteria
 
 1. Users never see raw `@Lxx` syntax while editing in SmartPad.
-2. Clicking a result chip at a valid caret inserts a reference chip node.
+2. Direct result-chip clicks do not mutate the document; explicit menu insertion at a valid caret inserts a reference chip node.
 3. Drag/drop and copy/paste chip references work in rich editor mode.
 4. Reordering lines does not break existing references.
 5. Source error produces broken-state reference chips and clear helper message on dependents.
