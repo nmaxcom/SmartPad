@@ -13,7 +13,7 @@ import { waitForUIRenderComplete } from "./utils";
 
 test.describe("Semantic Highlighting", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("http://localhost:3000");
+    await page.goto("/");
     await page.waitForSelector('[data-testid="smart-pad-editor"]');
     const editor = page.locator(".ProseMirror");
     await editor.click();

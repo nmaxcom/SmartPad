@@ -39,7 +39,7 @@ async function startDevServer(): Promise<ChildProcess | null> {
 
   // Check if server is already running
   try {
-    const response = await fetch("http://localhost:3000");
+    const response = await fetch("http://localhost:3200");
     if (response.ok) {
       console.log("📡 Dev server already running, reusing existing server");
       return null; // No process to manage, server already running
@@ -57,7 +57,7 @@ async function startDevServer(): Promise<ChildProcess | null> {
   // Handle server output
   serverProcess.stdout?.on("data", (data) => {
     const output = data.toString();
-    if (output.includes("Local:") || output.includes("localhost:3000")) {
+    if (output.includes("Local:") || output.includes("localhost:3200")) {
       console.log("📡 Dev server output:", output.trim());
     }
   });
@@ -67,7 +67,7 @@ async function startDevServer(): Promise<ChildProcess | null> {
   });
 
   // Wait for server to be ready
-  await waitForServer("http://localhost:3000");
+  await waitForServer("http://localhost:3200");
 
   return serverProcess;
 }
@@ -131,8 +131,8 @@ Before(async function () {
   global.page = await global.context.newPage();
 
   // Navigate to the application
-  console.log("🌐 Navigating to http://localhost:3000...");
-  await global.page.goto("http://localhost:3000");
+  console.log("🌐 Navigating to http://localhost:3200...");
+  await global.page.goto("http://localhost:3200");
   console.log("✅ Navigation complete");
 
   // Wait for the application to be ready

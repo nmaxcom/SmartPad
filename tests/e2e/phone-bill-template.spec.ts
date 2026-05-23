@@ -9,7 +9,7 @@ import { waitForEditorReady, waitForUIRenderComplete } from "./utils";
 
 test.describe("Phone Bill Template", () => {
   test("loads without evaluation errors", async ({ page }) => {
-    await page.goto("http://localhost:3000");
+    await page.goto("/");
     await waitForEditorReady(page);
 
     await page.locator(".template-button", { hasText: "Phone Bill" }).click();

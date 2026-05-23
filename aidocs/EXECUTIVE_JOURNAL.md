@@ -3767,6 +3767,47 @@
 *   Risks/blockers:
     *   Existing unrelated workspace changes remain intentionally untouched.
 
+## Entry J-2026-05-23-01
+
+*   Timestamp: 2026-05-23 04:24:00 CEST / 2026-05-23 02:24:00 UTC
+*   Summary:
+    *   User requested a stricter evidence-based review because prior roadmap language blurred currently working features with proposed improvements.
+    *   Assistant audited trust registry, backlog, specs, source references, and test results to separate implemented behavior, improvements to existing behavior, and entirely new proposed features.
+    *   Assistant found and fixed a local Playwright harness mismatch: app dev port is `3200` but Playwright/browser support still pointed to `3000`.
+*   Decisions:
+    *   Treat lists, ranges, live results, result chips/references, `@view` plotting, solve, units, currency, dates, and file management as implemented features when discussing roadmap.
+    *   Treat auto-suggested plots, tables, scenario sheets, goal-seek interactions, and human-first solve phrasing as proposed/new unless explicitly scoped as an extension of an implemented system.
+    *   Use full e2e results cautiously until old browser tests are updated to isolate from the default Quick Tour sheet and current UI.
+*   User directives:
+    *   Review code and run tests before proposing further plans.
+    *   Make it clear what is new, what improves existing features, how it changes UX, and how features interact.
+*   Assistant commitments:
+    *   Provide a clear evidence-based feature map with examples and expected product value.
+    *   Keep current-vs-new terminology explicit.
+*   Artifacts:
+    *   `playwright.config.ts` (updated local e2e base URL/web server URL to port 3200)
+    *   `tests/e2e/phone-bill-template.spec.ts` (uses Playwright base URL)
+    *   `tests/e2e/semantic-highlighting.spec.ts` (uses Playwright base URL)
+    *   `tests/features/support/playwright-setup.ts` (BDD browser harness uses port 3200)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run docs:map` passed.
+    *   `npm run docs:drift` passed.
+    *   `npm run spec:test` passed.
+    *   `npm run spec:trust` passed (`13` tracked source specs, `23` registry entries).
+    *   `npm run test:unit -- --runInBand` passed (`63` suites, `987` tests passed, `2` skipped).
+    *   `npm run test:temporary-edge` passed (`50/50`).
+    *   `npm run build` passed with existing bundle-size warning.
+    *   Full `npm run test:e2e -- --workers=1` now starts on port `3200` but failed after `95` passed / `1` skipped due to a large block of old browser tests interacting with the default Quick Tour/current UI and some live-result/cursor/value-insert browser regressions.
+    *   Targeted current-capability e2e smoke passed (`8/8`) for Quick Tour, live-result template, and core result-reference drag/reference propagation flows.
+    *   `npm run verify:changed` passed for the previous committed range; current harness edits were validated by the targeted e2e smoke.
+*   Pending updates:
+    *   Existing feature-lane items remain open for plot interaction discovery, live/trigger chip parity, and drag/drop caret preview.
+    *   Browser regression suite needs a cleanup pass before full e2e can be treated as a reliable all-green product signal.
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   `aidocs/TODO_BACKLOG.md`, `dist/index.html`, and `.obsidian/` were already dirty/untracked and remain intentionally unstaged.
+
 ## Entry J-2026-03-04-03
 
 *   Timestamp: 2026-03-04 01:32:55 CET / 2026-03-04 00:32:55 UTC
