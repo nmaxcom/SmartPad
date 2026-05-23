@@ -3808,6 +3808,37 @@
 *   Risks/blockers:
     *   `aidocs/TODO_BACKLOG.md`, `dist/index.html`, and `.obsidian/` were already dirty/untracked and remain intentionally unstaged.
 
+## Entry J-2026-05-23-02
+
+*   Timestamp: 2026-05-23 23:55:36 CEST / 2026-05-23 21:55:36 UTC
+*   Summary:
+    *   User approved the roadmap recommendations except the tables feature, and asked whether chip behavior shown in the UI diverges from code/spec expectations.
+    *   Assistant inspected result-chip specs, implementation, CSS, settings, and Playwright tests, then verified real browser behavior with a controlled SmartPad sheet.
+    *   Findings: chips expose only a copy action visually; chips are technically draggable and drag inserts references; result click currently does not insert references; no chip menu/explore/plot actions are implemented in the visible UI.
+*   Decisions:
+    *   Tables/structured collections should not be treated as an approved roadmap item.
+    *   Current chip reality is "copy button + implicit draggable chip"; planned chip menu/plot actions are future work, not current behavior.
+    *   Existing spec language around default click insertion is stale relative to current tests and drag-only behavior.
+*   User directives:
+    *   Exclude tables from the approved direction.
+    *   Verify chips as they function today, not only from roadmap/spec wording.
+*   Assistant commitments:
+    *   Report the current chip contract clearly and call out UX/spec mismatches.
+*   Artifacts:
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+    *   `/private/tmp/smartpad-chip-hover.png` (temporary verification screenshot)
+*   Validation:
+    *   Browser DOM verification on `http://localhost:3200/`: result chip has `draggable="true"`, one copy action, no menu button, click does not insert a reference, synthetic drag/drop inserts a structured `.semantic-reference-chip`.
+    *   Manual controlled copy check: live chip copied `12`; trigger chip copied `12`.
+    *   Focused Playwright command: 6/7 passed for chip drag/reference/copy routes; the one failed live-copy test used the default Quick Tour sheet and copied the first existing live chip (`732`) instead of the controlled `3*4` line, so it is a test isolation issue rather than a controlled-copy failure.
+*   Pending updates:
+    *   Align `docs/Specs/ResultChipsAndValueGraph.spec.md` with the actual drag-only click behavior or intentionally re-implement click insertion if that is still desired.
+    *   Add visible drag affordance and/or a chip action menu if users are expected to discover drag/explore/plot actions.
+    *   Clean stale browser tests so default Quick Tour content does not pollute feature-specific assertions.
+    *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
+*   Risks/blockers:
+    *   Existing unrelated dirty files remain intentionally unstaged.
+
 ## Entry J-2026-03-04-03
 
 *   Timestamp: 2026-03-04 01:32:55 CET / 2026-03-04 00:32:55 UTC
