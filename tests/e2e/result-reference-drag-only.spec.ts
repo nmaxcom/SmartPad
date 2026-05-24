@@ -457,6 +457,29 @@ test.describe("Result references (drag-only)", () => {
     await expect(page.locator(".plot-view-scatter-dot")).toHaveCount(4);
   });
 
+  test("result chip menu does not suggest scatter for mismatched list lengths", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("study hours = 2, 3, 4 =>");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("test score = 58, 61, 68, 73 =>");
+    await waitForUIRenderComplete(page);
+
+    const sourceChip = page.locator(".ProseMirror p").nth(1).locator(".semantic-result-display");
+    await sourceChip.hover();
+    await sourceChip
+      .locator(".semantic-result-menu")
+      .evaluate((button: HTMLElement) => button.click());
+
+    const menu = page.locator(".semantic-result-action-menu");
+    await expect(menu.getByRole("menuitem", { name: "Plot as histogram" })).toBeEnabled();
+    await expect(
+      menu.getByRole("menuitem", { name: "Plot as scatter vs study hours" })
+    ).toHaveCount(0);
+  });
+
   test("dragging a result chip onto a line inserts a reference chip", async ({ page }) => {
     const editor = page.locator('[data-testid="smart-pad-editor"]');
     await editor.click();

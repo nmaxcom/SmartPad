@@ -25,4 +25,22 @@ describe("TemplatePanel", () => {
     expect(title).toBe("Quick Tour");
     expect(makeActive).toBe(true);
   });
+
+  test("includes the visual insights template for new plot suggestions", () => {
+    const createSheetFromContent = jest.fn().mockResolvedValue(undefined);
+    (useSheetContext as jest.Mock).mockReturnValue({
+      createSheetFromContent,
+    });
+
+    render(<TemplatePanel />);
+    fireEvent.click(screen.getByRole("button", { name: /Visual Insights/i }));
+
+    expect(createSheetFromContent).toHaveBeenCalledTimes(1);
+    const [content, title, makeActive] = createSheetFromContent.mock.calls[0];
+    expect(content).toContain("@view hist y=wait times size=md");
+    expect(content).toContain("@view scatter x=study hours y=test score size=md");
+    expect(content).toContain("@view plot x=time y=speed domain=0.25..6 size=md");
+    expect(title).toBe("Visual Insights");
+    expect(makeActive).toBe(true);
+  });
 });

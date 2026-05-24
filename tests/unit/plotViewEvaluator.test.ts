@@ -210,6 +210,39 @@ describe("PlotViewEvaluator", () => {
     }
   });
 
+  test("builds a connected histogram for identical values", () => {
+    const astNodes = [parseLine("@view hist y=waits size=sm", 1)];
+    const variables = new Map<string, Variable>([
+      ["waits", createVariable("waits", createNumberList([5, 5, 5, 5]))],
+    ]);
+    const evaluator = new PlotViewEvaluator();
+
+    const result = evaluator.evaluate(astNodes[0], createContext(astNodes, variables));
+
+    expect(result?.type).toBe("plotView");
+    if (result?.type === "plotView") {
+      expect(result.status).toBe("connected");
+      expect(result.kind).toBe("hist");
+      expect(result.data).toEqual([{ x: 5, y: 4 }]);
+      expect(result.domain?.min).toBeLessThan(5);
+      expect(result.domain?.max).toBeGreaterThan(5);
+    }
+  });
+
+  test("disconnects histogram for scalar sources", () => {
+    const astNodes = [parseLine("@view hist y=waits size=md", 1)];
+    const variables = new Map<string, Variable>([["waits", createVariable("waits", 5)]]);
+    const evaluator = new PlotViewEvaluator();
+
+    const result = evaluator.evaluate(astNodes[0], createContext(astNodes, variables));
+
+    expect(result?.type).toBe("plotView");
+    if (result?.type === "plotView") {
+      expect(result.status).toBe("disconnected");
+      expect(result.message).toBe("Histogram needs a numeric list");
+    }
+  });
+
   test("builds scatter data from equal-length numeric lists", () => {
     const astNodes = [parseLine("@view scatter x=hours y=score size=md", 1)];
     const variables = new Map<string, Variable>([
@@ -232,6 +265,40 @@ describe("PlotViewEvaluator", () => {
         { x: 4, y: 68 },
         { x: 5, y: 73 },
       ]);
+    }
+  });
+
+  test("disconnects scatter when list lengths differ", () => {
+    const astNodes = [parseLine("@view scatter x=hours y=score size=md", 1)];
+    const variables = new Map<string, Variable>([
+      ["hours", createVariable("hours", createNumberList([2, 3, 4]))],
+      ["score", createVariable("score", createNumberList([58, 61, 68, 73]))],
+    ]);
+    const evaluator = new PlotViewEvaluator();
+
+    const result = evaluator.evaluate(astNodes[0], createContext(astNodes, variables));
+
+    expect(result?.type).toBe("plotView");
+    if (result?.type === "plotView") {
+      expect(result.status).toBe("disconnected");
+      expect(result.message).toBe("Scatter lists must have the same length (3 vs 4)");
+    }
+  });
+
+  test("disconnects scatter when x is not a list", () => {
+    const astNodes = [parseLine("@view scatter x=hours y=score size=md", 1)];
+    const variables = new Map<string, Variable>([
+      ["hours", createVariable("hours", 2)],
+      ["score", createVariable("score", createNumberList([58, 61, 68, 73]))],
+    ]);
+    const evaluator = new PlotViewEvaluator();
+
+    const result = evaluator.evaluate(astNodes[0], createContext(astNodes, variables));
+
+    expect(result?.type).toBe("plotView");
+    if (result?.type === "plotView") {
+      expect(result.status).toBe("disconnected");
+      expect(result.message).toBe("Scatter needs numeric x and y lists");
     }
   });
 });

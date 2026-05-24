@@ -231,6 +231,45 @@
     *   Full Playwright suite was not rerun; targeted e2e covered the touched menu and plot rendering paths.
     *   Time-series suggestions are still not included in this first list/range slice.
 
+## Entry J-2026-05-24-06
+
+*   Timestamp: 2026-05-24 12:28:48 CEST
+*   Summary:
+    *   User requested a quick template demonstrating the new plot/result-chip features with useful examples and asked to test edge cases because they suspect bugs.
+    *   Assistant added the `Visual Insights` quick template covering live-bound named plots, multi-variable plot choices, numeric-list histograms, identical-value histograms, and scatter plots from equal-length numeric lists.
+    *   Assistant expanded tests for edge cases: identical histograms connect, scalar histogram sources disconnect, scatter list-length mismatch disconnects, non-list x disconnects, and mismatched list pairs do not show scatter suggestions in the chip menu.
+*   Decisions:
+    *   Add this as a new quick template rather than replacing `Quick Tour`.
+    *   Keep the template focused on shipped visual features; table examples remain excluded.
+*   User directives:
+    *   Create a useful and interesting quick template for the new features.
+    *   Test edge cases for all cases because bugs are suspected.
+*   Artifacts:
+    *   `src/templates/visualInsightsTemplate.ts`
+    *   `src/components/VariablePanel/TemplatePanel.tsx`
+    *   `tests/unit/visualInsightsTemplate.test.ts`
+    *   `tests/e2e/visual-insights-template.spec.ts`
+    *   `tests/unit/plotViewEvaluator.test.ts`
+    *   `tests/e2e/result-reference-drag-only.spec.ts`
+    *   `tests/unit/templatePanelSheetCreation.test.tsx`
+    *   `docs/spec-map.json`
+    *   `docs/ABOUT.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/visualInsightsTemplate.test.ts tests/unit/plotViewEvaluator.test.ts tests/unit/templatePanelSheetCreation.test.tsx` ✅
+    *   `npx playwright test tests/e2e/visual-insights-template.spec.ts tests/e2e/result-reference-drag-only.spec.ts -g "Visual Insights template|does not suggest scatter for mismatched|suggests and creates a histogram|suggests and creates scatter" --project=chromium --config=playwright.config.ts --workers=1` ✅
+    *   `npm run build` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+*   Pending updates:
+    *   Run `npm run verify:changed` after commit.
+    *   Human gate remains open for `T-2026-05-24-03`.
+*   Risks/blockers:
+    *   Full Playwright suite was not rerun; targeted coverage now includes template loading and the relevant edge cases.
+
 ## Entry J-2026-02-11-02
 
 *   Timestamp: 2026-02-11 06:51:39 CET

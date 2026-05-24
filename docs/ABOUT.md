@@ -14,6 +14,7 @@ Recent template updates:
 - Clicking a quick template now opens it in a new sheet and makes that new sheet active, preserving the current sheet content.
 - When multiple right-side panels are open, the `Quick Templates` panel is pinned at the top for faster access.
 - The `Quick Tour` template was condensed into practical mini-scenarios and now starts with a short scrubbing primer.
+- The `Visual Insights` template demonstrates live-bound result plots plus histogram and scatter suggestions from result chips.
 
 These are some examples of its syntax:
 # Quick Tour: a guided walkthrough

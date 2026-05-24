@@ -159,6 +159,7 @@
         "src/state/SettingsContext.tsx",
         "src/templates/quickTourTemplate.ts",
         "src/templates/capabilitySprintTemplate.ts",
+        "src/templates/visualInsightsTemplate.ts",
         "src/App.css",
         "src/styles/",
         "src/App.tsx",
