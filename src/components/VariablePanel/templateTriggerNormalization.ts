@@ -10,6 +10,7 @@ const shouldKeepExplicitTrigger = (
 ): boolean => {
   if (trailing.startsWith("⚠️")) return true;
   if (/\bsolve\b/i.test(expression)) return true;
+  if (/^make\b/i.test(expression)) return true;
   return REQUIRED_TRIGGER_LINES[templateId]?.has(expression) ?? false;
 };
 

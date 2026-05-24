@@ -4943,3 +4943,56 @@
     *   `P-2026-02-11-01` remains `in_progress` (journal maintenance ongoing).
 *   Risks/blockers:
     *   None.
+
+## Entry J-2026-05-24-05
+
+*   Timestamp: 2026-05-24 13:22:57 CEST
+*   Summary:
+    *   User moved the approved roadmap to goal-seek and asked to add interesting examples to the existing demonstration template while renaming it to `New stuff`.
+    *   Assistant implemented one-variable goal-seek syntax as `make <target> = <value> by <variable> =>`, including named-result targets, direct expression targets, unit-aware solving, and explicit multi-variable rejection.
+    *   Result-chip menus now expose `Set target...` / `Set target by <variable>` actions that insert editable goal-seek lines below the source instead of overwriting existing variables.
+    *   The visual demo template is now `New stuff` and combines live plots, histogram/scatter suggestions, and goal-seek examples for take-home pay, savings targets, and unit-aware speed/time tradeoffs.
+*   Decisions:
+    *   Keep goal-seek as normal executable SmartPad text, not a new `@` directive.
+    *   Insert goal-seek drafts from chip menus and let the user edit the desired target value before deciding whether to apply anything.
+    *   Reject multi-variable goal-seek for now rather than silently choosing a variable or pretending there is a unique answer.
+*   User directives:
+    *   Continue with goal-seek next.
+    *   Add useful and interesting examples to the quick template.
+    *   Rename the template to `New stuff`.
+*   Assistant commitments:
+    *   Keep the remaining roadmap order visible in `aidocs/TODO_BACKLOG.md`.
+    *   Treat apply-to-sheet/scenario integration as a later product decision after the user reviews this first goal-seek slice.
+*   Artifacts:
+    *   `src/eval/solveEvaluator.ts`
+    *   `src/parsing/astParser.ts`
+    *   `src/components/ResultReferenceInteractionExtension.ts`
+    *   `src/components/VariablePanel/TemplatePanel.tsx`
+    *   `src/components/VariablePanel/templateTriggerNormalization.ts`
+    *   `src/templates/visualInsightsTemplate.ts`
+    *   `docs/Specs/Solve.spec.md`
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
+    *   `docs/spec-map.json`
+    *   `docs/ABOUT.md`
+    *   `tests/unit/solve.test.ts`
+    *   `tests/unit/visualInsightsTemplate.test.ts`
+    *   `tests/unit/templatePanelSheetCreation.test.tsx`
+    *   `tests/unit/templateTriggerNormalization.test.ts`
+    *   `tests/e2e/result-reference-drag-only.spec.ts`
+    *   `tests/e2e/visual-insights-template.spec.ts`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/visualInsightsTemplate.test.ts tests/unit/solve.test.ts tests/unit/templatePanelSheetCreation.test.tsx tests/unit/templateTriggerNormalization.test.ts` ✅
+    *   `npx playwright test tests/e2e/visual-insights-template.spec.ts tests/e2e/result-reference-drag-only.spec.ts -g "New stuff template|inserts an editable goal-seek line|does not suggest scatter for mismatched|suggests and creates a histogram|suggests and creates scatter" --project=chromium --config=playwright.config.ts --workers=1` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run build` ✅
+*   Pending updates:
+    *   `T-2026-05-24-04` remains `in_progress` until user reviews and confirms the goal-seek UX/product fit.
+    *   Next roadmap item after confirmation is scenario comparison (`T-2026-05-24-05`), unless user asks to expand goal-seek with apply-to-sheet first.
+*   Risks/blockers:
+    *   V1 goal-seek is intentionally one-variable only.
+    *   The current solver handles reliable one-variable forms but does not yet algebraically factor repeated-target expressions such as `gross - gross * tax`; examples use equivalent solver-friendly forms such as `gross * keep rate`.

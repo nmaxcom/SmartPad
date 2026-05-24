@@ -1,4 +1,4 @@
-export const VISUAL_INSIGHTS_TEMPLATE = `# Visual Insights Lab: live plots, histograms, scatter
+export const NEW_STUFF_TEMPLATE = `# New stuff: visual insights and goal seek
 # Use the result-chip menu on the marked result lines to recreate each view.
 # These examples are intentionally practical and editable.
 
@@ -41,6 +41,25 @@ daily spend = $120, $160, $210, $260, $310, $390
 ticket sales = 68, 77, 89, 96, 108, 121 =>
 @view scatter x=daily spend y=ticket sales size=md
 
+# 6) Goal seek from a trusted result: set a desired output and solve the input
+keep rate = 78%
+gross = EUR 3000
+take home = gross * keep rate =>
+make take home = EUR 4000 by gross =>
+
+# Another one-variable goal: how much monthly saving hits the fund?
+current savings = EUR 3200
+periods = 18
+monthly saving = EUR 900
+goal fund = current savings + monthly saving * periods =>
+make goal fund = EUR 20000 by monthly saving =>
+
+# Source-expression goal seek also works without naming the result.
+target distance = 120 km
+target time = 2 h
+make target distance / target time = 80 km/h by target time =>
+
 # Guardrail to try manually:
 # If you make one scatter list shorter, the scatter suggestion should disappear or the view should disconnect clearly.
+# If you try "make distance = 300 km by speed, time =>", v1 should reject it instead of pretending there is one answer.
 `;

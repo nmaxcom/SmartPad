@@ -73,6 +73,12 @@ interface PlotMenuAction {
   accent?: boolean;
 }
 
+interface GoalSeekMenuAction {
+  label: string;
+  line: string;
+  title?: string;
+}
+
 interface SourceResultInfo {
   targetName?: string;
   expression: string;
@@ -855,6 +861,28 @@ const buildVisualPlotMenuActions = (
   return actions;
 };
 
+const buildGoalSeekMenuActions = (
+  view: any,
+  payload: ReferencePayload | null
+): GoalSeekMenuAction[] => {
+  if (!payload) return [];
+  const sourceInfo = buildSourceResultInfo(view, payload);
+  const plan = buildPlotSourcePlan(view, payload);
+  if (!sourceInfo || !plan || plan.xVariables.length === 0) {
+    return [];
+  }
+  const target = (sourceInfo.targetName || sourceInfo.expression).trim();
+  const currentValue = normalizeChipText(payload.sourceValue || payload.sourceLabel || "");
+  if (!target || !currentValue) {
+    return [];
+  }
+  return plan.xVariables.map((variable) => ({
+    label: plan.xVariables.length > 1 ? `Set target by ${variable}` : "Set target...",
+    line: `make ${target} = ${currentValue} by ${variable} =>`,
+    title: `Insert an editable goal-seek line that solves ${variable}`,
+  }));
+};
+
 const resolveDisplayedResultValue = (target: HTMLElement): string => {
   const explicitResultValue = normalizeChipText(String(target.getAttribute("data-result-value") || ""));
   if (explicitResultValue) return explicitResultValue;
@@ -1305,6 +1333,37 @@ export const ResultReferenceInteractionExtension = Extension.create({
         })
       );
       const payload = payloadFromElement(resultEl);
+      const goalSeekActions = buildGoalSeekMenuActions(view, payload);
+      if (goalSeekActions.length === 0) {
+        menu.appendChild(
+          buildMenuButton("Set target...", () => {}, {
+            disabled: true,
+            title: "Available when the result depends on a variable SmartPad can solve for",
+          })
+        );
+      } else {
+        goalSeekActions.forEach((goalAction) => {
+          menu.appendChild(
+            buildMenuButton(
+              goalAction.label,
+              () => {
+                if (!payload) {
+                  closeResultActionMenu();
+                  return;
+                }
+                const insertedCursor = insertTextAfterSourceLine(view, payload, goalAction.line);
+                if (typeof insertedCursor === "number") {
+                  postInsertCursor = insertedCursor;
+                  consumeResultClick = true;
+                  view.focus();
+                }
+                closeResultActionMenu();
+              },
+              { title: goalAction.title }
+            )
+          );
+        });
+      }
       const visualPlotActions = buildVisualPlotMenuActions(view, payload);
       visualPlotActions.forEach((plotAction) => {
         menu.appendChild(

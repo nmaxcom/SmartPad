@@ -319,4 +319,34 @@ describe("Solve evaluator", () => {
     expect(result?.type).toBe("error");
     expect((result as any).error).toContain("equation is not valid");
   });
+
+  test("goal-seek solves a named result by one variable", () => {
+    const context = createContext();
+    evaluateLine("keep rate = 78%", context, 1);
+    evaluateLine("gross = EUR 3000", context, 2);
+    evaluateLine("take home = gross * keep rate =>", context, 3);
+    const result = evaluateLine("make take home = EUR 4000 by gross =>", context, 4);
+
+    expect(result?.type).toBe("mathResult");
+    expect((result as any).result).toBe("5128.205128 EUR");
+  });
+
+  test("goal-seek solves a source expression without a named result", () => {
+    const context = createContext();
+    evaluateLine("distance = 120 km", context, 1);
+    evaluateLine("time = 2 h", context, 2);
+    const result = evaluateLine("make distance / time = 80 km/h by time =>", context, 3);
+
+    expect(result?.type).toBe("mathResult");
+    expect((result as any).result).toBe("1.5 h");
+  });
+
+  test("goal-seek rejects unsupported multi-variable requests", () => {
+    const context = createContext();
+    evaluateLine("distance = speed * time", context, 1);
+    const result = evaluateLine("make distance = 300 km by speed, time =>", context, 2);
+
+    expect(result?.type).toBe("error");
+    expect((result as any).error).toContain("multiple variables");
+  });
 });

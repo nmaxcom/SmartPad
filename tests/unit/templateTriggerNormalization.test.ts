@@ -18,6 +18,13 @@ describe("normalizeTemplateTriggers", () => {
     expect(normalizeTemplateTriggers("live-result-playground", content)).toBe("solve x + 2 = 5 =>");
   });
 
+  test("keeps explicit goal-seek trigger lines", () => {
+    const content = "make take home = EUR 4000 by gross =>";
+    expect(normalizeTemplateTriggers("new-stuff", content)).toBe(
+      "make take home = EUR 4000 by gross =>"
+    );
+  });
+
   test("keeps template-specific required trigger lines", () => {
     const liveContent = "unknownVar + 1 =>\n3*4 =>";
     expect(normalizeTemplateTriggers("live-result-playground", liveContent)).toBe(

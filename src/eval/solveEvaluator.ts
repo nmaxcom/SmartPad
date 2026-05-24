@@ -58,6 +58,7 @@ const operatorPrecedence: Record<string, number> = {
 };
 
 const isSolveExpression = (expr: string): boolean => /^solve\b/i.test(expr.trim());
+const isGoalSeekExpression = (expr: string): boolean => /^make\b/i.test(expr.trim());
 const isConstantName = (name: string): boolean =>
   name === "PI" || name === "E";
 const isErrorValue = (value: unknown): value is ErrorValue => value instanceof ErrorValue;
@@ -113,6 +114,29 @@ const splitTopLevelList = (input: string): string[] => {
   return parts;
 };
 
+const normalizeGoalSeekSourceExpression = (expression: string): string => {
+  const phraseVariable = "[A-Za-z_][A-Za-z0-9_]*(?:\\s+[A-Za-z_][A-Za-z0-9_]*)*";
+  const applyPercentPhrase = (
+    input: string,
+    keyword: "on" | "of" | "off",
+    replacement: (rate: string, base: string) => string
+  ): string =>
+    input.replace(
+      new RegExp(`\\b(${phraseVariable})\\s+${keyword}\\s+(${phraseVariable})\\b`, "gi"),
+      (_match, rate: string, base: string) => replacement(rate.trim(), base.trim())
+    );
+
+  let normalized = expression;
+  normalized = applyPercentPhrase(normalized, "on", (rate, base) => `(${base} * ${rate})`);
+  normalized = applyPercentPhrase(normalized, "of", (rate, base) => `(${base} * ${rate})`);
+  normalized = applyPercentPhrase(
+    normalized,
+    "off",
+    (rate, base) => `(${base} - ${base} * ${rate})`
+  );
+  return normalized;
+};
+
 const parseSolveExpression = (expression: string): SolveParseResult | null => {
   const trimmed = expression.trim();
   if (!isSolveExpression(trimmed)) return null;
@@ -152,6 +176,65 @@ const parseSolveExpression = (expression: string): SolveParseResult | null => {
   }
 
   return { target, equations, whereClause };
+};
+
+const parseGoalSeekExpression = (
+  expression: string,
+  context: EvaluationContext
+): SolveParseResult | ErrorValue | null => {
+  const trimmed = expression.trim();
+  if (!isGoalSeekExpression(trimmed)) return null;
+
+  const afterMake = trimmed.replace(/^make\s+/i, "");
+  const byIndex = findKeywordIndex(afterMake, "by");
+  if (byIndex === null) return null;
+
+  const equationSection = afterMake.slice(0, byIndex).trim();
+  const variableSectionRaw = afterMake.slice(byIndex + 2).trim();
+  if (!equationSection || !variableSectionRaw) return null;
+
+  const withIndex = findKeywordIndex(variableSectionRaw, "with");
+  const variableSection =
+    withIndex === null ? variableSectionRaw : variableSectionRaw.slice(0, withIndex).trim();
+  const strategySection =
+    withIndex === null ? "" : variableSectionRaw.slice(withIndex + 4).trim();
+  const targetVariables = splitTopLevelList(variableSection)
+    .map((entry) => normalizeVariableName(entry))
+    .filter(Boolean);
+
+  if (targetVariables.length === 0) return null;
+  if (targetVariables.length > 1) {
+    return ErrorValue.semanticError(
+      strategySection
+        ? "Cannot goal-seek multiple variables yet"
+        : "Cannot goal-seek multiple variables without an explicit supported strategy"
+    );
+  }
+
+  const goalEquation = splitTopLevelEquation(equationSection);
+  if (!goalEquation) return null;
+
+  const equations: SolveEquation[] = [];
+  const targetResultName = normalizeVariableName(goalEquation.left);
+  const sourceVariable = context.variableContext.get(targetResultName);
+  const sourceEquation = (context.equationStore || [])
+    .slice()
+    .reverse()
+    .find((entry) => normalizeVariableName(entry.variableName) === targetResultName);
+  const sourceExpression = sourceVariable?.rawValue?.trim() || sourceEquation?.expression?.trim();
+  if (sourceExpression) {
+    equations.push({
+      left: targetResultName,
+      right: normalizeGoalSeekSourceExpression(sourceExpression),
+    });
+  }
+  equations.push(goalEquation);
+
+  return {
+    target: targetVariables[0],
+    equations,
+    whereClause: strategySection || undefined,
+  };
 };
 
 const buildSolveExpression = (components: ExpressionComponent[]): SolveExpression | ErrorValue => {
@@ -831,6 +914,7 @@ export class SolveEvaluator implements NodeEvaluator {
     if (!isExpressionNode(node)) return false;
     const expr = (node as ExpressionNode).expression;
     if (isSolveExpression(expr)) return true;
+    if (isGoalSeekExpression(expr)) return true;
     return isVariableReferenceExpression(expr);
   }
 
@@ -838,13 +922,17 @@ export class SolveEvaluator implements NodeEvaluator {
     if (!isExpressionNode(node)) return null;
     const exprNode = node as ExpressionNode;
     const rawExpression = exprNode.expression.trim();
-    const conversion = isSolveExpression(rawExpression)
+    const conversion = isSolveExpression(rawExpression) || isGoalSeekExpression(rawExpression)
       ? null
       : this.extractConversionSuffix(rawExpression);
     const baseExpression = conversion ? conversion.baseExpression : rawExpression;
 
     if (isSolveExpression(baseExpression)) {
       return this.evaluateExplicitSolve(exprNode, baseExpression, conversion, context);
+    }
+
+    if (isGoalSeekExpression(baseExpression)) {
+      return this.evaluateGoalSeek(exprNode, baseExpression, context);
     }
 
     if (!isVariableReferenceExpression(baseExpression)) {
@@ -875,7 +963,30 @@ export class SolveEvaluator implements NodeEvaluator {
     if (!parsed) {
       return this.createErrorNode("Cannot solve: equation is not valid", node.expression, context.lineNumber);
     }
+    return this.evaluateParsedSolve(node, parsed, conversion, context);
+  }
 
+  private evaluateGoalSeek(
+    node: ExpressionNode,
+    baseExpression: string,
+    context: EvaluationContext
+  ): RenderNode {
+    const parsed = parseGoalSeekExpression(baseExpression, context);
+    if (!parsed) {
+      return this.createErrorNode("Cannot goal-seek: goal line is not valid", node.expression, context.lineNumber);
+    }
+    if (isErrorValue(parsed)) {
+      return this.createErrorNode((parsed as ErrorValue).getMessage(), node.expression, context.lineNumber);
+    }
+    return this.evaluateParsedSolve(node, parsed as SolveParseResult, null, context);
+  }
+
+  private evaluateParsedSolve(
+    node: ExpressionNode,
+    parsed: SolveParseResult,
+    conversion: { baseExpression: string; target: string; keyword: string } | null,
+    context: EvaluationContext
+  ): RenderNode {
     const target = normalizeVariableName(parsed.target);
     const localValues = new Map<string, SemanticValue>();
     const assignmentEquations: SolveEquation[] = [];

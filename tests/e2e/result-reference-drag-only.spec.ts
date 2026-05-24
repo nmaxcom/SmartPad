@@ -480,6 +480,34 @@ test.describe("Result references (drag-only)", () => {
     ).toHaveCount(0);
   });
 
+  test("result chip menu inserts an editable goal-seek line", async ({ page }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("keep rate = 78%");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("gross = EUR 3000");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("take home = gross * keep rate =>");
+    await waitForUIRenderComplete(page);
+
+    const sourceChip = page.locator(".ProseMirror p").nth(2).locator(".semantic-result-display");
+    await sourceChip.hover();
+    await sourceChip
+      .locator(".semantic-result-menu")
+      .evaluate((button: HTMLElement) => button.click());
+
+    const menu = page.locator(".semantic-result-action-menu");
+    await expect(menu.getByRole("menuitem", { name: "Set target by gross" })).toBeEnabled();
+    await menu.getByRole("menuitem", { name: "Set target by gross" }).click();
+    await waitForUIRenderComplete(page);
+
+    const goalLine = page.locator(".ProseMirror p").nth(3);
+    await expect(goalLine).toContainText("make take home =");
+    await expect(goalLine).toContainText("by gross =>");
+    await expect(goalLine.locator(".semantic-result-display")).toHaveCount(1);
+    await expect(page.locator(".semantic-error-result")).toHaveCount(0);
+  });
+
   test("dragging a result chip onto a line inserts a reference chip", async ({ page }) => {
     const editor = page.locator('[data-testid="smart-pad-editor"]');
     await editor.click();

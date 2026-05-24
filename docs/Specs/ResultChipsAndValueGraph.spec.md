@@ -216,6 +216,7 @@ Flow:
 3. Copy icon click copies the rendered value and briefly sets copied feedback state on the chip.
 4. Dragging the chip itself or the drag handle starts result-reference drag/drop.
 5. The action menu exposes current supported commands (`Copy value`, `Insert reference`, `Insert value`) and enables plot creation when the source result depends on a plottable variable.
+   - Results with one or more solve candidates expose `Set target...` / `Set target by <variable>` actions that insert editable `make ... by ... =>` goal-seek lines below the source.
    - Single-input unnamed results insert a source-adjacent directive such as `@view plot x=x size=md`, relying on the existing nearest-expression binding instead of copying the formula into `y=...`.
    - Named results insert a live named binding such as `@view plot x=time y=speed size=md`, so later edits to `speed = ... =>` update the plot without rewriting the directive.
    - Multi-input results expose explicit choices such as `Plot vs distance` and `Plot vs time` rather than guessing the x-axis.
@@ -231,7 +232,8 @@ Guardrails:
 4. Live and trigger chips must share the same interaction capability contract (copy, drag/drop insert, visual affordances), differing only by surfacing source metadata.
 5. `Plot from result` must stay disabled for scalar-only results that would create a disconnected chart.
 6. Histogram/scatter suggestions must only appear for list shapes the renderer can connect immediately.
-7. Disabled planned actions must be visually disabled and must not pretend a feature is currently available.
+7. Goal-seek actions must never overwrite source variables automatically; applying a solved value is a separate future action.
+8. Disabled planned actions must be visually disabled and must not pretend a feature is currently available.
 
 ---
 

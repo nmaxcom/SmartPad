@@ -1,6 +1,6 @@
 # SmartPad Solve and Symbolic Math Spec
 
-This spec defines SmartPad's solve behavior for unknown variables, including implicit back-solving (`x =>`) and explicit solve clauses (`solve x in ... =>`).
+This spec defines SmartPad's solve behavior for unknown variables, including implicit back-solving (`x =>`), explicit solve clauses (`solve x in ... =>`), and one-variable goal-seek lines (`make result = target by x =>`).
 
 ---
 
@@ -48,6 +48,20 @@ Notes:
 Recommendation:
 - Keep `=>` on shared/reviewed solve lines for deterministic behavior across settings.
 
+### 1.4 Goal-seek trigger
+
+- Syntax: `make <target result or expression> = <desired value> by <variable> =>`
+- Examples:
+  - `make take home = EUR 4000 by gross =>`
+  - `make distance / time = 80 km/h by time =>`
+
+Behavior:
+- Named target results use the latest source equation recorded above the goal line.
+- Unnamed target expressions are solved directly from the expression in the goal line.
+- V1 supports one free variable.
+- Multi-variable goal-seek requests must return an explicit unsupported/strategy error rather than inventing a single answer.
+- Goal-seek lines require `=>` and template normalization must preserve that trigger.
+
 ---
 
 ## 2) Equation Sources
@@ -77,6 +91,7 @@ Line-order contract:
    - `distance = v * time`, `v =>` -> `distance / time`
 3. Solved expressions substitute known scalar constants when available.
 4. Unit/currency conversion suffixes (`to` / `in`) can be applied after solve when conversion target is valid.
+5. Goal-seek returns the solved value for the selected variable but does not overwrite the sheet automatically.
 
 ---
 
@@ -110,6 +125,8 @@ Solve returns explicit errors for invalid or unsupported cases, including:
 4. `Cannot solve: variable appears on both sides` (except known denominator special case)
 5. `Cannot solve: unsupported function` / `unsupported operator`
 6. `⚠️ Cannot solve: no real solution` when solved expression requires invalid real-domain evaluation (for example negative radicand)
+7. `Cannot goal-seek: goal line is not valid` for malformed `make ... by ...` lines.
+8. `Cannot goal-seek multiple variables...` for unsupported v1 multi-variable goal-seek.
 
 ---
 
@@ -141,3 +158,16 @@ Solve returns explicit errors for invalid or unsupported cases, including:
    - `goal => 100`
    - `x =>`
    - Result: `30`
+
+6. Goal-seek from a named result:
+   - `keep rate = 78%`
+   - `gross = EUR 3000`
+   - `take home = gross * keep rate =>`
+   - `make take home = EUR 4000 by gross =>`
+   - Result: `5128.205128 EUR`
+
+7. Goal-seek from an unnamed expression:
+   - `distance = 120 km`
+   - `time = 2 h`
+   - `make distance / time = 80 km/h by time =>`
+   - Result: `1.5 h`

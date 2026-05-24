@@ -5,7 +5,7 @@ import { parseLine } from "../../src/parsing/astParser";
 import { recordEquationFromNode } from "../../src/solve/equationStore";
 import { ReactiveVariableStore } from "../../src/state/variableStore";
 import type { Variable } from "../../src/state/types";
-import { VISUAL_INSIGHTS_TEMPLATE } from "../../src/templates/visualInsightsTemplate";
+import { NEW_STUFF_TEMPLATE } from "../../src/templates/visualInsightsTemplate";
 
 const createContext = (): EvaluationContext => ({
   variableStore: new ReactiveVariableStore(),
@@ -24,19 +24,23 @@ const syncVariables = (context: EvaluationContext) => {
   });
 };
 
-describe("Visual Insights template", () => {
-  test("contains every new plot affordance example", () => {
-    expect(VISUAL_INSIGHTS_TEMPLATE).toContain("@view plot x=time y=speed");
-    expect(VISUAL_INSIGHTS_TEMPLATE).toContain("@view plot x=promo spend y=forecast revenue");
-    expect(VISUAL_INSIGHTS_TEMPLATE).toContain("@view plot x=price delta y=forecast revenue");
-    expect(VISUAL_INSIGHTS_TEMPLATE).toContain("@view hist y=wait times");
-    expect(VISUAL_INSIGHTS_TEMPLATE).toContain("@view hist y=same wait");
-    expect(VISUAL_INSIGHTS_TEMPLATE).toContain("@view scatter x=study hours y=test score");
-    expect(VISUAL_INSIGHTS_TEMPLATE).toContain("@view scatter x=daily spend y=ticket sales");
+describe("New stuff template", () => {
+  test("contains every new plot and goal-seek affordance example", () => {
+    expect(NEW_STUFF_TEMPLATE).toContain("@view plot x=time y=speed");
+    expect(NEW_STUFF_TEMPLATE).toContain("@view plot x=promo spend y=forecast revenue");
+    expect(NEW_STUFF_TEMPLATE).toContain("@view plot x=price delta y=forecast revenue");
+    expect(NEW_STUFF_TEMPLATE).toContain("@view hist y=wait times");
+    expect(NEW_STUFF_TEMPLATE).toContain("@view hist y=same wait");
+    expect(NEW_STUFF_TEMPLATE).toContain("@view scatter x=study hours y=test score");
+    expect(NEW_STUFF_TEMPLATE).toContain("@view scatter x=daily spend y=ticket sales");
+    expect(NEW_STUFF_TEMPLATE).toContain("make take home = EUR 4000 by gross =>");
+    expect(NEW_STUFF_TEMPLATE).toContain(
+      "make goal fund = EUR 20000 by monthly saving =>"
+    );
   });
 
   test("evaluates executable lines and connects every @view", () => {
-    const lines = VISUAL_INSIGHTS_TEMPLATE.split("\n");
+    const lines = NEW_STUFF_TEMPLATE.split("\n");
     const context = createContext();
     const executable = lines
       .map((raw, index) => ({ raw, lineNumber: index + 1 }))

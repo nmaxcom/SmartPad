@@ -1,7 +1,7 @@
 import React from "react";
 import { QUICK_TOUR_TEMPLATE } from "../../templates/quickTourTemplate";
 import { CAPABILITY_SPRINT_TEMPLATE } from "../../templates/capabilitySprintTemplate";
-import { VISUAL_INSIGHTS_TEMPLATE } from "../../templates/visualInsightsTemplate";
+import { NEW_STUFF_TEMPLATE } from "../../templates/visualInsightsTemplate";
 import { useSheetContext } from "../../state/SheetContext";
 import { normalizeTemplateTriggers } from "./templateTriggerNormalization";
 import "./TemplatePanel.css";
@@ -21,10 +21,10 @@ const templates = [
     content: CAPABILITY_SPRINT_TEMPLATE,
   },
   {
-    id: "visual-insights",
+    id: "new-stuff",
     emoji: "📊",
-    name: "Visual Insights",
-    content: VISUAL_INSIGHTS_TEMPLATE,
+    name: "New stuff",
+    content: NEW_STUFF_TEMPLATE,
   },
   {
     id: "unit-aliases",
