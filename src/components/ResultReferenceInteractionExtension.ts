@@ -1,6 +1,14 @@
 import { Extension } from "@tiptap/core";
 import { NodeSelection, Plugin, TextSelection } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
+import {
+  ExpressionComponent,
+  isCombinedAssignmentNode,
+  isExpressionNode,
+  isVariableAssignmentNode,
+} from "../parsing/ast";
+import { parseLine } from "../parsing/astParser";
+import { parseExpressionComponents } from "../parsing/expressionComponents";
 import { createReferencePlaceholder } from "../references/referenceIds";
 import type { SettingsState } from "../state/types";
 
@@ -42,6 +50,24 @@ interface LineBoundaryDropTarget {
   sourceLine: number;
   isLastLine: boolean;
   paragraphIndex: number;
+}
+
+interface SourceTextblockSnapshot {
+  lineId: string;
+  lineNumber: number;
+  text: string;
+}
+
+interface PlotSourcePlan {
+  targetName?: string;
+  expression: string;
+  xVariables: string[];
+}
+
+interface PlotMenuAction {
+  label: string;
+  directive: string;
+  title?: string;
 }
 
 const HIGHLIGHT_REFRESH_META = "spRefHighlightRefresh";
@@ -564,27 +590,142 @@ const resolveInlineDropPos = (view: any, event: DragEvent): number | null => {
 
 const normalizeChipText = (value: string): string => String(value || "").replace(/\s+/g, " ").trim();
 
-const inferPlotSourceExpression = (payload: ReferencePayload | null): string => {
-  const label = normalizeChipText(payload?.sourceLabel || "");
-  if (!label) return "";
-  return label
-    .replace(/\s*=>\s*.*$/, "")
-    .replace(/^.*=>\s*/, "")
-    .trim();
+const getTextblockTextWithoutResultTokens = (node: any): string => {
+  let text = "";
+  node?.forEach?.((child: any) => {
+    const typeName = String(child?.type?.name || "");
+    if (typeName === "resultToken") {
+      return;
+    }
+    if (typeName === "referenceToken") {
+      text += String(child?.attrs?.label || child?.attrs?.sourceValue || "");
+      return;
+    }
+    if (child?.isText) {
+      text += String(child.text || "");
+      return;
+    }
+    text += String(child?.textContent || "");
+  });
+  return text;
 };
 
-const expressionHasPlotVariable = (expression: string): boolean => {
-  const identifiers = expression.match(/[A-Za-z_][A-Za-z0-9_]*/g) || [];
-  const reserved = new Set(["to", "in", "per", "of", "and", "or"]);
-  return identifiers.some((identifier) => !reserved.has(identifier.toLowerCase()));
+const findSourceTextblockSnapshot = (
+  view: any,
+  payload: ReferencePayload | null
+): SourceTextblockSnapshot | null => {
+  if (!payload) return null;
+  const resolvedPayload = resolvePayloadLineIdentity(view.state, payload);
+  let lineNumber = 0;
+  let fallback: SourceTextblockSnapshot | null = null;
+  let matchedById: SourceTextblockSnapshot | null = null;
+
+  view.state.doc.descendants((node: any) => {
+    if (!node?.isTextblock) {
+      return true;
+    }
+    lineNumber += 1;
+    const lineId = String((node as any).attrs?.lineId || "").trim();
+    const snapshot = {
+      lineId,
+      lineNumber,
+      text: getTextblockTextWithoutResultTokens(node),
+    };
+    if (!fallback && resolvedPayload.sourceLine > 0 && lineNumber === resolvedPayload.sourceLine) {
+      fallback = snapshot;
+    }
+    if (resolvedPayload.sourceLineId && lineId === resolvedPayload.sourceLineId) {
+      matchedById = snapshot;
+      return false;
+    }
+    return true;
+  });
+
+  return matchedById || fallback;
 };
 
-const buildPlotDirectiveFromPayload = (payload: ReferencePayload | null): string | null => {
-  const expression = inferPlotSourceExpression(payload);
-  if (!expression || !expressionHasPlotVariable(expression)) {
+const collectExpressionVariables = (components: ExpressionComponent[]): string[] => {
+  const variables: string[] = [];
+  const visit = (component: ExpressionComponent | undefined) => {
+    if (!component) return;
+    if (component.type === "variable") {
+      variables.push(component.value);
+    }
+    component.children?.forEach(visit);
+    component.args?.forEach((arg) => arg.components.forEach(visit));
+    if (component.access) {
+      visit(component.access.base);
+      component.access.indexComponents?.forEach(visit);
+      component.access.startComponents?.forEach(visit);
+      component.access.endComponents?.forEach(visit);
+    }
+  };
+  components.forEach(visit);
+  return uniqueNonEmptyValues(variables);
+};
+
+const buildPlotSourcePlan = (
+  view: any,
+  payload: ReferencePayload | null
+): PlotSourcePlan | null => {
+  const source = findSourceTextblockSnapshot(view, payload);
+  if (!source) return null;
+
+  const astNode = parseLine(source.text, source.lineNumber);
+  let targetName = "";
+  let expression = "";
+  let components: ExpressionComponent[] = [];
+
+  if (isCombinedAssignmentNode(astNode)) {
+    targetName = astNode.variableName;
+    expression = astNode.expression;
+    components = astNode.components;
+  } else if (isExpressionNode(astNode)) {
+    expression = astNode.expression;
+    components = astNode.components;
+  } else if (isVariableAssignmentNode(astNode)) {
+    targetName = astNode.variableName;
+    expression = astNode.rawValue;
+    try {
+      components = parseExpressionComponents(astNode.rawValue);
+    } catch {
+      components = [];
+    }
+  }
+
+  expression = expression.trim();
+  if (!expression) {
     return null;
   }
-  return `@view plot y=${expression} size=md`;
+
+  const xVariables = collectExpressionVariables(components).filter(
+    (variable) => variable !== targetName
+  );
+  if (xVariables.length === 0) {
+    return null;
+  }
+
+  return {
+    targetName: targetName.trim() || undefined,
+    expression,
+    xVariables,
+  };
+};
+
+const buildPlotMenuActions = (
+  view: any,
+  payload: ReferencePayload | null
+): PlotMenuAction[] => {
+  const plan = buildPlotSourcePlan(view, payload);
+  if (!plan) return [];
+  const yParam = plan.targetName ? ` y=${plan.targetName}` : "";
+  return plan.xVariables.map((xVariable) => ({
+    label: plan.xVariables.length > 1 ? `Plot vs ${xVariable}` : "Plot from result",
+    directive: `@view plot x=${xVariable}${yParam} size=md`,
+    title: plan.targetName
+      ? `Create a live plot of ${plan.targetName} against ${xVariable}`
+      : `Create a live plot of the source expression against ${xVariable}`,
+  }));
 };
 
 const resolveDisplayedResultValue = (target: HTMLElement): string => {
@@ -1034,31 +1175,41 @@ export const ResultReferenceInteractionExtension = Extension.create({
         })
       );
       const payload = payloadFromElement(resultEl);
-      const plotDirective = buildPlotDirectiveFromPayload(payload);
-      menu.appendChild(
-        buildMenuButton(
-          "Plot from result",
-          () => {
-            if (!payload || !plotDirective) {
-              closeResultActionMenu();
-              return;
-            }
-            const insertedCursor = insertTextAfterSourceLine(view, payload, plotDirective);
-            if (typeof insertedCursor === "number") {
-              postInsertCursor = insertedCursor;
-              consumeResultClick = true;
-              view.focus();
-            }
-            closeResultActionMenu();
-          },
-          plotDirective
-            ? undefined
-            : {
-                disabled: true,
-                title: "Available for expressions with a plottable variable",
-              }
-        )
-      );
+      const plotActions = buildPlotMenuActions(view, payload);
+      if (plotActions.length === 0) {
+        menu.appendChild(
+          buildMenuButton("Plot from result", () => {}, {
+            disabled: true,
+            title: "Available when the source result depends on a plottable variable",
+          })
+        );
+      } else {
+        plotActions.forEach((plotAction) => {
+          menu.appendChild(
+            buildMenuButton(
+              plotAction.label,
+              () => {
+                if (!payload) {
+                  closeResultActionMenu();
+                  return;
+                }
+                const insertedCursor = insertTextAfterSourceLine(
+                  view,
+                  payload,
+                  plotAction.directive
+                );
+                if (typeof insertedCursor === "number") {
+                  postInsertCursor = insertedCursor;
+                  consumeResultClick = true;
+                  view.focus();
+                }
+                closeResultActionMenu();
+              },
+              { title: plotAction.title }
+            )
+          );
+        });
+      }
       menu.appendChild(
         buildMenuButton("Explore dependencies", () => {}, {
           disabled: true,

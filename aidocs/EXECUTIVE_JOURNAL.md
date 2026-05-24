@@ -156,6 +156,42 @@
 *   Risks/blockers:
     *   Current runtime behavior still contains the known stale-formula issue until the next implementation slice replaces formula snapshots.
 
+## Entry J-2026-05-24-04
+
+*   Timestamp: 2026-05-24 05:11:57 CEST
+*   Summary:
+    *   User approved moving ahead after asking for a serious, complete `Plot from result` review rather than a one-off formula-string fix.
+    *   Assistant implemented live-bound plot generation from result chips: unnamed expression results insert source-adjacent `@view plot x=... size=md`, named results insert `@view plot x=... y=<name> size=md`, and multi-variable formulas expose explicit `Plot vs ...` choices.
+    *   The result-chip menu now derives plot eligibility from the parsed source line AST instead of from the rendered chip label.
+*   Decisions:
+    *   Keep scalar-only results disabled for plotting.
+    *   Use `y=<result name>` for named results so source formula edits update the plot through the existing variable raw-value resolution.
+    *   Avoid guessing an x-axis when more than one source variable is present.
+*   User directives:
+    *   Do the work only after identifying the broader problems in the feature.
+    *   Keep the roadmap order visible and proceed step by step.
+*   Artifacts:
+    *   `src/components/ResultReferenceInteractionExtension.ts`
+    *   `tests/e2e/result-reference-drag-only.spec.ts`
+    *   `tests/unit/plotViewEvaluator.test.ts`
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/plotViewEvaluator.test.ts` ✅
+    *   `npx playwright test tests/e2e/result-reference-drag-only.spec.ts -g "result chip menu inserts reference and plain value explicitly|result chip menu creates a plot view for plottable expressions|result chip plot action binds named results and lets users choose the x variable" --project=chromium --config=playwright.config.ts --workers=1` ✅
+    *   `npm run build` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run verify:changed` ✅
+*   Pending updates:
+    *   Human gate remains open: user has not yet confirmed `T-2026-05-24-02` as complete.
+    *   Next approved roadmap item after confirmation: `T-2026-05-24-03`, list/range visual suggestions.
+*   Risks/blockers:
+    *   Full Playwright suite was not rerun; targeted e2e covered the touched menu and plot-generation flows.
+
 ## Entry J-2026-02-11-02
 
 *   Timestamp: 2026-02-11 06:51:39 CET

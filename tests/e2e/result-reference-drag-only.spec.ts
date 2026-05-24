@@ -350,7 +350,51 @@ test.describe("Result references (drag-only)", () => {
     await waitForUIRenderComplete(page);
 
     const plotLine = page.locator(".ProseMirror p").nth(2);
-    await expect(plotLine).toContainText("@view plot y=x^2 size=md");
+    await expect(plotLine).toContainText("@view plot x=x size=md");
+    await expect(page.locator(".plot-view").first()).toBeVisible();
+    await expect(page.locator(".plot-view-disconnected")).toHaveCount(0);
+  });
+
+  test("result chip plot action binds named results and lets users choose the x variable", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("distance = 120 km");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("time = 2 h");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("speed = distance / time =>");
+    await waitForUIRenderComplete(page);
+
+    const sourceChip = page.locator(".ProseMirror p").nth(2).locator(".semantic-result-display");
+    await sourceChip.hover();
+    await sourceChip.locator(".semantic-result-menu").click();
+
+    const menu = page.locator(".semantic-result-action-menu");
+    await expect(menu.getByRole("menuitem", { name: "Plot vs distance" })).toBeEnabled();
+    await expect(menu.getByRole("menuitem", { name: "Plot vs time" })).toBeEnabled();
+    await menu.getByRole("menuitem", { name: "Plot vs time" }).click();
+    await waitForUIRenderComplete(page);
+
+    const plotLine = page.locator(".ProseMirror p").nth(3);
+    await expect(plotLine).toContainText("@view plot x=time y=speed size=md");
+    await expect(plotLine).not.toContainText("distance / time");
+    await expect(page.locator(".plot-view").first()).toBeVisible();
+    await expect(page.locator(".plot-view-disconnected")).toHaveCount(0);
+
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      editor?.commands?.setContent(
+        "<p>distance = 120 km</p><p>time = 2 h</p><p>speed = distance / (time * 2) =&gt;</p><p>@view plot x=time y=speed size=md</p>"
+      );
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    await expect(page.locator(".ProseMirror p").nth(3)).toContainText(
+      "@view plot x=time y=speed size=md"
+    );
     await expect(page.locator(".plot-view").first()).toBeVisible();
     await expect(page.locator(".plot-view-disconnected")).toHaveCount(0);
   });
