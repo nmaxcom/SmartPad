@@ -215,7 +215,8 @@ Flow:
    - an action menu icon.
 3. Copy icon click copies the rendered value and briefly sets copied feedback state on the chip.
 4. Dragging the chip itself or the drag handle starts result-reference drag/drop.
-5. The action menu exposes current supported commands (`Copy value`, `Insert reference`, `Insert value`) and may show disabled planned commands when they are not implemented yet.
+5. The action menu exposes current supported commands (`Copy value`, `Insert reference`, `Insert value`) and enables `Plot from result` when the source expression contains a plottable variable.
+6. Planned commands that are not implemented yet may be shown disabled.
 
 Guardrails:
 
@@ -223,7 +224,8 @@ Guardrails:
 2. Value used for copy/drag payload must remain the result value (icons must not pollute chip text payload).
 3. Copy icon click must not trigger drag session start.
 4. Live and trigger chips must share the same interaction capability contract (copy, drag/drop insert, visual affordances), differing only by surfacing source metadata.
-5. Disabled planned actions must be visually disabled and must not pretend a feature is currently available.
+5. `Plot from result` must stay disabled for scalar-only results that would create a disconnected chart.
+6. Disabled planned actions must be visually disabled and must not pretend a feature is currently available.
 
 ---
 

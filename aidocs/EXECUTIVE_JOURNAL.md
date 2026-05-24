@@ -88,6 +88,42 @@
 *   Risks/blockers:
     *   None for the corrected chip flows; full Playwright remains broader than this targeted correction pass.
 
+## Entry J-2026-05-24-02
+
+*   Timestamp: 2026-05-24 04:44:55 CEST / 2026-05-24 02:44:55 UTC
+*   Summary:
+    *   User asked whether it was time to execute the previously recommended roadmap order.
+    *   Assistant confirmed the next order excluding tables and implemented the first small vertical slice: `Plot from result` from the result-chip action menu.
+    *   Result-chip menus now enable `Plot from result` for expressions with a plottable variable and keep it disabled for scalar-only results that would create disconnected charts.
+*   Decisions:
+    *   Start the approved roadmap with chip-menu plot discovery, because the result-chip menu foundation is now in place.
+    *   Keep list visual suggestions, goal-seek, scenarios, and solve phrasing as later slices.
+    *   Do not include table work in this approved path.
+*   User directives:
+    *   Proceed with the previously recommended order while respecting the earlier exclusion of tables.
+*   Assistant commitments:
+    *   Keep each roadmap slice small, visible in UX, and covered by tests before moving to the next feature.
+*   Artifacts:
+    *   `src/components/ResultReferenceInteractionExtension.ts`
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
+    *   `tests/e2e/result-reference-drag-only.spec.ts`
+    *   `/private/tmp/smartpad-plot-from-result.png` (temporary visual verification screenshot)
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run build` ✅
+    *   `npx playwright test tests/e2e/result-reference-drag-only.spec.ts -g "result chip menu inserts reference and plain value explicitly|result chip menu creates a plot view for plottable expressions|clicking a result chip does not insert|result chips expose drag handle" --project=chromium --config=playwright.config.ts --workers=1` ✅
+    *   Manual Playwright shell verification on `http://localhost:3200/` confirmed `Plot from result` enabled for `x^2 =>`, inserted `@view plot y=x^2 size=md`, and rendered one connected `.plot-view` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run test:unit -- --runInBand` ✅
+    *   `npm run verify:changed` ✅ after commit on `HEAD~1...HEAD`
+*   Pending updates:
+    *   Human gate remains open: user has not yet confirmed this first roadmap slice as complete.
+*   Risks/blockers:
+    *   Full Playwright suite was not rerun; targeted e2e covered the touched chip-menu plot path and existing chip menu regressions.
+
 ## Entry J-2026-02-11-02
 
 *   Timestamp: 2026-02-11 06:51:39 CET

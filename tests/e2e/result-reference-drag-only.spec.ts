@@ -332,6 +332,29 @@ test.describe("Result references (drag-only)", () => {
     await expect(valueLine).toContainText("snapshot = 120");
   });
 
+  test("result chip menu creates a plot view for plottable expressions", async ({ page }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("x = 2");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("x^2 =>");
+    await waitForUIRenderComplete(page);
+
+    const sourceChip = page.locator(".ProseMirror p").nth(1).locator(".semantic-result-display");
+    await sourceChip.hover();
+    await sourceChip.locator(".semantic-result-menu").click();
+
+    const menu = page.locator(".semantic-result-action-menu");
+    await expect(menu.getByRole("menuitem", { name: "Plot from result" })).toBeEnabled();
+    await menu.getByRole("menuitem", { name: "Plot from result" }).click();
+    await waitForUIRenderComplete(page);
+
+    const plotLine = page.locator(".ProseMirror p").nth(2);
+    await expect(plotLine).toContainText("@view plot y=x^2 size=md");
+    await expect(page.locator(".plot-view").first()).toBeVisible();
+    await expect(page.locator(".plot-view-disconnected")).toHaveCount(0);
+  });
+
   test("dragging a result chip onto a line inserts a reference chip", async ({ page }) => {
     const editor = page.locator('[data-testid="smart-pad-editor"]');
     await editor.click();

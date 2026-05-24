@@ -480,6 +480,38 @@ const insertReferenceAfterBoundary = (
   }
 };
 
+const insertTextAfterSourceLine = (
+  view: any,
+  payload: ReferencePayload,
+  text: string
+): number | null => {
+  const resolvedPayload = resolvePayloadLineIdentity(view.state, payload);
+  const splitPosById = resolvedPayload.sourceLineId
+    ? getTextblockSplitPosByLineId(view.state.doc, resolvedPayload.sourceLineId)
+    : null;
+  const splitPos =
+    typeof splitPosById === "number" && splitPosById > 0
+      ? splitPosById
+      : getTextblockSplitPosByLineNumber(view.state.doc, resolvedPayload.sourceLine);
+  if (typeof splitPos !== "number" || splitPos <= 0) {
+    return null;
+  }
+  try {
+    const splitSelectionPos = Math.max(1, Math.min(splitPos + 1, view.state.doc.content.size));
+    const splitTr = view.state.tr.split(splitPos);
+    splitTr.setSelection(TextSelection.create(splitTr.doc, splitSelectionPos));
+    view.dispatch(splitTr);
+    const insertPos = view.state.selection.from;
+    const tr = view.state.tr.insertText(text, insertPos, insertPos);
+    const cursor = insertPos + text.length;
+    tr.setSelection(TextSelection.create(tr.doc, cursor));
+    view.dispatch(tr);
+    return cursor;
+  } catch {
+    return null;
+  }
+};
+
 const resolveBoundaryDropTarget = (view: any, event: DragEvent): LineBoundaryDropTarget | null => {
   const editorRect = view.dom.getBoundingClientRect();
   const paragraphs = Array.from(view.dom.querySelectorAll("p")) as HTMLElement[];
@@ -531,6 +563,29 @@ const resolveInlineDropPos = (view: any, event: DragEvent): number | null => {
 };
 
 const normalizeChipText = (value: string): string => String(value || "").replace(/\s+/g, " ").trim();
+
+const inferPlotSourceExpression = (payload: ReferencePayload | null): string => {
+  const label = normalizeChipText(payload?.sourceLabel || "");
+  if (!label) return "";
+  return label
+    .replace(/\s*=>\s*.*$/, "")
+    .replace(/^.*=>\s*/, "")
+    .trim();
+};
+
+const expressionHasPlotVariable = (expression: string): boolean => {
+  const identifiers = expression.match(/[A-Za-z_][A-Za-z0-9_]*/g) || [];
+  const reserved = new Set(["to", "in", "per", "of", "and", "or"]);
+  return identifiers.some((identifier) => !reserved.has(identifier.toLowerCase()));
+};
+
+const buildPlotDirectiveFromPayload = (payload: ReferencePayload | null): string | null => {
+  const expression = inferPlotSourceExpression(payload);
+  if (!expression || !expressionHasPlotVariable(expression)) {
+    return null;
+  }
+  return `@view plot y=${expression} size=md`;
+};
 
 const resolveDisplayedResultValue = (target: HTMLElement): string => {
   const explicitResultValue = normalizeChipText(String(target.getAttribute("data-result-value") || ""));
@@ -978,14 +1033,34 @@ export const ResultReferenceInteractionExtension = Extension.create({
           closeResultActionMenu();
         })
       );
+      const payload = payloadFromElement(resultEl);
+      const plotDirective = buildPlotDirectiveFromPayload(payload);
       menu.appendChild(
-        buildMenuButton("Explore dependencies", () => {}, {
-          disabled: true,
-          title: "Planned action",
-        })
+        buildMenuButton(
+          "Plot from result",
+          () => {
+            if (!payload || !plotDirective) {
+              closeResultActionMenu();
+              return;
+            }
+            const insertedCursor = insertTextAfterSourceLine(view, payload, plotDirective);
+            if (typeof insertedCursor === "number") {
+              postInsertCursor = insertedCursor;
+              consumeResultClick = true;
+              view.focus();
+            }
+            closeResultActionMenu();
+          },
+          plotDirective
+            ? undefined
+            : {
+                disabled: true,
+                title: "Available for expressions with a plottable variable",
+              }
+        )
       );
       menu.appendChild(
-        buildMenuButton("Plot from result", () => {}, {
+        buildMenuButton("Explore dependencies", () => {}, {
           disabled: true,
           title: "Planned action",
         })
