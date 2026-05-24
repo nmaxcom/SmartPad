@@ -46,6 +46,102 @@ This cue means:
 
 ## 4. Suggestion rules
 
+### 4.0 Source binding for Plot from result
+
+`Plot from result` must create a live view of the thing the user is studying, not a copied text snapshot.
+
+Bad generated output:
+
+```smartpad
+distance = 120 km
+time = 2 h
+speed = distance / time =>
+@view plot y=distance / time size=md
+```
+
+Why this is bad:
+
+- the plot duplicates the source formula
+- editing `speed = distance / time =>` later does not update the generated `y=...`
+- the user now has two formulas that look related but can silently diverge
+
+Preferred generated output for a named result:
+
+```smartpad
+distance = 120 km
+time = 2 h
+speed = distance / time =>
+@view plot x=time y=speed size=md
+```
+
+Preferred generated output for an unnamed expression directly above the view:
+
+```smartpad
+distance / time =>
+@view plot x=time size=md
+```
+
+In the unnamed case, omitting `y=` is intentional: the view binds to the nearest source expression above it. Editing that source expression changes the plot because there is no copied formula to drift.
+
+Product rule:
+
+1. Named result chips should generate plots using the result name as `y=...` when a stable variable name exists.
+2. Unnamed result chips should generate a source-adjacent view without `y=...`, relying on the existing nearest-expression binding.
+3. If the source expression has one candidate independent variable, SmartPad can choose it automatically as `x=...`.
+4. If the source expression has multiple candidate independent variables, SmartPad must ask through the menu/submenu instead of silently choosing the first token.
+5. Scalar-only results must keep `Plot from result` disabled, because they cannot produce a meaningful function plot.
+6. The visual chart title/legend may use friendly labels, but the binding must stay live.
+
+### 4.0.1 X-variable choice
+
+When a formula contains multiple variables, the useful question is "what do you want to vary?"
+
+Example:
+
+```smartpad
+distance = 120 km
+time = 2 h
+speed = distance / time =>
+```
+
+Menu should not create a plot immediately. It should expose choices such as:
+
+- `Plot vs distance`
+- `Plot vs time`
+
+Choosing `Plot vs time` emits:
+
+```smartpad
+@view plot x=time y=speed size=md
+```
+
+Choosing `Plot vs distance` emits:
+
+```smartpad
+@view plot x=distance y=speed size=md
+```
+
+Guardrail:
+
+- the selected x-variable must be numeric, duration, currency, percentage, or a compatible unit value that the plot engine can sample
+- if a variable cannot be sampled, show it disabled with a short reason
+
+### 4.0.2 Source mutation scenarios
+
+Generated plots must remain useful after normal edits:
+
+1. User edits the source formula body.
+   - `speed = distance / time =>` becomes `speed = distance / (time + stops) =>`
+   - expected: plot still tracks `speed`
+2. User edits an unnamed expression above a source-adjacent plot.
+   - `distance / time =>` becomes `(distance - detour) / time =>`
+   - expected: plot updates because `y=` was omitted
+3. User renames a named result.
+   - `speed = ... =>` becomes `pace = ... =>`
+   - expected: plot disconnects with a clear missing-source message or offers a repair action; it must not silently keep an old formula copy
+4. User inserts a line between source and source-adjacent unnamed plot.
+   - expected: either the plot stays anchored to original source through metadata, or the UI warns that the nearest-expression binding changed
+
 ### 4.1 Histogram
 
 Suggest when the source resolves to:
@@ -142,6 +238,80 @@ Menu cue on relevant result/table summary:
 
 ## 8. Acceptance examples
 
+### 8.0 Live-bound plot from named result
+
+Input:
+
+```smartpad
+distance = 120 km
+time = 2 h
+speed = distance / time =>
+```
+
+Menu:
+
+- includes `Plot vs distance`
+- includes `Plot vs time`
+- does not emit `y=distance / time`
+
+After choosing `Plot vs time`, expected inserted view:
+
+```smartpad
+@view plot x=time y=speed size=md
+```
+
+Then edit:
+
+```smartpad
+speed = distance / (time + 0.25 h) =>
+```
+
+Expected:
+
+- the existing plot remains connected
+- the plotted y-series updates through `speed`
+- no duplicated stale formula remains in the view directive
+
+### 8.0.1 Live-bound plot from unnamed result
+
+Input:
+
+```smartpad
+distance = 120 km
+time = 2 h
+distance / time =>
+```
+
+After choosing `Plot vs time`, expected inserted view directly below the source:
+
+```smartpad
+@view plot x=time size=md
+```
+
+Then edit:
+
+```smartpad
+(distance - 10 km) / time =>
+```
+
+Expected:
+
+- plot updates to the edited nearest source expression
+- generated view still has no duplicated `y=` formula
+
+### 8.0.2 Scalar-only result stays disabled
+
+Input:
+
+```smartpad
+100 + 20 =>
+```
+
+Expected:
+
+- menu includes `Plot from result` only if useful as a disabled item
+- no click path creates a disconnected plot
+
 ### 8.1 Histogram available
 
 Input:
@@ -173,9 +343,14 @@ Expected:
 
 Promotion requires:
 
-1. targeted Jest coverage for suggestion eligibility logic
-2. targeted Playwright coverage for cue rendering, menu highlighting, and plot creation from chip menus
-3. full Jest suite
-4. full Playwright suite
-5. all general regression checks green
-6. iteration until no behavior contradicts this spec
+1. targeted Jest coverage for source-binding and x-variable eligibility logic
+2. targeted Jest coverage for list/range suggestion eligibility logic
+3. targeted Playwright coverage for named-result plot creation and source-formula edit propagation
+4. targeted Playwright coverage for unnamed-result source-adjacent plot creation and edit propagation
+5. targeted Playwright coverage for multi-variable chooser behavior and disabled non-sampleable variables
+6. targeted Playwright coverage for scalar-only disabled plot action
+7. targeted Playwright coverage for cue rendering, menu highlighting, and plot creation from chip menus
+8. full Jest suite
+9. full Playwright suite or explicit documented deferral with focused coverage rationale
+10. all general regression checks green
+11. iteration until no behavior contradicts this spec

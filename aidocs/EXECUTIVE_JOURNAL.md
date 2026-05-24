@@ -124,6 +124,38 @@
 *   Risks/blockers:
     *   Full Playwright suite was not rerun; targeted e2e covered the touched chip-menu plot path and existing chip menu regressions.
 
+## Entry J-2026-05-24-03
+
+*   Timestamp: 2026-05-24 04:57:35 CEST / 2026-05-24 02:57:35 UTC
+*   Summary:
+    *   User asked to persist the remaining approved roadmap order and flagged that the current `Plot from result` implementation duplicates the full formula (`y=distance / time`) instead of staying tied to the studied result (`speed` or source expression).
+    *   Assistant updated the feature backlog with the remaining approved order and explicitly excluded table work from that path.
+    *   Assistant expanded the auto-suggested plots proposal with a stronger product plan for live source binding, x-variable choice, source mutation behavior, and test scenarios.
+*   Decisions:
+    *   Treat current formula-copy generation as a product problem to correct before broadening plot suggestions.
+    *   Named result plots should bind through the result name when available, e.g. `@view plot x=time y=speed size=md`.
+    *   Unnamed source-adjacent plots should omit `y=` so the plot follows the nearest source expression instead of duplicating formula text.
+    *   Multi-variable formulas need an explicit `Plot vs ...` choice; SmartPad must not silently pick the first variable.
+*   User directives:
+    *   Keep the remaining roadmap order somewhere persistent.
+    *   Think deeply about the product needs and plan stronger ideas and test scenarios for `Plot from result`.
+*   Assistant commitments:
+    *   Implement the plot-source-binding correction before moving to list/range visual suggestions.
+    *   Verify each feature slice with source mutation scenarios, not only initial render.
+*   Artifacts:
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `docs/Specs/proposed/auto-suggested-plots.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+*   Pending updates:
+    *   Implement `T-2026-05-24-02`: live-bound `Plot from result` with x-variable choice and regression tests.
+*   Risks/blockers:
+    *   Current runtime behavior still contains the known stale-formula issue until the next implementation slice replaces formula snapshots.
+
 ## Entry J-2026-02-11-02
 
 *   Timestamp: 2026-02-11 06:51:39 CET
