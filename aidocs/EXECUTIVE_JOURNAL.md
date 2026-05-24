@@ -192,6 +192,45 @@
 *   Risks/blockers:
     *   Full Playwright suite was not rerun; targeted e2e covered the touched menu and plot-generation flows.
 
+## Entry J-2026-05-24-05
+
+*   Timestamp: 2026-05-24 05:39:04 CEST
+*   Summary:
+    *   User accepted `a6422e06` as good and asked to continue.
+    *   Assistant marked live-bound `Plot from result` complete and implemented the next approved slice: numeric-list visual suggestions.
+    *   Result-chip menus now highlight `Plot as histogram` for numeric-list results and `Plot as scatter vs ...` for equal-length numeric-list pairs; generated `@view hist` and `@view scatter` directives render connected views.
+*   Decisions:
+    *   Keep table work excluded.
+    *   Treat histogram/scatter actions as list/range visual suggestions, not generic scalar dependency plots.
+    *   Only show list visual suggestions when the generated view should connect immediately.
+*   User directives:
+    *   Proceed with the approved roadmap order.
+*   Artifacts:
+    *   `src/eval/plotViewEvaluator.ts`
+    *   `src/components/PlotViewExtension.ts`
+    *   `src/components/ResultReferenceInteractionExtension.ts`
+    *   `src/components/Editor.css`
+    *   `tests/unit/plotViewEvaluator.test.ts`
+    *   `tests/e2e/result-reference-drag-only.spec.ts`
+    *   `docs/Specs/Plotting.spec.md`
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (updated)
+*   Validation:
+    *   `npm run test:unit -- tests/unit/plotViewEvaluator.test.ts` ✅
+    *   `npx playwright test tests/e2e/result-reference-drag-only.spec.ts -g "result chip menu inserts reference and plain value explicitly|result chip menu creates a plot view for plottable expressions|result chip plot action binds named results|result chip menu suggests and creates a histogram|result chip menu suggests and creates scatter" --project=chromium --config=playwright.config.ts --workers=1` ✅
+    *   `npm run build` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+*   Pending updates:
+    *   Human gate remains open for `T-2026-05-24-03` until the user confirms the histogram/scatter slice.
+    *   Next approved roadmap item after confirmation: goal-seek from result chips.
+*   Risks/blockers:
+    *   Full Playwright suite was not rerun; targeted e2e covered the touched menu and plot rendering paths.
+    *   Time-series suggestions are still not included in this first list/range slice.
+
 ## Entry J-2026-02-11-02
 
 *   Timestamp: 2026-02-11 06:51:39 CET

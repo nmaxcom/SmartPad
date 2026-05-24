@@ -479,8 +479,26 @@ size=md
 If X or Y is a list:
 
 * `plot` → line or bar (auto)
-* `hist` → histogram
+* `hist` → histogram from one numeric/unit/currency/duration/percentage list
+* `scatter` → scatter from two equal-length numeric/unit/currency/duration/percentage lists
 * `box` → box plot
+
+Examples:
+
+```smartpad
+wait times = 3, 4, 4, 5, 8, 12 =>
+@view hist y=wait times size=md
+
+study hours = 2, 3, 4, 5 =>
+test score = 58, 61, 68, 73 =>
+@view scatter x=study hours y=test score size=md
+```
+
+Rules:
+
+* `hist` disconnects unless the selected source resolves to one numeric list.
+* `scatter` disconnects unless `x=` and `y=` resolve to numeric lists of the same length.
+* Result-chip menu suggestions for these views are highlighted and only shown when the generated view should connect immediately.
 
 ---
 

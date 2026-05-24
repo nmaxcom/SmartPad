@@ -881,6 +881,45 @@ const createPlotSvg = (
         ? { x: model.currentX, y: series.currentY }
         : null;
 
+    if (model.kind === "hist") {
+      const centers = seriesLayout.points.map((point) => xScale(point.x));
+      const spacing =
+        centers.length > 1
+          ? Math.min(...centers.slice(1).map((center, pointIndex) => center - centers[pointIndex]))
+          : plotWidth / 8;
+      const barWidth = Math.max(4, Math.min(42, Math.abs(spacing) * 0.72));
+      const baseline = yScale(yMin <= 0 && yMax >= 0 ? 0 : yMin);
+      seriesLayout.points.forEach((point) => {
+        const x = xScale(point.x) - barWidth / 2;
+        const y = yScale(point.y);
+        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute("x", `${x}`);
+        rect.setAttribute("y", `${Math.min(y, baseline)}`);
+        rect.setAttribute("width", `${barWidth}`);
+        rect.setAttribute("height", `${Math.max(1, Math.abs(baseline - y))}`);
+        rect.setAttribute("rx", "2");
+        rect.setAttribute("class", "plot-view-bar");
+        rect.setAttribute("data-series-index", String(index));
+        rect.style.fill = seriesLayout.color;
+        svg.appendChild(rect);
+      });
+      return;
+    }
+
+    if (model.kind === "scatter") {
+      seriesLayout.points.forEach((point) => {
+        const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        dot.setAttribute("cx", `${xScale(point.x)}`);
+        dot.setAttribute("cy", `${yScale(point.y)}`);
+        dot.setAttribute("r", "4");
+        dot.setAttribute("class", "plot-view-scatter-dot");
+        dot.setAttribute("data-series-index", String(index));
+        dot.style.fill = seriesLayout.color;
+        svg.appendChild(dot);
+      });
+      return;
+    }
+
     let pathData = "";
     const pathPoints: Array<{ x: number; y: number }> = [];
     let hasStarted = false;

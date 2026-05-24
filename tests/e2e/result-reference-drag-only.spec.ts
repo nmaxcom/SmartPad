@@ -399,6 +399,64 @@ test.describe("Result references (drag-only)", () => {
     await expect(page.locator(".plot-view-disconnected")).toHaveCount(0);
   });
 
+  test("result chip menu suggests and creates a histogram for numeric lists", async ({ page }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("wait times = 3, 4, 4, 5, 8, 12 =>");
+    await waitForUIRenderComplete(page);
+
+    const sourceChip = page.locator(".ProseMirror p").first().locator(".semantic-result-display");
+    await sourceChip.hover();
+    await sourceChip
+      .locator(".semantic-result-menu")
+      .evaluate((button: HTMLElement) => button.click());
+
+    const menu = page.locator(".semantic-result-action-menu");
+    const histogramAction = menu.getByRole("menuitem", { name: "Plot as histogram" });
+    await expect(histogramAction).toBeEnabled();
+    await expect(histogramAction).toHaveClass(/semantic-result-plot-suggestion/);
+    await histogramAction.click();
+    await waitForUIRenderComplete(page);
+
+    const plotLine = page.locator(".ProseMirror p").nth(1);
+    await expect(plotLine).toContainText("@view hist y=wait times size=md");
+    await expect(page.locator(".plot-view").first()).toBeVisible();
+    await expect(page.locator(".plot-view-disconnected")).toHaveCount(0);
+    await expect(page.locator(".plot-view-bar").first()).toBeVisible();
+  });
+
+  test("result chip menu suggests and creates scatter for equal-length numeric lists", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("study hours = 2, 3, 4, 5 =>");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("test score = 58, 61, 68, 73 =>");
+    await waitForUIRenderComplete(page);
+
+    const sourceChip = page.locator(".ProseMirror p").nth(1).locator(".semantic-result-display");
+    await sourceChip.hover();
+    await sourceChip
+      .locator(".semantic-result-menu")
+      .evaluate((button: HTMLElement) => button.click());
+
+    const menu = page.locator(".semantic-result-action-menu");
+    const scatterAction = menu.getByRole("menuitem", {
+      name: "Plot as scatter vs study hours",
+    });
+    await expect(scatterAction).toBeEnabled();
+    await expect(scatterAction).toHaveClass(/semantic-result-plot-suggestion/);
+    await scatterAction.click();
+    await waitForUIRenderComplete(page);
+
+    const plotLine = page.locator(".ProseMirror p").nth(2);
+    await expect(plotLine).toContainText("@view scatter x=study hours y=test score size=md");
+    await expect(page.locator(".plot-view").first()).toBeVisible();
+    await expect(page.locator(".plot-view-disconnected")).toHaveCount(0);
+    await expect(page.locator(".plot-view-scatter-dot")).toHaveCount(4);
+  });
+
   test("dragging a result chip onto a line inserts a reference chip", async ({ page }) => {
     const editor = page.locator('[data-testid="smart-pad-editor"]');
     await editor.click();

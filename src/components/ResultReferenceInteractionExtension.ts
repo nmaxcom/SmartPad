@@ -9,8 +9,10 @@ import {
 } from "../parsing/ast";
 import { parseLine } from "../parsing/astParser";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
+import { getPlotNumericValue } from "../plotting/plottingUtils";
 import { createReferencePlaceholder } from "../references/referenceIds";
 import type { SettingsState } from "../state/types";
+import { ListValue, SemanticParsers, SemanticValue } from "../types";
 
 const RESULT_SELECTOR =
   ".semantic-result-display, .semantic-live-result-display";
@@ -68,6 +70,17 @@ interface PlotMenuAction {
   label: string;
   directive: string;
   title?: string;
+  accent?: boolean;
+}
+
+interface SourceResultInfo {
+  targetName?: string;
+  expression: string;
+}
+
+interface NamedNumericListSource {
+  name: string;
+  length: number;
 }
 
 const HIGHLIGHT_REFRESH_META = "spRefHighlightRefresh";
@@ -728,6 +741,120 @@ const buildPlotMenuActions = (
   }));
 };
 
+const buildSourceResultInfo = (
+  view: any,
+  payload: ReferencePayload | null
+): SourceResultInfo | null => {
+  const source = findSourceTextblockSnapshot(view, payload);
+  if (!source) return null;
+  const astNode = parseLine(source.text, source.lineNumber);
+  if (isCombinedAssignmentNode(astNode)) {
+    return {
+      targetName: astNode.variableName,
+      expression: astNode.expression,
+    };
+  }
+  if (isVariableAssignmentNode(astNode)) {
+    return {
+      targetName: astNode.variableName,
+      expression: astNode.rawValue,
+    };
+  }
+  if (isExpressionNode(astNode)) {
+    return {
+      expression: astNode.expression,
+    };
+  }
+  return null;
+};
+
+const getNumericListLength = (value: SemanticValue | null): number | null => {
+  if (!(value instanceof ListValue)) return null;
+  const items = value.getItems();
+  if (items.length === 0) return null;
+  for (const item of items) {
+    const numeric = getPlotNumericValue(item);
+    if (numeric === null || !Number.isFinite(numeric)) {
+      return null;
+    }
+  }
+  return items.length;
+};
+
+const parseNumericListLength = (raw: string): number | null => {
+  const parsed = SemanticParsers.parse(String(raw || "").trim());
+  return parsed ? getNumericListLength(parsed) : null;
+};
+
+const collectNamedNumericListSources = (
+  view: any,
+  excludeName?: string
+): NamedNumericListSource[] => {
+  const sources: NamedNumericListSource[] = [];
+  let lineNumber = 0;
+  view.state.doc.descendants((node: any) => {
+    if (!node?.isTextblock) {
+      return true;
+    }
+    lineNumber += 1;
+    const astNode = parseLine(getTextblockTextWithoutResultTokens(node), lineNumber);
+    const name = isCombinedAssignmentNode(astNode)
+      ? astNode.variableName
+      : isVariableAssignmentNode(astNode)
+        ? astNode.variableName
+        : "";
+    const expression = isCombinedAssignmentNode(astNode)
+      ? astNode.expression
+      : isVariableAssignmentNode(astNode)
+        ? astNode.rawValue
+        : "";
+    if (!name || name === excludeName || !expression) {
+      return true;
+    }
+    const length = parseNumericListLength(expression);
+    if (length !== null) {
+      sources.push({ name, length });
+    }
+    return true;
+  });
+  return sources;
+};
+
+const buildVisualPlotMenuActions = (
+  view: any,
+  payload: ReferencePayload | null
+): PlotMenuAction[] => {
+  if (!payload) return [];
+  const sourceInfo = buildSourceResultInfo(view, payload);
+  const selectedLength = parseNumericListLength(payload.sourceValue);
+  if (!sourceInfo || selectedLength === null) {
+    return [];
+  }
+
+  const yParam = sourceInfo.targetName ? ` y=${sourceInfo.targetName}` : "";
+  const actions: PlotMenuAction[] = [
+    {
+      label: "Plot as histogram",
+      directive: `@view hist${yParam} size=md`,
+      title: "Create a histogram from this numeric list",
+      accent: true,
+    },
+  ];
+
+  collectNamedNumericListSources(view, sourceInfo.targetName)
+    .filter((candidate) => candidate.length === selectedLength)
+    .forEach((candidate) => {
+      actions.push({
+        label: `Plot as scatter vs ${candidate.name}`,
+        directive: `@view scatter x=${candidate.name}${yParam} size=md`,
+        title: `Create a scatter plot using ${candidate.name} as x`,
+        accent: true,
+      });
+    });
+
+  return actions;
+};
+
 const resolveDisplayedResultValue = (target: HTMLElement): string => {
   const explicitResultValue = normalizeChipText(String(target.getAttribute("data-result-value") || ""));
   if (explicitResultValue) return explicitResultValue;
@@ -1092,12 +1219,15 @@ export const ResultReferenceInteractionExtension = Extension.create({
     const buildMenuButton = (
       label: string,
       action: () => void,
-      options?: { disabled?: boolean; title?: string }
+      options?: { disabled?: boolean; title?: string; accent?: boolean }
     ): HTMLButtonElement => {
       const button = document.createElement("button");
       button.type = "button";
       button.setAttribute("role", "menuitem");
       button.textContent = label;
+      if (options?.accent) {
+        button.classList.add("semantic-result-plot-suggestion");
+      }
       if (options?.title) {
         button.title = options.title;
       }
@@ -1175,8 +1305,34 @@ export const ResultReferenceInteractionExtension = Extension.create({
         })
       );
       const payload = payloadFromElement(resultEl);
+      const visualPlotActions = buildVisualPlotMenuActions(view, payload);
+      visualPlotActions.forEach((plotAction) => {
+        menu.appendChild(
+          buildMenuButton(
+            plotAction.label,
+            () => {
+              if (!payload) {
+                closeResultActionMenu();
+                return;
+              }
+              const insertedCursor = insertTextAfterSourceLine(
+                view,
+                payload,
+                plotAction.directive
+              );
+              if (typeof insertedCursor === "number") {
+                postInsertCursor = insertedCursor;
+                consumeResultClick = true;
+                view.focus();
+              }
+              closeResultActionMenu();
+            },
+            { title: plotAction.title, accent: plotAction.accent }
+          )
+        );
+      });
       const plotActions = buildPlotMenuActions(view, payload);
-      if (plotActions.length === 0) {
+      if (plotActions.length === 0 && visualPlotActions.length === 0) {
         menu.appendChild(
           buildMenuButton("Plot from result", () => {}, {
             disabled: true,

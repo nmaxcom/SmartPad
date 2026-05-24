@@ -3,18 +3,26 @@ import { PlotViewEvaluator } from "../../src/eval/plotViewEvaluator";
 import { ReactiveVariableStore } from "../../src/state/variableStore";
 import { EvaluationContext } from "../../src/eval/registry";
 import { Variable } from "../../src/state/types";
-import { NumberValue } from "../../src/types";
+import { ListValue, NumberValue, SemanticValue } from "../../src/types";
 
-const createVariable = (name: string, value: number, rawValue?: string): Variable => {
+const createVariable = (
+  name: string,
+  value: number | SemanticValue,
+  rawValue?: string
+): Variable => {
   const now = new Date();
+  const semanticValue = typeof value === "number" ? NumberValue.from(value) : value;
   return {
     name,
-    value: NumberValue.from(value),
-    rawValue: rawValue ?? String(value),
+    value: semanticValue,
+    rawValue: rawValue ?? semanticValue.toString(),
     createdAt: now,
     updatedAt: now,
   };
 };
+
+const createNumberList = (values: number[]) =>
+  ListValue.fromItems(values.map((value) => NumberValue.from(value)));
 
 const createContext = (
   astNodes: ReturnType<typeof parseLine>[],
@@ -179,6 +187,51 @@ describe("PlotViewEvaluator", () => {
     if (result?.type === "plotView") {
       expect(result.status).toBe("connected");
       expect(result.size).toBe("xl");
+    }
+  });
+
+  test("builds histogram data from a named numeric list", () => {
+    const astNodes = [parseLine("@view hist y=waits size=md", 1)];
+    const variables = new Map<string, Variable>([
+      ["waits", createVariable("waits", createNumberList([3, 4, 4, 5, 8, 12]))],
+    ]);
+    const evaluator = new PlotViewEvaluator();
+
+    const result = evaluator.evaluate(astNodes[0], createContext(astNodes, variables));
+
+    expect(result?.type).toBe("plotView");
+    if (result?.type === "plotView") {
+      expect(result.status).toBe("connected");
+      expect(result.kind).toBe("hist");
+      expect(result.x).toBe("waits");
+      expect(result.series?.[0]?.label).toBe("count");
+      expect(result.data?.length).toBeGreaterThan(1);
+      expect(result.data?.reduce((sum, point) => sum + (point.y || 0), 0)).toBe(6);
+    }
+  });
+
+  test("builds scatter data from equal-length numeric lists", () => {
+    const astNodes = [parseLine("@view scatter x=hours y=score size=md", 1)];
+    const variables = new Map<string, Variable>([
+      ["hours", createVariable("hours", createNumberList([2, 3, 4, 5]))],
+      ["score", createVariable("score", createNumberList([58, 61, 68, 73]))],
+    ]);
+    const evaluator = new PlotViewEvaluator();
+
+    const result = evaluator.evaluate(astNodes[0], createContext(astNodes, variables));
+
+    expect(result?.type).toBe("plotView");
+    if (result?.type === "plotView") {
+      expect(result.status).toBe("connected");
+      expect(result.kind).toBe("scatter");
+      expect(result.x).toBe("hours");
+      expect(result.series?.[0]?.label).toBe("score");
+      expect(result.data).toEqual([
+        { x: 2, y: 58 },
+        { x: 3, y: 61 },
+        { x: 4, y: 68 },
+        { x: 5, y: 73 },
+      ]);
     }
   });
 });

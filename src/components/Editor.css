@@ -519,6 +519,22 @@ body.number-scrubbing * {
   opacity: 0.62;
 }
 
+.semantic-result-action-menu button.semantic-result-plot-suggestion {
+  color: var(--color-teal);
+  font-weight: 600;
+}
+
+.semantic-result-action-menu button.semantic-result-plot-suggestion::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 7px;
+  border-radius: 999px;
+  background: currentColor;
+  vertical-align: 1px;
+}
+
 .semantic-live-blocked-display {
   margin-left: 1ch;
   color: #ff8fb6;
@@ -1136,6 +1152,18 @@ body.number-scrubbing * {
 .plot-view-area {
   opacity: 0.6;
   pointer-events: none;
+}
+
+.plot-view-bar {
+  opacity: 0.78;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.12));
+}
+
+.plot-view-scatter-dot {
+  opacity: 0.86;
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 1.2;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.16));
 }
 
 .plot-view-intersection-dot {
