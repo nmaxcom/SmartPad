@@ -310,7 +310,7 @@ body.number-scrubbing * {
 }
 
 .semantic-currency {
-  color: var(--syntax-currency);
+  color: var(--syntax-unit);
   font-weight: 600;
 }
 

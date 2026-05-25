@@ -9,8 +9,8 @@ import { Decoration, DecorationSet } from "prosemirror-view";
 import { Node as ProseMirrorNode } from "prosemirror-model";
 import { Variable } from "../state/types";
 import { parseLine } from "../parsing/astParser";
-import { isVariableAssignmentNode, isCombinedAssignmentNode, isExpressionNode } from "../parsing/ast";
-import { tokenizeExpression, Token } from "./SemanticHighlightExtension";
+import { isVariableAssignmentNode, isCombinedAssignmentNode } from "../parsing/ast";
+import { extractTokensFromASTNode } from "./SemanticHighlightExtension";
 
 const variableHoverPluginKey = new PluginKey("variableHover");
 
@@ -97,40 +97,22 @@ export const VariableHoverExtension = Extension.create({
                       }
                     }
 
-                    let expressionToTokenize = "";
-                    let expressionOffset = 0;
+                    const tokens = extractTokensFromASTNode(astNode, variableContext);
+                    tokens.forEach(token => {
+                      if (token.type === 'variable' && token.text === variableName) {
+                        const from = offset + token.start + 1;
+                        const to = offset + token.end + 1;
 
-                    if (isVariableAssignmentNode(astNode) && !astNode.parsedValue.isNumeric()) {
-                        expressionToTokenize = text.substring(text.indexOf('=') + 1);
-                        expressionOffset = text.indexOf(expressionToTokenize);
-                    } else if (isExpressionNode(astNode)) {
-                        expressionToTokenize = text.substring(0, text.indexOf('=>'));
-                    } else if (isCombinedAssignmentNode(astNode)) {
-                        expressionToTokenize = text.substring(text.indexOf('=') + 1, text.indexOf('=>'));
-                        expressionOffset = text.indexOf(expressionToTokenize);
-                    }
-
-                    
-
-                    if (expressionToTokenize) {
-                        const tokens = tokenizeExpression(expressionToTokenize, expressionOffset, variableContext);
-                        
-                        tokens.forEach(token => {
-                          if (token.type === 'variable' && token.text === variableName) {
-                            const from = offset + token.start + 1;
-                            const to = offset + token.end + 1;
-                            
-                            const isDeclaration = decorations.some(d => d.from === from && d.to === to);
-                            if (!isDeclaration) {
-                                decorations.push(
-                                    Decoration.inline(from, to, {
-                                        class: "variable-highlight-reference",
-                                    })
-                                );
-                            }
-                          }
-                        });
-                    }
+                        const isDeclaration = decorations.some(d => d.from === from && d.to === to);
+                        if (!isDeclaration) {
+                            decorations.push(
+                                Decoration.inline(from, to, {
+                                    class: "variable-highlight-reference",
+                                })
+                            );
+                        }
+                      }
+                    });
                   }
                 });
 

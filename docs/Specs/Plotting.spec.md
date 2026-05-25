@@ -420,16 +420,18 @@ Pan/zoom only affects the **viewport**.
 * Scroll = zoom X
 * Shift + scroll = pan
 * Small “Reset view” control restores viewport to computed view (instead of the full domain)
+* Double-clicking the chart resets the user viewport to the computed view.
 
 ---
 
 ### 9.3 Persistence rules
 
-* Pan/zoom is transient unless user commits it
+* Pan/zoom is transient while the gesture is active and becomes the active user viewport once the interaction commits.
 * If user commits:
 
   * viewport is serialized as `view=`
 * Domain never silently changes
+* Editing source values must not discard a viewport the user has already set through pan/zoom/domain controls. The user viewport remains active until the user explicitly resets it, including by double-clicking the chart.
 
 ---
 

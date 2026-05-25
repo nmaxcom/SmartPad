@@ -323,12 +323,23 @@ describe("Solve evaluator", () => {
   test("goal-seek solves a named result by one variable", () => {
     const context = createContext();
     evaluateLine("keep rate = 78%", context, 1);
-    evaluateLine("gross = EUR 3000", context, 2);
+    evaluateLine("gross = 3000 EUR", context, 2);
     evaluateLine("take home = gross * keep rate =>", context, 3);
-    const result = evaluateLine("make take home = EUR 4000 by gross =>", context, 4);
+    const result = evaluateLine("make take home = 4000 EUR by gross =>", context, 4);
 
     expect(result?.type).toBe("mathResult");
     expect((result as any).result).toBe("5128.205128 EUR");
+  });
+
+  test("goal-seek accepts symbol-first currency targets", () => {
+    const context = createContext();
+    evaluateLine("keep rate = 84%", context, 1);
+    evaluateLine("gross = €3000", context, 2);
+    evaluateLine("take home = gross * keep rate =>", context, 3);
+    const result = evaluateLine("make take home = €4000 by gross =>", context, 4);
+
+    expect(result?.type).toBe("mathResult");
+    expect((result as any).result).toBe("€4761.904762");
   });
 
   test("goal-seek solves a source expression without a named result", () => {

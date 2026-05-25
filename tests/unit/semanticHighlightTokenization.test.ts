@@ -1,4 +1,8 @@
-import { tokenizeExpression } from "../../src/components/SemanticHighlightExtension";
+import {
+  extractTokensFromASTNode,
+  tokenizeExpression,
+} from "../../src/components/SemanticHighlightExtension";
+import { parseLine } from "../../src/parsing/astParser";
 import { NumberValue } from "../../src/types";
 
 const makeContext = (names: string[]): Map<string, any> =>
@@ -130,5 +134,46 @@ describe("Semantic highlight tokenization", () => {
     expect(tokens.some((token) => token.type === "function" && token.text.toLowerCase() === "solve")).toBe(
       false
     );
+  });
+
+  test("highlights goal-seek command tokens without swallowing variables", () => {
+    const tokens = tokenizeExpression(
+      "make take home = €4000 by gross",
+      0,
+      makeContext(["take home", "gross"]) as any
+    );
+
+    expect(tokens.find((token) => token.text === "make")?.type).toBe("keyword");
+    expect(tokens.find((token) => token.text === "by")?.type).toBe("keyword");
+    expect(tokens.find((token) => token.text === "take home")?.type).toBe("variable");
+    expect(tokens.find((token) => token.text === "gross")?.type).toBe("variable");
+    expect(tokens.find((token) => token.text === "€")?.type).toBe("currency");
+  });
+
+  test("highlights currency codes in conventional amount-code literals", () => {
+    const tokens = tokenizeExpression("3000 EUR + EUR 4000", 0, new Map());
+    const currencyTokens = tokens
+      .filter((token) => token.type === "currency")
+      .map((token) => token.text.toUpperCase());
+
+    expect(currencyTokens).toEqual(["EUR", "EUR"]);
+  });
+
+  test("keeps currency codes currency-colored inside amount literals even when a same-named variable exists", () => {
+    const tokens = tokenizeExpression("3000 EUR", 0, makeContext(["EUR"]) as any);
+    expect(tokens.find((token) => token.text === "EUR")?.type).toBe("currency");
+  });
+
+  test("highlights @view keyword and variables inside view directives", () => {
+    const ast = parseLine("@view plot x=time y=take home size=md", 1);
+    const tokens = extractTokensFromASTNode(
+      ast,
+      makeContext(["time", "take home"]) as any
+    );
+
+    expect(tokens.find((token) => token.text === "@view")?.type).toBe("keyword");
+    expect(tokens.find((token) => token.text === "plot")?.type).toBe("keyword");
+    expect(tokens.find((token) => token.text === "time")?.type).toBe("variable");
+    expect(tokens.find((token) => token.text === "take home")?.type).toBe("variable");
   });
 });

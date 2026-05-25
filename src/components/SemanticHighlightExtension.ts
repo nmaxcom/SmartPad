@@ -21,6 +21,7 @@ import {
   isCombinedAssignmentNode,
   isErrorNode,
   isFunctionDefinitionNode,
+  isViewDirectiveNode,
 } from "../parsing/ast";
 
 const LIVE_HIGHLIGHT_KEYWORD_REGEX = /\b(to|in|of|on|off|as|is|per|where|asc|desc)\b/i;
@@ -314,7 +315,7 @@ export const SemanticHighlightExtension = Extension.create({
  * @param variableContext A map of known variables to help with identification.
  * @returns An array of tokens.
  */
-function extractTokensFromASTNode(
+export function extractTokensFromASTNode(
   astNode: ASTNode,
   variableContext: Map<string, Variable>
 ): Token[] {
@@ -334,6 +335,62 @@ function extractTokensFromASTNode(
       start: 0,
       end: text.length,
       text: text,
+    });
+    return tokens;
+  }
+
+  if (isViewDirectiveNode(astNode)) {
+    const viewIndex = text.indexOf("@view");
+    if (viewIndex !== -1) {
+      tokens.push({
+        type: "keyword",
+        start: viewIndex,
+        end: viewIndex + 5,
+        text: "@view",
+      });
+    }
+
+    const kindMatch = text.slice(viewIndex + 5).match(/\S+/);
+    if (viewIndex !== -1 && kindMatch?.index !== undefined) {
+      const kindStart = viewIndex + 5 + kindMatch.index;
+      tokens.push({
+        type: "keyword",
+        start: kindStart,
+        end: kindStart + kindMatch[0].length,
+        text: kindMatch[0],
+      });
+    }
+
+    const keyRegex = /\b([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*/g;
+    const matches = Array.from(text.matchAll(keyRegex));
+    matches.forEach((match, index) => {
+      const key = match[1];
+      if (!key || match.index === undefined) return;
+      const keyStart = match.index;
+      const operatorStart = keyStart + match[0].lastIndexOf("=");
+      tokens.push({
+        type: "keyword",
+        start: keyStart,
+        end: keyStart + key.length,
+        text: key,
+      });
+      tokens.push({
+        type: "operator",
+        start: operatorStart,
+        end: operatorStart + 1,
+        text: "=",
+      });
+
+      if (!["x", "y", "values"].includes(key.toLowerCase())) return;
+      const valueStart = keyStart + match[0].length;
+      const valueEnd =
+        index + 1 < matches.length && matches[index + 1].index !== undefined
+          ? matches[index + 1].index!
+          : text.length;
+      const valueText = text.slice(valueStart, valueEnd).trim();
+      if (!valueText) return;
+      const trimmedStart = text.indexOf(valueText, valueStart);
+      tokens.push(...tokenizeExpression(valueText, trimmedStart, variableContext));
     });
     return tokens;
   }
@@ -521,7 +578,7 @@ export function tokenizeExpression(
   // Regular expressions for different token types
   const numberRegex = /^[-+]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/;
   const functionRegex = /^([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/;
-  const solveKeywordRegex = /^solve\b/i;
+  const commandKeywordRegex = /^(solve|make)\b/i;
   const operatorRegex = /^[\+\-\*\/\^\%]/;
   const parenRegex = /^[\(\)]/;
   const bracketRegex = /^[\[\]]/;
@@ -529,8 +586,11 @@ export function tokenizeExpression(
   const triggerRegex = /^=>/;
   const unitRegex = /^[a-zA-Z°µμΩ][a-zA-Z0-9°µμΩ\/\^\-\*\·]*/;
   const currencySymbolRegex = /^[\$€£¥₹₿]/;
-  const currencyCodeRegex = /^(CHF|CAD|AUD)\b/;
-  const keywordRegex = /^(to|in|of|on|off|as|is|per)\b/;
+  const currencyCodeRegex = /^(USD|EUR|GBP|JPY|INR|BTC|ETH|USDT|USDC|BNB|XRP|SOL|ADA|DOGE|LTC|DOT|AVAX|MATIC|TRX|LINK|CHF|CAD|AUD)\b/i;
+  const isGoalSeekExpression = /^\s*make\b/i.test(expr);
+  const keywordRegex = isGoalSeekExpression
+    ? /^(to|in|of|on|off|as|is|per|by|with)\b/i
+    : /^(to|in|of|on|off|as|is|per)\b/i;
   const whereKeywordRegex = /^where\b/i;
   const constantRegex = /^(PI|E)\b/;
   const reservedKeywordLikeIdentifiers = new Set([
@@ -546,6 +606,9 @@ export function tokenizeExpression(
     "asc",
     "desc",
     "solve",
+    "make",
+    "by",
+    "with",
   ]);
 
   // Get all variable names sorted by length (longest first for greedy matching)
@@ -572,17 +635,17 @@ export function tokenizeExpression(
       continue;
     }
 
-    // Check for solve command keyword at expression start
+    // Check for command keyword at expression start
     if (!matched && pos === 0) {
-      const solveMatch = expr.substring(pos).match(solveKeywordRegex);
-      if (solveMatch) {
+      const commandMatch = expr.substring(pos).match(commandKeywordRegex);
+      if (commandMatch) {
         pushToken({
           type: "keyword",
           start: baseOffset + pos,
-          end: baseOffset + pos + solveMatch[0].length,
-          text: solveMatch[0],
+          end: baseOffset + pos + commandMatch[0].length,
+          text: commandMatch[0],
         });
-        pos += solveMatch[0].length;
+        pos += commandMatch[0].length;
         matched = true;
       }
     }
@@ -614,6 +677,33 @@ export function tokenizeExpression(
           pos++;
         }
         matched = true;
+      }
+    }
+
+    // Check for currency codes in code-first or number-suffix currency literals before
+    // variable matching, so `3000 EUR` stays currency-colored even if `EUR` exists as a
+    // manual FX variable elsewhere in the sheet.
+    if (!matched) {
+      const codeMatch = expr.substring(pos).match(currencyCodeRegex);
+      if (codeMatch) {
+        const beforeToken = tokens[tokens.length - 1];
+        let lookahead = pos + codeMatch[0].length;
+        while (lookahead < expr.length && /\s/.test(expr[lookahead])) {
+          lookahead += 1;
+        }
+        const codeFirstCurrency = /^[+-]?\d/.test(expr.slice(lookahead));
+        const codeAfterNumber =
+          beforeToken?.type === "scrubbableNumber" || beforeToken?.type === "number";
+        if (codeFirstCurrency || codeAfterNumber) {
+          pushToken({
+            type: "currency",
+            start: baseOffset + pos,
+            end: baseOffset + pos + codeMatch[0].length,
+            text: codeMatch[0],
+          });
+          pos += codeMatch[0].length;
+          matched = true;
+        }
       }
     }
 
@@ -979,7 +1069,7 @@ function normalizeReservedKeywordTokens(
   baseOffset: number
 ): Token[] {
   const normalized = [...tokens];
-  const reservedWordOperators = new Set(["to", "in", "of", "on", "off", "as", "is", "per"]);
+  const reservedWordOperators = new Set(["to", "in", "of", "on", "off", "as", "is", "per", "by", "with"]);
 
   for (let i = 0; i < normalized.length; i += 1) {
     const token = normalized[i];

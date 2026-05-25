@@ -154,6 +154,8 @@ interface PlotViewState {
   >;
 }
 
+type PlotViewOverride = PlotViewState["overrides"][string];
+
 const buildExpressionNode = (node: CombinedAssignmentNode): ExpressionNode => ({
   type: "expression",
   line: node.line,
@@ -291,24 +293,50 @@ const buildPlotModel = (
   };
 };
 
-const buildPlotKey = (model: PlotViewModel, fallbackLine?: number): string => {
+const formatPlotKeyRange = (range?: PlotRange): string =>
+  range ? `${range.min}:${range.max}` : "auto";
+
+const buildPlotDataKey = (model: PlotViewModel): string =>
+  model.series
+    .map((series) => {
+      const points = series.data || [];
+      const first = points[0];
+      const last = points[points.length - 1];
+      return [
+        series.expression || "",
+        points.length,
+        first ? `${first.x}:${first.y ?? "null"}` : "none",
+        last ? `${last.x}:${last.y ?? "null"}` : "none",
+      ].join(":");
+    })
+    .join("|");
+
+const buildPlotKey = (
+  model: PlotViewModel,
+  fallbackLine?: number,
+  override?: PlotViewOverride
+): string => {
   const line = model.targetLine ?? fallbackLine ?? 0;
   const kindKey = model.kind || "plot";
   const sizeKey = model.size || "md";
   const xVarKey = model.x || "x";
-  const xKey = model.currentX !== undefined ? Math.round(model.currentX * 1000) : "na";
-  const yKey =
-    model.currentY !== undefined && model.currentY !== null
-      ? Math.round(model.currentY * 1000)
-      : "na";
   const seriesKey = model.series
     .map((series) => series.expression || "")
     .join("|");
-  const domainKey = model.domain ? `${model.domain.min}:${model.domain.max}` : "auto";
-  const viewKey = model.view ? `${model.view.min}:${model.view.max}` : "auto";
-  const yDomainKey = model.yDomain ? `${model.yDomain.min}:${model.yDomain.max}` : "auto";
-  const yViewKey = model.yView ? `${model.yView.min}:${model.yView.max}` : "auto";
-  return `plot-${model.source}-${line}-${kindKey}-${sizeKey}-${xVarKey}-${xKey}-${yKey}-${seriesKey}-${domainKey}-${viewKey}-${yDomainKey}-${yViewKey}`;
+  const explicitDomainKey = model.domain?.raw ? formatPlotKeyRange(model.domain) : "auto";
+  const explicitViewKey = model.view?.raw ? formatPlotKeyRange(model.view) : "auto";
+  const explicitYDomainKey = model.yDomain?.raw ? formatPlotKeyRange(model.yDomain) : "auto";
+  const explicitYViewKey = model.yView?.raw ? formatPlotKeyRange(model.yView) : "auto";
+  const overrideKey = override
+    ? [
+        formatPlotKeyRange(override.domain),
+        formatPlotKeyRange(override.view),
+        formatPlotKeyRange(override.yDomain),
+        formatPlotKeyRange(override.yView),
+      ].join("|")
+    : "no-override";
+  const dataKey = buildPlotDataKey(model);
+  return `plot-${model.source}-${line}-${kindKey}-${sizeKey}-${xVarKey}-${seriesKey}-${explicitDomainKey}-${explicitViewKey}-${explicitYDomainKey}-${explicitYViewKey}-${overrideKey}-${dataKey}`;
 };
 
 const deriveYDomain = (data?: PlotPoint[]): PlotRange | undefined => {
@@ -2501,7 +2529,7 @@ export const PlotViewExtension = Extension.create({
                     currentView
                   ),
                 {
-                  key: buildPlotKey(model, plotNode.line),
+                  key: buildPlotKey(model, plotNode.line, override),
                   side: 1,
                   ignoreSelection: true,
                   stopEvent: (event) =>
@@ -2543,7 +2571,7 @@ export const PlotViewExtension = Extension.create({
                         currentView
                       ),
                     {
-                      key: buildPlotKey(model, pluginState.transient.targetLine),
+                      key: buildPlotKey(model, pluginState.transient.targetLine, override),
                       side: 1,
                       ignoreSelection: true,
                       stopEvent: (event) =>

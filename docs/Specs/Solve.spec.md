@@ -52,7 +52,8 @@ Recommendation:
 
 - Syntax: `make <target result or expression> = <desired value> by <variable> =>`
 - Examples:
-  - `make take home = EUR 4000 by gross =>`
+  - `make take home = 4000 EUR by gross =>`
+  - Symbol-first currency targets such as `make take home = €4000 by gross =>` are valid.
   - `make distance / time = 80 km/h by time =>`
 
 Behavior:
@@ -161,9 +162,9 @@ Solve returns explicit errors for invalid or unsupported cases, including:
 
 6. Goal-seek from a named result:
    - `keep rate = 78%`
-   - `gross = EUR 3000`
+   - `gross = 3000 EUR`
    - `take home = gross * keep rate =>`
-   - `make take home = EUR 4000 by gross =>`
+   - `make take home = 4000 EUR by gross =>`
    - Result: `5128.205128 EUR`
 
 7. Goal-seek from an unnamed expression:

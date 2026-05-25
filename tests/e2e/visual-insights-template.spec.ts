@@ -15,8 +15,8 @@ test.describe("New stuff template", () => {
     await expect(editor).toContainText("@view plot x=time y=speed domain=0.25..6 size=md");
     await expect(editor).toContainText("@view hist y=wait times size=md");
     await expect(editor).toContainText("@view scatter x=study hours y=test score size=md");
-    await expect(editor).toContainText("make take home = EUR 4000 by gross =>");
-    await expect(editor).toContainText("make goal fund = EUR 20000 by monthly saving =>");
+    await expect(editor).toContainText("make take home = 4000 EUR by gross =>");
+    await expect(editor).toContainText("make goal fund = 20000 EUR by monthly saving =>");
 
     await expect(page.locator(".semantic-error-result")).toHaveCount(0);
     await expect(page.locator(".plot-view-disconnected")).toHaveCount(0);

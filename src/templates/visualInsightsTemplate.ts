@@ -43,16 +43,16 @@ ticket sales = 68, 77, 89, 96, 108, 121 =>
 
 # 6) Goal seek from a trusted result: set a desired output and solve the input
 keep rate = 78%
-gross = EUR 3000
+gross = 3000 EUR
 take home = gross * keep rate =>
-make take home = EUR 4000 by gross =>
+make take home = 4000 EUR by gross =>
 
 # Another one-variable goal: how much monthly saving hits the fund?
-current savings = EUR 3200
+current savings = 3200 EUR
 periods = 18
-monthly saving = EUR 900
+monthly saving = 900 EUR
 goal fund = current savings + monthly saving * periods =>
-make goal fund = EUR 20000 by monthly saving =>
+make goal fund = 20000 EUR by monthly saving =>
 
 # Source-expression goal seek also works without naming the result.
 target distance = 120 km

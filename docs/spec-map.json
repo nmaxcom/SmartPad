@@ -133,6 +133,7 @@
         "src/components/pasteTransforms.ts",
         "src/components/Editor.css",
         "src/components/SemanticHighlightExtension.ts",
+        "src/components/VariableHoverExtension.ts",
         "src/components/Result",
         "src/components/Reference",
         "docs/Specs/ResultChipsAndValueGraph.spec.md",

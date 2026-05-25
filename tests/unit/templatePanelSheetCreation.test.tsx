@@ -40,7 +40,7 @@ describe("TemplatePanel", () => {
     expect(content).toContain("@view hist y=wait times size=md");
     expect(content).toContain("@view scatter x=study hours y=test score size=md");
     expect(content).toContain("@view plot x=time y=speed domain=0.25..6 size=md");
-    expect(content).toContain("make take home = EUR 4000 by gross =>");
+    expect(content).toContain("make take home = 4000 EUR by gross =>");
     expect(title).toBe("New stuff");
     expect(makeActive).toBe(true);
   });

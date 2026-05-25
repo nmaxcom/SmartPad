@@ -4996,3 +4996,46 @@
 *   Risks/blockers:
     *   V1 goal-seek is intentionally one-variable only.
     *   The current solver handles reliable one-variable forms but does not yet algebraically factor repeated-target expressions such as `gross - gross * tax`; examples use equivalent solver-friendly forms such as `gross * keep rate`.
+
+## Entry J-2026-05-25-01
+
+*   Timestamp: 2026-05-25 23:24:51 CEST
+*   Summary:
+    *   User reported polish regressions around goal-seek and views: `@view` lacked syntax color/variable hover support, goal-seek highlighting swallowed variables, conventional currency formats should be used in `New stuff`, `€3000` goal-seek targets errored, currency tokens should share unit color, and chart pan/zoom should not reset on source value edits.
+    *   Assistant fixed command parsing so `make ... =>` lines skip normal expression component parsing and evaluate through the goal-seek parser, allowing `make take home = €4000 by gross =>`.
+    *   Syntax highlighting now covers `make`, `by`, `@view`, view kinds, view parameter keys, `x=`/`y=`/`values=` variables, and currency code/symbol literals; variable hover now reuses the same token extraction used for rendering.
+    *   The `New stuff` template now uses conventional amount-code currency literals such as `3000 EUR`.
+    *   Plot widget identity no longer keys off current x/y values or auto domains, reducing unintended chart recreation when source values change; explicit double-click/reset remains the way to clear the user viewport.
+*   Decisions:
+    *   Keep `make`/`by` as command keywords while leaving the target/result and input names as variables for hover-to-highlight.
+    *   Treat `@view` lines as first-class syntax, not plain text, while keeping variable-bearing parameter values tokenized like normal expressions.
+    *   Style currency tokens with the unit color so `EUR` and `€` read as unit-like semantic annotations.
+*   User directives:
+    *   Fix the listed highlighting, currency, template, and chart reset issues.
+*   Artifacts:
+    *   `src/parsing/astParser.ts`
+    *   `src/components/SemanticHighlightExtension.ts`
+    *   `src/components/VariableHoverExtension.ts`
+    *   `src/components/Editor.css`
+    *   `src/components/PlotViewExtension.ts`
+    *   `src/templates/visualInsightsTemplate.ts`
+    *   `docs/Specs/Solve.spec.md`
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
+    *   `docs/Specs/Plotting.spec.md`
+    *   `docs/ABOUT.md`
+    *   `docs/spec-map.json`
+    *   `tests/unit/semanticHighlightTokenization.test.ts`
+    *   `tests/unit/solve.test.ts`
+    *   `tests/unit/visualInsightsTemplate.test.ts`
+    *   `tests/unit/templatePanelSheetCreation.test.tsx`
+    *   `tests/e2e/semantic-highlighting.spec.ts`
+    *   `tests/e2e/visual-insights-template.spec.ts`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/semanticHighlightTokenization.test.ts tests/unit/solve.test.ts tests/unit/visualInsightsTemplate.test.ts tests/unit/templatePanelSheetCreation.test.tsx --runInBand` ✅
+    *   `npx playwright test tests/e2e/semantic-highlighting.spec.ts tests/e2e/visual-insights-template.spec.ts -g "same syntax color|goal-seek and @view|New stuff template" --project=chromium --config=playwright.config.ts --workers=1` ✅
+*   Pending updates:
+    *   `T-2026-05-24-04` remains `in_progress` until user confirms the goal-seek UX/product fit.
+*   Risks/blockers:
+    *   A direct browser regression for wheel/pan preservation was not kept because the hidden plot controls in the Playwright harness made the test brittle; machine validation still covers the syntax/currency bugs and final build/spec gates.

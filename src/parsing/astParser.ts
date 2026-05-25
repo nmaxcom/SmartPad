@@ -312,6 +312,7 @@ function createVariableAssignmentNode(
 function createExpressionNode(expression: string, raw: string, line: number): ExpressionNode | ErrorNode {
   try {
     const hasTrigger = raw.includes("=>");
+    const isCommandExpression = /^(solve|make)\b/i.test(expression.trim());
     if (!hasTrigger && containsTopLevelEquation(expression)) {
       return {
         type: "expression",
@@ -349,7 +350,7 @@ function createExpressionNode(expression: string, raw: string, line: number): Ex
     // Parse the expression into a component tree if it's not a raw list literal
     let components: ReturnType<typeof parseExpressionComponents> = [];
     const isCommaList = splitTopLevelCommas(expressionForComponents).length > 1;
-    if (!isListLiteral) {
+    if (!isListLiteral && !isCommandExpression) {
       try {
         if (!isCommaList) {
           components = parseExpressionComponents(expressionForComponents);

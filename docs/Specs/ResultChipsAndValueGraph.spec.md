@@ -383,6 +383,9 @@ By default SmartPad keeps references alive when copying/exporting text, so paste
 2. `where` is highlighted as a keyword when used as a filter/solve clause operator (for example `list where > 10` or `solve x where y = 2`).
 3. A user-defined variable named `where` still highlights as a variable in normal variable-reference positions (for example `where + 1`).
 4. `solve` is highlighted as a keyword command token at the start of explicit solve expressions (for example `solve break_even_km in ...`), not as a variable or function name.
+5. `make` is highlighted as a keyword command token at the start of goal-seek lines, and `by` is highlighted as the goal-seek input selector keyword. The target/result names and chosen input remain variable tokens so hover-to-highlight works across declarations, goal-seek lines, and result-chip menu insertions.
+6. `@view` directive lines highlight `@view`, the view kind, and parameter keys as directive syntax. Variable-bearing parameters such as `x=`, `y=`, and `values=` tokenize their values as normal expressions so variables in plot/hist/scatter view lines participate in hover-to-highlight.
+7. Currency codes and symbols used in amount literals, for example `3000 EUR`, `EUR 3000`, and `€3000`, are highlighted with the unit/currency color treatment rather than as ordinary variables.
 5. Reserved operator/command words (`solve/to/in/of/on/off/as/is/per/where`) must not be tokenized as function names just because `(` follows.
 6. If variables named `on`, `off`, or `where` exist, keyword/operator positions still render them as keywords (for example `a on (b off c)` and `list where > 10`).
 

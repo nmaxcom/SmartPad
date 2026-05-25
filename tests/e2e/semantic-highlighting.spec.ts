@@ -84,6 +84,53 @@ test.describe("Semantic Highlighting", () => {
     await expect(line2.locator(".semantic-currency", { hasText: "€" })).toBeVisible();
   });
 
+  test("uses the same syntax color for currency and units", async ({ page }) => {
+    await page.keyboard.type("distance = 2 km");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("gross = €3000");
+    await waitForUIRenderComplete(page);
+
+    const unitColor = await page
+      .locator(".semantic-unit", { hasText: "km" })
+      .first()
+      .evaluate((el) => window.getComputedStyle(el).color);
+    const currencyColor = await page
+      .locator(".semantic-currency", { hasText: "€" })
+      .first()
+      .evaluate((el) => window.getComputedStyle(el).color);
+
+    expect(currencyColor).toBe(unitColor);
+  });
+
+  test("highlights goal-seek and @view directives with hoverable variables", async ({ page }) => {
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      if (!editor) return;
+      editor.commands.setContent(
+        "<p>gross = €3000</p><p>keep rate = 84%</p><p>take home = gross * keep rate =&gt;</p><p>@view plot x=gross y=take home size=md</p><p>make take home = €4000 by gross =&gt;</p>"
+      );
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    const viewLine = page.locator(".ProseMirror p").nth(3);
+    await expect(viewLine.locator(".semantic-keyword", { hasText: "@view" })).toBeVisible();
+    await expect(viewLine.locator(".semantic-variable", { hasText: "gross" })).toBeVisible();
+    await expect(viewLine.locator(".semantic-variable", { hasText: "take home" })).toBeVisible();
+
+    const goalLine = page.locator(".ProseMirror p").nth(4);
+    await expect(goalLine.locator(".semantic-keyword", { hasText: "make" })).toBeVisible();
+    await expect(goalLine.locator(".semantic-keyword", { hasText: "by" })).toBeVisible();
+    await expect(goalLine.locator(".semantic-currency", { hasText: "€" })).toBeVisible();
+    await expect(goalLine.locator(".semantic-variable", { hasText: "take home" })).toBeVisible();
+    await expect(goalLine.locator(".semantic-variable", { hasText: "gross" })).toBeVisible();
+    await expect(page.locator(".semantic-error-result")).toHaveCount(0);
+
+    await viewLine.locator(".semantic-variable", { hasText: "take home" }).hover();
+    await expect(page.locator(".variable-highlight-declaration")).toHaveCount(1);
+    await expect(page.locator(".variable-highlight-reference")).toHaveCount(2);
+  });
+
   test("highlights conversion expressions without => when they are valid live expressions", async ({
     page,
   }) => {

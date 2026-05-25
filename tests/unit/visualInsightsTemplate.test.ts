@@ -33,9 +33,10 @@ describe("New stuff template", () => {
     expect(NEW_STUFF_TEMPLATE).toContain("@view hist y=same wait");
     expect(NEW_STUFF_TEMPLATE).toContain("@view scatter x=study hours y=test score");
     expect(NEW_STUFF_TEMPLATE).toContain("@view scatter x=daily spend y=ticket sales");
-    expect(NEW_STUFF_TEMPLATE).toContain("make take home = EUR 4000 by gross =>");
+    expect(NEW_STUFF_TEMPLATE).toContain("gross = 3000 EUR");
+    expect(NEW_STUFF_TEMPLATE).toContain("make take home = 4000 EUR by gross =>");
     expect(NEW_STUFF_TEMPLATE).toContain(
-      "make goal fund = EUR 20000 by monthly saving =>"
+      "make goal fund = 20000 EUR by monthly saving =>"
     );
   });
 
