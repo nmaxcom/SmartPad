@@ -1,0 +1,73 @@
+import { expect, test, type Page } from "@playwright/test";
+import { waitForEditorReady, waitForUIRenderComplete } from "./utils";
+
+const setEditorContent = async (page: Page, html: string) => {
+  await page.evaluate((content) => {
+    const editor = (window as any).tiptapEditor;
+    editor?.commands?.setContent(content);
+    window.dispatchEvent(new Event("forceEvaluation"));
+  }, html);
+  await waitForUIRenderComplete(page);
+};
+
+const getAxisLabels = async (page: Page) =>
+  page.locator(".plot-view svg").first().evaluate((svg: SVGSVGElement) =>
+    Array.from(svg.querySelectorAll("text.plot-view-axis-text")).map((node) => node.textContent)
+  );
+
+const getXAxisLabels = async (page: Page) => {
+  const labels = await getAxisLabels(page);
+  return labels.slice(0, Math.floor(labels.length / 2));
+};
+
+const wheelPlotCenter = async (page: Page, deltaY: number) => {
+  const box = await page.locator(".plot-view svg").first().boundingBox();
+  expect(box).not.toBeNull();
+  await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+  await page.mouse.wheel(0, deltaY);
+};
+
+const doubleClickPlotCenter = async (page: Page) => {
+  const box = await page.locator(".plot-view svg").first().boundingBox();
+  expect(box).not.toBeNull();
+  await page.mouse.dblclick(box!.x + box!.width / 2, box!.y + box!.height / 2);
+};
+
+test.describe("Plot view interactions", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+    await waitForEditorReady(page);
+  });
+
+  test("keeps wheel zoom on y-bound persistent plots until explicit reset", async ({ page }) => {
+    await setEditorContent(
+      page,
+      "<p>slope = 2</p><p>x = 5</p><p>y = x * slope =&gt;</p><p>@view plot x=x y=y domain=0..10 size=md</p>"
+    );
+
+    await expect(page.locator(".plot-view").first()).toBeVisible();
+    await expect(page.locator(".plot-view-disconnected")).toHaveCount(0);
+
+    const initialLabels = await getAxisLabels(page);
+    const initialXLabels = await getXAxisLabels(page);
+    await wheelPlotCenter(page, -800);
+    await page.waitForTimeout(300);
+
+    const zoomedLabels = await getAxisLabels(page);
+    expect(zoomedLabels).not.toEqual(initialLabels);
+
+    await page.waitForTimeout(400);
+    await expect.poll(() => getAxisLabels(page)).toEqual(zoomedLabels);
+
+    await setEditorContent(
+      page,
+      "<p>slope = 3</p><p>x = 5</p><p>y = x * slope =&gt;</p><p>@view plot x=x y=y domain=0..10 size=md</p>"
+    );
+    await expect.poll(() => getAxisLabels(page)).toEqual(zoomedLabels);
+
+    await doubleClickPlotCenter(page);
+    await page.waitForTimeout(300);
+    await expect.poll(() => getXAxisLabels(page)).toEqual(initialXLabels);
+    expect(await getAxisLabels(page)).not.toEqual(zoomedLabels);
+  });
+});

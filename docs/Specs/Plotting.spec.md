@@ -429,9 +429,10 @@ Pan/zoom only affects the **viewport**.
 * Pan/zoom is transient while the gesture is active and becomes the active user viewport once the interaction commits.
 * If user commits:
 
-  * viewport is serialized as `view=`
+  * viewport is stored as the active user viewport; where represented in directive text, X viewport uses `view=` and Y viewport uses `yview=`
 * Domain never silently changes
 * Editing source values must not discard a viewport the user has already set through pan/zoom/domain controls. The user viewport remains active until the user explicitly resets it, including by double-clicking the chart.
+* This applies equally to named series views such as `@view plot x=time y=speed`: rerendering the named source or updating its input values must preserve the user's committed viewport.
 
 ---
 

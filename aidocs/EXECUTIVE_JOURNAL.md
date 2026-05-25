@@ -5039,3 +5039,39 @@
     *   `T-2026-05-24-04` remains `in_progress` until user confirms the goal-seek UX/product fit.
 *   Risks/blockers:
     *   A direct browser regression for wheel/pan preservation was not kept because the hidden plot controls in the Playwright harness made the test brittle; machine validation still covers the syntax/currency bugs and final build/spec gates.
+
+## Entry J-2026-05-25-02
+
+*   Timestamp: 2026-05-25 23:40:09 CEST
+*   Summary:
+    *   User reported that any pan or zoom on a chart autoreset immediately.
+    *   Assistant reproduced the reset with a focused Playwright debug case: wheel zoom produced the correct manual viewport, then the next plot widget redraw fell back to the original `0..10` view.
+    *   Fixed persistent plot override application so named `y=` views keep manual `view`, `yView`, and `yDomain` overrides even when the view was not previously anchored to a source `targetLine`.
+    *   Removed viewport override values from the plot widget key so committing pan/zoom state does not force unnecessary widget remounts during interaction.
+    *   Anchored named y-series plots to their source assignment line when available, improving model identity for `@view plot x=... y=<result>` views.
+*   User directives:
+    *   Fix chart pan/zoom persistence rather than only documenting the issue.
+*   Artifacts:
+    *   `src/components/PlotViewExtension.ts`
+    *   `src/eval/plotViewEvaluator.ts`
+    *   `tests/unit/plotViewEvaluator.test.ts`
+    *   `tests/e2e/plot-view-interactions.spec.ts`
+    *   `docs/Specs/Plotting.spec.md`
+    *   `docs/Specs/implemented/plotting-and-dependency-views.md`
+    *   `docs/spec-map.json`
+    *   `docs/spec-trust.json`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/plotViewEvaluator.test.ts --runInBand` ✅
+    *   `npx playwright test tests/e2e/plot-view-interactions.spec.ts --project=chromium --config=playwright.config.ts --workers=1` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run build` ✅
+    *   `npm run verify:changed` ✅
+*   Pending updates:
+    *   Await user confirmation that the chart interaction now feels correct; `T-2026-05-24-04` remains open for goal-seek product review.
+*   Risks/blockers:
+    *   None known after the direct wheel-zoom regression passed.

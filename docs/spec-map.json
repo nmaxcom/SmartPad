@@ -116,6 +116,7 @@
       "specPrefixes": [
         "src/plotting/",
         "src/components/PlotViewExtension.ts",
+        "src/eval/plotViewEvaluator.ts",
         "docs/Specs/Plotting.spec.md",
         "docs/Specs/implemented/plotting-and-dependency-views.md"
       ],

@@ -311,11 +311,7 @@ const buildPlotDataKey = (model: PlotViewModel): string =>
     })
     .join("|");
 
-const buildPlotKey = (
-  model: PlotViewModel,
-  fallbackLine?: number,
-  override?: PlotViewOverride
-): string => {
+const buildPlotKey = (model: PlotViewModel, fallbackLine?: number): string => {
   const line = model.targetLine ?? fallbackLine ?? 0;
   const kindKey = model.kind || "plot";
   const sizeKey = model.size || "md";
@@ -327,16 +323,22 @@ const buildPlotKey = (
   const explicitViewKey = model.view?.raw ? formatPlotKeyRange(model.view) : "auto";
   const explicitYDomainKey = model.yDomain?.raw ? formatPlotKeyRange(model.yDomain) : "auto";
   const explicitYViewKey = model.yView?.raw ? formatPlotKeyRange(model.yView) : "auto";
-  const overrideKey = override
-    ? [
-        formatPlotKeyRange(override.domain),
-        formatPlotKeyRange(override.view),
-        formatPlotKeyRange(override.yDomain),
-        formatPlotKeyRange(override.yView),
-      ].join("|")
-    : "no-override";
   const dataKey = buildPlotDataKey(model);
-  return `plot-${model.source}-${line}-${kindKey}-${sizeKey}-${xVarKey}-${seriesKey}-${explicitDomainKey}-${explicitViewKey}-${explicitYDomainKey}-${explicitYViewKey}-${overrideKey}-${dataKey}`;
+  return `plot-${model.source}-${line}-${kindKey}-${sizeKey}-${xVarKey}-${seriesKey}-${explicitDomainKey}-${explicitViewKey}-${explicitYDomainKey}-${explicitYViewKey}-${dataKey}`;
+};
+
+const applyPlotOverride = (model: PlotViewModel, override?: PlotViewOverride) => {
+  if (!override) return;
+  if (override.domain) model.domain = override.domain;
+  if (override.view) model.view = override.view;
+  if (override.yDomain) model.yDomain = override.yDomain;
+  if (override.yView) model.yView = override.yView;
+  if (override.yView || override.yDomain) {
+    model.yViewAuto = false;
+  }
+  if (override.yDomain) {
+    model.yDomainAuto = false;
+  }
 };
 
 const deriveYDomain = (data?: PlotPoint[]): PlotRange | undefined => {
@@ -2505,19 +2507,9 @@ export const PlotViewExtension = Extension.create({
                 );
                 if (recomputed) {
                   model = recomputed;
-                } else if (override) {
-                  if (override.domain) model.domain = override.domain;
-                  if (override.view) model.view = override.view;
-                  if (override.yDomain) model.yDomain = override.yDomain;
-                  if (override.yView) model.yView = override.yView;
-                }
-                if (override?.yView || override?.yDomain) {
-                  model.yViewAuto = false;
-                }
-                if (override?.yDomain) {
-                  model.yDomainAuto = false;
                 }
               }
+              applyPlotOverride(model, override);
               const widget = Decoration.widget(
                 info.insertPos,
                 () =>
@@ -2529,7 +2521,7 @@ export const PlotViewExtension = Extension.create({
                     currentView
                   ),
                 {
-                  key: buildPlotKey(model, plotNode.line, override),
+                  key: buildPlotKey(model, plotNode.line),
                   side: 1,
                   ignoreSelection: true,
                   stopEvent: (event) =>
@@ -2571,7 +2563,7 @@ export const PlotViewExtension = Extension.create({
                         currentView
                       ),
                     {
-                      key: buildPlotKey(model, pluginState.transient.targetLine, override),
+                      key: buildPlotKey(model, pluginState.transient.targetLine),
                       side: 1,
                       ignoreSelection: true,
                       stopEvent: (event) =>

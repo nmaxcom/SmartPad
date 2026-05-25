@@ -135,6 +135,29 @@ const resolveNearestExpressionNode = (
   return null;
 };
 
+const resolveSeriesTargetExpressionNode = (
+  raw: string | undefined,
+  context: EvaluationContext,
+  line: number
+): ExpressionNode | null => {
+  const label = raw?.trim();
+  if (!label || !context.astNodes || line <= 1) return null;
+
+  for (let index = line - 2; index >= 0; index -= 1) {
+    const candidate = context.astNodes[index];
+    if (!candidate) continue;
+    if (isCombinedAssignmentNode(candidate) && candidate.variableName === label) {
+      return buildExpressionNode(candidate);
+    }
+    if (isVariableAssignmentNode(candidate) && candidate.variableName === label) {
+      const parsed = buildExpressionNodeFromText(candidate.rawValue?.trim() || "", candidate.line);
+      if (parsed) return parsed;
+    }
+  }
+
+  return null;
+};
+
 const cloneVariableStore = (context: EvaluationContext) => {
   const store = new ReactiveVariableStore();
   context.variableContext.forEach((variable) => {
@@ -419,7 +442,7 @@ export class PlotViewEvaluator implements NodeEvaluator {
     const yView = yViewRaw ? parsePlotRange(yViewRaw) || undefined : undefined;
     const seriesParam = parseSeriesList(node.params.y);
     const expressionNode = seriesParam.length
-      ? null
+      ? resolveSeriesTargetExpressionNode(seriesParam[0], context, node.line)
       : resolveNearestExpressionNode(context.astNodes, node.line);
 
     const listPlotNode = buildListPlotNode(

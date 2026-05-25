@@ -77,6 +77,30 @@ describe("PlotViewEvaluator", () => {
     }
   });
 
+  test("anchors named y series to the source assignment when available", () => {
+    const astNodes = [
+      parseLine("distance = 120", 1),
+      parseLine("time = 2", 2),
+      parseLine("speed = distance / time =>", 3),
+      parseLine("@view plot x=time y=speed domain=0..5", 4),
+    ];
+    const variables = new Map<string, Variable>([
+      ["distance", createVariable("distance", 120)],
+      ["time", createVariable("time", 2)],
+      ["speed", createVariable("speed", 60, "distance / time")],
+    ]);
+    const evaluator = new PlotViewEvaluator();
+
+    const result = evaluator.evaluate(astNodes[3], createContext(astNodes, variables));
+
+    expect(result?.type).toBe("plotView");
+    if (result?.type === "plotView") {
+      expect(result.status).toBe("connected");
+      expect(result.series?.[0]?.label).toBe("speed");
+      expect(result.targetLine).toBe(3);
+    }
+  });
+
   test("named y series follows edited source formulas without changing the directive", () => {
     const astNodes = [parseLine("@view plot x=time y=speed domain=0..5", 1)];
     const variables = new Map<string, Variable>([
