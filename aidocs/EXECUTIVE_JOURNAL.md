@@ -5075,3 +5075,21 @@
     *   Await user confirmation that the chart interaction now feels correct; `T-2026-05-24-04` remains open for goal-seek product review.
 *   Risks/blockers:
     *   None known after the direct wheel-zoom regression passed.
+
+## Entry J-2026-05-26-01
+
+*   Timestamp: 2026-05-26 19:19:42 CEST
+*   Summary:
+    *   User suspected the local repository had lost its GitHub reference.
+    *   Assistant verified `origin` still points to `https://github.com/nmaxcom/SmartPad.git`.
+    *   Assistant verified the current branch `codex/proposed-next-wave-specs` tracks `origin/codex/proposed-next-wave-specs`.
+    *   Remote `git ls-remote` confirmed GitHub has both `main` and `codex/proposed-next-wave-specs`; local `HEAD` matches the remote branch at `aded793e`.
+*   Validation:
+    *   `git remote -v` ✅
+    *   `git status --short --branch` ✅
+    *   `git ls-remote --heads origin main codex/proposed-next-wave-specs` ✅
+    *   `git rev-parse HEAD` and `git rev-parse origin/codex/proposed-next-wave-specs` match ✅
+*   Pending updates:
+    *   None.
+*   Risks/blockers:
+    *   The GitHub Pages URL `https://nmaxcom.github.io/SmartPad/` is the deployed site URL, not the Git remote URL.
