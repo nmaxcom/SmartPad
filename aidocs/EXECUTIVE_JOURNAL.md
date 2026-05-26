@@ -5093,3 +5093,19 @@
     *   None.
 *   Risks/blockers:
     *   The GitHub Pages URL `https://nmaxcom.github.io/SmartPad/` is the deployed site URL, not the Git remote URL.
+
+## Entry J-2026-05-26-02
+
+*   Timestamp: 2026-05-26 19:23:21 CEST
+*   Summary:
+    *   User reported that GitHub push/web update was confusing because recent work lived on multiple branches.
+    *   Assistant confirmed GitHub Pages deploy is triggered by pushes to `main` via `.github/workflows/deploy-pages.yml`.
+    *   Assistant fast-forwarded local `main` from `dd79687d` to `453e8a61`, bringing the recent `codex/proposed-next-wave-specs` commits onto the deploy branch.
+    *   Local `main` is now ahead of `origin/main` and ready to push for web deployment.
+*   Validation:
+    *   `git log --oneline --decorate --graph --max-count=12` ✅
+    *   `.github/workflows/deploy-pages.yml` reviewed: deploy trigger is `push` to `main` ✅
+*   Pending updates:
+    *   Run a final build sanity check, then push `main` to `origin`.
+*   Risks/blockers:
+    *   Branch cleanup is intentionally deferred until the web update is verified.
