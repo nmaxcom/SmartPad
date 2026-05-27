@@ -541,6 +541,7 @@ export class PlotViewEvaluator implements NodeEvaluator {
         xVariable: x || "",
         variableContext: context.variableContext,
         variableStore: context.variableStore,
+        functionStore: context.functionStore,
         registry: defaultRegistry,
         settings: plotSettings,
         domainSpec: node.params.domain,

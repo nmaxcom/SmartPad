@@ -5109,3 +5109,34 @@
     *   Run a final build sanity check, then push `main` to `origin`.
 *   Risks/blockers:
     *   Branch cleanup is intentionally deferred until the web update is verified.
+
+## Entry J-2026-05-27-01
+
+*   Timestamp: 2026-05-27 04:09:34 CEST
+*   Summary:
+    *   User explored making charts whenever an expression is mathematically plottable, including user-defined functions such as `area(r) = PI * r^2`.
+    *   Assistant identified that plot sampling did not receive the document `functionStore`, so function-backed series could render as "No plottable data" even though normal expression evaluation worked.
+    *   Plot sampling now evaluates with the current function store, plot caches include function definitions in their signature, and `PlotViewExtension` receives the latest function definitions from the editor evaluation pass.
+    *   Added direct unit and Playwright coverage for `area(r)`, `arei = area(x)`, and `@view y=arei x=x domain=0..30`.
+*   Artifacts:
+    *   `src/plotting/plottingUtils.ts`
+    *   `src/components/Editor.tsx`
+    *   `src/components/PlotViewExtension.ts`
+    *   `src/eval/plotViewEvaluator.ts`
+    *   `tests/unit/plotViewEvaluator.test.ts`
+    *   `tests/e2e/plot-view-interactions.spec.ts`
+    *   `docs/Specs/Plotting.spec.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/plotViewEvaluator.test.ts --runInBand` ✅
+    *   `npx playwright test tests/e2e/plot-view-interactions.spec.ts --project=chromium --config=playwright.config.ts --workers=1` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run build` ✅
+    *   `npm run verify:changed` ✅
+*   Pending updates:
+    *   Decide whether to make plot suggestions more proactive for any plottable one-variable expression/function.
+*   Risks/blockers:
+    *   Current charting remains one chosen X variable at a time; multi-input functions need an explicit slice/parameter-fixing UI before they can be plotted safely.

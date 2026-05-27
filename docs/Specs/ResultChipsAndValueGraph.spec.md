@@ -219,6 +219,7 @@ Flow:
    - Results with one or more solve candidates expose `Set target...` / `Set target by <variable>` actions that insert editable `make ... by ... =>` goal-seek lines below the source.
    - Single-input unnamed results insert a source-adjacent directive such as `@view plot x=x size=md`, relying on the existing nearest-expression binding instead of copying the formula into `y=...`.
    - Named results insert a live named binding such as `@view plot x=time y=speed size=md`, so later edits to `speed = ... =>` update the plot without rewriting the directive.
+   - Function-backed named results remain plottable: if `speed`, `area`, or another named result is computed through a user-defined function, the generated view evaluates with the same function definitions as the editor.
    - Multi-input results expose explicit choices such as `Plot vs distance` and `Plot vs time` rather than guessing the x-axis.
    - Numeric-list results expose highlighted visual suggestions such as `Plot as histogram`.
    - Equal-length numeric-list pairs expose highlighted scatter suggestions such as `Plot as scatter vs study hours`.

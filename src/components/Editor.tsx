@@ -41,7 +41,7 @@ import { LineIdExtension } from "./LineIdExtension";
 // Import helper to identify combined assignment nodes (e.g. "speed = slider(...)")
 import { parseLine } from "../parsing/astParser";
 import { recordEquationFromNode } from "../solve/equationStore";
-import { isExpressionNode } from "../parsing/ast";
+import { FunctionDefinitionNode, isExpressionNode } from "../parsing/ast";
 import { SemanticParsers, NumberValue, SymbolicValue, SemanticValueTypes } from "../types";
 import { defaultRegistry } from "../eval";
 import type { RenderNode } from "../eval";
@@ -312,6 +312,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
   const { settings } = useSettingsContext();
   const settingsRef = useRef(settings);
   const lineResultStatusByIdRef = useRef<Map<string, LineResultStatus>>(new Map());
+  const functionStoreRef = useRef<Map<string, FunctionDefinitionNode>>(new Map());
   const isUpdatingRef = useRef(false);
 
   useEffect(() => {
@@ -354,7 +355,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
 
         // Process nodes one by one in document order for variable state
         const collectedRenderNodes: RenderNode[] = [];
-        const functionStore = new Map<string, import("../parsing/ast").FunctionDefinitionNode>();
+        const functionStore = new Map<string, FunctionDefinitionNode>();
         const equationStore: import("../solve/equationStore").EquationEntry[] = [];
         const lineResultById = new Map<string, LineResultState>();
         const lineResultByLine = new Map<number, LineResultState>();
@@ -963,6 +964,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
           (window as any).__liveResultMetrics = getLiveResultMetrics();
           (window as any).__lineResultStatusById = Array.from(lineResultStatusById.entries());
           lineResultStatusByIdRef.current = new Map(lineResultStatusById);
+          functionStoreRef.current = new Map(functionStore);
           
           window.dispatchEvent(
             new CustomEvent("evaluationDone", { 
@@ -1083,6 +1085,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
           const variables = reactiveStore.getAllVariables();
           return new Map(variables.map((variable) => [variable.name, variable]));
         },
+        getFunctionStore: () => functionStoreRef.current,
         getSettings: () => settings,
       }),
       // The VariableHoverExtension provides hover-to-highlight functionality for variables.

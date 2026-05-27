@@ -70,4 +70,16 @@ test.describe("Plot view interactions", () => {
     await expect.poll(() => getXAxisLabels(page)).toEqual(initialXLabels);
     expect(await getAxisLabels(page)).not.toEqual(zoomedLabels);
   });
+
+  test("plots user-defined function calls through named series", async ({ page }) => {
+    await setEditorContent(
+      page,
+      "<p>// Calculates area of a circle</p><p>area(r) = PI * r^2</p><p>x = 30</p><p>arei = area(x)</p><p>@view y=arei x=x domain=0..30</p>"
+    );
+
+    await expect(page.locator(".plot-view").first()).toBeVisible();
+    await expect(page.locator(".plot-view-disconnected")).toHaveCount(0);
+    await expect(page.locator(".plot-view")).not.toContainText("No plottable data");
+    await expect(page.locator(".plot-view-line").first()).toBeVisible();
+  });
 });

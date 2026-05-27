@@ -1,4 +1,4 @@
-import { ExpressionNode, ExpressionComponent } from "../parsing/ast";
+import { ExpressionNode, ExpressionComponent, FunctionDefinitionNode } from "../parsing/ast";
 import { EvaluatorRegistry, EvaluationContext } from "../eval/registry";
 import { Variable } from "../state/types";
 import { ReactiveVariableStore } from "../state/variableStore";
@@ -45,6 +45,7 @@ export interface PlotComputationInput {
   xVariable: string;
   variableContext: Map<string, Variable>;
   variableStore: ReactiveVariableStore;
+  functionStore?: Map<string, FunctionDefinitionNode>;
   registry: EvaluatorRegistry;
   settings: PlotSettings;
   domainSpec?: string;
@@ -148,6 +149,19 @@ const buildDependencySignature = (
       if (!variable) return `${name}=undefined`;
       const raw = variable.rawValue ?? variable.value?.toString();
       return `${name}=${raw ?? "undefined"}`;
+    })
+    .join("|");
+};
+
+const buildFunctionSignature = (functionStore?: Map<string, FunctionDefinitionNode>): string => {
+  if (!functionStore || functionStore.size === 0) return "";
+  return Array.from(functionStore.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([name, definition]) => {
+      const params = definition.params
+        .map((param) => `${param.name}=${param.defaultExpression ?? ""}`)
+        .join(",");
+      return `${name}(${params})=${definition.expression}`;
     })
     .join("|");
 };
@@ -328,11 +342,12 @@ const buildEvaluationContext = (
   expressionNode: ExpressionNode,
   variableContext: Map<string, Variable>,
   variableStore: ReactiveVariableStore,
+  functionStore: Map<string, FunctionDefinitionNode> | undefined,
   settings: PlotSettings
 ): EvaluationContext => ({
   variableStore,
   variableContext,
-  functionStore: undefined,
+  functionStore,
   equationStore: undefined,
   lineNumber: expressionNode.line,
   decimalPlaces: settings.decimalPlaces,
@@ -350,9 +365,16 @@ const evaluateExpressionAt = (
   expressionNode: ExpressionNode,
   variableContext: Map<string, Variable>,
   variableStore: ReactiveVariableStore,
+  functionStore: Map<string, FunctionDefinitionNode> | undefined,
   settings: PlotSettings
 ): number | null => {
-  const context = buildEvaluationContext(expressionNode, variableContext, variableStore, settings);
+  const context = buildEvaluationContext(
+    expressionNode,
+    variableContext,
+    variableStore,
+    functionStore,
+    settings
+  );
   const renderNode = registry.evaluate(expressionNode, context);
   if (!renderNode || renderNode.type === "error") return null;
   const rawResult = (renderNode as any).result ?? "";
@@ -378,6 +400,7 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
     xVariable,
     variableContext,
     variableStore,
+    functionStore,
     registry,
     settings,
     domainSpec,
@@ -457,6 +480,7 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
 
   const dependencies = collectVariableDependencies(expressionNode.components);
   const depsSignature = buildDependencySignature(dependencies, xVariable, variableContext);
+  const fnSignature = buildFunctionSignature(functionStore);
   const cacheKey = [
     expressionNode.expression,
     xVariable,
@@ -464,6 +488,7 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
     normalizedDomain.max,
     totalSamples,
     depsSignature,
+    fnSignature,
   ].join("|");
   const cached = readCache(cacheKey);
   if (cached) {
@@ -472,6 +497,7 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
       expressionNode,
       baseContext,
       variableStore,
+      functionStore,
       settings
     );
     return {
@@ -506,6 +532,7 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
       expressionNode,
       sampleContext,
       baseStore,
+      functionStore,
       settings
     );
 
@@ -517,6 +544,7 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
     expressionNode,
     baseContext,
     variableStore,
+    functionStore,
     settings
   );
 

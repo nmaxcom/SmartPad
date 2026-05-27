@@ -8,6 +8,7 @@ import {
   isCombinedAssignmentNode,
   ExpressionNode,
   CombinedAssignmentNode,
+  FunctionDefinitionNode,
 } from "../parsing/ast";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
 import { Variable } from "../state/types";
@@ -183,11 +184,12 @@ const buildEvaluationContext = (
   expressionNode: ExpressionNode,
   variableContext: Map<string, Variable>,
   variableStore: ReactiveVariableStore,
+  functionStore: Map<string, FunctionDefinitionNode> | undefined,
   settings: any
 ) => ({
   variableStore,
   variableContext,
-  functionStore: undefined,
+  functionStore,
   equationStore: undefined,
   lineNumber: expressionNode.line,
   decimalPlaces: settings.decimalPlaces,
@@ -203,11 +205,18 @@ const buildEvaluationContext = (
 const evaluateExpressionSemantic = (
   expressionNode: ExpressionNode,
   variableContext: Map<string, Variable>,
+  functionStore: Map<string, FunctionDefinitionNode> | undefined,
   settings: any
 ) => {
   const store = new ReactiveVariableStore();
   variableContext.forEach((variable) => store.setVariableWithMetadata(variable));
-  const context = buildEvaluationContext(expressionNode, variableContext, store, settings);
+  const context = buildEvaluationContext(
+    expressionNode,
+    variableContext,
+    store,
+    functionStore,
+    settings
+  );
   const renderNode = defaultRegistry.evaluate(expressionNode, context as any);
   if (!renderNode || renderNode.type === "error") return null;
   const rawResult = (renderNode as any).result ?? "";
@@ -568,6 +577,7 @@ const computeModelFromExpression = (
   seriesDefinitions: Array<{ label?: string; expression: string }> | undefined,
   lineIndex: ReturnType<typeof buildLineIndex>,
   variableContext: Map<string, Variable>,
+  functionStore: Map<string, FunctionDefinitionNode> | undefined,
   settings: any
 ): PlotViewModel | null => {
   const info = lineIndex[targetLine];
@@ -610,6 +620,7 @@ const computeModelFromExpression = (
         variableContext.forEach((variable) => store.setVariableWithMetadata(variable));
         return store;
       })(),
+      functionStore,
       registry: defaultRegistry,
       settings,
       domainSpec: domainOverride ? `${domainOverride.min}..${domainOverride.max}` : undefined,
@@ -670,7 +681,9 @@ const computeModelFromExpression = (
     if (directValue) {
       return getPlotUnitFormat(directValue);
     }
-    return getPlotUnitFormat(evaluateExpressionSemantic(node, variableContext, settings));
+    return getPlotUnitFormat(
+      evaluateExpressionSemantic(node, variableContext, functionStore, settings)
+    );
   });
   const series: PlotSeriesModel[] = seriesSpecs.map((spec, index) => ({
     label: spec.label,
@@ -2344,6 +2357,9 @@ export const PlotViewExtension = Extension.create({
     let currentView: EditorView | null = null;
     const getVariableContext =
       this.options.getVariableContext || (() => new Map<string, Variable>());
+    const getFunctionStore =
+      this.options.getFunctionStore ||
+      (() => undefined as Map<string, FunctionDefinitionNode> | undefined);
     const getSettings = this.options.getSettings || (() => ({}));
 
     return [
@@ -2381,6 +2397,7 @@ export const PlotViewExtension = Extension.create({
             if (!pluginState) return DecorationSet.empty;
 
             const lineIndex = buildLineIndex(state.doc);
+            const functionStore = getFunctionStore();
             const decorations: Decoration[] = [];
             const handleOverrideUpdate = (
               key: string,
@@ -2503,6 +2520,7 @@ export const PlotViewExtension = Extension.create({
                   seriesDefinitions,
                   lineIndex,
                   getVariableContext(),
+                  functionStore,
                   settings
                 );
                 if (recomputed) {
@@ -2547,6 +2565,7 @@ export const PlotViewExtension = Extension.create({
                 undefined,
                 lineIndex,
                 getVariableContext(),
+                functionStore,
                 settings
               );
               if (model) {
@@ -2661,6 +2680,7 @@ export const PlotViewExtension = Extension.create({
                   if (expressionNode) {
                     const settings = buildSettingsSnapshot(getSettings());
                     const variableContext = getVariableContext();
+                    const functionStore = getFunctionStore();
                     const store = new ReactiveVariableStore();
                     variableContext.forEach((variable) => store.setVariableWithMetadata(variable));
                     const preview = computePlotData({
@@ -2668,6 +2688,7 @@ export const PlotViewExtension = Extension.create({
                       xVariable: variableName,
                       variableContext,
                       variableStore: store,
+                      functionStore,
                       registry: defaultRegistry,
                       settings,
                       sampleCount: 10,

@@ -1,9 +1,11 @@
 import { parseLine } from "../../src/parsing/astParser";
+import "../../src/eval";
 import { PlotViewEvaluator } from "../../src/eval/plotViewEvaluator";
 import { ReactiveVariableStore } from "../../src/state/variableStore";
 import { EvaluationContext } from "../../src/eval/registry";
 import { Variable } from "../../src/state/types";
 import { ListValue, NumberValue, SemanticValue } from "../../src/types";
+import { FunctionDefinitionNode } from "../../src/parsing/ast";
 
 const createVariable = (
   name: string,
@@ -26,7 +28,8 @@ const createNumberList = (values: number[]) =>
 
 const createContext = (
   astNodes: ReturnType<typeof parseLine>[],
-  variables: Map<string, Variable>
+  variables: Map<string, Variable>,
+  functionStore = new Map<string, FunctionDefinitionNode>()
 ): EvaluationContext => {
   const variableStore = new ReactiveVariableStore();
   variables.forEach((variable) => {
@@ -35,6 +38,7 @@ const createContext = (
   return {
     variableStore,
     variableContext: variables,
+    functionStore,
     astNodes,
     lineNumber: astNodes.length,
     decimalPlaces: 6,
@@ -98,6 +102,38 @@ describe("PlotViewEvaluator", () => {
       expect(result.status).toBe("connected");
       expect(result.series?.[0]?.label).toBe("speed");
       expect(result.targetLine).toBe(3);
+    }
+  });
+
+  test("plots named series backed by user-defined functions", () => {
+    const functionNode = parseLine("area(r) = PI * r^2", 1);
+    if (functionNode.type !== "functionDefinition") {
+      throw new Error(`Expected functionDefinition, got ${functionNode.type}`);
+    }
+    const astNodes = [
+      functionNode,
+      parseLine("x = 30", 2),
+      parseLine("arei = area(x)", 3),
+      parseLine("@view plot x=x y=arei domain=0..30", 4),
+    ];
+    const variables = new Map<string, Variable>([
+      ["x", createVariable("x", 30)],
+      ["arei", createVariable("arei", 2827.433388, "area(x)")],
+    ]);
+    const functionStore = new Map<string, FunctionDefinitionNode>([["area", functionNode]]);
+    const evaluator = new PlotViewEvaluator();
+
+    const result = evaluator.evaluate(astNodes[3], createContext(astNodes, variables, functionStore));
+
+    expect(result?.type).toBe("plotView");
+    if (result?.type === "plotView") {
+      expect(result.status).toBe("connected");
+      expect(result.series?.[0]?.label).toBe("arei");
+      expect(result.data?.length).toBeGreaterThan(2);
+      const plottable = (result.data || []).filter((point) => point.y !== null);
+      expect(plottable.length).toBeGreaterThan(2);
+      expect(Math.max(...plottable.map((point) => point.y as number))).toBeGreaterThan(2500);
+      expect(result.currentY).toBeCloseTo(Math.PI * 30 ** 2, 2);
     }
   });
 

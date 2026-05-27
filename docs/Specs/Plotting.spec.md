@@ -255,6 +255,31 @@ g = x^2
 @view plot x=x y="2*x + 1, x^2"
 ```
 
+Direct expression:
+
+```smartpad
+x = 0
+@view plot x=x y="x^3 + 4" domain=-10..10
+```
+
+User-defined function:
+
+```smartpad
+area(r) = PI * r^2
+x = 30
+circle area = area(x)
+@view plot x=x y="area(x)" domain=0..30
+```
+
+Named series backed by a function:
+
+```smartpad
+area(r) = PI * r^2
+x = 30
+arei = area(x)
+@view plot x=x y=arei domain=0..30
+```
+
 With explicit domain:
 
 ```smartpad
