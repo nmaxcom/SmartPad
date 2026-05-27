@@ -262,6 +262,11 @@ x = 0
 @view plot x=x y="x^3 + 4" domain=-10..10
 ```
 
+Direct polynomial expressions may be plotted through quoted `y=` expressions. When no explicit
+`domain=` is provided, SmartPad samples an expanded domain for pan/zoom headroom, but the initial
+Y auto-scale is derived from the visible X viewport so a curve like `x^2` does not flatten against
+a huge hidden-domain Y range.
+
 User-defined function:
 
 ```smartpad
@@ -446,6 +451,7 @@ Pan/zoom only affects the **viewport**.
 * Shift + scroll = pan
 * Small “Reset view” control restores viewport to computed view (instead of the full domain)
 * Double-clicking the chart resets the user viewport to the computed view.
+* Rendered series, fills, bars, scatter dots, current-value dots, and intersection dots are clipped to the plot body. Axes, ticks, and labels remain above the clipped plot layer.
 
 ---
 
@@ -458,6 +464,7 @@ Pan/zoom only affects the **viewport**.
 * Domain never silently changes
 * Editing source values must not discard a viewport the user has already set through pan/zoom/domain controls. The user viewport remains active until the user explicitly resets it, including by double-clicking the chart.
 * This applies equally to named series views such as `@view plot x=time y=speed`: rerendering the named source or updating its input values must preserve the user's committed viewport.
+* Automatic Y view is recalculated from visible points while the chart is in auto-Y mode. Once the user sets a Y viewport through interaction or directive text, that user viewport is treated as manual until reset.
 
 ---
 

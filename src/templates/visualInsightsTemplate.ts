@@ -13,6 +13,17 @@ stops = 0.25 h
 trip speed = distance / (time + stops) =>
 @view plot x=time y=trip speed domain=0.25..6 size=md
 
+# Function-backed plot: named results and direct function expressions both sample correctly
+radius = 30
+circle_area(r) = PI * r^2
+area now = circle_area(radius) =>
+@view plot x=radius y=area now domain=0..40 size=md
+
+# Direct polynomial plot: quote expressions when y is not a named result
+x = 0
+curve = x^3 + 4 =>
+@view plot x=x y="x^3 + 4" domain=-10..10 size=md
+
 # 2) Multi-variable result: menu should offer Plot vs promo spend and Plot vs price delta
 base revenue = $3000
 promo spend = $400
@@ -58,6 +69,10 @@ make goal fund = 20000 EUR by monthly saving =>
 target distance = 120 km
 target time = 2 h
 make target distance / target time = 80 km/h by target time =>
+
+# Scientific duration literals stay durations, not generic units
+edge tiny = 9.99e-5 s
+edge tiny + 9 s =>
 
 # Guardrail to try manually:
 # If you make one scatter list shorter, the scatter suggestion should disappear or the view should disconnect clearly.

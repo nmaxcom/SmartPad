@@ -217,6 +217,7 @@ Flow:
 4. Dragging the chip itself or the drag handle starts result-reference drag/drop.
 5. The action menu exposes current supported commands (`Copy value`, `Insert reference`, `Insert value`) and enables plot creation when the source result depends on a plottable variable.
    - Results with one or more solve candidates expose `Set target...` / `Set target by <variable>` actions that insert editable `make ... by ... =>` goal-seek lines below the source.
+   - Goal-seek actions insert parser-safe numeric targets even when the visible chip uses grouped thousands; for example a rendered `2,520,000 EUR` target is inserted as `2520000 EUR`.
    - Single-input unnamed results insert a source-adjacent directive such as `@view plot x=x size=md`, relying on the existing nearest-expression binding instead of copying the formula into `y=...`.
    - Named results insert a live named binding such as `@view plot x=time y=speed size=md`, so later edits to `speed = ... =>` update the plot without rewriting the directive.
    - Function-backed named results remain plottable: if `speed`, `area`, or another named result is computed through a user-defined function, the generated view evaluates with the same function definitions as the editor.
@@ -386,9 +387,10 @@ By default SmartPad keeps references alive when copying/exporting text, so paste
 4. `solve` is highlighted as a keyword command token at the start of explicit solve expressions (for example `solve break_even_km in ...`), not as a variable or function name.
 5. `make` is highlighted as a keyword command token at the start of goal-seek lines, and `by` is highlighted as the goal-seek input selector keyword. The target/result names and chosen input remain variable tokens so hover-to-highlight works across declarations, goal-seek lines, and result-chip menu insertions.
 6. `@view` directive lines highlight `@view`, the view kind, and parameter keys as directive syntax. Variable-bearing parameters such as `x=`, `y=`, and `values=` tokenize their values as normal expressions so variables in plot/hist/scatter view lines participate in hover-to-highlight.
-7. Currency codes and symbols used in amount literals, for example `3000 EUR`, `EUR 3000`, and `€3000`, are highlighted with the unit/currency color treatment rather than as ordinary variables.
-5. Reserved operator/command words (`solve/to/in/of/on/off/as/is/per/where`) must not be tokenized as function names just because `(` follows.
-6. If variables named `on`, `off`, or `where` exist, keyword/operator positions still render them as keywords (for example `a on (b off c)` and `list where > 10`).
+7. Function definitions tokenize their right-hand expression as normal expression content: variables participate in hover-to-highlight and numeric literals remain scrubbable.
+8. Currency codes and symbols used in amount literals, for example `3000 EUR`, `EUR 3000`, and `€3000`, are highlighted with the unit/currency color treatment rather than as ordinary variables.
+9. Reserved operator/command words (`solve/to/in/of/on/off/as/is/per/where`) must not be tokenized as function names just because `(` follows.
+10. If variables named `on`, `off`, or `where` exist, keyword/operator positions still render them as keywords (for example `a on (b off c)` and `list where > 10`).
 
 ### 8.9 Current SmartPad Touchpoints (Implementation map)
 

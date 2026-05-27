@@ -62,6 +62,7 @@ const PLOT_SERIES_COLORS = [
   "var(--plot-series-4)",
   "var(--plot-series-5)",
 ];
+let plotClipIdCounter = 0;
 
 interface PlotSeriesModel {
   label?: string;
@@ -736,17 +737,10 @@ const createPlotSvg = (
   const viewRange = viewOverride || model.view || model.domain;
   if (!viewRange) return null;
 
-  const domainMin = model.domain?.min ?? viewRange.min;
-  const domainMax = model.domain?.max ?? viewRange.max;
-  const renderRange = {
-    min: domainMin,
-    max: domainMax,
-  };
-
   const seriesLayouts: PlotSeriesLayout[] = model.series.map((series, index) => {
     const points = (series.data || []).filter(
       (point) =>
-        point.y !== null && point.x >= renderRange.min && point.x <= renderRange.max
+        point.y !== null && point.x >= viewRange.min && point.x <= viewRange.max
     ) as Array<{ x: number; y: number }>;
     return {
       index,
@@ -761,13 +755,14 @@ const createPlotSvg = (
   if (visiblePoints.length === 0) return null;
 
   const derivedRange = deriveYDomain(visiblePoints);
-  const yRangeBase = yViewOverride || model.yView || model.yDomain || derivedRange;
+  const yRangeBase =
+    yViewOverride || (yViewAuto ? undefined : model.yView || model.yDomain) || derivedRange;
   if (!yRangeBase) return null;
   let yMin = yRangeBase.min;
   let yMax = yRangeBase.max;
   if (yViewAuto && derivedRange) {
-    yMin = Math.min(yMin, derivedRange.min);
-    yMax = Math.max(yMax, derivedRange.max);
+    yMin = derivedRange.min;
+    yMax = derivedRange.max;
   }
 
   const plotWidth = Math.max(1, width - padding.left - padding.right);
@@ -793,6 +788,21 @@ const createPlotSvg = (
   svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
   const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
   svg.appendChild(defs);
+
+  const clipId = `plot-clip-${(plotClipIdCounter += 1)}`;
+  const plotClip = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+  plotClip.setAttribute("id", clipId);
+  const plotClipRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  plotClipRect.setAttribute("x", `${padding.left}`);
+  plotClipRect.setAttribute("y", `${padding.top}`);
+  plotClipRect.setAttribute("width", `${plotWidth}`);
+  plotClipRect.setAttribute("height", `${plotHeight}`);
+  plotClip.appendChild(plotClipRect);
+  defs.appendChild(plotClip);
+
+  const plotLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  plotLayer.setAttribute("clip-path", `url(#${clipId})`);
+  svg.appendChild(plotLayer);
 
   const axisX = document.createElementNS("http://www.w3.org/2000/svg", "line");
   axisX.setAttribute("x1", `${padding.left}`);
@@ -944,7 +954,7 @@ const createPlotSvg = (
         rect.setAttribute("class", "plot-view-bar");
         rect.setAttribute("data-series-index", String(index));
         rect.style.fill = seriesLayout.color;
-        svg.appendChild(rect);
+        plotLayer.appendChild(rect);
       });
       return;
     }
@@ -958,7 +968,7 @@ const createPlotSvg = (
         dot.setAttribute("class", "plot-view-scatter-dot");
         dot.setAttribute("data-series-index", String(index));
         dot.style.fill = seriesLayout.color;
-        svg.appendChild(dot);
+        plotLayer.appendChild(dot);
       });
       return;
     }
@@ -1010,14 +1020,14 @@ const createPlotSvg = (
         area.setAttribute("d", areaData);
         area.setAttribute("class", "plot-view-area");
         area.setAttribute("fill", `url(#${gradientId})`);
-        svg.appendChild(area);
+        plotLayer.appendChild(area);
       }
       const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
       path.setAttribute("d", pathData);
       path.setAttribute("class", "plot-view-line");
       path.setAttribute("data-series-index", String(index));
       path.style.stroke = seriesLayout.color;
-      svg.appendChild(path);
+      plotLayer.appendChild(path);
       lineElements.set(index, path);
     }
 
@@ -1029,7 +1039,7 @@ const createPlotSvg = (
       dot.setAttribute("class", "plot-view-dot");
       dot.setAttribute("data-series-index", String(index));
       dot.style.fill = seriesLayout.color;
-      svg.appendChild(dot);
+      plotLayer.appendChild(dot);
     }
   });
 
@@ -1128,7 +1138,7 @@ const createPlotSvg = (
       dot.setAttribute("cy", `${yScale(point.y)}`);
       dot.setAttribute("r", "4");
       dot.setAttribute("class", "plot-view-intersection-dot");
-      svg.appendChild(dot);
+      plotLayer.appendChild(dot);
     });
     intersectionPoints = intersections;
   }
@@ -1163,11 +1173,6 @@ const createPlotWidget = (
   onClose?: () => void,
   editorView?: EditorView | null
 ): HTMLElement => {
-  const rangesMatch = (a?: PlotRange, b?: PlotRange) =>
-    !!a &&
-    !!b &&
-    Math.abs(a.min - b.min) < 1e-9 &&
-    Math.abs(a.max - b.max) < 1e-9;
   let currentXView: PlotRange | undefined =
     model.view || model.autoView || model.domain;
   let currentYView: PlotRange | undefined =
@@ -1175,9 +1180,6 @@ const createPlotWidget = (
   let yViewAuto = model.yViewAuto ?? true;
   let yDomainAuto = model.yDomainAuto ?? true;
   const yPanDomainPadding = model.yPanDomainPadding ?? 6;
-  if (model.autoYView && currentYView && rangesMatch(currentYView, model.autoYView)) {
-    yViewAuto = false;
-  }
   let drawWithView: ((nextX: PlotRange | undefined, nextY: PlotRange | undefined) => void) | null =
     null;
   const container = document.createElement("div");
@@ -2502,7 +2504,7 @@ export const PlotViewExtension = Extension.create({
               const overrideKey = `persistent-${plotNode.line}`;
               const override = pluginState.overrides?.[overrideKey];
               let model = buildPlotModel(plotNode, "persistent");
-              if (model.targetLine && model.x) {
+              if (model.kind === "plot" && model.targetLine && model.x) {
                 const settings = buildSettingsSnapshot(getSettings());
                 const seriesDefinitions = plotNode.series?.map((entry) => ({
                   label: entry.label,

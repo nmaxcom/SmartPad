@@ -5140,3 +5140,47 @@
     *   Decide whether to make plot suggestions more proactive for any plottable one-variable expression/function.
 *   Risks/blockers:
     *   Current charting remains one chosen X variable at a time; multi-input functions need an explicit slice/parameter-fixing UI before they can be plotted safely.
+
+## Entry J-2026-05-27-02
+
+*   Timestamp: 2026-05-27 04:51:12 CEST
+*   Summary:
+    *   User reported several New stuff and plotting/goal-seek polish issues from visual review.
+    *   Assistant added New stuff examples for function-backed plots, quoted direct polynomial plots, and scientific-duration edge cases.
+    *   Plot rendering now clips series/fills/dots to the plot body, keeps axes above plotted marks, and derives automatic Y view from visible points instead of hidden expanded-domain samples.
+    *   Goal-seek menu actions now insert parser-safe targets without thousands separators, and incomplete `make`/`solve` command drafts without `=>` no longer show premature parse errors.
+    *   Function definition right-hand expressions now participate in semantic highlighting and number scrubbing.
+    *   Scientific duration literals such as `9.99e-5 s` parse as durations instead of generic units.
+*   Artifacts:
+    *   `src/components/PlotViewExtension.ts`
+    *   `src/components/ResultReferenceInteractionExtension.ts`
+    *   `src/components/SemanticHighlightExtension.ts`
+    *   `src/parsing/astParser.ts`
+    *   `src/templates/visualInsightsTemplate.ts`
+    *   `src/types/DurationValue.ts`
+    *   `tests/e2e/plot-view-interactions.spec.ts`
+    *   `tests/e2e/result-reference-drag-only.spec.ts`
+    *   `tests/unit/astParser.test.ts`
+    *   `tests/unit/durationMath.test.ts`
+    *   `tests/unit/semanticHighlightTokenization.test.ts`
+    *   `tests/unit/visualInsightsTemplate.test.ts`
+    *   `docs/Specs/Plotting.spec.md`
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
+    *   `docs/Specs/Solve.spec.md`
+    *   `docs/Specs/duration.spec.md`
+    *   `docs/Specs/proposed/ux-feature-ideas-backlog.md`
+    *   `docs/spec-map.json`
+    *   `docs/spec-trust.json`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/visualInsightsTemplate.test.ts tests/unit/durationMath.test.ts tests/unit/semanticHighlightTokenization.test.ts tests/unit/astParser.test.ts tests/unit/plotViewEvaluator.test.ts --runInBand` ✅
+    *   `npx playwright test tests/e2e/plot-view-interactions.spec.ts tests/e2e/result-reference-drag-only.spec.ts --project=chromium --config=playwright.config.ts --workers=1` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run build` ✅
+    *   `npm run verify:changed` ✅
+*   Pending updates:
+    *   Await user confirmation that the chart scaling/clipping and goal-seek insertion now match the intended UX.
+*   Risks/blockers:
+    *   None known after targeted unit, full related E2E, docs/spec gates, and build passed.

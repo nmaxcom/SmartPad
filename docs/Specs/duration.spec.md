@@ -57,6 +57,7 @@ Correct examples:
 -90min => -1 h 30 min
 1h 90min => 2 h 30 min
 -3h 15min => -3 h 15 min
+9.99e-5 s => 0.0000999 s
 
 Mixed-sign math must be explicit:
 

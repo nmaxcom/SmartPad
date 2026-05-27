@@ -609,6 +609,9 @@ const resolveInlineDropPos = (view: any, event: DragEvent): number | null => {
 
 const normalizeChipText = (value: string): string => String(value || "").replace(/\s+/g, " ").trim();
 
+const normalizeGoalSeekTargetValue = (value: string): string =>
+  normalizeChipText(value).replace(/(\d),(?=\d{3}(\D|$))/g, "$1");
+
 const getTextblockTextWithoutResultTokens = (node: any): string => {
   let text = "";
   node?.forEach?.((child: any) => {
@@ -872,7 +875,7 @@ const buildGoalSeekMenuActions = (
     return [];
   }
   const target = (sourceInfo.targetName || sourceInfo.expression).trim();
-  const currentValue = normalizeChipText(payload.sourceValue || payload.sourceLabel || "");
+  const currentValue = normalizeGoalSeekTargetValue(payload.sourceValue || payload.sourceLabel || "");
   if (!target || !currentValue) {
     return [];
   }

@@ -508,6 +508,47 @@ test.describe("Result references (drag-only)", () => {
     await expect(page.locator(".semantic-error-result")).toHaveCount(0);
   });
 
+  test("goal-seek menu inserts parser-safe targets when thousands grouping is enabled", async ({
+    page,
+  }) => {
+    await page.evaluate(() => {
+      const key = "smartpad-settings";
+      const existing = JSON.parse(localStorage.getItem(key) || "{}");
+      localStorage.setItem(key, JSON.stringify({ ...existing, groupThousands: true }));
+    });
+    await page.reload();
+    await page.waitForSelector('[data-testid="smart-pad-editor"]');
+
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      editor?.commands?.setContent(
+        "<p>keep rate = 84%</p><p>gross = 3000000 EUR</p><p>take home = gross * keep rate =&gt;</p>"
+      );
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    const sourceChip = page
+      .locator(".ProseMirror p")
+      .nth(2)
+      .locator(".semantic-result-display, .semantic-live-result-display");
+    await sourceChip.hover();
+    await sourceChip
+      .locator(".semantic-result-menu")
+      .evaluate((button: HTMLElement) => button.click());
+
+    const menu = page.locator(".semantic-result-action-menu");
+    await expect(menu.getByRole("menuitem", { name: "Set target by gross" })).toBeEnabled();
+    await menu.getByRole("menuitem", { name: "Set target by gross" }).click();
+    await waitForUIRenderComplete(page);
+
+    const goalLine = page.locator(".ProseMirror p").nth(3);
+    await expect(goalLine).toContainText("make take home =");
+    await expect(goalLine).toContainText("2520000 EUR");
+    await expect(goalLine).not.toContainText("2,520,000");
+    await expect(page.locator(".semantic-error-result")).toHaveCount(0);
+  });
+
   test("dragging a result chip onto a line inserts a reference chip", async ({ page }) => {
     const editor = page.locator('[data-testid="smart-pad-editor"]');
     await editor.click();

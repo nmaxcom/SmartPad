@@ -65,6 +65,9 @@ export function parseLine(line: string, lineNumber: number = 1): ASTNode {
 
     // Check for explicit solve/goal-seek expressions before variable assignments
     if (/^(solve|make)\b/i.test(trimmedLine)) {
+      if (!trimmedLine.includes("=>")) {
+        return createPlainTextNode(line, lineNumber);
+      }
       if (needsExpressionEvaluation(trimmedLine)) {
         return parseExpression(line, lineNumber);
       }

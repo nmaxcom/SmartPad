@@ -69,6 +69,11 @@ describe("AST Parser", () => {
           expect(result.content).toBe("2 + 2 = 4");
         }
       });
+
+      it("keeps incomplete goal-seek commands as plain text until the trigger is typed", () => {
+        const result = parseLine("make force = 20N by mass", 1);
+        expect(isPlainTextNode(result)).toBe(true);
+      });
     });
 
     describe("Variable Assignment", () => {

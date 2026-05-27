@@ -143,7 +143,7 @@ export class DurationValue extends SemanticValue {
         while (pos < trimmed.length && /\s/.test(trimmed[pos])) pos += 1;
       }
 
-      const numberMatch = trimmed.slice(pos).match(/^(\d+(?:\.\d+)?)/);
+      const numberMatch = trimmed.slice(pos).match(/^(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/);
       if (!numberMatch) return null;
       const raw = numberMatch[1];
       const value = Number(raw);
@@ -210,11 +210,15 @@ export class DurationValue extends SemanticValue {
         "hour",
         "millisecond",
       ]);
-      if (preserveSingle.has(unit)) {
+      const shouldPreserveSingle =
+        preserveSingle.has(unit) || (unit === "second" && Math.abs(rawValue) < 1);
+      if (shouldPreserveSingle) {
         const absValue = Math.abs(rawValue);
         const unitLabel =
           unit === "millisecond"
             ? "ms"
+            : unit === "second"
+              ? "s"
             : unit === "minute"
               ? "min"
               : unit === "hour"

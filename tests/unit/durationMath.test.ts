@@ -49,6 +49,8 @@ describe("Duration and time math", () => {
       ["-3h - 15min =>", "-3 h 15 min"],
       ["2h1min =>", "2 h 1 min"],
       ["1h -30min =>", "30 min"],
+      ["9.99e-5 s =>", "0.0000999 s"],
+      ["9.99e-5 s + 9 s =>", "9 s"],
     ];
 
     cases.forEach(([input, expected], index) => {

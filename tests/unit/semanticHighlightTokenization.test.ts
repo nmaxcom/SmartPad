@@ -176,4 +176,15 @@ describe("Semantic highlight tokenization", () => {
     expect(tokens.find((token) => token.text === "time")?.type).toBe("variable");
     expect(tokens.find((token) => token.text === "take home")?.type).toBe("variable");
   });
+
+  test("marks numbers inside function definitions as scrubbable", () => {
+    const ast = parseLine("area(r) = PI * 3 * r^4 + 10", 1);
+    const tokens = extractTokensFromASTNode(ast, makeContext(["r"]) as any);
+    const scrubbable = tokens
+      .filter((token) => token.type === "scrubbableNumber")
+      .map((token) => token.text);
+
+    expect(scrubbable).toEqual(["3", "4", "10"]);
+    expect(tokens.find((token) => token.text === "r")?.type).toBe("variable");
+  });
 });

@@ -10,12 +10,12 @@ Source of truth for enforcement: `docs/spec-trust.json`.
 | Explicit Trigger (`=>`) | `docs/Specs/implemented/explicit-trigger.md` | `docs/Specs/ExplicitTrigger.spec.md` | `tests/unit/expressionParser.test.ts`, `tests/unit/templateTriggerNormalization.test.ts`, `tests/unit/solve.test.ts` |
 | Functions and User-Defined Formulas | `docs/Specs/implemented/functions-and-user-defined-formulas.md` | `docs/Specs/Functions.spec.md` | `tests/unit/functions.test.ts`, `tests/unit/astParser.test.ts` |
 | Modulo Operator | `docs/Specs/implemented/modulo-operator.md` | `docs/Specs/Modulo.spec.md` | `tests/unit/modulo.test.ts`, `tests/unit/expressionParser.test.ts` |
-| Result Chips and References | `docs/Specs/implemented/result-chips-and-references.md` | `docs/Specs/ResultChipsAndValueGraph.spec.md` | `tests/e2e/result-reference.spec.ts`, `tests/e2e/results-decorator-regression.spec.ts` |
-| Plotting and Dependency Views | `docs/Specs/implemented/plotting-and-dependency-views.md` | `docs/Specs/Plotting.spec.md` | `tests/unit/plotViewEvaluator.test.ts`, `tests/unit/capabilitySprintTemplate.test.ts` |
+| Result Chips and References | `docs/Specs/implemented/result-chips-and-references.md` | `docs/Specs/ResultChipsAndValueGraph.spec.md` | `tests/e2e/result-reference-drag-only.spec.ts`, `tests/e2e/result-reference.spec.ts`, `tests/e2e/results-decorator-regression.spec.ts`, `tests/unit/semanticHighlightTokenization.test.ts` |
+| Plotting and Dependency Views | `docs/Specs/implemented/plotting-and-dependency-views.md` | `docs/Specs/Plotting.spec.md` | `tests/unit/plotViewEvaluator.test.ts`, `tests/e2e/plot-view-interactions.spec.ts`, `tests/unit/capabilitySprintTemplate.test.ts` |
 | Currency and FX | `docs/Specs/implemented/currency-and-fx.md` | `docs/Specs/Currency.spec.md` | `tests/unit/currency-expression-evaluator.test.ts`, `tests/unit/currencyFx.test.ts` |
 | Lists | `docs/Specs/implemented/lists.md` | `docs/Specs/Lists.spec.md` | `tests/unit/list.test.ts`, `tests/unit/listSpecExamples.test.ts` |
 | Ranges | `docs/Specs/implemented/ranges.md` | `docs/Specs/Ranges.spec.md` | `tests/unit/range.test.ts` |
 | Locale Date and Time | `docs/Specs/implemented/locale-date-time.md` | `docs/Specs/Locale.spec.md` | `tests/unit/localeDate.test.ts` |
 | Duration and Time Values | `docs/Specs/implemented/duration-and-time-values.md` | `docs/Specs/duration.spec.md` | `tests/unit/durationMath.test.ts`, `tests/unit/dateMathEvaluator.test.ts` |
 | File Management | `docs/Specs/implemented/file-management.md` | `docs/Specs/FileManagement.spec.md` | `tests/e2e/save-load-buttons.spec.ts`, `tests/e2e/migration-verification.spec.ts` |
-| Solve and Symbolic Math | `docs/Specs/implemented/solve-and-symbolic-math.md` | `docs/Specs/Solve.spec.md` | `tests/unit/solve.test.ts`, `tests/unit/capabilitySprintTemplate.test.ts` |
+| Solve and Symbolic Math | `docs/Specs/implemented/solve-and-symbolic-math.md` | `docs/Specs/Solve.spec.md` | `tests/unit/solve.test.ts`, `tests/unit/astParser.test.ts`, `tests/unit/capabilitySprintTemplate.test.ts` |

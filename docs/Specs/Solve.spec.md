@@ -62,6 +62,7 @@ Behavior:
 - V1 supports one free variable.
 - Multi-variable goal-seek requests must return an explicit unsupported/strategy error rather than inventing a single answer.
 - Goal-seek lines require `=>` and template normalization must preserve that trigger.
+- Incomplete `solve` / `make` command drafts without `=>` are treated as plain text while the user is still typing, rather than showing a premature parse error.
 
 ---
 

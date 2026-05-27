@@ -531,6 +531,12 @@ export function extractTokensFromASTNode(
         end: equalsIndex + 1,
         text: "=",
       });
+
+      const expressionText = text.substring(equalsIndex + 1).trim();
+      if (expressionText) {
+        const expressionStart = text.indexOf(expressionText, equalsIndex + 1);
+        tokens.push(...tokenizeExpression(expressionText, expressionStart, variableContext));
+      }
     }
 
     const openIndex = text.indexOf("(");

@@ -55,7 +55,12 @@
       "sourceSpec": "docs/Specs/ResultChipsAndValueGraph.spec.md",
       "canonicalSpec": "docs/Specs/implemented/result-chips-and-references.md",
       "mappedGroups": ["Editor And Result Chips"],
-      "testRefs": ["tests/e2e/result-reference-drag-only.spec.ts", "tests/e2e/result-reference.spec.ts", "tests/e2e/results-decorator-regression.spec.ts"]
+      "testRefs": [
+        "tests/e2e/result-reference-drag-only.spec.ts",
+        "tests/e2e/result-reference.spec.ts",
+        "tests/e2e/results-decorator-regression.spec.ts",
+        "tests/unit/semanticHighlightTokenization.test.ts"
+      ]
     },
     {
       "id": "currency-and-fx",
@@ -124,6 +129,7 @@
       "mappedGroups": ["Solve And Symbolic Math", "Expression Engine"],
       "testRefs": [
         "tests/unit/solve.test.ts",
+        "tests/unit/astParser.test.ts",
         "tests/unit/capabilitySprintTemplate.test.ts"
       ]
     },

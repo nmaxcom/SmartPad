@@ -20,6 +20,14 @@ const getXAxisLabels = async (page: Page) => {
   return labels.slice(0, Math.floor(labels.length / 2));
 };
 
+const getYAxisLabels = async (page: Page) => {
+  const labels = await getAxisLabels(page);
+  return labels.slice(Math.floor(labels.length / 2));
+};
+
+const axisLabelToNumber = (label: string | null) =>
+  Number(String(label || "").replace(/,/g, ""));
+
 const wheelPlotCenter = async (page: Page, deltaY: number) => {
   const box = await page.locator(".plot-view svg").first().boundingBox();
   expect(box).not.toBeNull();
@@ -81,5 +89,30 @@ test.describe("Plot view interactions", () => {
     await expect(page.locator(".plot-view-disconnected")).toHaveCount(0);
     await expect(page.locator(".plot-view")).not.toContainText("No plottable data");
     await expect(page.locator(".plot-view-line").first()).toBeVisible();
+  });
+
+  test("keeps polynomial plots scaled to the visible domain and clipped inside axes", async ({
+    page,
+  }) => {
+    await setEditorContent(
+      page,
+      "<p>x = 30</p><p>y = x^2</p><p>@view plot x=x y=y size=sm</p>"
+    );
+
+    await expect(page.locator(".plot-view").first()).toBeVisible();
+    await expect(page.locator(".plot-view-disconnected")).toHaveCount(0);
+    await expect(page.locator(".plot-view-line").first()).toBeVisible();
+
+    const yLabels = (await getYAxisLabels(page)).map(axisLabelToNumber);
+    const finiteLabels = yLabels.filter(Number.isFinite);
+    expect(Math.max(...finiteLabels)).toBeLessThan(6000);
+
+    const clipPath = await page
+      .locator(".plot-view-line")
+      .first()
+      .evaluate((line) =>
+        line.parentElement?.getAttribute("clip-path") || ""
+      );
+    expect(clipPath).toMatch(/^url\(#plot-clip-\d+\)$/);
   });
 });

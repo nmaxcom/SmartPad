@@ -27,6 +27,8 @@ const syncVariables = (context: EvaluationContext) => {
 describe("New stuff template", () => {
   test("contains every new plot and goal-seek affordance example", () => {
     expect(NEW_STUFF_TEMPLATE).toContain("@view plot x=time y=speed");
+    expect(NEW_STUFF_TEMPLATE).toContain("@view plot x=radius y=area now");
+    expect(NEW_STUFF_TEMPLATE).toContain('@view plot x=x y="x^3 + 4"');
     expect(NEW_STUFF_TEMPLATE).toContain("@view plot x=promo spend y=forecast revenue");
     expect(NEW_STUFF_TEMPLATE).toContain("@view plot x=price delta y=forecast revenue");
     expect(NEW_STUFF_TEMPLATE).toContain("@view hist y=wait times");
@@ -38,6 +40,7 @@ describe("New stuff template", () => {
     expect(NEW_STUFF_TEMPLATE).toContain(
       "make goal fund = 20000 EUR by monthly saving =>"
     );
+    expect(NEW_STUFF_TEMPLATE).toContain("edge tiny = 9.99e-5 s");
   });
 
   test("evaluates executable lines and connects every @view", () => {
@@ -75,6 +78,6 @@ describe("New stuff template", () => {
     });
 
     expect(failures).toEqual([]);
-    expect(connectedViews).toBe(8);
+    expect(connectedViews).toBe(10);
   });
 });
