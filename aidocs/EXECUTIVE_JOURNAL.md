@@ -5184,3 +5184,30 @@
     *   Await user confirmation that the chart scaling/clipping and goal-seek insertion now match the intended UX.
 *   Risks/blockers:
     *   None known after targeted unit, full related E2E, docs/spec gates, and build passed.
+
+## Entry J-2026-05-29-01
+
+*   Timestamp: 2026-05-29 00:29:04 CEST
+*   Summary:
+    *   User showed that `@view plot x=x y=arei size=sm` auto-scaled Y to around `1e+6`, while an explicit equivalent `domain=-6..66` produced a useful Y range.
+    *   Assistant found that auto-Y mode still passed the initial expanded `currentYView` into SVG rendering as an override.
+    *   Plot rendering now passes no Y override while auto-Y is active, so visible-point Y scaling is used consistently.
+    *   Double-click reset now restores auto-Y mode when the plot originally had automatic Y scaling.
+    *   Added Playwright coverage comparing automatic domain and explicit equivalent domain for `area(r) = PI * r^2`, `x = 30`, `arei = area(x)`.
+*   Artifacts:
+    *   `src/components/PlotViewExtension.ts`
+    *   `tests/e2e/plot-view-interactions.spec.ts`
+    *   `docs/Specs/Plotting.spec.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npx playwright test tests/e2e/plot-view-interactions.spec.ts --project=chromium --config=playwright.config.ts --workers=1` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run build` ✅
+    *   `npm run verify:changed` ✅
+*   Pending updates:
+    *   Await user confirmation that the automatic Y scale now matches the expected chart readability.
+*   Risks/blockers:
+    *   None known after direct reproduction and post-commit `verify:changed` passed.

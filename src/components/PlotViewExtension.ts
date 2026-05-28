@@ -1176,7 +1176,7 @@ const createPlotWidget = (
   let currentXView: PlotRange | undefined =
     model.view || model.autoView || model.domain;
   let currentYView: PlotRange | undefined =
-    model.yView || model.autoYView || model.yDomain;
+    model.yViewAuto ? undefined : model.yView || model.autoYView || model.yDomain;
   let yViewAuto = model.yViewAuto ?? true;
   let yDomainAuto = model.yDomainAuto ?? true;
   const yPanDomainPadding = model.yPanDomainPadding ?? 6;
@@ -2264,8 +2264,8 @@ const createPlotWidget = (
       const resetXView = model.autoView || model.view || model.domain;
       const resetYView = model.autoYView || model.yView || model.yDomain;
       if (resetXView) currentXView = resetXView;
-      if (resetYView) currentYView = resetYView;
-      yViewAuto = false;
+      yViewAuto = model.yViewAuto ?? true;
+      currentYView = yViewAuto ? undefined : resetYView;
       yDomainAuto = model.yDomainAuto ?? true;
       if (drawWithView) drawWithView(currentXView, currentYView);
       if (onUpdate) {
@@ -2285,7 +2285,7 @@ const createPlotWidget = (
         width,
         height,
         currentXView,
-        currentYView,
+        yViewAuto ? undefined : currentYView,
         yViewAuto
       );
       if (isPlotDebugEnabled()) {

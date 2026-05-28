@@ -10,18 +10,18 @@ const setEditorContent = async (page: Page, html: string) => {
   await waitForUIRenderComplete(page);
 };
 
-const getAxisLabels = async (page: Page) =>
-  page.locator(".plot-view svg").first().evaluate((svg: SVGSVGElement) =>
+const getAxisLabels = async (page: Page, plotIndex = 0) =>
+  page.locator(".plot-view svg").nth(plotIndex).evaluate((svg: SVGSVGElement) =>
     Array.from(svg.querySelectorAll("text.plot-view-axis-text")).map((node) => node.textContent)
   );
 
-const getXAxisLabels = async (page: Page) => {
-  const labels = await getAxisLabels(page);
+const getXAxisLabels = async (page: Page, plotIndex = 0) => {
+  const labels = await getAxisLabels(page, plotIndex);
   return labels.slice(0, Math.floor(labels.length / 2));
 };
 
-const getYAxisLabels = async (page: Page) => {
-  const labels = await getAxisLabels(page);
+const getYAxisLabels = async (page: Page, plotIndex = 0) => {
+  const labels = await getAxisLabels(page, plotIndex);
   return labels.slice(Math.floor(labels.length / 2));
 };
 
@@ -114,5 +114,32 @@ test.describe("Plot view interactions", () => {
         line.parentElement?.getAttribute("clip-path") || ""
       );
     expect(clipPath).toMatch(/^url\(#plot-clip-\d+\)$/);
+  });
+
+  test("uses the same visible y scale for automatic and equivalent explicit domains", async ({
+    page,
+  }) => {
+    await setEditorContent(
+      page,
+      [
+        "<p>area(r) = PI * r^2</p>",
+        "<p>x = 30</p>",
+        "<p>arei = area(x)</p>",
+        "<p>@view plot x=x y=arei size=sm</p>",
+        "<p>@view plot x=x y=arei domain=-6..66 size=sm</p>",
+      ].join("")
+    );
+
+    await expect(page.locator(".plot-view")).toHaveCount(2);
+    await expect(page.locator(".plot-view-disconnected")).toHaveCount(0);
+
+    const autoYLabels = (await getYAxisLabels(page, 0)).map(axisLabelToNumber);
+    const explicitYLabels = (await getYAxisLabels(page, 1)).map(axisLabelToNumber);
+    const autoMax = Math.max(...autoYLabels.filter(Number.isFinite));
+    const explicitMax = Math.max(...explicitYLabels.filter(Number.isFinite));
+
+    expect(autoMax).toBeLessThan(20000);
+    expect(explicitMax).toBeLessThan(20000);
+    expect(Math.abs(autoMax - explicitMax)).toBeLessThan(1000);
   });
 });
