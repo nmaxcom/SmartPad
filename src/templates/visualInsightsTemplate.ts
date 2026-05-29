@@ -19,10 +19,8 @@ circle_area(r) = PI * r^2
 area now = circle_area(radius) =>
 @view plot x=radius y=area now domain=0..40 size=md
 
-# Direct polynomial plot: quote expressions when y is not a named result
-x = 0
-curve = x^3 + 4 =>
-@view plot x=x y="x^3 + 4" domain=-10..10 size=md
+# Direct polynomial plot: quote the expression; x is inferred and plot-only
+@view plot y="x^3 + 4" domain=-10..10 size=md
 
 # Direct function plot: no throwaway x assignment needed
 f(x) = 56*x + 7

@@ -198,6 +198,22 @@ describe("PlotViewEvaluator", () => {
     }
   });
 
+  test("plots a direct expression by inferring a virtual x variable", () => {
+    const astNodes = [parseLine('@view plot y="x^3 + 4" domain=-2..2', 1)];
+    const evaluator = new PlotViewEvaluator();
+
+    const result = evaluator.evaluate(astNodes[0], createContext(astNodes, new Map()));
+
+    expect(result?.type).toBe("plotView");
+    if (result?.type === "plotView") {
+      expect(result.status).toBe("connected");
+      expect(result.x).toBe("x");
+      expect(result.expression).toBe("x^3 + 4");
+      expect(result.currentY).toBe(4);
+      expect(result.data?.some((point) => point.x === 2 && point.y === 12)).toBe(true);
+    }
+  });
+
   test("plots function-backed assignments with a virtual x variable", () => {
     const functionNode = parseLine("f(x) = x^3 + 4", 1);
     if (functionNode.type !== "functionDefinition") {

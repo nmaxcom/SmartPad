@@ -258,14 +258,15 @@ g = x^2
 Direct expression:
 
 ```smartpad
-x = 0
-@view plot x=x y="x^3 + 4" domain=-10..10
+@view plot y="x^3 + 4" domain=-10..10
 ```
 
-Direct polynomial expressions may be plotted through quoted `y=` expressions. When no explicit
-`domain=` is provided, SmartPad samples an expanded domain for pan/zoom headroom, but the initial
-Y auto-scale is derived from the visible X viewport so a curve like `x^2` does not flatten against
-a huge hidden-domain Y range.
+Direct polynomial expressions may be plotted through quoted `y=` expressions. If the expression
+contains exactly one free variable such as `x`, SmartPad infers that variable as the X axis and uses
+a temporary plot-only numeric variable. Users do not need a fake `x = 0` assignment for pure curve
+exploration. When no explicit `domain=` is provided, SmartPad samples an expanded domain for
+pan/zoom headroom, but the initial Y auto-scale is derived from the visible X viewport so a curve
+like `x^2` does not flatten against a huge hidden-domain Y range.
 
 Direct one-argument function:
 

@@ -25,7 +25,7 @@ This page captures feature ideas that are not current shipped contracts.
 - Automatic graph suggestions for list/function outputs:
   - dedicated proposal: `docs/Specs/proposed/auto-suggested-plots.md`
 - Quick templates as validation surfaces for new interaction clusters:
-  - shipped examples should exercise edge cases that users can inspect visually, including direct one-argument function plots, function-backed plots, direct polynomial plot directives, goal-seek insertion, and semantic duration literals.
+  - shipped examples should exercise edge cases that users can inspect visually, including direct one-argument function plots, function-backed plots, direct polynomial plot directives that do not require dummy `x = 0` assignments, goal-seek insertion, and semantic duration literals.
 - Tables and structured collections:
   - dedicated proposal: `docs/Specs/proposed/tables-and-structured-collections.md`
 - Time/playhead animation for expressions using a time variable.

@@ -28,7 +28,8 @@ describe("New stuff template", () => {
   test("contains every new plot and goal-seek affordance example", () => {
     expect(NEW_STUFF_TEMPLATE).toContain("@view plot x=time y=speed");
     expect(NEW_STUFF_TEMPLATE).toContain("@view plot x=radius y=area now");
-    expect(NEW_STUFF_TEMPLATE).toContain('@view plot x=x y="x^3 + 4"');
+    expect(NEW_STUFF_TEMPLATE).toContain('@view plot y="x^3 + 4"');
+    expect(NEW_STUFF_TEMPLATE).not.toContain("x = 0");
     expect(NEW_STUFF_TEMPLATE).toContain("@view plot y=f domain=-10..10");
     expect(NEW_STUFF_TEMPLATE).toContain("@view plot x=x y=ff domain=-10..10");
     expect(NEW_STUFF_TEMPLATE).toContain("@view plot x=promo spend y=forecast revenue");

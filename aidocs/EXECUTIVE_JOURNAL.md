@@ -5291,3 +5291,41 @@
     *   Next candidate slice: multi-input function visualization using explicit 2D slices first and heatmap/surface only when the product behavior is clear.
 *   Risks/blockers:
     *   Multi-input free-variable plots are intentionally not implemented in this slice to avoid presenting mathematically misleading 2D output.
+
+## Entry J-2026-05-29-04
+
+*   Timestamp: 2026-05-29 20:53:53 CEST / 2026-05-29 18:53:53 UTC
+*   Summary:
+    *   User pointed out that direct curve plotting should not require a dummy `x = 0` value in the sheet.
+    *   Assistant confirmed the product direction: pure curve exploration should infer the single free variable and use a plot-only virtual X value.
+    *   `New stuff` and the plotting spec now demonstrate `@view plot y="x^3 + 4" domain=-10..10` instead of requiring `x = 0` and `x=x`.
+    *   Added regression coverage proving direct expressions infer a virtual X variable.
+*   Decisions:
+    *   Direct quoted one-variable expressions should be first-class plot inputs.
+    *   Dummy document variables should not be part of recommended plotting UX for pure mathematical curves.
+*   User directives:
+    *   Reconsider the product design around explicit X values for direct mathematical curve plotting.
+*   Assistant commitments:
+    *   Validate the visible template, update docs/specs, run gates, and commit a scoped follow-up fix.
+*   Artifacts changed:
+    *   `src/templates/visualInsightsTemplate.ts`
+    *   `tests/unit/plotViewEvaluator.test.ts`
+    *   `tests/unit/visualInsightsTemplate.test.ts`
+    *   `tests/e2e/visual-insights-template.spec.ts`
+    *   `docs/Specs/Plotting.spec.md`
+    *   `docs/ABOUT.md`
+    *   `docs/Specs/proposed/ux-feature-ideas-backlog.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/plotViewEvaluator.test.ts --runInBand` ✅
+    *   `npm run test:unit -- tests/unit/visualInsightsTemplate.test.ts --runInBand` ✅
+    *   `npx playwright test tests/e2e/visual-insights-template.spec.ts --project=chromium --config=playwright.config.ts --workers=1` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run build` ✅
+*   Pending updates:
+    *   Commit the scoped fix, run post-commit `npm run verify:changed`, and await user review.
+*   Risks/blockers:
+    *   None known; this is currently a docs/template/test alignment with already-supported evaluator behavior.

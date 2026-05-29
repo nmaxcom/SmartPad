@@ -13,6 +13,7 @@ test.describe("New stuff template", () => {
 
     const editor = page.locator(".ProseMirror");
     await expect(editor).toContainText("@view plot x=time y=speed domain=0.25..6 size=md");
+    await expect(editor).toContainText('@view plot y="x^3 + 4" domain=-10..10 size=md');
     await expect(editor).toContainText("@view plot y=f domain=-10..10 size=md");
     await expect(editor).toContainText("@view plot x=x y=ff domain=-10..10 size=md");
     await expect(editor).toContainText("@view hist y=wait times size=md");
