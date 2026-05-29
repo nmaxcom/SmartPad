@@ -206,4 +206,28 @@ test.describe("Plot view interactions", () => {
 
     await page.evaluate(() => document.body.classList.remove("number-scrubbing"));
   });
+
+  test("keeps scrubbed auto y scale scoped to the visible x window", async ({ page }) => {
+    const content = [
+      "<p>f(x) = 3^x - x^3</p>",
+      "<p>@view plot x=x y=f(x)</p>",
+    ].join("");
+
+    await setEditorContent(page, content);
+    const initialYLabels = (await getYAxisLabels(page)).map(axisLabelToNumber);
+    const initialMax = Math.max(...initialYLabels.filter(Number.isFinite));
+    expect(initialMax).toBeLessThan(100);
+
+    await page.evaluate(() => document.body.classList.add("number-scrubbing"));
+    try {
+      await setEditorContent(page, content);
+
+      const scrubbedYLabels = (await getYAxisLabels(page)).map(axisLabelToNumber);
+      const scrubbedFinite = scrubbedYLabels.filter(Number.isFinite);
+      expect(Math.max(...scrubbedFinite)).toBeLessThan(100);
+      await expect(page.locator(".plot-view")).not.toContainText("e+22");
+    } finally {
+      await page.evaluate(() => document.body.classList.remove("number-scrubbing"));
+    }
+  });
 });

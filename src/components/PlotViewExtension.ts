@@ -278,7 +278,9 @@ const buildPlotModel = (
             },
           ]
         : [];
-  const derivedY = deriveYDomainFromSeries(series);
+  const visibleXRange = plotNode.view || plotNode.domain;
+  const derivedY =
+    deriveYDomainFromSeries(series, visibleXRange) || deriveYDomainFromSeries(series);
   const resolvedYDomain = plotNode.yDomain || derivedY;
   const resolvedYView = plotNode.yView || plotNode.yDomain || derivedY;
   const model: PlotViewModel = {

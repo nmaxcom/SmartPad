@@ -5361,3 +5361,35 @@
     *   Commit the scoped fix, run post-commit `npm run verify:changed`, and await user review.
 *   Risks/blockers:
     *   None known after targeted E2E reproduced both intended behaviors.
+
+## Entry J-2026-05-30-01
+
+*   Timestamp: 2026-05-30 00:59:33 CEST / 2026-05-29 22:59:33 UTC
+*   Summary:
+    *   User reported that function plots can start readable but jump to an enormous Y domain during dragging or value changes when no explicit `domain=` is supplied.
+    *   Assistant identified the likely path: persistent plots with expanded hidden X sampling could cache an automatic Y view derived from offscreen points during scrub.
+    *   The fix scopes persistent auto-Y derivation to the visible X viewport before falling back to the full sampled domain.
+    *   Added an E2E regression for `f(x) = 3^x - x^3` with `@view plot x=x y=f(x)` during numeric scrubbing.
+*   Decisions:
+    *   Expanded sampling domains are for pan/zoom headroom only; they must not poison initial or held automatic Y scale.
+    *   Scrub-time cached auto-Y must preserve the pre-scrub visible viewport scale.
+*   User directives:
+    *   Fix unstable automatic Y domains that become huge after dragging/changing values.
+*   Assistant commitments:
+    *   Validate with targeted E2E, update plotting spec, run gates, and commit a scoped fix.
+*   Artifacts changed:
+    *   `src/components/PlotViewExtension.ts`
+    *   `tests/e2e/plot-view-interactions.spec.ts`
+    *   `docs/Specs/Plotting.spec.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npx playwright test tests/e2e/plot-view-interactions.spec.ts --project=chromium --config=playwright.config.ts --workers=1` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run build` ✅
+*   Pending updates:
+    *   Commit the scoped fix, run post-commit `npm run verify:changed`, and await user review.
+*   Risks/blockers:
+    *   None known after targeted E2E reproduced the unstable auto-Y scenario.

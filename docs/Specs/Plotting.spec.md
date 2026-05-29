@@ -494,6 +494,7 @@ Pan/zoom only affects the **viewport**.
 * This applies equally to named series views such as `@view plot x=time y=speed`: rerendering the named source or updating its input values must preserve the user's committed viewport.
 * Automatic Y view is recalculated from visible points while the chart is in auto-Y mode. Once the user sets a Y viewport through interaction or directive text, that user viewport is treated as manual until reset.
 * During numeric scrubbing, automatic Y view is temporarily held at the pre-scrub scale so changes in slope/shape remain visually perceptible instead of being normalized away by continuous auto-scaling.
+* The held pre-scrub automatic Y view must also be based on the visible X viewport, not on the expanded sampling domain. Offscreen growth such as `3^x` must not poison the cached Y scale and flatten the visible curve during scrub.
 * Auto-Y mode must not pass an initial expanded Y view as a render override. A plot with inferred X view and the same plot with an explicit equivalent `domain=` must produce comparable Y scaling.
 * Plot widget identity must include all rendered point coordinates, not only first/last points. Scatter plots must rerender when an intermediate X or Y list value changes.
 
