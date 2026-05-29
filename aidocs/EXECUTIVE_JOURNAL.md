@@ -5211,3 +5211,34 @@
     *   Await user confirmation that the automatic Y scale now matches the expected chart readability.
 *   Risks/blockers:
     *   None known after direct reproduction and post-commit `verify:changed` passed.
+
+## Entry J-2026-05-29-02
+
+*   Timestamp: 2026-05-29 04:37:55 CEST
+*   Summary:
+    *   User showed that `Plot from result` generated `@view plot x=radius y=circle area size=md` for `circle area = area(radius)`, but the chart rendered "No plottable data".
+    *   Assistant reproduced the failure through the result-chip menu with `radius = 4 m` and `area(r) = PI * r^2`.
+    *   Root cause: named live assignment results without `=>` are not always persisted into `variableContext`, so `y=circle area` could not resolve through variables even though the source assignment line existed.
+    *   `PlotViewEvaluator` now resolves named series from prior assignment AST lines when no persisted variable/raw expression is available.
+    *   Added unit coverage for function-backed unit-valued series and Playwright coverage for the result-chip plot action.
+*   Artifacts:
+    *   `src/eval/plotViewEvaluator.ts`
+    *   `tests/unit/plotViewEvaluator.test.ts`
+    *   `tests/e2e/result-reference-drag-only.spec.ts`
+    *   `docs/Specs/Plotting.spec.md`
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/plotViewEvaluator.test.ts --runInBand` ✅
+    *   `npx playwright test tests/e2e/result-reference-drag-only.spec.ts -g "function-backed unit results" --project=chromium --config=playwright.config.ts --workers=1` ✅
+    *   `npx playwright test tests/e2e/result-reference-drag-only.spec.ts --project=chromium --config=playwright.config.ts --workers=1` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run build` ✅
+    *   `npm run verify:changed` ✅
+*   Pending updates:
+    *   Await user confirmation that `Plot from result` now connects for function-backed unit results.
+*   Risks/blockers:
+    *   None known after unit, full related E2E, docs/spec gates, build, and post-commit `verify:changed` passed.

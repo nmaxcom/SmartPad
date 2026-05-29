@@ -87,9 +87,29 @@ const parseSeriesList = (raw?: string): string[] => {
     .filter(Boolean);
 };
 
+const findPriorAssignmentExpression = (
+  label: string,
+  context: EvaluationContext,
+  line: number
+): string | null => {
+  if (!label || !context.astNodes || line <= 1) return null;
+  for (let index = line - 2; index >= 0; index -= 1) {
+    const candidate = context.astNodes[index];
+    if (!candidate) continue;
+    if (isCombinedAssignmentNode(candidate) && candidate.variableName === label) {
+      return candidate.expression;
+    }
+    if (isVariableAssignmentNode(candidate) && candidate.variableName === label) {
+      return candidate.rawValue?.trim() || null;
+    }
+  }
+  return null;
+};
+
 const resolveSeriesExpression = (
   raw: string,
-  context: EvaluationContext
+  context: EvaluationContext,
+  line: number
 ): { label: string; expression: string } => {
   const label = raw.trim();
   if (!label) return { label: raw, expression: raw };
@@ -99,6 +119,10 @@ const resolveSeriesExpression = (
     if (candidate) {
       return { label, expression: candidate };
     }
+  }
+  const assignmentExpression = findPriorAssignmentExpression(label, context, line);
+  if (assignmentExpression) {
+    return { label, expression: assignmentExpression };
   }
   return { label, expression: label };
 };
@@ -269,7 +293,7 @@ const buildListPlotNode = (
 ): PlotViewRenderNode | null => {
   if (kind === "hist") {
     const definition = seriesParam[0]
-      ? resolveSeriesExpression(seriesParam[0], context)
+      ? resolveSeriesExpression(seriesParam[0], context, node.line)
       : expressionNode
         ? { label: expressionNode.expression, expression: expressionNode.expression }
         : null;
@@ -343,7 +367,7 @@ const buildListPlotNode = (
       };
     }
     const definition = seriesParam[0]
-      ? resolveSeriesExpression(seriesParam[0], context)
+      ? resolveSeriesExpression(seriesParam[0], context, node.line)
       : expressionNode
         ? { label: expressionNode.expression, expression: expressionNode.expression }
         : null;
@@ -476,7 +500,7 @@ export class PlotViewEvaluator implements NodeEvaluator {
     const resolvedExpressionNode = expressionNode;
 
     const seriesDefinitions = seriesParam.length
-      ? seriesParam.map((entry) => resolveSeriesExpression(entry, context))
+      ? seriesParam.map((entry) => resolveSeriesExpression(entry, context, node.line))
       : [
           {
             label: resolvedExpressionNode!.expression,

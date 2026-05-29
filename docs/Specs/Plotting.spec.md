@@ -285,6 +285,10 @@ arei = area(x)
 @view plot x=x y=arei domain=0..30
 ```
 
+Named `y=` series resolve from the nearest prior assignment when the result is live-only and not
+persisted as a variable. For example `circle area = area(radius)` followed by
+`@view plot x=radius y=circle area` plots `area(radius)` and remains live-bound to that assignment.
+
 With explicit domain:
 
 ```smartpad

@@ -4,7 +4,8 @@ import { PlotViewEvaluator } from "../../src/eval/plotViewEvaluator";
 import { ReactiveVariableStore } from "../../src/state/variableStore";
 import { EvaluationContext } from "../../src/eval/registry";
 import { Variable } from "../../src/state/types";
-import { ListValue, NumberValue, SemanticValue } from "../../src/types";
+import { ListValue, NumberValue, SemanticValue, UnitValue } from "../../src/types";
+import { SmartPadQuantity } from "../../src/units/unitsnetAdapter";
 import { FunctionDefinitionNode } from "../../src/parsing/ast";
 
 const createVariable = (
@@ -134,6 +135,41 @@ describe("PlotViewEvaluator", () => {
       expect(plottable.length).toBeGreaterThan(2);
       expect(Math.max(...plottable.map((point) => point.y as number))).toBeGreaterThan(2500);
       expect(result.currentY).toBeCloseTo(Math.PI * 30 ** 2, 2);
+    }
+  });
+
+  test("plots named function series with unit-valued inputs and outputs", () => {
+    const functionNode = parseLine("area(r) = PI * r^2", 1);
+    if (functionNode.type !== "functionDefinition") {
+      throw new Error(`Expected functionDefinition, got ${functionNode.type}`);
+    }
+    const astNodes = [
+      functionNode,
+      parseLine("radius = 4 m", 2),
+      parseLine("circle area = area(radius)", 3),
+      parseLine("@view plot x=radius y=circle area size=md", 4),
+    ];
+    const variables = new Map<string, Variable>([
+      [
+        "radius",
+        createVariable(
+          "radius",
+          new UnitValue(SmartPadQuantity.fromValueAndUnit(4, "m"))
+        ),
+      ],
+    ]);
+    const functionStore = new Map<string, FunctionDefinitionNode>([["area", functionNode]]);
+    const evaluator = new PlotViewEvaluator();
+
+    const result = evaluator.evaluate(astNodes[3], createContext(astNodes, variables, functionStore));
+
+    expect(result?.type).toBe("plotView");
+    if (result?.type === "plotView") {
+      expect(result.status).toBe("connected");
+      expect(result.series?.[0]?.label).toBe("circle area");
+      const plottable = (result.data || []).filter((point) => point.y !== null);
+      expect(plottable.length).toBeGreaterThan(2);
+      expect(result.currentY).toBeCloseTo(Math.PI * 4 ** 2, 2);
     }
   });
 

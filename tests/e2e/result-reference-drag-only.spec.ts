@@ -399,6 +399,41 @@ test.describe("Result references (drag-only)", () => {
     await expect(page.locator(".plot-view-disconnected")).toHaveCount(0);
   });
 
+  test("result chip plot action connects function-backed unit results", async ({ page }) => {
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      editor?.commands?.setContent(
+        [
+          "<p>area(r) = PI * r^2</p>",
+          "<p>radius = 4 m</p>",
+          "<p>circle area = area(radius)</p>",
+        ].join("")
+      );
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    const sourceChip = page
+      .locator(".ProseMirror p")
+      .nth(2)
+      .locator(".semantic-result-display, .semantic-live-result-display");
+    await sourceChip.hover();
+    await sourceChip
+      .locator(".semantic-result-menu")
+      .evaluate((button: HTMLElement) => button.click());
+
+    const menu = page.locator(".semantic-result-action-menu");
+    await expect(menu.getByRole("menuitem", { name: "Plot from result" })).toBeEnabled();
+    await menu.getByRole("menuitem", { name: "Plot from result" }).click();
+    await waitForUIRenderComplete(page);
+
+    const plotLine = page.locator(".ProseMirror p").nth(3);
+    await expect(plotLine).toContainText("@view plot x=radius y=circle area size=md");
+    await expect(page.locator(".plot-view").first()).toBeVisible();
+    await expect(page.locator(".plot-view-disconnected")).toHaveCount(0);
+    await expect(page.locator(".plot-view-line").first()).toBeVisible();
+  });
+
   test("result chip menu suggests and creates a histogram for numeric lists", async ({ page }) => {
     const editor = page.locator('[data-testid="smart-pad-editor"]');
     await editor.click();
