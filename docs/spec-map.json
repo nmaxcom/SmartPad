@@ -173,6 +173,7 @@
         "src/templates/quickTourTemplate.ts",
         "src/templates/capabilitySprintTemplate.ts",
         "src/templates/visualInsightsTemplate.ts",
+        "src/templates/goalSeekTemplate.ts",
         "src/App.css",
         "src/styles/",
         "src/App.tsx",

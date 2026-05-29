@@ -44,4 +44,22 @@ describe("TemplatePanel", () => {
     expect(title).toBe("New stuff");
     expect(makeActive).toBe(true);
   });
+
+  test("includes the dedicated Goal Seek template", () => {
+    const createSheetFromContent = jest.fn().mockResolvedValue(undefined);
+    (useSheetContext as jest.Mock).mockReturnValue({
+      createSheetFromContent,
+    });
+
+    render(<TemplatePanel />);
+    fireEvent.click(screen.getByRole("button", { name: /Goal Seek/i }));
+
+    expect(createSheetFromContent).toHaveBeenCalledTimes(1);
+    const [content, title, makeActive] = createSheetFromContent.mock.calls[0];
+    expect(content).toContain("make checkout total = 150 EUR by items =>");
+    expect(content).toContain("make runway = 12 month by monthly burn =>");
+    expect(content).toContain("make target distance / target time = 100 km/h by target time =>");
+    expect(title).toBe("Goal Seek");
+    expect(makeActive).toBe(true);
+  });
 });
