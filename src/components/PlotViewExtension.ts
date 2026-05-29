@@ -63,6 +63,7 @@ const PLOT_SERIES_COLORS = [
   "var(--plot-series-5)",
 ];
 let plotClipIdCounter = 0;
+const scrubAutoYViewCache = new Map<string, PlotRange>();
 
 interface PlotSeriesModel {
   label?: string;
@@ -255,6 +256,8 @@ const buildPlotModel = (
   plotNode: PlotViewRenderNode,
   source: PlotSource
 ): PlotViewModel => {
+  const isScrubbing =
+    typeof document !== "undefined" && document.body?.classList.contains("number-scrubbing");
   const series: PlotSeriesModel[] =
     plotNode.series && plotNode.series.length
       ? plotNode.series.map((entry, index) => ({
@@ -278,7 +281,7 @@ const buildPlotModel = (
   const derivedY = deriveYDomainFromSeries(series);
   const resolvedYDomain = plotNode.yDomain || derivedY;
   const resolvedYView = plotNode.yView || plotNode.yDomain || derivedY;
-  return {
+  const model: PlotViewModel = {
     source,
     kind: plotNode.kind,
     size: plotNode.size || "md",
@@ -301,6 +304,8 @@ const buildPlotModel = (
     currentY: series[0]?.currentY ?? plotNode.currentY,
     targetLine: plotNode.targetLine,
   };
+  syncScrubAutoYView(model, buildStablePlotKey(model, plotNode.line), isScrubbing, 8);
+  return model;
 };
 
 const formatPlotKeyRange = (range?: PlotRange): string =>
@@ -310,18 +315,14 @@ const buildPlotDataKey = (model: PlotViewModel): string =>
   model.series
     .map((series) => {
       const points = series.data || [];
-      const first = points[0];
-      const last = points[points.length - 1];
-      return [
-        series.expression || "",
-        points.length,
-        first ? `${first.x}:${first.y ?? "null"}` : "none",
-        last ? `${last.x}:${last.y ?? "null"}` : "none",
-      ].join(":");
+      const pointKey = points
+        .map((point) => `${point.x}:${point.y ?? "null"}`)
+        .join(",");
+      return [series.expression || "", points.length, pointKey || "none"].join(":");
     })
     .join("|");
 
-const buildPlotKey = (model: PlotViewModel, fallbackLine?: number): string => {
+const buildStablePlotKey = (model: PlotViewModel, fallbackLine?: number): string => {
   const line = model.targetLine ?? fallbackLine ?? 0;
   const kindKey = model.kind || "plot";
   const sizeKey = model.size || "md";
@@ -333,8 +334,12 @@ const buildPlotKey = (model: PlotViewModel, fallbackLine?: number): string => {
   const explicitViewKey = model.view?.raw ? formatPlotKeyRange(model.view) : "auto";
   const explicitYDomainKey = model.yDomain?.raw ? formatPlotKeyRange(model.yDomain) : "auto";
   const explicitYViewKey = model.yView?.raw ? formatPlotKeyRange(model.yView) : "auto";
+  return `plot-${model.source}-${line}-${kindKey}-${sizeKey}-${xVarKey}-${seriesKey}-${explicitDomainKey}-${explicitViewKey}-${explicitYDomainKey}-${explicitYViewKey}`;
+};
+
+const buildPlotKey = (model: PlotViewModel, fallbackLine?: number): string => {
   const dataKey = buildPlotDataKey(model);
-  return `plot-${model.source}-${line}-${kindKey}-${sizeKey}-${xVarKey}-${seriesKey}-${explicitDomainKey}-${explicitViewKey}-${explicitYDomainKey}-${explicitYViewKey}-${dataKey}`;
+  return `${buildStablePlotKey(model, fallbackLine)}-${dataKey}`;
 };
 
 const applyPlotOverride = (model: PlotViewModel, override?: PlotViewOverride) => {
@@ -402,6 +407,24 @@ const expandPlotRange = (range: PlotRange | undefined, factor: number): PlotRang
   const center = range.min + span / 2;
   const nextSpan = span * factor;
   return { min: center - nextSpan / 2, max: center + nextSpan / 2 };
+};
+
+const syncScrubAutoYView = (
+  model: PlotViewModel,
+  stableKey: string,
+  isScrubbing: boolean,
+  yDomainPadding: number
+) => {
+  if (!model.yViewAuto || !model.yDomainAuto || !model.yView) return;
+  if (isScrubbing) {
+    const cachedYView = scrubAutoYViewCache.get(stableKey);
+    if (!cachedYView) return;
+    model.yView = { ...cachedYView };
+    model.yDomain = expandPlotRange(model.yView, yDomainPadding) || model.yView;
+    model.yViewAuto = false;
+    return;
+  }
+  scrubAutoYViewCache.set(stableKey, { ...model.yView });
 };
 
 const trimScientificZeros = (value: string) =>
@@ -646,8 +669,8 @@ const computeModelFromExpression = (
   const baseYDomain =
     deriveYDomainFromSeries(seriesData, viewCandidate) || deriveYDomainFromSeries(seriesData);
   const baseYView = expandPlotRange(baseYDomain, yViewPadding) || baseYDomain;
-  const autoYView = yViewOverride?.raw ? yViewOverride : baseYView || baseYDomain;
-  const autoYDomain =
+  let autoYView = yViewOverride?.raw ? yViewOverride : baseYView || baseYDomain;
+  let autoYDomain =
     yDomainOverride?.raw ? yDomainOverride : expandPlotRange(autoYView, yDomainPadding) || autoYView;
   let computedYDomain = yDomainOverride || autoYDomain;
   if (yViewOverride) {
@@ -660,9 +683,30 @@ const computeModelFromExpression = (
       computedYDomain = yViewOverride;
     }
   }
-  const computedYView = yViewOverride || autoYView || computedYDomain;
-  const yViewAuto = !yViewOverride && !yDomainOverride;
+  let computedYView = yViewOverride || autoYView || computedYDomain;
+  let yViewAuto = !yViewOverride && !yDomainOverride;
   const yDomainAuto = !yDomainOverride;
+  const autoYCacheKey = [
+    source,
+    targetLine,
+    xVariable,
+    seriesSpecs.map((spec) => spec.expression).join("|"),
+    firstResult.domain ? `${firstResult.domain.min}..${firstResult.domain.max}` : "auto-domain",
+  ].join(":");
+  if (!yViewOverride && !yDomainOverride && computedYView) {
+    if (isScrubbing) {
+      const cachedYView = scrubAutoYViewCache.get(autoYCacheKey);
+      if (cachedYView) {
+        autoYView = { ...cachedYView };
+        autoYDomain = expandPlotRange(autoYView, yDomainPadding) || autoYView;
+        computedYDomain = autoYDomain;
+        computedYView = autoYView;
+        yViewAuto = false;
+      }
+    } else {
+      scrubAutoYViewCache.set(autoYCacheKey, { ...computedYView });
+    }
+  }
   if (isPlotDebugEnabled()) {
     logPlotDebug("[plot] computeModel", {
       line: targetLine,

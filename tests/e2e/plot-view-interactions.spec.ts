@@ -142,4 +142,68 @@ test.describe("Plot view interactions", () => {
     expect(explicitMax).toBeLessThan(20000);
     expect(Math.abs(autoMax - explicitMax)).toBeLessThan(1000);
   });
+
+  test("rerenders scatter plots when an intermediate x-list value changes", async ({ page }) => {
+    await setEditorContent(
+      page,
+      [
+        "<p>daily spend = $120, $160, $210, $260, $373, $390</p>",
+        "<p>ticket sales = 68, 77, 89, 96, 111, 121</p>",
+        "<p>@view scatter x=daily spend y=ticket sales size=md</p>",
+      ].join("")
+    );
+
+    await expect(page.locator(".plot-view-scatter-dot")).toHaveCount(6);
+    const before = await page
+      .locator(".plot-view-scatter-dot")
+      .nth(3)
+      .evaluate((dot) => Number(dot.getAttribute("cx")));
+
+    await setEditorContent(
+      page,
+      [
+        "<p>daily spend = $120, $160, $210, $320, $373, $390</p>",
+        "<p>ticket sales = 68, 77, 89, 96, 111, 121</p>",
+        "<p>@view scatter x=daily spend y=ticket sales size=md</p>",
+      ].join("")
+    );
+
+    const after = await page
+      .locator(".plot-view-scatter-dot")
+      .nth(3)
+      .evaluate((dot) => Number(dot.getAttribute("cx")));
+    expect(after).toBeGreaterThan(before + 20);
+  });
+
+  test("keeps automatic y scale stable during numeric scrubbing so slope changes are visible", async ({
+    page,
+  }) => {
+    const renderRevenuePlot = async (adMultiplier: number) => {
+      await setEditorContent(
+        page,
+        [
+          "<p>base revenue = $3240</p>",
+          "<p>promo spend = $430</p>",
+          `<p>ad multiplier = ${adMultiplier}</p>`,
+          "<p>price delta = 45</p>",
+          "<p>price penalty = $160</p>",
+          "<p>forecast revenue = base revenue + promo spend * ad multiplier - price delta * price penalty</p>",
+          "<p>@view plot x=promo spend y=forecast revenue domain=0..1000 size=md</p>",
+        ].join("")
+      );
+    };
+
+    await renderRevenuePlot(4);
+    const initialYLabels = await getYAxisLabels(page);
+    const initialPath = await page.locator(".plot-view-line").first().getAttribute("d");
+
+    await page.evaluate(() => document.body.classList.add("number-scrubbing"));
+    await renderRevenuePlot(20);
+
+    await expect.poll(() => getYAxisLabels(page)).toEqual(initialYLabels);
+    const scrubbedPath = await page.locator(".plot-view-line").first().getAttribute("d");
+    expect(scrubbedPath).not.toEqual(initialPath);
+
+    await page.evaluate(() => document.body.classList.remove("number-scrubbing"));
+  });
 });

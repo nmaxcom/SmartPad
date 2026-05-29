@@ -5329,3 +5329,35 @@
     *   Commit the scoped fix, run post-commit `npm run verify:changed`, and await user review.
 *   Risks/blockers:
     *   None known; this is currently a docs/template/test alignment with already-supported evaluator behavior.
+
+## Entry J-2026-05-29-05
+
+*   Timestamp: 2026-05-29 21:11:06 CEST / 2026-05-29 19:11:06 UTC
+*   Summary:
+    *   User reported two plot reactivity/UX defects from visual review: scatter did not update when scrubbing `daily spend` X-list values, and line plots hid slope changes because auto-Y continuously rescaled the visible range.
+    *   Assistant identified that plot widget identity only keyed first/last points, so intermediate scatter point changes could reuse stale SVG widgets.
+    *   Plot widget keys now include all rendered point coordinates, and auto-Y is temporarily held at the pre-scrub scale during numeric scrubbing so slope/shape changes remain visible.
+    *   Added Playwright regressions for intermediate scatter X changes and scrub-time Y scale stability.
+*   Decisions:
+    *   Scatter/list plots must rerender for any point coordinate change, not just endpoint changes.
+    *   Auto-Y remains useful for initial readability, but during active numeric scrubbing it must not normalize away the visual effect the user is exploring.
+*   User directives:
+    *   Fix the reported plot update and visible-slope behavior.
+*   Assistant commitments:
+    *   Validate with targeted E2E, update plotting spec, run gates, and commit a scoped fix.
+*   Artifacts changed:
+    *   `src/components/PlotViewExtension.ts`
+    *   `tests/e2e/plot-view-interactions.spec.ts`
+    *   `docs/Specs/Plotting.spec.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npx playwright test tests/e2e/plot-view-interactions.spec.ts --project=chromium --config=playwright.config.ts --workers=1` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run build` ✅
+*   Pending updates:
+    *   Commit the scoped fix, run post-commit `npm run verify:changed`, and await user review.
+*   Risks/blockers:
+    *   None known after targeted E2E reproduced both intended behaviors.
