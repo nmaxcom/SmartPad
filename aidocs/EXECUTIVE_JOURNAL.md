@@ -5242,3 +5242,52 @@
     *   Await user confirmation that `Plot from result` now connects for function-backed unit results.
 *   Risks/blockers:
     *   None known after unit, full related E2E, docs/spec gates, build, and post-commit `verify:changed` passed.
+
+## Entry J-2026-05-29-03
+
+*   Timestamp: 2026-05-29 12:35:19 CEST / 2026-05-29 10:35:19 UTC
+*   Summary:
+    *   User approved moving ahead with the broader function-plotting plan after clarifying that multi-input free variables imply a 3D/surface or heatmap-style visualization rather than a normal 2D line.
+    *   Assistant implemented the first high-confidence slice: direct one-argument function plotting through `@view plot y=<function>`, function-backed series plots that can render with a plot-only X variable, and result-chip menu actions for one-argument function-call results.
+    *   `New stuff` now demonstrates direct function plots and function-backed expression plots without requiring a throwaway `x = ...` assignment.
+    *   Backlog item `T-2026-05-29-03` now tracks this slice and explicitly leaves multi-input function heatmaps/slices/surfaces as the next separate reviewable slice.
+*   Decisions:
+    *   One free variable maps to a 2D line plot.
+    *   Two freely varying function inputs will not be faked as a 2D line; that work remains a future heatmap/slice/surface slice.
+    *   Plot-only virtual X variables may be used only for rendering and must not create or mutate document variables.
+*   User directives:
+    *   Proceed with the plan carefully and avoid regressions.
+    *   Keep remaining order/pending work visible.
+*   Assistant commitments:
+    *   Finish machine gates, commit only assistant-authored files, and leave multi-input visualization as the next explicit product slice.
+*   Artifacts changed:
+    *   `src/eval/plotViewEvaluator.ts`
+    *   `src/components/ResultReferenceInteractionExtension.ts`
+    *   `src/components/Editor.tsx`
+    *   `src/templates/visualInsightsTemplate.ts`
+    *   `tests/unit/plotViewEvaluator.test.ts`
+    *   `tests/unit/visualInsightsTemplate.test.ts`
+    *   `tests/e2e/result-reference-drag-only.spec.ts`
+    *   `tests/e2e/visual-insights-template.spec.ts`
+    *   `docs/Specs/Plotting.spec.md`
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
+    *   `docs/Specs/implemented/plotting-and-dependency-views.md`
+    *   `docs/Specs/implemented/index.md`
+    *   `docs/spec-trust.json`
+    *   `aidocs/TODO_BACKLOG.md`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/plotViewEvaluator.test.ts --runInBand` ✅
+    *   `npm run test:unit -- tests/unit/visualInsightsTemplate.test.ts --runInBand` ✅
+    *   `npx playwright test tests/e2e/result-reference-drag-only.spec.ts --project=chromium --config=playwright.config.ts --workers=1` ✅
+    *   `npx playwright test tests/e2e/visual-insights-template.spec.ts --project=chromium --config=playwright.config.ts --workers=1` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run build` ✅
+    *   `npm run verify:changed` ✅
+*   Pending updates:
+    *   Await user review/confirmation of `T-2026-05-29-03`.
+    *   Next candidate slice: multi-input function visualization using explicit 2D slices first and heatmap/surface only when the product behavior is clear.
+*   Risks/blockers:
+    *   Multi-input free-variable plots are intentionally not implemented in this slice to avoid presenting mathematically misleading 2D output.

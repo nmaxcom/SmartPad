@@ -14,7 +14,7 @@ Recent template updates:
 - Clicking a quick template now opens it in a new sheet and makes that new sheet active, preserving the current sheet content.
 - When multiple right-side panels are open, the `Quick Templates` panel is pinned at the top for faster access.
 - The `Quick Tour` template was condensed into practical mini-scenarios and now starts with a short scrubbing primer.
-- The `New stuff` template demonstrates live-bound result plots, histogram/scatter suggestions, and one-variable goal-seek from result chips using conventional currency examples such as `3000 EUR`.
+- The `New stuff` template demonstrates live-bound result plots, direct one-argument function plots (`@view plot y=f`), histogram/scatter suggestions, and one-variable goal-seek from result chips using conventional currency examples such as `3000 EUR`.
 
 These are some examples of its syntax:
 # Quick Tour: a guided walkthrough

@@ -12,8 +12,9 @@ import { NodeEvaluator, EvaluationContext } from "./registry";
 import { PlotKind, PlotRange, PlotSize, PlotViewRenderNode } from "./renderNodes";
 import { computePlotData, getPlotNumericValue, parsePlotRange } from "../plotting/plottingUtils";
 import { defaultRegistry } from "./registry";
-import { ListValue, SemanticParsers, SemanticValue } from "../types";
+import { ListValue, NumberValue, SemanticParsers, SemanticValue } from "../types";
 import { ReactiveVariableStore } from "../state/variableStore";
+import { Variable } from "../state/types";
 
 const SUPPORTED_KINDS: PlotKind[] = ["plot", "scatter", "hist", "box", "auto"];
 const SUPPORTED_SIZES: PlotSize[] = ["sm", "md", "lg", "xl"];
@@ -113,6 +114,11 @@ const resolveSeriesExpression = (
 ): { label: string; expression: string } => {
   const label = raw.trim();
   if (!label) return { label: raw, expression: raw };
+  const functionDefinition = context.functionStore?.get(label);
+  if (functionDefinition && functionDefinition.params.length === 1) {
+    const parameter = functionDefinition.params[0].name;
+    return { label: `${label}(${parameter})`, expression: `${label}(${parameter})` };
+  }
   const variable = context.variableContext.get(label);
   if (variable?.rawValue) {
     const candidate = variable.rawValue.trim();
@@ -125,6 +131,53 @@ const resolveSeriesExpression = (
     return { label, expression: assignmentExpression };
   }
   return { label, expression: label };
+};
+
+const componentsContainVariable = (
+  components: ExpressionNode["components"],
+  variableName: string
+): boolean => {
+  for (const component of components) {
+    if ((component.type === "variable" || component.type === "resultReference") && component.value === variableName) {
+      return true;
+    }
+    if (component.children && componentsContainVariable(component.children as any, variableName)) {
+      return true;
+    }
+    if (component.args) {
+      for (const arg of component.args) {
+        if (componentsContainVariable(arg.components as any, variableName)) {
+          return true;
+        }
+      }
+    }
+    if (component.access) {
+      if (componentsContainVariable([component.access.base] as any, variableName)) {
+        return true;
+      }
+      const accessComponents = [
+        ...(component.access.indexComponents || []),
+        ...(component.access.startComponents || []),
+        ...(component.access.endComponents || []),
+      ];
+      if (accessComponents.length && componentsContainVariable(accessComponents as any, variableName)) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
+const createVirtualPlotVariable = (name: string): Variable => {
+  const now = new Date();
+  const value = NumberValue.from(0);
+  return {
+    name,
+    value,
+    rawValue: "0",
+    createdAt: now,
+    updatedAt: now,
+  };
 };
 
 const resolveNearestExpressionNode = (
@@ -559,12 +612,25 @@ export class PlotViewEvaluator implements NodeEvaluator {
     const domainExpansionFactor =
       typeof context.plotDomainExpansion === "number" ? context.plotDomainExpansion : undefined;
 
+    let plotVariableContext = context.variableContext;
+    let plotVariableStore = context.variableStore;
+    if (
+      x &&
+      !context.variableContext.has(x) &&
+      safeSeriesNodes.some((seriesNode) => componentsContainVariable(seriesNode.components, x))
+    ) {
+      const virtualVariable = createVirtualPlotVariable(x);
+      plotVariableContext = new Map(context.variableContext);
+      plotVariableContext.set(x, virtualVariable);
+      plotVariableStore = cloneVariableStore({ ...context, variableContext: plotVariableContext });
+    }
+
     const plotResults = safeSeriesNodes.map((seriesNode) =>
       computePlotData({
         expressionNode: seriesNode,
         xVariable: x || "",
-        variableContext: context.variableContext,
-        variableStore: context.variableStore,
+        variableContext: plotVariableContext,
+        variableStore: plotVariableStore,
         functionStore: context.functionStore,
         registry: defaultRegistry,
         settings: plotSettings,

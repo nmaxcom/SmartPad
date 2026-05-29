@@ -222,6 +222,7 @@ Flow:
    - Named results insert a live named binding such as `@view plot x=time y=speed size=md`, so later edits to `speed = ... =>` update the plot without rewriting the directive.
    - Named live results that are not persisted as variables must still resolve from their source assignment line. For example `circle area = area(radius)` followed by `@view plot x=radius y=circle area` must plot the expression `area(radius)` even if `circle area` is only a live result.
    - Function-backed named results remain plottable: if `speed`, `area`, or another named result is computed through a user-defined function, the generated view evaluates with the same function definitions as the editor.
+   - One-argument function-call results expose a direct function plot action. For example `f(x) = 56*x + 7` and `f(10) =>` can insert `@view plot y=f size=md`, which renders by inferring the function parameter as the X axis without requiring a throwaway `x = ...` line.
    - Multi-input results expose explicit choices such as `Plot vs distance` and `Plot vs time` rather than guessing the x-axis.
    - Numeric-list results expose highlighted visual suggestions such as `Plot as histogram`.
    - Equal-length numeric-list pairs expose highlighted scatter suggestions such as `Plot as scatter vs study hours`.

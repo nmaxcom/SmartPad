@@ -173,6 +173,58 @@ describe("PlotViewEvaluator", () => {
     }
   });
 
+  test("plots a one-argument function by name without requiring a document x variable", () => {
+    const functionNode = parseLine("f(x) = 56*x + 7", 1);
+    if (functionNode.type !== "functionDefinition") {
+      throw new Error(`Expected functionDefinition, got ${functionNode.type}`);
+    }
+    const astNodes = [
+      functionNode,
+      parseLine("@view plot y=f domain=-2..2", 2),
+    ];
+    const functionStore = new Map<string, FunctionDefinitionNode>([["f", functionNode]]);
+    const evaluator = new PlotViewEvaluator();
+
+    const result = evaluator.evaluate(astNodes[1], createContext(astNodes, new Map(), functionStore));
+
+    expect(result?.type).toBe("plotView");
+    if (result?.type === "plotView") {
+      expect(result.status).toBe("connected");
+      expect(result.x).toBe("x");
+      expect(result.expression).toBe("f(x)");
+      expect(result.series?.[0]?.label).toBe("f(x)");
+      expect(result.currentY).toBe(7);
+      expect(result.data?.some((point) => point.x === 2 && point.y === 119)).toBe(true);
+    }
+  });
+
+  test("plots function-backed assignments with a virtual x variable", () => {
+    const functionNode = parseLine("f(x) = x^3 + 4", 1);
+    if (functionNode.type !== "functionDefinition") {
+      throw new Error(`Expected functionDefinition, got ${functionNode.type}`);
+    }
+    const astNodes = [
+      functionNode,
+      parseLine("ff = f(x)", 2),
+      parseLine("@view plot x=x y=ff domain=-2..2", 3),
+    ];
+    const variables = new Map<string, Variable>([
+      ["ff", createVariable("ff", 4, "f(x)")],
+    ]);
+    const functionStore = new Map<string, FunctionDefinitionNode>([["f", functionNode]]);
+    const evaluator = new PlotViewEvaluator();
+
+    const result = evaluator.evaluate(astNodes[2], createContext(astNodes, variables, functionStore));
+
+    expect(result?.type).toBe("plotView");
+    if (result?.type === "plotView") {
+      expect(result.status).toBe("connected");
+      expect(result.x).toBe("x");
+      expect(result.currentY).toBe(4);
+      expect(result.data?.some((point) => point.x === 2 && point.y === 12)).toBe(true);
+    }
+  });
+
   test("named y series follows edited source formulas without changing the directive", () => {
     const astNodes = [parseLine("@view plot x=time y=speed domain=0..5", 1)];
     const variables = new Map<string, Variable>([

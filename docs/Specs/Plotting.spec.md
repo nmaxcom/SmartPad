@@ -267,6 +267,29 @@ Direct polynomial expressions may be plotted through quoted `y=` expressions. Wh
 Y auto-scale is derived from the visible X viewport so a curve like `x^2` does not flatten against
 a huge hidden-domain Y range.
 
+Direct one-argument function:
+
+```smartpad
+f(x) = 56*x + 7
+@view plot y=f domain=-10..10
+```
+
+When `y=` names a user-defined function with exactly one parameter, SmartPad treats it as the
+function call for that parameter (`f(x)` above), infers the X axis from the function signature, and
+creates a temporary numeric X variable if the document has not defined one yet.
+
+Function-backed expression without a global X assignment:
+
+```smartpad
+f(x) = x^3 + 4
+ff = f(x)
+@view plot x=x y=ff domain=-10..10
+```
+
+If the plotted series depends on the requested X variable but that variable is not defined in the
+document, SmartPad uses a temporary plot-only numeric variable. The plot does not create or mutate a
+document variable; it only supplies sampled values while rendering the view.
+
 User-defined function:
 
 ```smartpad

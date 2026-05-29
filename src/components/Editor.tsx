@@ -1066,6 +1066,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       // Interactions that turn result chips into reusable reference chips
       ResultReferenceInteractionExtension.configure({
         getSettings: () => settingsRef.current,
+        getFunctionStore: () => functionStoreRef.current,
       }),
       // Number scrubber for interactive dragging
       NumberScrubberExtension,

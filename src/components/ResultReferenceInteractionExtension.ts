@@ -3,6 +3,7 @@ import { NodeSelection, Plugin, TextSelection } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import {
   ExpressionComponent,
+  FunctionDefinitionNode,
   isCombinedAssignmentNode,
   isExpressionNode,
   isVariableAssignmentNode,
@@ -71,6 +72,11 @@ interface PlotMenuAction {
   directive: string;
   title?: string;
   accent?: boolean;
+}
+
+interface FunctionPlotActionSource {
+  functionName: string;
+  parameterName: string;
 }
 
 interface GoalSeekMenuAction {
@@ -686,6 +692,42 @@ const collectExpressionVariables = (components: ExpressionComponent[]): string[]
   return uniqueNonEmptyValues(variables);
 };
 
+const findSingleInputFunctionCall = (
+  components: ExpressionComponent[],
+  functionStore: Map<string, FunctionDefinitionNode> | undefined
+): FunctionPlotActionSource | null => {
+  if (!functionStore || functionStore.size === 0) return null;
+  let match: FunctionPlotActionSource | null = null;
+  const visit = (component: ExpressionComponent | undefined): boolean => {
+    if (!component || match) return Boolean(match);
+    if (component.type === "function") {
+      const functionName = component.value.replace(/\s+/g, " ").trim();
+      const definition = functionStore.get(functionName);
+      if (definition && definition.params.length === 1) {
+        match = {
+          functionName,
+          parameterName: definition.params[0].name,
+        };
+        return true;
+      }
+    }
+    if (component.children?.some((child) => visit(child))) return true;
+    if (component.args?.some((arg) => arg.components.some((child) => visit(child)))) return true;
+    if (component.access) {
+      if (visit(component.access.base)) return true;
+      const accessComponents = [
+        ...(component.access.indexComponents || []),
+        ...(component.access.startComponents || []),
+        ...(component.access.endComponents || []),
+      ];
+      if (accessComponents.some((child) => visit(child))) return true;
+    }
+    return false;
+  };
+  components.some((component) => visit(component));
+  return match;
+};
+
 const buildPlotSourcePlan = (
   view: any,
   payload: ReferencePayload | null
@@ -736,10 +778,38 @@ const buildPlotSourcePlan = (
 
 const buildPlotMenuActions = (
   view: any,
-  payload: ReferencePayload | null
+  payload: ReferencePayload | null,
+  functionStore?: Map<string, FunctionDefinitionNode>
 ): PlotMenuAction[] => {
   const plan = buildPlotSourcePlan(view, payload);
-  if (!plan) return [];
+  if (!plan) {
+    const source = findSourceTextblockSnapshot(view, payload);
+    if (!source) return [];
+    const astNode = parseLine(source.text, source.lineNumber);
+    const components = isCombinedAssignmentNode(astNode)
+      ? astNode.components
+      : isExpressionNode(astNode)
+        ? astNode.components
+        : isVariableAssignmentNode(astNode)
+          ? (() => {
+              try {
+                return parseExpressionComponents(astNode.rawValue);
+              } catch {
+                return [];
+              }
+            })()
+          : [];
+    const functionSource = findSingleInputFunctionCall(components, functionStore);
+    if (!functionSource) return [];
+    const { functionName, parameterName } = functionSource;
+    return [
+      {
+        label: `Plot function ${functionName}(${parameterName})`,
+        directive: `@view plot y=${functionName} size=md`,
+        title: `Create a live plot of ${functionName} against ${parameterName}`,
+      },
+    ];
+  }
   const yParam = plan.targetName ? ` y=${plan.targetName}` : "";
   return plan.xVariables.map((xVariable) => ({
     label: plan.xVariables.length > 1 ? `Plot vs ${xVariable}` : "Plot from result",
@@ -1127,6 +1197,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
         chipInsertMode: "reference",
         referenceTextExportMode: "preserve",
       }),
+      getFunctionStore: (): Map<string, FunctionDefinitionNode> | undefined => undefined,
     };
   },
 
@@ -1161,6 +1232,9 @@ export const ResultReferenceInteractionExtension = Extension.create({
       getSettings?.().chipInsertMode === "value" ? "value" : "reference";
     const getReferenceTextExportMode = (): "preserve" | "readable" =>
       getSettings?.().referenceTextExportMode === "readable" ? "readable" : "preserve";
+    const getFunctionStore = this.options.getFunctionStore as
+      | (() => Map<string, FunctionDefinitionNode> | undefined)
+      | undefined;
     const serializeReferencePayload = (
       payload: ReferencePayload,
       mode: "preserve" | "readable"
@@ -1393,7 +1467,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
           )
         );
       });
-      const plotActions = buildPlotMenuActions(view, payload);
+      const plotActions = buildPlotMenuActions(view, payload, getFunctionStore?.());
       if (plotActions.length === 0 && visualPlotActions.length === 0) {
         menu.appendChild(
           buildMenuButton("Plot from result", () => {}, {

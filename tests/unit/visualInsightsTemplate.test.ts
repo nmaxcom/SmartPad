@@ -29,6 +29,8 @@ describe("New stuff template", () => {
     expect(NEW_STUFF_TEMPLATE).toContain("@view plot x=time y=speed");
     expect(NEW_STUFF_TEMPLATE).toContain("@view plot x=radius y=area now");
     expect(NEW_STUFF_TEMPLATE).toContain('@view plot x=x y="x^3 + 4"');
+    expect(NEW_STUFF_TEMPLATE).toContain("@view plot y=f domain=-10..10");
+    expect(NEW_STUFF_TEMPLATE).toContain("@view plot x=x y=ff domain=-10..10");
     expect(NEW_STUFF_TEMPLATE).toContain("@view plot x=promo spend y=forecast revenue");
     expect(NEW_STUFF_TEMPLATE).toContain("@view plot x=price delta y=forecast revenue");
     expect(NEW_STUFF_TEMPLATE).toContain("@view hist y=wait times");
@@ -78,6 +80,6 @@ describe("New stuff template", () => {
     });
 
     expect(failures).toEqual([]);
-    expect(connectedViews).toBe(10);
+    expect(connectedViews).toBe(12);
   });
 });

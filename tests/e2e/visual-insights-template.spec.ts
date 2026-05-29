@@ -13,6 +13,8 @@ test.describe("New stuff template", () => {
 
     const editor = page.locator(".ProseMirror");
     await expect(editor).toContainText("@view plot x=time y=speed domain=0.25..6 size=md");
+    await expect(editor).toContainText("@view plot y=f domain=-10..10 size=md");
+    await expect(editor).toContainText("@view plot x=x y=ff domain=-10..10 size=md");
     await expect(editor).toContainText("@view hist y=wait times size=md");
     await expect(editor).toContainText("@view scatter x=study hours y=test score size=md");
     await expect(editor).toContainText("make take home = 4000 EUR by gross =>");
@@ -20,7 +22,7 @@ test.describe("New stuff template", () => {
 
     await expect(page.locator(".semantic-error-result")).toHaveCount(0);
     await expect(page.locator(".plot-view-disconnected")).toHaveCount(0);
-    await expect(page.locator(".plot-view")).toHaveCount(8);
+    await expect(page.locator(".plot-view")).toHaveCount(12);
     await expect(page.locator(".plot-view-bar").first()).toBeVisible();
     await expect(page.locator(".plot-view-scatter-dot").first()).toBeVisible();
   });

@@ -434,6 +434,43 @@ test.describe("Result references (drag-only)", () => {
     await expect(page.locator(".plot-view-line").first()).toBeVisible();
   });
 
+  test("result chip menu creates a plot directly from a one-argument function call", async ({
+    page,
+  }) => {
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      editor?.commands?.setContent(
+        [
+          "<p>f(x) = 56*x + 7</p>",
+          "<p>f(10) =&gt;</p>",
+        ].join("")
+      );
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    const sourceChip = page
+      .locator(".ProseMirror p")
+      .nth(1)
+      .locator(".semantic-result-display, .semantic-live-result-display");
+    await sourceChip.hover();
+    await sourceChip
+      .locator(".semantic-result-menu")
+      .evaluate((button: HTMLElement) => button.click());
+
+    const menu = page.locator(".semantic-result-action-menu");
+    const plotFunction = menu.getByRole("menuitem", { name: "Plot function f(x)" });
+    await expect(plotFunction).toBeEnabled();
+    await plotFunction.click();
+    await waitForUIRenderComplete(page);
+
+    const plotLine = page.locator(".ProseMirror p").nth(2);
+    await expect(plotLine).toContainText("@view plot y=f size=md");
+    await expect(page.locator(".plot-view").first()).toBeVisible();
+    await expect(page.locator(".plot-view-disconnected")).toHaveCount(0);
+    await expect(page.locator(".plot-view-line").first()).toBeVisible();
+  });
+
   test("result chip menu suggests and creates a histogram for numeric lists", async ({ page }) => {
     const editor = page.locator('[data-testid="smart-pad-editor"]');
     await editor.click();

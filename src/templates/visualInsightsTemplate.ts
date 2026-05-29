@@ -24,6 +24,15 @@ x = 0
 curve = x^3 + 4 =>
 @view plot x=x y="x^3 + 4" domain=-10..10 size=md
 
+# Direct function plot: no throwaway x assignment needed
+f(x) = 56*x + 7
+f(10) =>
+@view plot y=f domain=-10..10 size=md
+
+# Function-backed expression plot: ff stays linked to f(x), and x can be virtual
+ff = f(x)
+@view plot x=x y=ff domain=-10..10 size=md
+
 # 2) Multi-variable result: menu should offer Plot vs promo spend and Plot vs price delta
 base revenue = $3000
 promo spend = $400
