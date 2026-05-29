@@ -192,7 +192,12 @@ Examples that must parse as arithmetic:
 ```text
 9L/min*18min => 162 L
 10m/s*2s => 20 m
+120 km / 2 h => 60 km/h
 ```
+
+When a unit value is divided by a single-unit duration, the default display preserves the user's
+compound unit choice (`km/h`, `m/min`, etc.) rather than normalizing to SI speed (`m/s`) unless the
+user explicitly requests that conversion.
 
 Examples that must remain valid compound-unit literals:
 

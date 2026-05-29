@@ -41,6 +41,7 @@
       "name": "Units And Conversions",
       "specPrefixes": [
         "src/units/",
+        "src/types/UnitValue.ts",
         "src/types/DurationValue.ts",
         "src/syntax/registry.ts",
         "docs/Specs/duration.spec.md",

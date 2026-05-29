@@ -11,6 +11,34 @@ import { PercentageValue } from './PercentageValue';
 import { DurationValue } from './DurationValue';
 import { SmartPadQuantity } from '../units/unitsnetAdapter';
 
+type DurationDisplayUnit = {
+  durationUnit: "year" | "month" | "week" | "day" | "hour" | "minute" | "second" | "millisecond";
+  symbol: string;
+};
+
+const getSingleDurationDisplayUnit = (duration: DurationValue): DurationDisplayUnit | null => {
+  const entries = Object.entries(duration.getParts()).filter(([, value]) => (value ?? 0) !== 0);
+  if (entries.length !== 1) return null;
+  const [unit] = entries[0] as [string, number];
+  switch (unit) {
+    case "year":
+    case "month":
+    case "week":
+    case "day":
+      return { durationUnit: unit, symbol: unit };
+    case "hour":
+      return { durationUnit: "hour", symbol: "h" };
+    case "minute":
+      return { durationUnit: "minute", symbol: "min" };
+    case "second":
+      return { durationUnit: "second", symbol: "s" };
+    case "millisecond":
+      return { durationUnit: "millisecond", symbol: "ms" };
+    default:
+      return null;
+  }
+};
+
 /**
  * Represents a physical quantity with units
  * Wraps the existing SmartPadQuantity to integrate with semantic type system
@@ -223,9 +251,13 @@ export class UnitValue extends SemanticValue {
       const otherDuration = other as DurationValue;
       
       try {
+        const displayUnit = getSingleDurationDisplayUnit(otherDuration);
+        const durationMagnitude = displayUnit
+          ? otherDuration.toFixedUnit(displayUnit.durationUnit)
+          : null;
         const durationQuantity = SmartPadQuantity.fromValueAndUnit(
-          otherDuration.getTotalSeconds(),
-          's'
+          typeof durationMagnitude === "number" ? durationMagnitude : otherDuration.getTotalSeconds(),
+          displayUnit ? displayUnit.symbol : 's'
         );
         const result = this.quantity.divide(durationQuantity);
         

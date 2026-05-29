@@ -5431,3 +5431,40 @@
     *   Await user review/confirmation.
 *   Risks/blockers:
     *   None known after targeted template validation.
+
+## Entry J-2026-05-30-03
+
+*   Timestamp: 2026-05-30 01:52:25 CEST / 2026-05-29 23:52:25 UTC
+*   Summary:
+    *   User noted that `route = 120 km`, `drive time = 2 h`, `average speed = route / drive time` should naturally display `60 km/h`, not `16.67 m/s`.
+    *   Assistant confirmed this should be the default: SI normalization is useful for internal magnitude comparison, but direct user-facing output should preserve the user's compound unit when it is obvious.
+    *   Unit/duration division now preserves a single-unit duration denominator (`h`, `min`, etc.) and speed derivation prefers the input compound unit before falling back to SI.
+    *   The Goal Seek template keeps the plain `route / drive time` line so it demonstrates the default behavior instead of hiding it with an explicit conversion.
+*   Decisions:
+    *   `km / h`-style results should display as `km/h` unless the user explicitly asks for `m/s` or another target.
+    *   Template examples should avoid workaround conversions when they would mask a product-level unit display bug.
+*   User directives:
+    *   Clarify and fix the default display for average-speed style unit division.
+*   Assistant commitments:
+    *   Add regression coverage, update specs, run gates, and commit a scoped fix.
+*   Artifacts changed:
+    *   `src/types/UnitValue.ts`
+    *   `src/units/unitsnetAdapter.ts`
+    *   `src/templates/goalSeekTemplate.ts`
+    *   `tests/unit/goalSeekTemplate.test.ts`
+    *   `docs/Specs/proposed/unit-aliases-and-ratio.md`
+    *   `docs/spec-map.json`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/goalSeekTemplate.test.ts tests/unit/unitsnetEvaluator.test.ts --runInBand` ✅
+    *   `npx playwright test tests/e2e/goal-seek-template.spec.ts --project=chromium --config=playwright.config.ts --workers=1` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run build` ✅
+    *   `npm run verify:changed` ✅
+*   Pending updates:
+    *   Await user review/confirmation.
+*   Risks/blockers:
+    *   None known after targeted validation and completion gates.

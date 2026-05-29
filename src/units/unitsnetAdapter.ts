@@ -526,6 +526,13 @@ export class SmartPadQuantity {
     numerator: SmartPadQuantity,
     denominator: SmartPadQuantity
   ): SmartPadQuantity {
+    const preferredUnit = `${numerator.unit}/${denominator.unit}`;
+    if (numerator.unit && denominator.unit) {
+      try {
+        return SmartPadQuantity.fromValueAndUnit(numerator.value / denominator.value, preferredUnit);
+      } catch {}
+    }
+
     const length = UnitsNetParser.parse(numerator.value, numerator.unit) as Length;
     const time = UnitsNetParser.parse(denominator.value, denominator.unit) as Duration;
     if (!(length instanceof Length) || !(time instanceof Duration)) {

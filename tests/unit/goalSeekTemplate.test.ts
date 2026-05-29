@@ -82,4 +82,25 @@ describe("Goal Seek template", () => {
     expect(failures).toEqual([]);
     expect(goalSeekResults).toBe(9);
   });
+
+  test("shows distance over declared duration in the user's compound speed unit", () => {
+    const context = createContext();
+    const lines = [
+      "route = 120 km",
+      "drive time = 2 h",
+      "average speed = route / drive time",
+    ];
+
+    let result: any;
+    lines.forEach((raw, index) => {
+      const node = parseLine(raw, index + 1);
+      context.lineNumber = index + 1;
+      result = defaultRegistry.evaluate(node, context);
+      recordEquationFromNode(node, context.equationStore ?? []);
+      syncVariables(context);
+    });
+
+    expect(result?.type).toBe("combined");
+    expect(result.result).toBe("60 km/h");
+  });
 });
