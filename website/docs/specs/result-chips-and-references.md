@@ -41,6 +41,8 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 ## Critical behavior rules
 
 - Broken-source states and dependency error UX.
+- SmartPad must not insert a reference from the direct chip click.
+- The click may focus/select the chip surface or reveal affordances, but it must not mutate the document.
 - Reference value payload must resolve from the rendered chip text first (then `aria-label`/`title`), and only use `data-result` as last-resort fallback.
 - In-flight drag payload must survive transient `dragleave` events so drop insertion remains reliable during normal pointer movement.
 - Drop cursor should be visually prominent (thicker/high-contrast) so line insertion is easy to target.
@@ -48,8 +50,6 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 - Boundary targeting must use one canonical resolver where the shown boundary indicator and the final insertion boundary are the same target.
 - Boundary insertion must tolerate missing paragraph `data-line-id` in the DOM by falling back to textblock line index, not defaulting silently to document end.
 - Dragging result chips must not trigger sheet/file import drop overlays.
-- Inserted reference chip label must match the exact visible source result, not the source expression text.
-- Bottom drop affordance must remain visible near the end of the document, including last-line drop for newline insertion.
 
 ## Power-user checklist
 

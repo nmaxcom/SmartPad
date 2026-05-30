@@ -44,8 +44,11 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 - must offer explicit recovery paths
 - Plots never become the primary control surface
 - `<kind>` defaults to `plot` if omitted
+- `size` may include trailing punctuation from inline editing (for example `size=lg,`) and is normalized.
 - edits preserve intent when possible
 - Percentages: clamped to sensible bounds (never cross invalid zones silently)
+- Plot widget identity must include all rendered point coordinates, not only first/last points. Scatter plots must rerender when an intermediate X or Y list value changes.
+- Result-chip menu suggestions for these views are highlighted and only shown when the generated view should connect immediately.
 
 ## Power-user checklist
 
