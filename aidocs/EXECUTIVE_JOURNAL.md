@@ -5487,3 +5487,22 @@
 *   Pending:
     *   Deploy to GitHub Pages for live site to pick up changes.
     *   User confirmation.
+
+## Entry J-2026-05-30-02
+
+*   Timestamp: 2026-05-30 05:24:22 CEST / 2026-05-30 03:24:22 UTC
+*   Summary:
+    *   User asked to make the project operate from a single branch for local work and GitHub pushes.
+    *   Confirmed `main` was already tracking `origin/main`.
+    *   Deleted local branches `codex/proposed-next-wave-specs` and `codex/plotting-list-first-spec-dossier`.
+    *   Deleted remote branch `origin/codex/proposed-next-wave-specs`.
+    *   Verified only `main` and `origin/main` remain.
+*   Decisions:
+    *   `main` is the single branch for ongoing work and publishing.
+    *   The old plotting dossier branch was not merged because it was stale and would conflict with the current project state.
+*   Validation:
+    *   `git branch -vv` shows only local `main`.
+    *   `git branch -r -vv` shows only `origin/HEAD -> origin/main` and `origin/main`.
+    *   `git status --short --branch` shows `main...origin/main`.
+*   Pending:
+    *   Commit and push this journal entry to `main`.
