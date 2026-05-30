@@ -18,6 +18,7 @@ import { useFxStatus } from "./hooks/useFxStatus";
 import { getSmartPadText } from "./components/editorText";
 import { sanitizeReferencePlaceholdersForDisplay } from "./references/referenceIds";
 import { parseRuntimeModeParams, RuntimeModeParams } from "./utils/runtimeMode";
+import { DEFAULT_SETTINGS } from "./state/settingsStore";
 
 const SHEET_DRAG_TYPE = "application/x-smartpad-sheet";
 const RESULT_REFERENCE_DRAG_TYPE = "application/x-smartpad-result-reference";
@@ -85,8 +86,8 @@ function AppContent() {
 
   useEffect(() => {
     if (runtimeParams.forceSpatialNeon) {
-      document.documentElement.dataset.uiTheme = "spatial-dark";
-      document.documentElement.dataset.syntaxTheme = "neon-syntax";
+      document.documentElement.dataset.uiTheme = DEFAULT_SETTINGS.uiTheme;
+      document.documentElement.dataset.syntaxTheme = DEFAULT_SETTINGS.syntaxTheme;
       return;
     }
     document.documentElement.dataset.uiTheme = settings.uiTheme;

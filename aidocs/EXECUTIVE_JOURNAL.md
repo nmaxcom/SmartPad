@@ -5468,3 +5468,22 @@
     *   Await user review/confirmation.
 *   Risks/blockers:
     *   None known after targeted validation and completion gates.
+
+---
+
+## Entry J-2026-05-30-01
+
+*   Timestamp: 2026-05-30
+*   Summary:
+    *   User asked to align GitHub Pages default themes with local defaults.
+    *   Root cause: docs embeds forced legacy `sp_theme=spatial-neon`, which mapped to `neon-syntax` instead of app defaults (`spatial-dark` + `spatial-syntax`).
+*   Changes:
+    *   `App.tsx`: legacy `sp_theme=spatial-neon` now applies `DEFAULT_SETTINGS` UI/syntax themes.
+    *   `ExamplePlayground.tsx`: removed forced `sp_theme` from inline preview URLs (embed uses app defaults).
+    *   Regenerated `public/docs` via `docs:docusaurus:publish-prod`.
+*   Validation:
+    *   `npm test -- tests/unit/appRuntimeMode.test.ts` ✅
+    *   `npm run docs:docusaurus:publish-prod` ✅
+*   Pending:
+    *   Deploy to GitHub Pages for live site to pick up changes.
+    *   User confirmation.

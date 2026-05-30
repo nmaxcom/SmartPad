@@ -18,7 +18,6 @@ function buildOpenInAppUrl(appBasePath: string, code: string, title: string) {
 function buildInlinePreviewUrl(appBasePath: string, code: string, title: string, nonce: number) {
   const params = new URLSearchParams();
   params.set("sp_embed", "1");
-  params.set("sp_theme", "spatial-neon");
   params.set("sp_preview", encodeURIComponent(code));
   params.set("sp_preview_title", encodeURIComponent(title));
   params.set("_r", String(nonce));

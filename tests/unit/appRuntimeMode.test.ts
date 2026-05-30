@@ -9,7 +9,7 @@ describe("App runtime mode params", () => {
     });
   });
 
-  it("detects spatial neon force theme when sp_theme=spatial-neon", () => {
+  it("detects legacy docs theme flag when sp_theme=spatial-neon", () => {
     expect(parseRuntimeModeParams("?sp_theme=spatial-neon")).toEqual({
       embed: false,
       forceSpatialNeon: true,
