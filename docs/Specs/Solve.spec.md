@@ -92,8 +92,12 @@ Line-order contract:
 2. Symbolic when unresolved values remain:
    - `distance = v * time`, `v =>` -> `distance / time`
 3. Solved expressions substitute known scalar constants when available.
-4. Unit/currency conversion suffixes (`to` / `in`) can be applied after solve when conversion target is valid.
-5. Goal-seek returns the solved value for the selected variable but does not overwrite the sheet automatically.
+4. Solved expressions that divide by reciprocal unit rates return the solved input unit when fully resolvable:
+   - `signup lift = 0.18 / EUR`
+   - `make projected signups = 850 by ad spend =>`
+   - Result: `2500 EUR`
+5. Unit/currency conversion suffixes (`to` / `in`) can be applied after solve when conversion target is valid.
+6. Goal-seek returns the solved value for the selected variable but does not overwrite the sheet automatically.
 
 ---
 
@@ -173,3 +177,11 @@ Solve returns explicit errors for invalid or unsupported cases, including:
    - `time = 2 h`
    - `make distance / time = 80 km/h by time =>`
    - Result: `1.5 h`
+
+8. Goal-seek through a reciprocal unit rate:
+   - `base signups = 400`
+   - `ad spend = 1200 EUR`
+   - `signup lift = 0.18 / EUR`
+   - `projected signups = base signups + ad spend * signup lift`
+   - `make projected signups = 850 by ad spend =>`
+   - Result: `2500 EUR`

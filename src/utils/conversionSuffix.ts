@@ -108,6 +108,10 @@ export const extractConversionSuffix = (
 export const findDanglingConversionKeyword = (
   expression: string
 ): { keyword: string } | null => {
+  if (extractConversionSuffix(expression)) {
+    return null;
+  }
+
   const candidates: Array<{ index: number; keyword: string }> = [];
   let depth = 0;
   let inString: string | null = null;

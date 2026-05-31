@@ -5432,6 +5432,31 @@
 *   Risks/blockers:
     *   None known after targeted template validation.
 
+## Entry J-2026-05-31-01
+
+*   Timestamp: 2026-05-31 04:37:27 CEST / 2026-05-31 02:37:39 UTC
+*   Summary:
+    *   User reported two unit/goal-seek regressions from the Goal Seek template: `make projected signups = 850 by ad spend =>` returned a symbolic expression instead of the solved spend, and `distance to in =>` errored because `in` was treated as a dangling conversion keyword rather than inches.
+    *   Root cause for goal seek: solve produced the right algebra, but semantic division rejected `number / (rate in 1/EUR)`, so output fell back to substituted symbolic text.
+    *   Root cause for `to in`: conversion keyword detection ran before confirming the full `to in` suffix, and the UnitsNet conversion parser did not allow `in` as a unit token after an already-consumed conversion keyword.
+*   Changes:
+    *   Added reciprocal-unit division so `450 / (0.18 1/EUR)` evaluates to `2500 EUR`, preserving currencies as currency values rather than pluralized count units.
+    *   Made conversion suffix dangling detection defer to valid full suffixes and allowed `in` as an inch unit target after `to`/`in`.
+    *   Added regressions for reciprocal-rate goal seek and `distance to in`.
+    *   Updated solve and unit conversion specs/trust metadata.
+*   Validation:
+    *   `npm run test:unit -- tests/unit/solve.test.ts tests/unit/unitAliasExamples.test.ts --runInBand` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run build` ✅
+    *   `npm run verify:changed` ✅
+*   Pending:
+    *   Await user review/confirmation.
+
+---
+
 ## Entry J-2026-05-30-03
 
 *   Timestamp: 2026-05-30 01:52:25 CEST / 2026-05-29 23:52:25 UTC

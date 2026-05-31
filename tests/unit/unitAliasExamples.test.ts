@@ -82,6 +82,17 @@ describe("Unit alias examples", () => {
     expect(output).toMatch(/4\s*km/);
   });
 
+  test("inch shorthand is accepted as a conversion target after to", () => {
+    const context = createContext();
+    evaluateLine("distance = 100 m", context, 1);
+
+    const result = evaluateLine("distance to in =>", context, 2);
+    const output = expectMathResult(result);
+
+    expect(output).toMatch(/3,?937\.0/);
+    expect(output).toMatch(/\bin\b/);
+  });
+
   test("alias conversions work with plural form inputs", () => {
     const context = createContext();
     evaluateLine("workweek = 40 h", context, 1);

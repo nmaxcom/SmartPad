@@ -600,6 +600,37 @@ const handleListOperation = (
 
   return mapListItems(right as ListValue, (item) => operator(left, item));
 };
+
+const divideByReciprocalUnit = (
+  left: SemanticValue,
+  right: SemanticValue
+): SemanticValue | null => {
+  if (!SemanticValueTypes.isNumber(left) || !SemanticValueTypes.isUnit(right)) {
+    return null;
+  }
+  const rightUnit = right.getUnit().trim();
+  if (!rightUnit.startsWith("1/")) {
+    return null;
+  }
+  let targetUnit = rightUnit.slice(2).trim();
+  if (targetUnit.startsWith("(") && targetUnit.endsWith(")")) {
+    targetUnit = targetUnit.slice(1, -1).trim();
+  }
+  if (!targetUnit) {
+    return null;
+  }
+  const currencySymbol = CurrencyValue.normalizeSymbol(targetUnit);
+  if (currencySymbol) {
+    return new CurrencyValue(
+      currencySymbol,
+      left.getNumericValue() / right.getNumericValue()
+    );
+  }
+  return UnitValue.fromValueAndUnit(
+    left.getNumericValue() / right.getNumericValue(),
+    targetUnit
+  );
+};
 // Arithmetic utilities
 export const SemanticArithmetic = {
   /**
@@ -740,7 +771,13 @@ export const SemanticArithmetic = {
         const base = SemanticValueTypes.isSymbolic(left) ? left : SymbolicValue.from(left.toString());
         return base.divide(right);
       }
-      return handleListOperation(left, right, (a, b) => a.divide(b));
+      return handleListOperation(left, right, (a, b) => {
+        const reciprocalResult = divideByReciprocalUnit(a, b);
+        if (reciprocalResult) {
+          return reciprocalResult;
+        }
+        return a.divide(b);
+      });
     } catch (error) {
       return ErrorValue.fromError(error as Error, 'runtime');
     }

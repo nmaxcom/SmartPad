@@ -336,6 +336,7 @@ Examples:
 time to write in workweek  => (time to write) in workweek
 time to write              => variable name, no conversion
 distance to airport in km  => (distance to airport) in km
+distance to in             => convert distance to inches; the final `in` is a unit target, not a dangling keyword
 ```
 
 ### 7.3 Single conversion per expression

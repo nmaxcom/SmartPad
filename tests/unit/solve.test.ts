@@ -57,6 +57,19 @@ describe("Solve evaluator", () => {
     expect((result as any).result).toBe("20 m/s");
   });
 
+  test("goal seek evaluates reciprocal unit rates back to the solved input unit", () => {
+    const context = createContext();
+    evaluateLine("base signups = 400", context, 1);
+    evaluateLine("ad spend = 1200 EUR", context, 2);
+    evaluateLine("signup lift = 0.18 / EUR", context, 3);
+    evaluateLine("projected signups = base signups + ad spend * signup lift", context, 4);
+
+    const result = evaluateLine("make projected signups = 850 by ad spend =>", context, 5);
+
+    expect(result?.type).toBe("mathResult");
+    expect((result as any).result).toBe("2500 EUR");
+  });
+
   test("implicit solve uses the closest equation above", () => {
     const context = createContext();
     evaluateLine("distance = v * time", context, 1);

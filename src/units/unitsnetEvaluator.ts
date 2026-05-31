@@ -536,6 +536,7 @@ export class UnitsNetParser {
         if (
           t.type === UnitsNetTokenType.IDENTIFIER ||
           t.type === UnitsNetTokenType.QUANTITY ||
+          (t.type === UnitsNetTokenType.TO && t.value === "in") ||
           (t.type === UnitsNetTokenType.OPERATOR &&
             (t.value === "/" || t.value === "^" || t.value === "*")) ||
           t.type === UnitsNetTokenType.NUMBER ||
