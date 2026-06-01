@@ -58,40 +58,33 @@ target distance = 250 km
 target time = 3 h
 make target distance / target time = 100 km/h by target time =>
 
-# 10) Compound investing: monthly deposits, tax on exit, and wealth over time.
-starting pot = 8000 EUR
-monthly contribution = 450 EUR
-annual return = 7%
-return multiplier = 1 + annual return
-exit tax = 21%
+# 10) Compound investing: monthly deposits, tax on exit, and time to 100k.
+seed = 8000 EUR
+monthly = 450 EUR
+rate = 7%
+tax = 21%
+mult = 1 + rate
 years = 12
-growth factor = return multiplier^years
-invested total = starting pot + monthly contribution * 12 * years =>
-compound wealth = starting pot * growth factor + monthly contribution * 12 * (growth factor - 1) / annual return =>
-tax due at exit = compound wealth * exit tax =>
-after tax wealth = compound wealth - tax due at exit =>
-@view plot x=years y=compound wealth,after tax wealth domain=0..35 size=md
-target after tax wealth = 100000 EUR
-required pre tax wealth = target after tax wealth / (1 - exit tax) =>
-required growth factor = (required pre tax wealth + monthly contribution * 12 / annual return) / (starting pot + monthly contribution * 12 / annual return) =>
-make return multiplier^years = required growth factor by years =>
+target = 100000 EUR
+wealth = seed * mult^years + monthly * 12 * (mult^years - 1) / rate =>
+tax due = wealth * tax =>
+net = (seed * mult^years + monthly * 12 * (mult^years - 1) / rate) * (1 - tax) =>
+@view plot x=years y=wealth,net domain=0..35 size=md
+need growth = (target / (1 - tax) + monthly * 12 / rate) / (seed + monthly * 12 / rate) =>
+make mult^years = need growth by years =>
 
-# 11) Sister question: what monthly contribution reaches the same after-tax target in 15 years?
+# 11) Sister question: what monthly contribution reaches 100k net in 15 years?
 years = 15
-growth factor = return multiplier^years
-invested total = starting pot + monthly contribution * 12 * years =>
-compound wealth = starting pot * growth factor + monthly contribution * 12 * (growth factor - 1) / annual return =>
-tax due at exit = compound wealth * exit tax =>
-after tax wealth = (starting pot * growth factor + monthly contribution * 12 * (growth factor - 1) / annual return) * (1 - exit tax) =>
-make after tax wealth = 100000 EUR by monthly contribution =>
+growth = (1 + rate)^years
+net = (seed * growth + monthly * 12 * (growth - 1) / rate) * (1 - tax) =>
+make net = target by monthly =>
 
-# 12) Sister question: what starting pot would make the 100k plan work with smaller monthly deposits?
+# 12) Sister question: what starting pot works with smaller monthly deposits?
 years = 12
-monthly contribution = 300 EUR
-growth factor = return multiplier^years
-compound wealth = starting pot * growth factor + monthly contribution * 12 * (growth factor - 1) / annual return =>
-after tax wealth = (starting pot * growth factor + monthly contribution * 12 * (growth factor - 1) / annual return) * (1 - exit tax) =>
-make after tax wealth = 100000 EUR by starting pot =>
+monthly = 300 EUR
+growth = (1 + rate)^years
+net = (seed * growth + monthly * 12 * (growth - 1) / rate) * (1 - tax) =>
+make net = target by seed =>
 
 # 13) Guardrail: v1 solves one input at a time.
 # Try this manually and it should reject the request instead of inventing one answer:

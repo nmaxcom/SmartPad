@@ -5432,6 +5432,30 @@
 *   Risks/blockers:
     *   None known after targeted template validation.
 
+## Entry J-2026-06-01-02
+
+*   Timestamp: 2026-06-01 02:31:58 CEST / 2026-06-01 00:31:58 UTC
+*   Summary:
+    *   User reported that the new compound-investing section was too muddy, showed symbolic residue in a preview line, and plotted flat compound-interest charts.
+    *   Simplified the scenario vocabulary from long phrase variables to short names (`seed`, `monthly`, `rate`, `tax`, `years`, `wealth`, `net`).
+    *   Root cause for flat charts: `net` depended on `wealth` after `wealth` had already been evaluated at the current year, so the plot sampled a constant. The template now keeps both plotted series directly dependent on `years`.
+    *   Added a regression assertion that the investing plot connects and both `wealth` and `net` vary materially across the sampled domain.
+*   Changes:
+    *   `src/templates/goalSeekTemplate.ts`
+    *   `tests/unit/goalSeekTemplate.test.ts`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/goalSeekTemplate.test.ts --runInBand` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run build` ✅
+    *   `npm run verify:changed` ✅
+*   Pending:
+    *   Await user review/confirmation.
+
+---
+
 ## Entry J-2026-06-01-01
 
 *   Timestamp: 2026-06-01 02:09:34 CEST / 2026-06-01 00:09:34 UTC

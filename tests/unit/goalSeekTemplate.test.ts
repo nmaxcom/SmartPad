@@ -37,12 +37,10 @@ describe("Goal Seek template", () => {
     expect(GOAL_SEEK_TEMPLATE).toContain(
       "make target distance / target time = 100 km/h by target time =>"
     );
-    expect(GOAL_SEEK_TEMPLATE).toContain("@view plot x=years y=compound wealth,after tax wealth");
-    expect(GOAL_SEEK_TEMPLATE).toContain("make return multiplier^years = required growth factor by years =>");
-    expect(GOAL_SEEK_TEMPLATE).toContain(
-      "make after tax wealth = 100000 EUR by monthly contribution =>"
-    );
-    expect(GOAL_SEEK_TEMPLATE).toContain("make after tax wealth = 100000 EUR by starting pot =>");
+    expect(GOAL_SEEK_TEMPLATE).toContain("@view plot x=years y=wealth,net");
+    expect(GOAL_SEEK_TEMPLATE).toContain("make mult^years = need growth by years =>");
+    expect(GOAL_SEEK_TEMPLATE).toContain("make net = target by monthly =>");
+    expect(GOAL_SEEK_TEMPLATE).toContain("make net = target by seed =>");
   });
 
   test("normalization keeps goal-seek triggers and removes optional result triggers", () => {
@@ -50,14 +48,12 @@ describe("Goal Seek template", () => {
 
     expect(normalized).toContain("make checkout total = 150 EUR by items =>");
     expect(normalized).toContain("make brew ratio = 16 by coffee =>");
-    expect(normalized).toContain("make return multiplier^years = required growth factor by years =>");
+    expect(normalized).toContain("make mult^years = need growth by years =>");
     expect(normalized).toContain("checkout total = unit price * items + shipping");
     expect(normalized).not.toContain("checkout total = unit price * items + shipping =>");
-    expect(normalized).toContain("after tax wealth = compound wealth - tax due at exit");
-    expect(normalized).not.toContain("after tax wealth = compound wealth - tax due at exit =>");
-    expect(normalized).toContain(
-      "after tax wealth = (starting pot * growth factor + monthly contribution * 12 * (growth factor - 1) / annual return) * (1 - exit tax)"
-    );
+    expect(normalized).toContain("wealth = seed * mult^years");
+    expect(normalized).not.toContain("wealth = seed * mult^years + monthly * 12 * (mult^years - 1) / rate =>");
+    expect(normalized).toContain("net = (seed * mult^years + monthly * 12 * (mult^years - 1) / rate) * (1 - tax)");
   });
 
   test("evaluates normalized executable lines without parse/runtime errors", () => {
@@ -75,6 +71,7 @@ describe("Goal Seek template", () => {
 
     const failures: string[] = [];
     let goalSeekResults = 0;
+    let investingPlot: any = null;
     executable.forEach(({ raw, lineNumber }, index) => {
       const node = context.astNodes?.[index];
       context.lineNumber = lineNumber;
@@ -89,10 +86,25 @@ describe("Goal Seek template", () => {
       if (raw.trim().startsWith("make ") && result?.type === "mathResult") {
         goalSeekResults += 1;
       }
+      if (raw.trim().startsWith("@view plot x=years y=wealth,net")) {
+        investingPlot = result;
+      }
     });
 
     expect(failures).toEqual([]);
     expect(goalSeekResults).toBe(12);
+    expect(investingPlot?.type).toBe("plotView");
+    expect(investingPlot?.status).toBe("connected");
+    const wealthSeries = investingPlot?.series?.find((series: any) => series.label === "wealth");
+    const netSeries = investingPlot?.series?.find((series: any) => series.label === "net");
+    const wealthValues = (wealthSeries?.data || [])
+      .map((point: any) => point.y)
+      .filter((value: unknown): value is number => typeof value === "number");
+    const netValues = (netSeries?.data || [])
+      .map((point: any) => point.y)
+      .filter((value: unknown): value is number => typeof value === "number");
+    expect(Math.max(...wealthValues) - Math.min(...wealthValues)).toBeGreaterThan(100000);
+    expect(Math.max(...netValues) - Math.min(...netValues)).toBeGreaterThan(70000);
   });
 
   test("shows distance over declared duration in the user's compound speed unit", () => {
