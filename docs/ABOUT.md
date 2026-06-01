@@ -15,7 +15,7 @@ Recent template updates:
 - When multiple right-side panels are open, the `Quick Templates` panel is pinned at the top for faster access.
 - The `Quick Tour` template was condensed into practical mini-scenarios and now starts with a short scrubbing primer.
 - The `New stuff` template demonstrates live-bound result plots, direct one-argument function plots (`@view plot y=f`), direct curve plots without dummy `x = 0` assignments, histogram/scatter suggestions, and one-variable goal-seek from result chips using conventional currency examples such as `3000 EUR`.
-- The `Goal Seek` template focuses on progressively richer one-variable target solving, from checkout totals to runway, pricing, campaign planning, range design, recipes, compound-investing timelines, and direct source-expression goals.
+- The `Goal Seek` template focuses on progressively richer one-variable target solving, from checkout totals to runway, pricing, campaign planning, range design, recipes, compound-investing timelines, and direct source-expression goals; the investing section uses small functions for repeated wealth/net-worth calculations so charts stay live and readable.
 
 These are some examples of its syntax:
 # Quick Tour: a guided walkthrough

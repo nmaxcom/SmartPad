@@ -5432,6 +5432,30 @@
 *   Risks/blockers:
     *   None known after targeted template validation.
 
+## Entry J-2026-06-01-03
+
+*   Timestamp: 2026-06-01 02:56:46 CEST / 2026-06-01 00:56:46 UTC
+*   Summary:
+    *   User clarified that template verification must inspect semantic wrapper outputs, not just absence of runtime errors, because symbolic/incomplete wrapper results reveal broken examples.
+    *   Reworked the compound-investing template section to use SmartPad functions (`wealth(y)`, `net_wealth(y)`) for the repeated calculation and plot, making the scenario shorter and easier to read.
+    *   Kept goal-seek lines in solver-friendly algebraic form where needed, but ensured critical wrapper outputs resolve to complete numeric results rather than expressions pointing at other variables.
+    *   Strengthened `goalSeekTemplate.test.ts` to fail if critical investing result wrappers contain unresolved references such as `seed`, `monthly`, `target`, `need growth`, or `mult`.
+*   Changes:
+    *   `src/templates/goalSeekTemplate.ts`
+    *   `tests/unit/goalSeekTemplate.test.ts`
+    *   `docs/ABOUT.md`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/goalSeekTemplate.test.ts --runInBand` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` pre-commit still evaluated the previous committed range and failed until this changeset is committed with its docs update.
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run build` ✅
+*   Pending:
+    *   Commit scoped changes, then run `npm run verify:changed`.
+
+---
+
 ## Entry J-2026-06-01-02
 
 *   Timestamp: 2026-06-01 02:31:58 CEST / 2026-06-01 00:31:58 UTC

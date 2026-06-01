@@ -64,27 +64,29 @@ monthly = 450 EUR
 rate = 7%
 tax = 21%
 mult = 1 + rate
+wealth(y) = seed * mult^y + monthly * 12 * (mult^y - 1) / rate
+net_wealth(y) = wealth(y) * (1 - tax)
 years = 12
 target = 100000 EUR
-wealth = seed * mult^years + monthly * 12 * (mult^years - 1) / rate =>
-tax due = wealth * tax =>
-net = (seed * mult^years + monthly * 12 * (mult^years - 1) / rate) * (1 - tax) =>
-@view plot x=years y=wealth,net domain=0..35 size=md
+wealth now = wealth(years) =>
+tax due = wealth now * tax =>
+net now = net_wealth(years) =>
+@view plot y=wealth,net_wealth domain=0..35 size=md
 need growth = (target / (1 - tax) + monthly * 12 / rate) / (seed + monthly * 12 / rate) =>
 make mult^years = need growth by years =>
 
 # 11) Sister question: what monthly contribution reaches 100k net in 15 years?
 years = 15
 growth = (1 + rate)^years
-net = (seed * growth + monthly * 12 * (growth - 1) / rate) * (1 - tax) =>
-make net = target by monthly =>
+net now = net_wealth(years) =>
+make (seed * growth + monthly * 12 * (growth - 1) / rate) * (1 - tax) = target by monthly =>
 
 # 12) Sister question: what starting pot works with smaller monthly deposits?
 years = 12
 monthly = 300 EUR
 growth = (1 + rate)^years
-net = (seed * growth + monthly * 12 * (growth - 1) / rate) * (1 - tax) =>
-make net = target by seed =>
+net now = net_wealth(years) =>
+make (seed * growth + monthly * 12 * (growth - 1) / rate) * (1 - tax) = target by seed =>
 
 # 13) Guardrail: v1 solves one input at a time.
 # Try this manually and it should reject the request instead of inventing one answer:
