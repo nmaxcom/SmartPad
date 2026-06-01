@@ -58,7 +58,42 @@ target distance = 250 km
 target time = 3 h
 make target distance / target time = 100 km/h by target time =>
 
-# 10) Guardrail: v1 solves one input at a time.
+# 10) Compound investing: monthly deposits, tax on exit, and wealth over time.
+starting pot = 8000 EUR
+monthly contribution = 450 EUR
+annual return = 7%
+return multiplier = 1 + annual return
+exit tax = 21%
+years = 12
+growth factor = return multiplier^years
+invested total = starting pot + monthly contribution * 12 * years =>
+compound wealth = starting pot * growth factor + monthly contribution * 12 * (growth factor - 1) / annual return =>
+tax due at exit = compound wealth * exit tax =>
+after tax wealth = compound wealth - tax due at exit =>
+@view plot x=years y=compound wealth,after tax wealth domain=0..35 size=md
+target after tax wealth = 100000 EUR
+required pre tax wealth = target after tax wealth / (1 - exit tax) =>
+required growth factor = (required pre tax wealth + monthly contribution * 12 / annual return) / (starting pot + monthly contribution * 12 / annual return) =>
+make return multiplier^years = required growth factor by years =>
+
+# 11) Sister question: what monthly contribution reaches the same after-tax target in 15 years?
+years = 15
+growth factor = return multiplier^years
+invested total = starting pot + monthly contribution * 12 * years =>
+compound wealth = starting pot * growth factor + monthly contribution * 12 * (growth factor - 1) / annual return =>
+tax due at exit = compound wealth * exit tax =>
+after tax wealth = (starting pot * growth factor + monthly contribution * 12 * (growth factor - 1) / annual return) * (1 - exit tax) =>
+make after tax wealth = 100000 EUR by monthly contribution =>
+
+# 12) Sister question: what starting pot would make the 100k plan work with smaller monthly deposits?
+years = 12
+monthly contribution = 300 EUR
+growth factor = return multiplier^years
+compound wealth = starting pot * growth factor + monthly contribution * 12 * (growth factor - 1) / annual return =>
+after tax wealth = (starting pot * growth factor + monthly contribution * 12 * (growth factor - 1) / annual return) * (1 - exit tax) =>
+make after tax wealth = 100000 EUR by starting pot =>
+
+# 13) Guardrail: v1 solves one input at a time.
 # Try this manually and it should reject the request instead of inventing one answer:
 # make checkout total = 200 EUR by unit price, items =>
 `;

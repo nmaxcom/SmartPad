@@ -37,6 +37,12 @@ describe("Goal Seek template", () => {
     expect(GOAL_SEEK_TEMPLATE).toContain(
       "make target distance / target time = 100 km/h by target time =>"
     );
+    expect(GOAL_SEEK_TEMPLATE).toContain("@view plot x=years y=compound wealth,after tax wealth");
+    expect(GOAL_SEEK_TEMPLATE).toContain("make return multiplier^years = required growth factor by years =>");
+    expect(GOAL_SEEK_TEMPLATE).toContain(
+      "make after tax wealth = 100000 EUR by monthly contribution =>"
+    );
+    expect(GOAL_SEEK_TEMPLATE).toContain("make after tax wealth = 100000 EUR by starting pot =>");
   });
 
   test("normalization keeps goal-seek triggers and removes optional result triggers", () => {
@@ -44,8 +50,14 @@ describe("Goal Seek template", () => {
 
     expect(normalized).toContain("make checkout total = 150 EUR by items =>");
     expect(normalized).toContain("make brew ratio = 16 by coffee =>");
+    expect(normalized).toContain("make return multiplier^years = required growth factor by years =>");
     expect(normalized).toContain("checkout total = unit price * items + shipping");
     expect(normalized).not.toContain("checkout total = unit price * items + shipping =>");
+    expect(normalized).toContain("after tax wealth = compound wealth - tax due at exit");
+    expect(normalized).not.toContain("after tax wealth = compound wealth - tax due at exit =>");
+    expect(normalized).toContain(
+      "after tax wealth = (starting pot * growth factor + monthly contribution * 12 * (growth factor - 1) / annual return) * (1 - exit tax)"
+    );
   });
 
   test("evaluates normalized executable lines without parse/runtime errors", () => {
@@ -80,7 +92,7 @@ describe("Goal Seek template", () => {
     });
 
     expect(failures).toEqual([]);
-    expect(goalSeekResults).toBe(9);
+    expect(goalSeekResults).toBe(12);
   });
 
   test("shows distance over declared duration in the user's compound speed unit", () => {

@@ -5432,6 +5432,34 @@
 *   Risks/blockers:
     *   None known after targeted template validation.
 
+## Entry J-2026-06-01-01
+
+*   Timestamp: 2026-06-01 02:09:34 CEST / 2026-06-01 00:09:34 UTC
+*   Summary:
+    *   User asked to add a compound-investing example to the best-fitting template, including monthly contributions, tax paid on exit, wealth-over-years plotting, goal seek for time to 100k, and sister ideas.
+    *   Added the scenario to the `Goal Seek` template because it combines forward modeling, visual curve inspection, and inverse target solving.
+    *   The example models starting pot, monthly contribution, annual return, exit tax, invested total, compound wealth, tax due, and after-tax wealth, then plots pre-tax and after-tax wealth against years.
+    *   Because the current solver does not expand multi-line dependency chains for goal seek, the "time to 100k" question uses a solver-friendly required-growth-factor step and then goal-seeks `return multiplier^years`.
+    *   Added sibling goal-seek questions for monthly contribution and starting pot.
+*   Changes:
+    *   `src/templates/goalSeekTemplate.ts`
+    *   `tests/unit/goalSeekTemplate.test.ts`
+    *   `docs/ABOUT.md`
+    *   `docs/spec-map.json`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/goalSeekTemplate.test.ts --runInBand` ✅
+    *   `npm run docs:map` initially caught unmapped source files from the previous local commit; mapping was corrected in this changeset.
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run build` ✅
+    *   `npm run verify:changed` ✅
+*   Pending:
+    *   Await user review/confirmation.
+
+---
+
 ## Entry J-2026-05-31-01
 
 *   Timestamp: 2026-05-31 04:37:27 CEST / 2026-05-31 02:37:39 UTC
