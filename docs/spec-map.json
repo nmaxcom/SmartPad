@@ -177,6 +177,7 @@
         "src/templates/capabilitySprintTemplate.ts",
         "src/templates/visualInsightsTemplate.ts",
         "src/templates/goalSeekTemplate.ts",
+        "src/templates/investmentTemplate.ts",
         "src/App.css",
         "src/styles/",
         "src/App.tsx",

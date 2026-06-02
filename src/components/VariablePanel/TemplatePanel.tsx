@@ -3,6 +3,7 @@ import { QUICK_TOUR_TEMPLATE } from "../../templates/quickTourTemplate";
 import { CAPABILITY_SPRINT_TEMPLATE } from "../../templates/capabilitySprintTemplate";
 import { NEW_STUFF_TEMPLATE } from "../../templates/visualInsightsTemplate";
 import { GOAL_SEEK_TEMPLATE } from "../../templates/goalSeekTemplate";
+import { INVESTMENT_TEMPLATE } from "../../templates/investmentTemplate";
 import { useSheetContext } from "../../state/SheetContext";
 import { normalizeTemplateTriggers } from "./templateTriggerNormalization";
 import "./TemplatePanel.css";
@@ -32,6 +33,12 @@ const templates = [
     emoji: "🎯",
     name: "Goal Seek",
     content: GOAL_SEEK_TEMPLATE,
+  },
+  {
+    id: "investment",
+    emoji: "💶",
+    name: "Investment Lab",
+    content: INVESTMENT_TEMPLATE,
   },
   {
     id: "unit-aliases",

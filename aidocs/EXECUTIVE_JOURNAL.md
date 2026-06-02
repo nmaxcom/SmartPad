@@ -5607,3 +5607,37 @@
     *   `git status --short --branch` shows `main...origin/main`.
 *   Pending:
     *   Commit and push this journal entry to `main`.
+
+---
+
+## Entry J-2026-06-02-01
+
+*   Timestamp: 2026-06-02
+*   Summary:
+    *   User reported that the previous compound-investment example still showed incomplete symbolic wrappers.
+    *   User asked to remove the regression-oriented template content and create a clean investment-focused template covering ROI, compound interest, investor costs, Spain-style fiscality, net totals, charts, and goal seek.
+*   Decisions:
+    *   Moved investing out of the `Goal Seek` template into a dedicated `Investment Lab` quick template.
+    *   Kept function-powered wealth charts, but used simple internal identifiers (`horizon`, `annual`, `charttax`) so semantic wrappers and plot samplers resolve numerically.
+    *   Used decimal rates displayed with `as %` to avoid percentage-subtraction edge cases in template examples.
+    *   Added a unit test that evaluates each executable template line, checks plot series contain numeric points, and fails when important result wrappers contain unresolved variable/function names.
+*   Artifacts changed:
+    *   `src/templates/goalSeekTemplate.ts`
+    *   `src/templates/investmentTemplate.ts`
+    *   `src/components/VariablePanel/TemplatePanel.tsx`
+    *   `tests/unit/goalSeekTemplate.test.ts`
+    *   `tests/unit/investmentTemplate.test.ts`
+    *   `tests/unit/templatePanelSheetCreation.test.tsx`
+    *   `docs/spec-map.json`
+    *   `docs/ABOUT.md`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/investmentTemplate.test.ts --runInBand` ✅
+    *   `npm run test:unit -- tests/unit/goalSeekTemplate.test.ts tests/unit/investmentTemplate.test.ts tests/unit/templatePanelSheetCreation.test.tsx --runInBand` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run build` ✅
+    *   `npm run verify:changed` ✅
+*   Risks/blockers:
+    *   Spain tax values are examples and must stay editable because legal/tax details change by filing year and personal situation.

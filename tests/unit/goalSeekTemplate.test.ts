@@ -37,12 +37,8 @@ describe("Goal Seek template", () => {
     expect(GOAL_SEEK_TEMPLATE).toContain(
       "make target distance / target time = 100 km/h by target time =>"
     );
-    expect(GOAL_SEEK_TEMPLATE).toContain("wealth(y) = seed * mult^y");
-    expect(GOAL_SEEK_TEMPLATE).toContain("net_wealth(y) = wealth(y) * (1 - tax)");
-    expect(GOAL_SEEK_TEMPLATE).toContain("@view plot y=wealth,net_wealth");
-    expect(GOAL_SEEK_TEMPLATE).toContain("make mult^years = need growth by years =>");
-    expect(GOAL_SEEK_TEMPLATE).toContain("= target by monthly =>");
-    expect(GOAL_SEEK_TEMPLATE).toContain("= target by seed =>");
+    expect(GOAL_SEEK_TEMPLATE).not.toContain("wealth(y)");
+    expect(GOAL_SEEK_TEMPLATE).not.toContain("need growth");
   });
 
   test("normalization keeps goal-seek triggers and removes optional result triggers", () => {
@@ -50,12 +46,8 @@ describe("Goal Seek template", () => {
 
     expect(normalized).toContain("make checkout total = 150 EUR by items =>");
     expect(normalized).toContain("make brew ratio = 16 by coffee =>");
-    expect(normalized).toContain("make mult^years = need growth by years =>");
     expect(normalized).toContain("checkout total = unit price * items + shipping");
     expect(normalized).not.toContain("checkout total = unit price * items + shipping =>");
-    expect(normalized).toContain("wealth now = wealth(years)");
-    expect(normalized).not.toContain("wealth now = wealth(years) =>");
-    expect(normalized).toContain("net now = net_wealth(years)");
   });
 
   test("evaluates normalized executable lines without parse/runtime errors", () => {
@@ -72,9 +64,7 @@ describe("Goal Seek template", () => {
     context.astNodes = executable.map(({ raw, lineNumber }) => parseLine(raw, lineNumber));
 
     const failures: string[] = [];
-    const incompleteWrappers: string[] = [];
     let goalSeekResults = 0;
-    let investingPlot: any = null;
     executable.forEach(({ raw, lineNumber }, index) => {
       const node = context.astNodes?.[index];
       context.lineNumber = lineNumber;
@@ -86,39 +76,13 @@ describe("Goal Seek template", () => {
         const message = (result as any).displayText || (result as any).error || "unknown error";
         failures.push(`line ${lineNumber}: "${raw}" -> ${String(message)}`);
       }
-      if (
-        raw.trim().match(/^(wealth now|tax due|net now|need growth|make mult\^years)/) &&
-        result &&
-        "result" in result
-      ) {
-        const output = String((result as any).result ?? "");
-        if (/\b(seed|monthly|rate|tax|target|need growth|wealth now|mult)\b/.test(output)) {
-          incompleteWrappers.push(`line ${lineNumber}: "${raw}" -> ${output}`);
-        }
-      }
       if (raw.trim().startsWith("make ") && result?.type === "mathResult") {
         goalSeekResults += 1;
-      }
-      if (raw.trim().startsWith("@view plot y=wealth,net_wealth")) {
-        investingPlot = result;
       }
     });
 
     expect(failures).toEqual([]);
-    expect(incompleteWrappers).toEqual([]);
-    expect(goalSeekResults).toBe(12);
-    expect(investingPlot?.type).toBe("plotView");
-    expect(investingPlot?.status).toBe("connected");
-    const wealthSeries = investingPlot?.series?.find((series: any) => series.label === "wealth(y)");
-    const netSeries = investingPlot?.series?.find((series: any) => series.label === "net_wealth(y)");
-    const wealthValues = (wealthSeries?.data || [])
-      .map((point: any) => point.y)
-      .filter((value: unknown): value is number => typeof value === "number");
-    const netValues = (netSeries?.data || [])
-      .map((point: any) => point.y)
-      .filter((value: unknown): value is number => typeof value === "number");
-    expect(Math.max(...wealthValues) - Math.min(...wealthValues)).toBeGreaterThan(100000);
-    expect(Math.max(...netValues) - Math.min(...netValues)).toBeGreaterThan(70000);
+    expect(goalSeekResults).toBe(9);
   });
 
   test("shows distance over declared duration in the user's compound speed unit", () => {

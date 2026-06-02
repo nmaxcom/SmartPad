@@ -62,4 +62,22 @@ describe("TemplatePanel", () => {
     expect(title).toBe("Goal Seek");
     expect(makeActive).toBe(true);
   });
+
+  test("includes the dedicated Investment Lab template", () => {
+    const createSheetFromContent = jest.fn().mockResolvedValue(undefined);
+    (useSheetContext as jest.Mock).mockReturnValue({
+      createSheetFromContent,
+    });
+
+    render(<TemplatePanel />);
+    fireEvent.click(screen.getByRole("button", { name: /Investment Lab/i }));
+
+    expect(createSheetFromContent).toHaveBeenCalledTimes(1);
+    const [content, title, makeActive] = createSheetFromContent.mock.calls[0];
+    expect(content).toContain("market = 0.07");
+    expect(content).toContain("taxlow = 0.19");
+    expect(content).toContain("@view plot y=wealth,netwealth");
+    expect(title).toBe("Investment Lab");
+    expect(makeActive).toBe(true);
+  });
 });
