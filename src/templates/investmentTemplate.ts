@@ -5,9 +5,9 @@ export const INVESTMENT_TEMPLATE = `# Investment Lab: ROI, compound interest, fe
 start = 20000 EUR
 monthly = 500 EUR
 horizon = 20
-market = 0.07
-fundfee = 0.0035
-platformfee = 0.0015
+market = 7%
+fundfee = 0.35%
+platformfee = 0.15%
 annual = market - fundfee - platformfee
 annual return = annual as % =>
 
@@ -27,10 +27,10 @@ gross roi now = roi(horizon) as % =>
 # Brackets are simplified for clarity: 19% to 6k, 21% to 50k, 23% to 200k.
 first bracket = 6000 EUR
 second bracket = 50000 EUR
-taxlow = 0.19
-taxmid = 0.21
-taxhigh = 0.23
-charttax = 0.21
+taxlow = 19%
+taxmid = 21%
+taxhigh = 23%
+charttax = 21%
 chart tax = charttax as % =>
 
 lowgain = min(gain(horizon), first bracket)
@@ -62,9 +62,9 @@ make start * growth + monthly * annuity = targetgross by monthly =>
 
 # 6) Sensitivity: compare low/base/high annual market returns
 horizon = 20
-low = 0.04 - fundfee - platformfee
-base = 0.07 - fundfee - platformfee
-high = 0.09 - fundfee - platformfee
+low = 4% - fundfee - platformfee
+base = 7% - fundfee - platformfee
+high = 9% - fundfee - platformfee
 value low = start * (1 + low)^horizon + monthly * 12 * ((1 + low)^horizon - 1) / low =>
 value base = start * (1 + base)^horizon + monthly * 12 * ((1 + base)^horizon - 1) / base =>
 value high = start * (1 + high)^horizon + monthly * 12 * ((1 + high)^horizon - 1) / high =>

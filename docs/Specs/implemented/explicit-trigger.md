@@ -5,6 +5,7 @@
 - Mapped group: `Expression Engine`
 - Verification tests:
   - `tests/unit/expressionParser.test.ts`
+  - `tests/unit/percentages.test.ts`
   - `tests/unit/templateTriggerNormalization.test.ts`
   - `tests/unit/solve.test.ts`
 

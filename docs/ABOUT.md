@@ -16,7 +16,7 @@ Recent template updates:
 - The `Quick Tour` template was condensed into practical mini-scenarios and now starts with a short scrubbing primer.
 - The `New stuff` template demonstrates live-bound result plots, direct one-argument function plots (`@view plot y=f`), direct curve plots without dummy `x = 0` assignments, histogram/scatter suggestions, and one-variable goal-seek from result chips using conventional currency examples such as `3000 EUR`.
 - The `Goal Seek` template focuses on progressively richer one-variable target solving, from checkout totals to runway, pricing, campaign planning, range design, recipes, and direct source-expression goals.
-- The `Investment Lab` template is dedicated to ROI, compound interest, investor costs, Spain-style savings-tax examples, net totals, live wealth curves, monthly-contribution goal seek, and low/base/high return sensitivity.
+- The `Investment Lab` template is dedicated to ROI, compound interest, investor costs, Spain-style savings-tax examples, net totals, live wealth curves, monthly-contribution goal seek, and low/base/high return sensitivity; its rates use editable percentage literals such as `7%`, `0.35%`, and `21%`.
 
 These are some examples of its syntax:
 # Quick Tour: a guided walkthrough

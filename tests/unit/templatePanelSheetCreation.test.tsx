@@ -74,8 +74,8 @@ describe("TemplatePanel", () => {
 
     expect(createSheetFromContent).toHaveBeenCalledTimes(1);
     const [content, title, makeActive] = createSheetFromContent.mock.calls[0];
-    expect(content).toContain("market = 0.07");
-    expect(content).toContain("taxlow = 0.19");
+    expect(content).toContain("market = 7%");
+    expect(content).toContain("taxlow = 19%");
     expect(content).toContain("@view plot y=wealth,netwealth");
     expect(title).toBe("Investment Lab");
     expect(makeActive).toBe(true);

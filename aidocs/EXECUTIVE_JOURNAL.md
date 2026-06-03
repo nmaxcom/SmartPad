@@ -5641,3 +5641,37 @@
     *   `npm run verify:changed` ✅
 *   Risks/blockers:
     *   Spain tax values are examples and must stay editable because legal/tax details change by filing year and personal situation.
+
+---
+
+## Entry J-2026-06-03-01
+
+*   Timestamp: 2026-06-03
+*   Summary:
+    *   User reported that changing Investment Lab rates from decimal form (`0.07`) to percentage form (`7%`) produced incorrect results.
+    *   Root cause: percentage-variable chains like `4% - fundfee - platformfee` were routed through natural discount semantics instead of regular rate arithmetic.
+*   Decisions:
+    *   Plain expressions containing literal `%` now fall back to semantic arithmetic when no natural percentage phrase pattern applies.
+    *   Percent-variable discount chains still handle expressions such as `base - discount`, but do not intercept expressions that already contain a `%` literal.
+    *   Investment Lab now uses user-facing percentage literals (`7%`, `0.35%`, `21%`) as the canonical template form.
+*   Artifacts changed:
+    *   `src/eval/percentageEvaluatorV2.ts`
+    *   `src/templates/investmentTemplate.ts`
+    *   `tests/unit/percentages.test.ts`
+    *   `tests/unit/investmentTemplate.test.ts`
+    *   `tests/unit/templatePanelSheetCreation.test.tsx`
+    *   `docs/Specs/ExplicitTrigger.spec.md`
+    *   `docs/Specs/implemented/explicit-trigger.md`
+    *   `docs/ABOUT.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/percentages.test.ts tests/unit/investmentTemplate.test.ts --runInBand` ✅
+    *   `npm run test:unit -- tests/unit/percentages.test.ts tests/unit/investmentTemplate.test.ts tests/unit/templatePanelSheetCreation.test.tsx --runInBand` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run build` ✅
+    *   `npm run verify:changed` ✅
+*   Risks/blockers:
+    *   Percentage semantics intentionally remain context-sensitive: `base - discount` means discount, while `4% - fee` means rate arithmetic.

@@ -160,8 +160,8 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     if (/\b(on|off)\b/.test(expr)) return true; // "discount on/off 100"
     if (this.parseTrailingPercentChain(expr)) return true; // "base + 10% - 5%"
     if (this.maybePercentVariableChain(expr)) return true; // "base + discount"
+    if (/%/.test(expr)) return true; // Plain percent literals in arithmetic expressions.
 
-    // Let semantic arithmetic handle plain % literals in regular math expressions.
     return false;
   }
   
@@ -300,6 +300,10 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
 
     // If no specific pattern matched, try general percentage arithmetic
     if (!result) {
+      result = this.evaluateSemanticExpression(expression, context);
+    }
+
+    if (!result) {
       result = this.evaluateGeneralPercentageExpression(expression, context);
     }
 
@@ -307,7 +311,11 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
   }
 
   private maybePercentVariableChain(expression: string): boolean {
-    return /[+\-]\s*[a-zA-Z_][a-zA-Z0-9_]*\s*$/.test(expression.trim());
+    const trimmed = expression.trim();
+    if (/%/.test(trimmed)) {
+      return false;
+    }
+    return /[+\-]\s*[a-zA-Z_][a-zA-Z0-9_]*\s*$/.test(trimmed);
   }
   
   /**
@@ -709,6 +717,9 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     context: EvaluationContext
   ): SemanticValue | null {
     let expr = expression.trim();
+    if (/%/.test(expr)) {
+      return null;
+    }
     const ops: Array<{ sign: "+" | "-"; percent: PercentageValue; symbol?: string }> = [];
     const tailRegex = /([+\-])\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*$/;
 

@@ -284,6 +284,25 @@ describe("Natural Percentages", () => {
     expect(result.displayText).toMatch(/=>\s*375/);
   });
 
+  test("percentage literal minus percentage variables is rate arithmetic, not chained discount", () => {
+    const variableContext = new Map();
+    variableContext.set("fundfee", makeVariable("fundfee", new PercentageValue(0.35), "0.35%"));
+    variableContext.set(
+      "platformfee",
+      makeVariable("platformfee", new PercentageValue(0.15), "0.15%")
+    );
+    const node = parseLine("4% - fundfee - platformfee =>", 1);
+    const result: any = defaultRegistry.evaluate(node as any, {
+      variableStore: { clearVariables() {}, setVariableWithMetadata() {} } as any,
+      variableContext,
+      lineNumber: 1,
+      decimalPlaces: 2,
+    });
+
+    expect(result?.type).toBe("mathResult");
+    expect(result.displayText).toMatch(/=>\s*3\.5%/);
+  });
+
   test("guard: adding different currency symbols should error", () => {
     const variableContext = new Map();
     variableContext.set("usd", makeVariable("usd", CurrencyValue.fromString("$100"), "$100"));

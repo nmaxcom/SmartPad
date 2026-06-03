@@ -72,7 +72,21 @@ After explicit evaluation, conversion suffixes (`to` / `in`) apply when valid:
 
 ---
 
-## 5) Template Normalization Rules
+## 5) Percentage Arithmetic vs Natural Percentage Phrases
+
+Explicit evaluation keeps natural percentage phrase behavior, but plain percentage arithmetic must remain numeric and composable:
+
+1. Natural phrases:
+   - `10% off 500 =>` -> `450`
+   - `base - discount =>` -> applies `discount` as an `off` operation when `discount` is a percentage variable
+2. Rate arithmetic:
+   - `4% - fundfee - platformfee =>` subtracts percentages as rates, not as chained discounts
+   - `7% - 0.35% - 0.15% =>` -> `6.5%`
+3. Financial formulas may use decimal rates (`0.07`) or percentage literals (`7%`) interchangeably when the formula treats the value as a numeric ratio.
+
+---
+
+## 6) Template Normalization Rules
 
 Template normalization may remove optional `=>` for readability, but must preserve explicit triggers for:
 
@@ -86,7 +100,7 @@ Reference implementation:
 
 ---
 
-## 6) Acceptance Examples
+## 7) Acceptance Examples
 
 1. Explicit arithmetic:
    - `2 + 3 =>` -> `5`
@@ -99,3 +113,5 @@ Reference implementation:
 5. Live-mode solve without trigger:
    - with `liveResultEnabled = true`, `solve v in distance = v * time` can render a live solve result.
    - with `liveResultEnabled = false`, the same line is not rendered as a result line unless `=>` is present.
+6. Percentage rate arithmetic:
+   - `4% - fundfee - platformfee =>` -> `3.5%` when `fundfee = 0.35%` and `platformfee = 0.15%`.
