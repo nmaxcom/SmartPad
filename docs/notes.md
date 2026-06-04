@@ -31,6 +31,7 @@ sheets/tabs, remember docs
 plots
 FX
 # bugs/ideas
+- Solve, simplify, find derivative
 - figure out / unify all the as, in, to, etc keywords
 
 - Parser confused by 3 digit groupings (frontend also renders them together in groups of 3):
