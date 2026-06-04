@@ -5706,3 +5706,64 @@
     *   `dist/index.html` remains modified locally from the build check and was intentionally not staged.
 *   Risks/blockers:
     *   Loopback access from shell-based runtime checks was inconsistent in this environment, so validation relied on regenerated artifact inspection plus the build gate.
+
+## Entry J-2026-06-04-02
+
+*   Timestamp: 2026-06-04 07:31:33 CEST +0200 / 2026-06-04 05:31:33 UTC +0000
+*   Summary:
+    *   User opened discussion for a new autocomplete feature to reduce repeated typing of variable and function names.
+    *   Assistant inspected editor, parser, variable store, function store, syntax registry, and existing TipTap/ProseMirror extension patterns before proposing product and implementation directions.
+*   Decisions:
+    *   No implementation decision yet; this is an analysis/proposal interaction.
+*   User directives:
+    *   Analyze the project carefully and provide the best autocomplete ideas.
+*   Assistant commitments:
+    *   Present a scoped, project-aware autocomplete plan with tradeoffs and recommended rollout order.
+*   Artifacts changed:
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   Code inspection only; no product code changed.
+*   Pending updates:
+    *   If user approves, create a concrete backlog/spec item before implementation.
+*   Risks/blockers:
+    *   Autocomplete must support phrase variables with spaces and should not interfere with live results, result chips, number scrubbing, or `@view` directives.
+
+## Entry J-2026-06-04-03
+
+*   Timestamp: 2026-06-04 07:45:11 CEST +0200 / 2026-06-04 05:45:11 UTC +0000
+*   Summary:
+    *   User approved the autocomplete direction.
+    *   Assistant implemented the first autocomplete slice: a pure suggestion engine plus a TipTap dropdown for current-sheet variables, user-defined functions, `@view` params, directives, and conversion units.
+    *   Phrase variables with spaces and user-defined function calls now insert from keyboard or pointer selection.
+*   Decisions:
+    *   Autocomplete remains contextual and current-sheet scoped.
+    *   v1 avoids comments and existing assignment left-hand sides.
+    *   Human completion gate remains open until the user confirms the behavior in-app.
+*   User directives:
+    *   Proceed with the approved autocomplete plan.
+*   Assistant commitments:
+    *   Keep the feature scoped and covered by targeted unit/e2e tests before broader autocomplete work.
+*   Artifacts changed:
+    *   `src/components/autocomplete/suggestions.ts`
+    *   `src/components/autocomplete/AutocompleteExtension.ts`
+    *   `src/components/Editor.tsx`
+    *   `src/components/Editor.css`
+    *   `tests/unit/autocompleteSuggestions.test.ts`
+    *   `tests/e2e/autocomplete.spec.ts`
+    *   `docs/Specs/proposed/autocomplete.md`
+    *   `docs/spec-map.json`
+    *   `docs/spec-trust.json`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/autocompleteSuggestions.test.ts --runInBand` ✅
+    *   `npx playwright test tests/e2e/autocomplete.spec.ts --project=chromium --config=playwright.config.ts --workers=1` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run build` ✅
+*   Pending updates:
+    *   `T-2026-06-04-01` remains `in_progress` pending user review/confirmation.
+*   Risks/blockers:
+    *   Broader autocomplete still needs follow-up coverage for mouse-heavy usage, mobile positioning, and richer snippets if those become priorities.

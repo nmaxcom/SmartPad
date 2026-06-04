@@ -36,6 +36,7 @@ import { ReferenceInlineNode } from "./ReferenceInlineNode";
 import { ResultInteractionExtension } from "./ResultInteractionExtension";
 import { ResultReferenceInteractionExtension } from "./ResultReferenceInteractionExtension";
 import { PlotViewExtension } from "./PlotViewExtension";
+import { AutocompleteExtension } from "./autocomplete/AutocompleteExtension";
 import { getDateLocaleEffective } from "../types/DateValue";
 import { LineIdExtension } from "./LineIdExtension";
 // Import helper to identify combined assignment nodes (e.g. "speed = slider(...)")
@@ -1088,6 +1089,13 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         },
         getFunctionStore: () => functionStoreRef.current,
         getSettings: () => settings,
+      }),
+      AutocompleteExtension.configure({
+        getVariableContext: () => {
+          const variables = reactiveStore.getAllVariables();
+          return new Map(variables.map((variable) => [variable.name, variable]));
+        },
+        getFunctionStore: () => functionStoreRef.current,
       }),
       // The VariableHoverExtension provides hover-to-highlight functionality for variables.
       VariableHoverExtension.configure({

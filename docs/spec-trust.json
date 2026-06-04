@@ -181,6 +181,14 @@
       "testRefs": []
     },
     {
+      "id": "autocomplete",
+      "status": "proposed",
+      "sourceSpec": "docs/Specs/proposed/autocomplete.md",
+      "canonicalSpec": "docs/Specs/proposed/autocomplete.md",
+      "mappedGroups": ["Editor And Result Chips", "Units And Conversions"],
+      "testRefs": ["tests/unit/autocompleteSuggestions.test.ts", "tests/e2e/autocomplete.spec.ts"]
+    },
+    {
       "id": "human-first-solve-phrasing",
       "status": "proposed",
       "sourceSpec": "docs/Specs/proposed/human-first-solve-phrasing.md",
