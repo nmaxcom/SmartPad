@@ -4,7 +4,9 @@
   "description": "> A text-based web application that combines the simplicity of a plain text editor with the power of real-time mathematical interpretation and calculation.",
   "main": "src/index.ts",
   "scripts": {
+    "predev": "npm run docs:docusaurus:publish-local",
     "dev": "node scripts/npm_run_dev_server_check.js",
+    "prepreview": "npm run docs:docusaurus:publish-local",
     "build": "vite build",
     "preview": "vite preview",
     "test": "npm run test:unit",

@@ -35,6 +35,8 @@ Remaining:
 
 Docusaurus install/build has been validated and local sync to `public/docs/` is working.
 
+Local app runs should refresh the checked-in docs artifacts first via `npm run dev` or `npm run preview`, which now republish the local-base Docusaurus output before serving.
+
 ## Constraints and guardrails
 
 - Specs are source of truth. Do not manually patch generated sections in `public/docs/index.html`.

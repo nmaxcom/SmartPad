@@ -9,7 +9,7 @@
 | P-2026-02-11-03 | Push latest commits and confirm Pages deploy URL | User | 2026-02-12 | done | Deployed and user confirmed app works |
 | P-2026-02-11-04 | Design docs site plan linked from app | Assistant | 2026-02-12 | done | Phased plan delivered to user |
 | P-2026-02-11-05 | Define docs-spec sync workflow and enforcement | Assistant | 2026-02-12 | done | AI-run docs ops guide and drift tooling created |
-| P-2026-02-11-06 | Implement actual docs site and app docs link | Assistant | 2026-02-13 | todo | Scaffold docs site and link from app header |
+| P-2026-02-11-06 | Implement actual docs site and app docs link | Assistant | 2026-02-13 | done | Scaffolded the docs site, wired the app docs link, and aligned local docs publishing with the checked-in artifact |
 | P-2026-02-12-01 | Add project AGENTS.md with executive and docs rules | Assistant | 2026-02-12 | done | Created AGENTS.md at repo root |
 | P-2026-02-12-02 | Establish multi-level todo system with focus lane | Assistant | 2026-02-12 | done | Added TODO system and backlog files |
 | P-2026-02-12-03 | Propose stronger anti-regression test approach | Assistant | 2026-02-13 | done | Added testing and regression policy to AGENTS/manual |
