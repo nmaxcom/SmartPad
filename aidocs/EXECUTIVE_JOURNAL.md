@@ -5675,3 +5675,34 @@
     *   `npm run verify:changed` ✅
 *   Risks/blockers:
     *   Percentage semantics intentionally remain context-sensitive: `base - discount` means discount, while `4% - fee` means rate arithmetic.
+
+## Entry J-2026-06-04-01
+
+*   Timestamp: 2026-06-04 06:57:04 CEST +0200 / 2026-06-04 04:57:04 UTC +0000
+*   Summary:
+    *   User reported that docs looked correct on GitHub Pages but failed locally with the Docusaurus baseUrl banner.
+    *   Assistant republished `public/docs` with the local `/docs/` base, updated the local docs workflow so `npm run dev` and `npm run preview` republish local docs before serving, and marked the old docs-site integration pending item as done.
+*   Decisions:
+    *   Keep checked-in `public/docs` aligned with local app hosting, not the production GitHub Pages base path.
+    *   Use `predev`/`prepreview` to make local docs regeneration automatic for the common developer workflows.
+    *   Leave production parity to the existing `docs:docusaurus:publish-prod` path in CI.
+*   User directives:
+    *   Fix the local docs mismatch shown in the screenshot.
+*   Assistant commitments:
+    *   Validate the regenerated docs artifacts and keep the journal/pending index aligned with the completed fix.
+*   Artifacts changed:
+    *   `package.json`
+    *   `docs/WEB_DOCS_ARCHITECTURE_DECISION.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+    *   `public/docs/` (regenerated with local base)
+    *   `git commit 4e98ff4f` (`fix docs local base for dev preview`)
+*   Validation:
+    *   `npm run docs:docusaurus:publish-local` ✅
+    *   `npm run verify:changed` ✅
+    *   `npm run build` ✅
+    *   Static artifact spot-check on `public/docs/index.html` confirmed `/docs/assets/...` paths and no `/SmartPad/docs/` asset URLs ✅
+*   Pending updates:
+    *   `P-2026-02-11-06` marked done in the Pending Index.
+    *   `dist/index.html` remains modified locally from the build check and was intentionally not staged.
+*   Risks/blockers:
+    *   Loopback access from shell-based runtime checks was inconsistent in this environment, so validation relied on regenerated artifact inspection plus the build gate.
