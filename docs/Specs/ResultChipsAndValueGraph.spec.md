@@ -230,6 +230,8 @@ Flow:
 7. Revealing hover actions must not change the rendered chip width or force a line wrap. Actions
    render outside normal text flow, preventing hover/out flicker loops near line endings without
    turning result chips into elongated bars.
+8. In Result Lane mode, hover actions open to the left of the chip so they do not collide with the
+   right lane boundary. The action cluster is lightweight chrome: no border and no box shadow.
 
 Guardrails:
 

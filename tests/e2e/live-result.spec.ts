@@ -326,6 +326,42 @@ test.describe("Live Result", () => {
     expect(Math.abs(after - before)).toBeLessThanOrEqual(1);
   });
 
+  test("places result-lane hover actions to the left without card chrome", async ({ page }) => {
+    await page.evaluate(() => {
+      const key = "smartpad-settings";
+      const existing = JSON.parse(localStorage.getItem(key) || "{}");
+      localStorage.setItem(key, JSON.stringify({ ...existing, resultLaneEnabled: true }));
+    });
+    await page.reload();
+    await page.waitForSelector('[data-testid="smart-pad-editor"]');
+
+    await setEditorContent(page, "total = 123456789 + 42 =>");
+    const chip = page.locator(".semantic-result-display").first();
+    await expect(chip).toBeVisible();
+    await chip.hover();
+
+    const geometry = await chip.evaluate((node) => {
+      const chipRect = (node as HTMLElement).getBoundingClientRect();
+      const actions = (node as HTMLElement).querySelector(
+        ".semantic-result-actions"
+      ) as HTMLElement | null;
+      if (!actions) return null;
+      const actionRect = actions.getBoundingClientRect();
+      const style = window.getComputedStyle(actions);
+      return {
+        actionRight: actionRect.right,
+        chipLeft: chipRect.left,
+        borderTopWidth: style.borderTopWidth,
+        boxShadow: style.boxShadow,
+      };
+    });
+
+    expect(geometry).not.toBeNull();
+    expect((geometry as any).actionRight).toBeLessThanOrEqual((geometry as any).chipLeft);
+    expect((geometry as any).borderTopWidth).toBe("0px");
+    expect((geometry as any).boxShadow).toBe("none");
+  });
+
   test("can be turned off in settings", async ({ page }) => {
     await page.getByLabel("Open settings").click();
     const liveToggle = page.getByLabel("Live Result");

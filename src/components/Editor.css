@@ -386,10 +386,10 @@ body.number-scrubbing * {
   max-width: none;
   margin-left: 0;
   padding: 2px 4px;
-  border: 1px solid var(--color-border);
+  border: 0;
   border-radius: 7px;
   background: color-mix(in srgb, var(--color-surface) 94%, black);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+  box-shadow: none;
   opacity: 0;
   transform: translate(6px, -50%) scale(0.98);
   pointer-events: none;
@@ -407,6 +407,58 @@ body.number-scrubbing * {
   opacity: 1;
   transform: translate(8px, -50%) scale(1);
   pointer-events: auto;
+}
+
+.editor-container.result-lane-enabled
+  .editor-content
+  p
+  .semantic-lane-result-wrapper
+  .semantic-result-actions,
+.editor-container.result-lane-enabled
+  .editor-content
+  p
+  .semantic-wrapper[data-result-node="true"]
+  .semantic-result-actions,
+.editor-container.result-lane-enabled
+  .editor-content
+  p
+  .semantic-lane-result-wrapper
+  .semantic-live-result-actions,
+.editor-container.result-lane-enabled
+  .editor-content
+  p
+  .semantic-wrapper[data-result-node="true"]
+  .semantic-live-result-actions {
+  left: auto;
+  right: 100%;
+  transform: translate(-6px, -50%) scale(0.98);
+}
+
+.editor-container.result-lane-enabled
+  .editor-content
+  p
+  .semantic-lane-result-wrapper
+  .semantic-result-display:hover
+  .semantic-result-actions,
+.editor-container.result-lane-enabled
+  .editor-content
+  p
+  .semantic-lane-result-wrapper
+  .semantic-result-display:focus-within
+  .semantic-result-actions,
+.editor-container.result-lane-enabled
+  .editor-content
+  p
+  .semantic-wrapper[data-result-node="true"]
+  .semantic-result-display:hover
+  .semantic-result-actions,
+.editor-container.result-lane-enabled
+  .editor-content
+  p
+  .semantic-wrapper[data-result-node="true"]
+  .semantic-result-display:focus-within
+  .semantic-result-actions {
+  transform: translate(-8px, -50%) scale(1);
 }
 
 .semantic-result-action,
