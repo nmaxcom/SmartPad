@@ -48,7 +48,8 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 - edits preserve intent when possible
 - Percentages: clamped to sensible bounds (never cross invalid zones silently)
 - Plot widget identity must include all rendered point coordinates, not only first/last points. Scatter plots must rerender when an intermediate X or Y list value changes.
-- Result-chip menu suggestions for these views are highlighted and only shown when the generated view should connect immediately.
+- Plot widget identity must also include the current-value marker coordinates. Updating the active X value must move the marker even if the sampled curve data is otherwise unchanged.
+- Tooltips must stay readable inside the chart bounds. Near the right or top edge, the tooltip repositions instead of being clipped by the chart container.
 
 ## Power-user checklist
 

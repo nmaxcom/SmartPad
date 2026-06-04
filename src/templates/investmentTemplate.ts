@@ -9,14 +9,13 @@ market = 7%
 fundfee = 0.35%
 platformfee = 0.15%
 annual = market - fundfee - platformfee
-annual return = annual as % =>
 
 # 2) Compound wealth after investor costs
 mult = 1 + annual
-paid(x) = start + monthly * 12 * x
-wealth(x) = start * mult^x + monthly * 12 * (mult^x - 1) / annual
-gain(x) = wealth(x) - paid(x)
-roi(x) = gain(x) / paid(x)
+paid(year) = start + monthly * 12 * year
+wealth(year) = start * mult^year + monthly * 12 * (mult^year - 1) / annual
+gain(year) = wealth(year) - paid(year)
+roi(year) = gain(year) / paid(year)
 
 paid total = paid(horizon) =>
 value before tax = wealth(horizon) =>
@@ -48,7 +47,7 @@ after tax roi = net profit / paid total as % =>
 # 4) See the curve: before tax vs after a simple effective tax
 efftax = tax due / gain before tax
 effective tax = efftax as % =>
-netwealth(x) = wealth(x) - gain(x) * charttax
+netwealth(year) = wealth(year) - gain(year) * charttax
 @view plot y=wealth,netwealth domain=0..35 size=md
 
 # 5) What monthly amount reaches a 250k net target in 20 years?

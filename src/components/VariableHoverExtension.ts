@@ -9,7 +9,12 @@ import { Decoration, DecorationSet } from "prosemirror-view";
 import { Node as ProseMirrorNode } from "prosemirror-model";
 import { Variable } from "../state/types";
 import { parseLine } from "../parsing/astParser";
-import { isVariableAssignmentNode, isCombinedAssignmentNode, isCommentNode } from "../parsing/ast";
+import {
+  isVariableAssignmentNode,
+  isCombinedAssignmentNode,
+  isCommentNode,
+  isFunctionDefinitionNode,
+} from "../parsing/ast";
 import { extractTokensFromASTNode } from "./SemanticHighlightExtension";
 
 const variableHoverPluginKey = new PluginKey("variableHover");
@@ -21,6 +26,9 @@ const isVariableBoundary = (char: string | undefined) =>
 
 const hasDecoration = (decorations: Decoration[], from: number, to: number) =>
   decorations.some((decoration) => decoration.from === from && decoration.to === to);
+
+const rangesOverlap = (aFrom: number, aTo: number, bFrom: number, bTo: number) =>
+  aFrom < bTo && bFrom < aTo;
 
 /**
  * A Tiptap extension that adds hover-to-highlight functionality for variables.
@@ -73,13 +81,25 @@ export const VariableHoverExtension = Extension.create({
              * variable and applies decorations to highlight them.
              */
             mouseover: (view, event) => {
-              const target = event.target as HTMLElement;
-              if (target.classList.contains("semantic-variable")) {
+              const rawTarget = event.target as Node | null;
+              const eventTarget =
+                rawTarget instanceof HTMLElement ? rawTarget : rawTarget?.parentElement;
+              const target = eventTarget?.closest?.(".semantic-variable, .semantic-function") as
+                | HTMLElement
+                | null;
+              if (!target) return;
+              if (
+                target.classList.contains("semantic-variable") ||
+                target.classList.contains("semantic-function")
+              ) {
                 const pos = view.posAtDOM(target, 0);
                 if (pos === null || pos === undefined) return;
 
-                const variableName = target.textContent;
-                if (!variableName) return;
+                const symbolName = target.textContent;
+                if (!symbolName) return;
+                const symbolType = target.classList.contains("semantic-function")
+                  ? "function"
+                  : "variable";
 
                 
 
@@ -94,10 +114,22 @@ export const VariableHoverExtension = Extension.create({
                     
 
                     // Highlight declaration
-                    if (isVariableAssignmentNode(astNode) || isCombinedAssignmentNode(astNode)) {
-                      if (astNode.variableName === variableName) {
-                        const from = offset + text.indexOf(variableName) + 1;
-                        const to = from + variableName.length;
+                    if (symbolType === "variable" && (isVariableAssignmentNode(astNode) || isCombinedAssignmentNode(astNode))) {
+                      if (astNode.variableName === symbolName) {
+                        const from = offset + text.indexOf(symbolName) + 1;
+                        const to = from + symbolName.length;
+                        decorations.push(
+                          Decoration.inline(from, to, {
+                            class: "variable-highlight-declaration",
+                          })
+                        );
+                      }
+                    }
+
+                    if (symbolType === "function" && isFunctionDefinitionNode(astNode)) {
+                      if (astNode.functionName === symbolName) {
+                        const from = offset + text.indexOf(symbolName) + 1;
+                        const to = from + symbolName.length;
                         decorations.push(
                           Decoration.inline(from, to, {
                             class: "variable-highlight-declaration",
@@ -107,8 +139,18 @@ export const VariableHoverExtension = Extension.create({
                     }
 
                     const tokens = extractTokensFromASTNode(astNode, variableContext);
+                    const protectedRanges = tokens
+                      .filter((token) => {
+                        if (token.type !== "variable" && token.type !== "function") return false;
+                        if (token.type !== symbolType) return true;
+                        return token.text !== symbolName;
+                      })
+                      .map((token) => ({
+                        from: offset + token.start + 1,
+                        to: offset + token.end + 1,
+                      }));
                     tokens.forEach(token => {
-                      if (token.type === 'variable' && token.text === variableName) {
+                      if (token.type === symbolType && token.text === symbolName) {
                         const from = offset + token.start + 1;
                         const to = offset + token.end + 1;
 
@@ -122,11 +164,11 @@ export const VariableHoverExtension = Extension.create({
                       }
                     });
 
-                    const variableRegex = new RegExp(escapeRegExp(variableName), "g");
+                    const variableRegex = new RegExp(escapeRegExp(symbolName), "g");
                     let match: RegExpExecArray | null;
                     while ((match = variableRegex.exec(text))) {
                       const start = match.index;
-                      const end = start + variableName.length;
+                      const end = start + symbolName.length;
                       if (
                         !isVariableBoundary(text[start - 1]) ||
                         !isVariableBoundary(text[end])
@@ -135,6 +177,9 @@ export const VariableHoverExtension = Extension.create({
                       }
                       const from = offset + start + 1;
                       const to = offset + end + 1;
+                      if (protectedRanges.some((range) => rangesOverlap(from, to, range.from, range.to))) {
+                        continue;
+                      }
                       if (hasDecoration(decorations, from, to)) {
                         continue;
                       }
@@ -152,7 +197,7 @@ export const VariableHoverExtension = Extension.create({
                 const decorationSet = DecorationSet.create(view.state.doc, decorations);
                 const newState = {
                   decorations: decorationSet,
-                  hoveredVariableName: variableName,
+                  hoveredVariableName: symbolName,
                 };
                 
                 const tr = view.state.tr;

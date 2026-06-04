@@ -126,6 +126,8 @@ Plain:
 Technical:
 - Unknown/unresolved identifiers in live mode should suppress output (not show error).
 - Incomplete syntax should suppress output.
+- Dangling unit conversions are a specific exception: `to` or `in` without a target unit should
+  show a standard warning chip explaining that the destination unit is missing.
 
 Plain:
 - If the line is unfinished or missing definitions, stay quiet until it becomes valid.
@@ -137,6 +139,7 @@ Examples:
 - `9L/min*18min` -> show `162 L` when complete (compact no-space form).
 - `2(3+4)` -> show `14` when complete.
 - `(2+3)(4+5)` -> show `45` when complete.
+- `30kg to` -> show `⚠️ Expected unit after 'to'`, not `evaluation failed`.
 
 ---
 

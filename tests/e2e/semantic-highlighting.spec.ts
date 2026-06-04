@@ -266,12 +266,12 @@ test.describe("Semantic Highlighting", () => {
       const editor = (window as any).tiptapEditor;
       editor.commands.setContent(
         [
-          "costs = $12, $15, $9",
-          "costs",
-          "expenses = costs",
-          "sum(costs)",
-          "count(costs)",
-        ].join("\n")
+          "<p>costs = $12, $15, $9</p>",
+          "<p>costs</p>",
+          "<p>expenses = costs</p>",
+          "<p>sum(costs)</p>",
+          "<p>count(costs)</p>",
+        ].join("")
       );
       editor.commands.focus("start");
       window.dispatchEvent(new Event("forceEvaluation"));
@@ -282,6 +282,52 @@ test.describe("Semantic Highlighting", () => {
 
     await expect(page.locator(".variable-highlight-declaration")).toHaveCount(1);
     await expect(page.locator(".variable-highlight-reference")).toHaveCount(4);
+  });
+
+  test("hovering a function name highlights its definition and calls", async ({ page }) => {
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      editor.commands.setContent(
+        [
+          "<p>wealth(year) = start * year</p>",
+          "<p>netwealth(year) = wealth(year) - 10</p>",
+          "<p>value before tax = wealth(20) =&gt;</p>",
+        ].join("")
+      );
+      editor.commands.focus("start");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    await page.locator(".semantic-function").filter({ hasText: /^wealth$/ }).first().hover();
+
+    await expect(page.locator(".variable-highlight-declaration")).toHaveCount(1);
+    await expect(page.locator(".variable-highlight-reference")).toHaveCount(3);
+  });
+
+  test("hovering a short variable does not highlight inside longer variable names", async ({ page }) => {
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      editor.commands.setContent(
+        [
+          "<p>low = 4%</p>",
+          "<p>value low = start * (1 + low)^horizon</p>",
+          "<p>value base = start * (1 + base)^horizon</p>",
+        ].join("")
+      );
+      editor.commands.focus("start");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    await page.locator(".semantic-variable").filter({ hasText: /^low$/ }).first().hover();
+
+    await expect(page.locator(".variable-highlight-declaration")).toHaveCount(1);
+    await expect(page.locator(".variable-highlight-reference")).toHaveCount(1);
+    const highlightedTexts = await page
+      .locator(".variable-highlight-reference")
+      .evaluateAll((nodes) => nodes.map((node) => node.textContent));
+    expect(highlightedTexts).toEqual(["low"]);
   });
 
   test("applies CSS styles correctly", async ({ page }) => {

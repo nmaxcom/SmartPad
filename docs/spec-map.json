@@ -63,9 +63,10 @@
       "specPrefixes": [
         "src/services/fxRates.ts",
         "src/utils/currencyFx.ts",
+        "src/types/CurrencyValue.ts",
         "docs/Specs/Currency.spec.md"
       ],
-      "docPrefixes": ["public/docs/"],
+      "docPrefixes": ["docs/Specs/Currency.spec.md", "public/docs/"],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
     },
     {

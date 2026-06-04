@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.9.2">
 <title data-rh="true">Plotting and Dependency Views | SmartPad Docs</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="http://localhost:3000/docs/img/logo.svg"><meta data-rh="true" name="twitter:image" content="http://localhost:3000/docs/img/logo.svg"><meta data-rh="true" property="og:url" content="http://localhost:3000/docs/specs/plotting-and-dependency-views/"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Plotting and Dependency Views | SmartPad Docs"><meta data-rh="true" name="description" content="Turn expressions into exploratory views with `@view` directives."><meta data-rh="true" property="og:description" content="Turn expressions into exploratory views with `@view` directives."><link data-rh="true" rel="icon" href="/docs/img/logo.svg"><link data-rh="true" rel="canonical" href="http://localhost:3000/docs/specs/plotting-and-dependency-views/"><link data-rh="true" rel="alternate" href="http://localhost:3000/docs/specs/plotting-and-dependency-views/" hreflang="en"><link data-rh="true" rel="alternate" href="http://localhost:3000/docs/specs/plotting-and-dependency-views/" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Plotting and Dependency Views","item":"http://localhost:3000/docs/specs/plotting-and-dependency-views"}]}</script><link rel="stylesheet" href="/docs/assets/css/styles.65553e9c.css">
-<script src="/docs/assets/js/runtime~main.c57dedec.js" defer="defer"></script>
+<script src="/docs/assets/js/runtime~main.4edaf036.js" defer="defer"></script>
 <script src="/docs/assets/js/main.ceb8f843.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -57,7 +57,8 @@ f = unknownVar + 1</code></pre><div class="example-playground__inline"><div clas
 <li class="">edits preserve intent when possible</li>
 <li class="">Percentages: clamped to sensible bounds (never cross invalid zones silently)</li>
 <li class="">Plot widget identity must include all rendered point coordinates, not only first/last points. Scatter plots must rerender when an intermediate X or Y list value changes.</li>
-<li class="">Result-chip menu suggestions for these views are highlighted and only shown when the generated view should connect immediately.</li>
+<li class="">Plot widget identity must also include the current-value marker coordinates. Updating the active X value must move the marker even if the sampled curve data is otherwise unchanged.</li>
+<li class="">Tooltips must stay readable inside the chart bounds. Near the right or top edge, the tooltip repositions instead of being clipped by the chart container.</li>
 </ul>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="power-user-checklist">Power-user checklist<a href="#power-user-checklist" class="hash-link" aria-label="Direct link to Power-user checklist" title="Direct link to Power-user checklist" translate="no">​</a></h2>
 <ul>

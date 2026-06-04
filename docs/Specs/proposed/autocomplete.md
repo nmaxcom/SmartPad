@@ -29,6 +29,8 @@ The first version focuses on reusing names and syntax that already exist in the 
 4. `Escape` closes suggestions without changing text.
 5. Clicking a suggestion applies it.
 6. Applying a suggestion replaces only the current query range, not the whole line.
+7. When keyboard navigation moves through a long suggestion list, the menu scroll position follows
+   the highlighted option so the active item remains visible.
 
 ## Source types
 
@@ -64,6 +66,9 @@ Typing `comp` should suggest `compound(principal, rate, years)` and insert `comp
 After conversion keywords, autocomplete should prefer targets compatible with the source value.
 Unit and duration sources should prefer unit symbols and aliases; currency sources should prefer
 currency codes and currency symbols.
+When the source value already has a concrete unit dimension, the target list must stay within
+that compatible dimension. For example `30kg to ` may suggest `g`, `kg`, and `lb`, but must not
+suggest temperature, distance, currency, or unrelated units.
 
 Examples:
 
@@ -135,6 +140,8 @@ ranking above `msr`, and `msr` ranking above generic substring matches.
 6. Do not open the menu only because the user clicks a variable or moves the caret.
 7. If the query ends with whitespace, do not keep suggesting the exact completed variable; only
    suggest longer phrase continuations such as `roi tax` for `roi `.
+8. If the query exactly matches a completed variable or function name, do not keep showing that
+   exact item while the user continues editing the same token.
 
 ## Acceptance tests
 
@@ -149,3 +156,5 @@ ranking above `msr`, and `msr` ranking above generic substring matches.
 9. Moving the caret onto an existing variable does not open suggestions.
 10. `# tax` returns no suggestions.
 11. Editing `tax r = 21%` with the cursor before `=` returns no suggestions.
+12. `30kg to ` suggests only mass-compatible targets such as `g`, `kg`, and `lb`.
+13. Completing `platformfee` exactly hides the exact `platformfee` suggestion.

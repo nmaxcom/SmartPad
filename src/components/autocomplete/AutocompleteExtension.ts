@@ -218,6 +218,9 @@ export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
               menu.appendChild(button);
             });
 
+            const activeItem = menu.querySelector(".smartpad-autocomplete-item-active");
+            activeItem?.scrollIntoView({ block: "nearest" });
+
             const coords = view.coordsAtPos(state.anchorPos);
             menu.style.left = `${Math.max(8, Math.min(coords.left, window.innerWidth - 328))}px`;
             menu.style.top = `${Math.min(coords.bottom + 8, window.innerHeight - 48)}px`;

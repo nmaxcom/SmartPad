@@ -42,6 +42,7 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 - Use live FX rates by default, with Frankfurter as primary and ECB as backup.
 - Symbols remain the default display unless the user explicitly targets a code.
+- ISO code literals may include or omit whitespace between amount and code: `35430 EUR`,
 - Cross-currency conversion requires an FX rate.
 - If live rates are unavailable, show a clear error (unless manual overrides exist).
 - Scope and precedence follow normal SmartPad variable rules (nearest wins).
@@ -49,7 +50,6 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 - Preserve the user's requested unit target in output.
 - Amber status when ECB is active (fallback).
 - Unknown currency code => error with suggestion.
-- Conversion requested with no live rate and no manual rate => error.
 
 ## Power-user checklist
 

@@ -227,6 +227,9 @@ Flow:
    - Numeric-list results expose highlighted visual suggestions such as `Plot as histogram`.
    - Equal-length numeric-list pairs expose highlighted scatter suggestions such as `Plot as scatter vs study hours`.
 6. Planned commands that are not implemented yet may be shown disabled.
+7. Revealing hover actions must not change the rendered chip width or force a line wrap. The chip
+   reserves stable action space and only changes action visibility, preventing hover/out flicker
+   loops near line endings.
 
 Guardrails:
 
@@ -391,9 +394,10 @@ By default SmartPad keeps references alive when copying/exporting text, so paste
 6. `@view` directive lines highlight `@view`, the view kind, and parameter keys as directive syntax. Variable-bearing parameters such as `x=`, `y=`, and `values=` tokenize their values as normal expressions so variables in plot/hist/scatter view lines participate in hover-to-highlight.
 7. Function definitions tokenize their right-hand expression as normal expression content: variables participate in hover-to-highlight and numeric literals remain scrubbable.
 8. Currency codes and symbols used in amount literals, for example `3000 EUR`, `3000EUR`, `EUR 3000`, `EUR3000`, and `€3000`, are highlighted with the unit/currency color treatment rather than as ordinary variables.
-9. Hovering a variable highlights the declaration and every exact same-name usage, including bare expression lines, assignment right-hand sides, and function-call arguments.
-9. Reserved operator/command words (`solve/to/in/of/on/off/as/is/per/where`) must not be tokenized as function names just because `(` follows.
-10. If variables named `on`, `off`, or `where` exist, keyword/operator positions still render them as keywords (for example `a on (b off c)` and `list where > 10`).
+9. Hovering a variable highlights the declaration and every exact same-name usage, including bare expression lines, assignment right-hand sides, and function-call arguments. Short names must only match exact token boundaries, so hovering `low` does not highlight the `low` substring inside a longer phrase such as `value low`.
+10. Hovering a function name highlights the function definition and every call to that same function.
+11. Reserved operator/command words (`solve/to/in/of/on/off/as/is/per/where`) must not be tokenized as function names just because `(` follows.
+12. If variables named `on`, `off`, or `where` exist, keyword/operator positions still render them as keywords (for example `a on (b off c)` and `list where > 10`).
 
 ### 8.9 Current SmartPad Touchpoints (Implementation map)
 

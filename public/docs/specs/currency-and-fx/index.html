@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.9.2">
 <title data-rh="true">Currency and FX | SmartPad Docs</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="http://localhost:3000/docs/img/logo.svg"><meta data-rh="true" name="twitter:image" content="http://localhost:3000/docs/img/logo.svg"><meta data-rh="true" property="og:url" content="http://localhost:3000/docs/specs/currency-and-fx/"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Currency and FX | SmartPad Docs"><meta data-rh="true" name="description" content="Treat currency as first-class units with live FX + manual overrides."><meta data-rh="true" property="og:description" content="Treat currency as first-class units with live FX + manual overrides."><link data-rh="true" rel="icon" href="/docs/img/logo.svg"><link data-rh="true" rel="canonical" href="http://localhost:3000/docs/specs/currency-and-fx/"><link data-rh="true" rel="alternate" href="http://localhost:3000/docs/specs/currency-and-fx/" hreflang="en"><link data-rh="true" rel="alternate" href="http://localhost:3000/docs/specs/currency-and-fx/" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Currency and FX","item":"http://localhost:3000/docs/specs/currency-and-fx"}]}</script><link rel="stylesheet" href="/docs/assets/css/styles.65553e9c.css">
-<script src="/docs/assets/js/runtime~main.c57dedec.js" defer="defer"></script>
+<script src="/docs/assets/js/runtime~main.4edaf036.js" defer="defer"></script>
 <script src="/docs/assets/js/main.ceb8f843.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -47,6 +47,7 @@ amount in BTC =&gt;</code></pre><div class="example-playground__inline"><div cla
 <ul>
 <li class="">Use live FX rates by default, with Frankfurter as primary and ECB as backup.</li>
 <li class="">Symbols remain the default display unless the user explicitly targets a code.</li>
+<li class="">ISO code literals may include or omit whitespace between amount and code: <code>35430 EUR</code>,</li>
 <li class="">Cross-currency conversion requires an FX rate.</li>
 <li class="">If live rates are unavailable, show a clear error (unless manual overrides exist).</li>
 <li class="">Scope and precedence follow normal SmartPad variable rules (nearest wins).</li>
@@ -54,7 +55,6 @@ amount in BTC =&gt;</code></pre><div class="example-playground__inline"><div cla
 <li class="">Preserve the user&#x27;s requested unit target in output.</li>
 <li class="">Amber status when ECB is active (fallback).</li>
 <li class="">Unknown currency code =&gt; error with suggestion.</li>
-<li class="">Conversion requested with no live rate and no manual rate =&gt; error.</li>
 </ul>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="power-user-checklist">Power-user checklist<a href="#power-user-checklist" class="hash-link" aria-label="Direct link to Power-user checklist" title="Direct link to Power-user checklist" translate="no">​</a></h2>
 <ul>

@@ -94,7 +94,9 @@ describe("Investment template", () => {
     expect(INVESTMENT_TEMPLATE).toContain("fundfee = 0.35%");
     expect(INVESTMENT_TEMPLATE).toContain("platformfee = 0.15%");
     expect(INVESTMENT_TEMPLATE).toContain("taxlow = 19%");
-    expect(INVESTMENT_TEMPLATE).toContain("wealth(x)");
+    expect(INVESTMENT_TEMPLATE).not.toContain("annual return = annual as %");
+    expect(INVESTMENT_TEMPLATE).toContain("wealth(year)");
+    expect(INVESTMENT_TEMPLATE).toContain("netwealth(year)");
     expect(INVESTMENT_TEMPLATE).toContain("@view plot y=wealth,netwealth");
     expect(INVESTMENT_TEMPLATE).toContain("gross roi now = roi(horizon) as % =>");
   });

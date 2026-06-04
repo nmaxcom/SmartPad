@@ -1,6 +1,6 @@
 import type { FunctionDefinitionNode } from "../../parsing/ast";
 import type { Variable } from "../../state/types";
-import { searchUnits } from "../../syntax/registry";
+import { searchUnits, SUPPORTED_UNITS } from "../../syntax/registry";
 
 export type AutocompleteKind = "variable" | "function" | "unit" | "directive" | "currency";
 type ConversionSourceKind = "currency" | "unit" | "unknown";
@@ -14,6 +14,7 @@ export type AutocompleteContext =
       replaceTo: number;
       sourceExpression: string;
       sourceKind: ConversionSourceKind;
+      sourceUnitCategory?: string;
     }
   | { type: "viewParam"; key: string; query: string; replaceFrom: number; replaceTo: number }
   | { type: "directive"; query: string; replaceFrom: number; replaceTo: number }
@@ -62,6 +63,14 @@ const CURRENCY_SUGGESTIONS = [
   { label: "₿", detail: "Bitcoin symbol" },
 ];
 const CURRENCY_TEXT_REGEX = /(?:[$€£¥₹₿]|(?:^|[^A-Za-z])(?:USD|EUR|GBP|JPY|CHF|CAD|AUD|BTC|ETH|USDT|USDC)\b)/i;
+const UNIT_LOOKUP = Object.entries(SUPPORTED_UNITS).flatMap(([, category]) =>
+  category.units.flatMap((unit) =>
+    [unit.symbol, unit.name, ...unit.aliases].map((alias) => ({
+      alias,
+      category: category.name,
+    }))
+  )
+);
 
 function normalizeText(value: string): string {
   return value.replace(/\s+/g, " ").trim().toLowerCase();
@@ -83,39 +92,64 @@ function isUnitLikeType(type: string): boolean {
   return type === "unit" || type === "duration";
 }
 
-function inferConversionSourceKind(sourceExpression: string): ConversionSourceKind {
+function normalizeUnitCategory(category?: string): string | undefined {
+  return category ? category.toLowerCase() : undefined;
+}
+
+function findUnitCategoryInExpression(sourceExpression: string): string | undefined {
+  const trimmed = sourceExpression.trim().toLowerCase();
+  const sorted = [...UNIT_LOOKUP].sort((a, b) => b.alias.length - a.alias.length);
+  const match = sorted.find((entry) => {
+    const alias = entry.alias.toLowerCase();
+    if (!alias) return false;
+    const escaped = alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`(?:^|[^A-Za-z0-9_])[-+]?\\d[\\d,.]*\\s*${escaped}$`, "i").test(trimmed);
+  });
+  return normalizeUnitCategory(match?.category);
+}
+
+function inferConversionSourceKind(sourceExpression: string): {
+  kind: ConversionSourceKind;
+  unitCategory?: string;
+} {
   if (CURRENCY_TEXT_REGEX.test(sourceExpression)) {
-    return "currency";
+    return { kind: "currency" };
   }
-  if (/\b(?:kg|g|mg|lb|oz|m|km|cm|mm|ft|in|mi|s|sec|min|h|hr|day|days|c|f|k|°c|°f)\b/i.test(sourceExpression)) {
-    return "unit";
+  const unitCategory = findUnitCategoryInExpression(sourceExpression);
+  if (unitCategory) {
+    return { kind: "unit", unitCategory };
   }
-  return "unknown";
+  return { kind: "unknown" };
 }
 
 function resolveConversionSourceKind(
   sourceExpression: string,
   variables: Map<string, Variable>
-): ConversionSourceKind {
+): { kind: ConversionSourceKind; unitCategory?: string } {
   const trimmed = sourceExpression.trim();
   const directKind = inferConversionSourceKind(trimmed);
-  if (directKind !== "unknown") {
+  if (directKind.kind !== "unknown") {
     return directKind;
   }
 
   const variable = variables.get(trimmed);
   if (!variable) {
-    return "unknown";
+    return { kind: "unknown" };
   }
 
   const type = getValueType(variable);
   if (isCurrencyType(type)) {
-    return "currency";
+    return { kind: "currency" };
   }
   if (isUnitLikeType(type)) {
-    return "unit";
+    const value = variable.value as any;
+    const unit = typeof value?.getUnit === "function" ? String(value.getUnit()) : variable.rawValue;
+    return {
+      kind: "unit",
+      unitCategory: findUnitCategoryInExpression(`1 ${unit}`),
+    };
   }
-  return "unknown";
+  return { kind: "unknown" };
 }
 
 function getVariableDetail(variable: Variable): string {
@@ -259,13 +293,15 @@ export function getAutocompleteContext(
   if (conversionMatch && conversionMatch.index !== undefined) {
     const query = conversionMatch[1] || "";
     const sourceExpression = beforeCursor.slice(0, conversionMatch.index).trim();
+    const source = inferConversionSourceKind(sourceExpression);
     return {
       type: "conversionTarget",
       query,
       replaceFrom: clampedOffset - query.length,
       replaceTo: clampedOffset,
       sourceExpression,
-      sourceKind: inferConversionSourceKind(sourceExpression),
+      sourceKind: source.kind,
+      sourceUnitCategory: source.unitCategory,
     };
   }
 
@@ -283,7 +319,6 @@ function variableItems(
     return [];
   }
   const key = context.type === "viewParam" ? context.key : "";
-  const queryHasTrailingWhitespace = /\s$/.test(context.query);
   const normalizedQuery = normalizeText(context.query);
   return Array.from(variables.values())
     .filter((variable) => !key || isVariableEligibleForViewKey(variable, key))
@@ -296,7 +331,7 @@ function variableItems(
       replaceFrom: context.replaceFrom,
       replaceTo: context.replaceTo,
     }))
-    .filter((item) => !(queryHasTrailingWhitespace && normalizeText(item.label) === normalizedQuery))
+    .filter((item) => normalizeText(item.label) !== normalizedQuery)
     .filter((item) => item.score > boost);
 }
 
@@ -310,6 +345,7 @@ function functionItems(
   if (context.type === "viewParam" && context.key !== "y") {
     return [];
   }
+  const normalizedQuery = normalizeText(context.query);
   return Array.from(functions.values())
     .map((fn) => {
       const signature = `${fn.functionName}(${fn.params.map((param) => param.name).join(", ")})`;
@@ -323,6 +359,7 @@ function functionItems(
         replaceTo: context.replaceTo,
       };
     })
+    .filter((item) => normalizeText(item.insertText.replace(/\($/, "")) !== normalizedQuery)
     .filter((item) => item.score > 25);
 }
 
@@ -334,6 +371,10 @@ function unitItems(context: AutocompleteContext): AutocompleteItem[] {
     return [];
   }
   return searchUnits(context.query || "")
+    .filter((unit) => {
+      if (!context.sourceUnitCategory) return true;
+      return normalizeUnitCategory(unit.category) === context.sourceUnitCategory;
+    })
     .slice(0, 24)
     .map((unit) => ({
       kind: "unit" as const,
@@ -384,9 +425,11 @@ export function getAutocompleteSuggestions(input: AutocompleteInput): Autocomple
     return [];
   }
   if (context.type === "conversionTarget" && context.sourceKind === "unknown") {
+    const source = resolveConversionSourceKind(context.sourceExpression, input.variables);
     context = {
       ...context,
-      sourceKind: resolveConversionSourceKind(context.sourceExpression, input.variables),
+      sourceKind: source.kind,
+      sourceUnitCategory: source.unitCategory,
     };
   }
 

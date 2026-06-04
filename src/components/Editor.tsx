@@ -291,6 +291,17 @@ const resolveDateLocaleForEvaluation = (settings: {
   return getDateLocaleEffective();
 };
 
+const getEvaluationFallbackMessage = (
+  rawExpression: string,
+  fallback = "evaluation failed"
+): string => {
+  const danglingConversion = rawExpression.trim().match(/\b(to|in)\s*$/i);
+  if (danglingConversion) {
+    return `Expected unit after '${danglingConversion[1].toLowerCase()}'`;
+  }
+  return fallback;
+};
+
 // Create Editor Context
 interface EditorContextType {
   editor: any;
@@ -594,7 +605,15 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
               const errorReason =
                 (renderNode as any)?.error ||
                 (renderNode as any)?.displayText ||
-                "evaluation failed";
+                getEvaluationFallbackMessage(trimmedRawExpression);
+              if (renderNode && (renderNode as any).type === "error") {
+                collectedRenderNodes.push({
+                  ...(renderNode as any),
+                  line: index + 1,
+                  originalRaw: lines[index] ?? node.raw ?? "",
+                  livePreview: true,
+                } as RenderNode);
+              }
               setLineResultState(index + 1, lineId, {
                 value: null,
                 display: "",
@@ -626,22 +645,23 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
                 });
               }
             } else {
+              const fallbackMessage = getEvaluationFallbackMessage(trimmedRawExpression);
               lineResultByLine.set(index + 1, {
                 value: null,
                 display: "",
                 hasError: true,
-                errorMessage: "evaluation failed",
+                errorMessage: fallbackMessage,
               });
               if (lineId) {
                 lineResultById.set(lineId, {
                   value: null,
                   display: "",
                   hasError: true,
-                  errorMessage: "evaluation failed",
+                  errorMessage: fallbackMessage,
                 });
                 lineResultStatusById.set(lineId, {
                   hasError: true,
-                  errorMessage: "evaluation failed",
+                  errorMessage: fallbackMessage,
                   display: "",
                 });
               }
@@ -696,7 +716,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
                   value: null,
                   display: "",
                   hasError: true,
-                  errorMessage: "evaluation failed",
+                  errorMessage: getEvaluationFallbackMessage(rawLine),
                 });
               } else if (
                 hasUnresolvedLiveIdentifiers(candidateNode.components, currentVariableContext) &&
@@ -747,7 +767,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
                   const errorReason =
                     (liveRenderNode as any)?.error ||
                     (liveRenderNode as any)?.displayText ||
-                    "evaluation failed";
+                    getEvaluationFallbackMessage(rawLine);
                   setLineResultState(index + 1, lineId, {
                     value: null,
                     display: "",

@@ -78,9 +78,81 @@ test.describe("Autocomplete", () => {
 
     await page.keyboard.press("Enter");
     await page.keyboard.type("win = roi");
-    await expect(page.locator(".smartpad-autocomplete-menu")).toBeVisible();
+    await expect(page.locator(".smartpad-autocomplete-menu")).toBeHidden();
 
     await page.keyboard.type(" ");
     await expect(page.locator(".smartpad-autocomplete-menu")).toBeHidden();
+  });
+
+  test("closes when a variable name is completed exactly", async ({ page }) => {
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      editor.commands.setContent("market = 7%\nfundfee = 0.35%\nplatformfee = 0.15%\n");
+      editor.commands.focus("end");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("annual = market - fundfee - platformfee");
+    await expect(page.locator(".smartpad-autocomplete-menu")).toBeHidden();
+  });
+
+  test("keeps the highlighted option visible while navigating long menus", async ({ page }) => {
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      const suffixes = [
+        "alpha",
+        "bravo",
+        "charlie",
+        "delta",
+        "echo",
+        "foxtrot",
+        "golf",
+        "hotel",
+        "india",
+        "juliet",
+        "kilo",
+        "lima",
+        "mike",
+        "november",
+      ];
+      const variables = suffixes.map((suffix, index) => `item ${suffix} = ${index + 1}`);
+      editor.commands.setContent(variables.map((line) => `<p>${line}</p>`).join(""));
+      editor.commands.focus("end");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("total = item");
+    const menu = page.locator(".smartpad-autocomplete-menu");
+    await expect(menu).toBeVisible();
+
+    for (let index = 0; index < 10; index++) {
+      await page.keyboard.press("ArrowDown");
+    }
+
+    const geometry = await page.evaluate(() => {
+      const menuEl = document.querySelector(".smartpad-autocomplete-menu") as HTMLElement | null;
+      const activeEl = document.querySelector(
+        ".smartpad-autocomplete-item-active"
+      ) as HTMLElement | null;
+      if (!menuEl || !activeEl) return null;
+      const menuRect = menuEl.getBoundingClientRect();
+      const activeRect = activeEl.getBoundingClientRect();
+      return {
+        scrollTop: menuEl.scrollTop,
+        activeTop: activeRect.top,
+        activeBottom: activeRect.bottom,
+        menuTop: menuRect.top,
+        menuBottom: menuRect.bottom,
+      };
+    });
+
+    expect(geometry).not.toBeNull();
+    expect((geometry as any).scrollTop).toBeGreaterThan(0);
+    expect((geometry as any).activeTop).toBeGreaterThanOrEqual((geometry as any).menuTop);
+    expect((geometry as any).activeBottom).toBeLessThanOrEqual((geometry as any).menuBottom);
   });
 });

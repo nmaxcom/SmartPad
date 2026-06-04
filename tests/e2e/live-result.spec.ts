@@ -174,7 +174,7 @@ test.describe("Live Result", () => {
       };
     });
     expect(actionsBeforeHover.opacity).toBeLessThan(0.2);
-    expect(actionsBeforeHover.maxWidth).toBeLessThan(1);
+    expect(actionsBeforeHover.maxWidth).toBeGreaterThan(10);
 
     await liveChip.hover();
     await page.waitForTimeout(220);
@@ -193,7 +193,7 @@ test.describe("Live Result", () => {
       };
     });
     expect(actionsAfterHover.opacity).toBeGreaterThan(0.5);
-    expect(actionsAfterHover.maxWidth).toBeGreaterThan(10);
+    expect(Math.abs(actionsAfterHover.maxWidth - actionsBeforeHover.maxWidth)).toBeLessThanOrEqual(1);
 
     const copyButtonStyles = await copyButton.evaluate((el) => {
       const style = window.getComputedStyle(el as HTMLElement);
@@ -304,6 +304,26 @@ test.describe("Live Result", () => {
     expect(blockedStyles.color).toBe("rgb(255, 143, 182)");
     expect(blockedStyles.fontSize).toBe("15px");
     expect(Number.parseInt(blockedStyles.fontWeight, 10)).toBeLessThanOrEqual(400);
+  });
+
+  test("shows a specific warning for dangling live unit conversions", async ({ page }) => {
+    await setEditorContent(page, "30kg to");
+    const blockedChip = page.locator(".semantic-error-result").first();
+    await expect(blockedChip).toHaveCount(1);
+    await expect(blockedChip).toContainText("Expected unit after 'to'");
+    await expect(blockedChip).not.toContainText("evaluation failed");
+  });
+
+  test("keeps result chip width stable when hover actions appear", async ({ page }) => {
+    await setEditorContent(page, "total = 123456789 + 42 =>");
+    const chip = page.locator(".semantic-result-display").first();
+    await expect(chip).toBeVisible();
+
+    const before = await chip.evaluate((node) => (node as HTMLElement).getBoundingClientRect().width);
+    await chip.hover();
+    const after = await chip.evaluate((node) => (node as HTMLElement).getBoundingClientRect().width);
+
+    expect(Math.abs(after - before)).toBeLessThanOrEqual(1);
   });
 
   test("can be turned off in settings", async ({ page }) => {

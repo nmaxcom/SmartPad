@@ -377,27 +377,23 @@ body.number-scrubbing * {
   align-items: center;
   justify-content: flex-end;
   gap: 3px;
-  max-width: 0;
-  margin-left: 0;
+  width: 66px;
+  max-width: 66px;
+  margin-left: 6px;
   opacity: 0;
-  transform: translateX(-6px);
+  transform: none;
   pointer-events: none;
   overflow: hidden;
   transition:
-    max-width 0.18s ease,
-    margin-left 0.18s ease,
     opacity 0.12s ease,
-    transform 0.18s ease;
+    filter 0.18s ease;
 }
 
 .semantic-result-display:hover .semantic-result-actions,
 .semantic-result-display:focus-within .semantic-result-actions,
 .semantic-live-result-display:hover .semantic-live-result-actions,
 .semantic-live-result-display:focus-within .semantic-live-result-actions {
-  max-width: 72px;
-  margin-left: 6px;
   opacity: 1;
-  transform: translateX(0);
   pointer-events: auto;
 }
 

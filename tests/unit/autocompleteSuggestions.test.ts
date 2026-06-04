@@ -36,6 +36,7 @@ const variables = new Map<string, Variable>([
   ["roi", variable("roi", "44%", "percentage")],
   ["roi tax", variable("roi tax", "21%", "percentage")],
   ["seed", variable("seed", "35430 EUR", "currency")],
+  ["platformfee", variable("platformfee", "0.15%", "percentage")],
 ]);
 
 const functions = new Map<string, FunctionDefinitionNode>([
@@ -149,6 +150,17 @@ describe("autocomplete suggestions", () => {
     expect(suggestions.map((suggestion) => suggestion.label)).not.toContain("roi");
   });
 
+  test("does not keep suggesting an exact completed variable", () => {
+    const suggestions = getAutocompleteSuggestions({
+      lineText: "annual = market - fundfee - platformfee",
+      cursorOffset: "annual = market - fundfee - platformfee".length,
+      variables,
+      functions,
+    });
+
+    expect(suggestions.map((suggestion) => suggestion.label)).not.toContain("platformfee");
+  });
+
   test("keeps suggesting phrase continuations after a trailing space", () => {
     const suggestions = getAutocompleteSuggestions({
       lineText: "win = roi ",
@@ -177,6 +189,21 @@ describe("autocomplete suggestions", () => {
     expect(suggestions.some((suggestion) => suggestion.kind === "unit" && suggestion.label === "µm")).toBe(
       false
     );
+  });
+
+  test("suggests only compatible unit dimensions for compact source units", () => {
+    const suggestions = getAutocompleteSuggestions({
+      lineText: "30kg to ",
+      cursorOffset: "30kg to ".length,
+      variables,
+      functions,
+      maxItems: 20,
+    });
+    const labels = suggestions.map((suggestion) => suggestion.label);
+
+    expect(labels).toEqual(expect.arrayContaining(["kg", "g", "lb"]));
+    expect(labels).not.toContain("C");
+    expect(labels).not.toContain("km");
   });
 
   test("suggests view directives after at-sign", () => {
