@@ -1,5 +1,26 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { waitForUIRenderComplete } from "./utils";
+
+const setEditorContent = async (page: Page, content: string) => {
+  await page.evaluate((nextContent: string) => {
+    const editor = (window as any).tiptapEditor;
+    editor.commands.setContent(nextContent);
+    editor.commands.focus("end");
+    window.dispatchEvent(new Event("forceEvaluation"));
+  }, content);
+  await waitForUIRenderComplete(page);
+};
+
+const clearAndType = async (page: Page, content: string) => {
+  await page.evaluate(() => {
+    const editor = (window as any).tiptapEditor;
+    editor.commands.clearContent(true);
+    editor.commands.focus("start");
+    window.dispatchEvent(new Event("forceEvaluation"));
+  });
+  await page.keyboard.type(content);
+  await waitForUIRenderComplete(page);
+};
 
 test.describe("Live Result", () => {
   test.beforeEach(async ({ page }) => {
@@ -253,33 +274,24 @@ test.describe("Live Result", () => {
   });
 
   test("suppresses live errors for incomplete and unresolved expressions", async ({ page }) => {
-    const editor = page.locator('[data-testid="smart-pad-editor"]');
-    await editor.click();
-    await page.keyboard.type("a+");
-
-    await waitForUIRenderComplete(page);
+    await setEditorContent(page, "a+");
     await expect(page.locator(".semantic-live-result-display")).toHaveCount(0);
     await expect(page.locator(".semantic-error-result")).toHaveCount(0);
 
-    await page.keyboard.type("1");
-    await waitForUIRenderComplete(page);
+    await setEditorContent(page, "a+1");
     await expect(page.locator(".semantic-live-result-display")).toHaveCount(0);
     await expect(page.locator(".semantic-error-result")).toHaveCount(0);
   });
 
-  test("shows blocked reason text inline instead of ellipsis", async ({ page }) => {
-    const editor = page.locator('[data-testid="smart-pad-editor"]');
-    await editor.click();
-    await page.keyboard.press("Control+a");
-    await page.keyboard.press("Delete");
-    await page.keyboard.type("unknownVar + 1");
-
-    await waitForUIRenderComplete(page);
-    const blockedChip = page.locator(".semantic-live-blocked-display").first();
+  test("shows warning reason text inline instead of ellipsis", async ({ page }) => {
+    await clearAndType(page, "30 kg to =>");
+    const blockedChip = page.locator(".semantic-error-result").first();
     await expect(blockedChip).toHaveCount(1);
     await expect(blockedChip).not.toHaveText("...");
     await expect(blockedChip).toHaveAttribute("data-result", /.+/);
-    await expect(blockedChip).toHaveText(/.+/);
+    await expect(blockedChip).toHaveText(/^⚠️ .+/);
+    await expect(blockedChip).not.toContainText("evaluation failed");
+    await expect(blockedChip).toHaveClass(/semantic-error-result/);
 
     const blockedStyles = await blockedChip.evaluate((node) => {
       const style = window.getComputedStyle(node as HTMLElement);
@@ -316,4 +328,5 @@ test.describe("Live Result", () => {
       "12"
     );
   });
+
 });

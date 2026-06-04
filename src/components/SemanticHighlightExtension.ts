@@ -592,7 +592,7 @@ export function tokenizeExpression(
   const triggerRegex = /^=>/;
   const unitRegex = /^[a-zA-Z°µμΩ][a-zA-Z0-9°µμΩ\/\^\-\*\·]*/;
   const currencySymbolRegex = /^[\$€£¥₹₿]/;
-  const currencyCodeRegex = /^(USD|EUR|GBP|JPY|INR|BTC|ETH|USDT|USDC|BNB|XRP|SOL|ADA|DOGE|LTC|DOT|AVAX|MATIC|TRX|LINK|CHF|CAD|AUD)\b/i;
+  const currencyCodeRegex = /^(USD|EUR|GBP|JPY|INR|BTC|ETH|USDT|USDC|BNB|XRP|SOL|ADA|DOGE|LTC|DOT|AVAX|MATIC|TRX|LINK|CHF|CAD|AUD)(?=$|[^A-Za-z0-9_]|[0-9])/i;
   const isGoalSeekExpression = /^\s*make\b/i.test(expr);
   const keywordRegex = isGoalSeekExpression
     ? /^(to|in|of|on|off|as|is|per|by|with)\b/i

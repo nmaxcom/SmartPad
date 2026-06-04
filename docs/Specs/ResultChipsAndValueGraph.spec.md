@@ -260,7 +260,7 @@ Behavior:
 2. Line result suppression follows current live policy (no noisy cascading stack traces by default).
 3. Inline helper appears: `source line has error`.
 4. Clicking warning chip jumps to source line.
-5. When live preview is blocked on a source line, the result-lane blocked chip renders the reason text inline (not `...` with hover-only tooltip).
+5. When live preview or explicit evaluation is blocked on a source line, the result-lane error chip renders a standard warning message inline (starts with `⚠️`, not `...`, and not legacy bare fallback text such as `evaluation failed`).
 6. Blocked chips use the same error typography treatment as inline error results (15px size, normal weight, pink error text).
 
 Plain explanation:
@@ -390,7 +390,8 @@ By default SmartPad keeps references alive when copying/exporting text, so paste
 5. `make` is highlighted as a keyword command token at the start of goal-seek lines, and `by` is highlighted as the goal-seek input selector keyword. The target/result names and chosen input remain variable tokens so hover-to-highlight works across declarations, goal-seek lines, and result-chip menu insertions.
 6. `@view` directive lines highlight `@view`, the view kind, and parameter keys as directive syntax. Variable-bearing parameters such as `x=`, `y=`, and `values=` tokenize their values as normal expressions so variables in plot/hist/scatter view lines participate in hover-to-highlight.
 7. Function definitions tokenize their right-hand expression as normal expression content: variables participate in hover-to-highlight and numeric literals remain scrubbable.
-8. Currency codes and symbols used in amount literals, for example `3000 EUR`, `EUR 3000`, and `€3000`, are highlighted with the unit/currency color treatment rather than as ordinary variables.
+8. Currency codes and symbols used in amount literals, for example `3000 EUR`, `3000EUR`, `EUR 3000`, `EUR3000`, and `€3000`, are highlighted with the unit/currency color treatment rather than as ordinary variables.
+9. Hovering a variable highlights the declaration and every exact same-name usage, including bare expression lines, assignment right-hand sides, and function-call arguments.
 9. Reserved operator/command words (`solve/to/in/of/on/off/as/is/per/where`) must not be tokenized as function names just because `(` follows.
 10. If variables named `on`, `off`, or `where` exist, keyword/operator positions still render them as keywords (for example `a on (b off c)` and `list where > 10`).
 

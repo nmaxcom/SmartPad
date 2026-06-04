@@ -497,6 +497,9 @@ Pan/zoom only affects the **viewport**.
 * The held pre-scrub automatic Y view must also be based on the visible X viewport, not on the expanded sampling domain. Offscreen growth such as `3^x` must not poison the cached Y scale and flatten the visible curve during scrub.
 * Auto-Y mode must not pass an initial expanded Y view as a render override. A plot with inferred X view and the same plot with an explicit equivalent `domain=` must produce comparable Y scaling.
 * Plot widget identity must include all rendered point coordinates, not only first/last points. Scatter plots must rerender when an intermediate X or Y list value changes.
+* Plot widget identity must also include the current-value marker coordinates. Updating the active X value must move the marker even if the sampled curve data is otherwise unchanged.
+* Stored viewport overrides are scoped to plot identity (`kind`, line, X variable, series, and explicit view/domain contract), not just line number. Changing `x=roi` to `x=capital` must not reuse a stale `roi` viewport and must not produce transient `No plottable data`.
+* Tooltips must stay readable inside the chart bounds. Near the right or top edge, the tooltip repositions instead of being clipped by the chart container.
 
 ---
 

@@ -261,6 +261,29 @@ test.describe("Semantic Highlighting", () => {
     await expect(resultElement).toHaveAttribute("data-result", /20/);
   });
 
+  test("hovering a list variable highlights declarations and all usages", async ({ page }) => {
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      editor.commands.setContent(
+        [
+          "costs = $12, $15, $9",
+          "costs",
+          "expenses = costs",
+          "sum(costs)",
+          "count(costs)",
+        ].join("\n")
+      );
+      editor.commands.focus("start");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    await page.locator(".semantic-variable", { hasText: "costs" }).first().hover();
+
+    await expect(page.locator(".variable-highlight-declaration")).toHaveCount(1);
+    await expect(page.locator(".variable-highlight-reference")).toHaveCount(4);
+  });
+
   test("applies CSS styles correctly", async ({ page }) => {
     await page.keyboard.type("price = 10.5");
     await page.waitForTimeout(100);

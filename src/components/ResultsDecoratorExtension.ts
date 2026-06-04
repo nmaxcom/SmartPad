@@ -69,6 +69,11 @@ export const ResultsDecoratorExtension = Extension.create({
             }
             (window as any)[REF_TRACE_LOG_STORE] = logs;
           };
+          const formatWarningText = (message: string | undefined | null): string => {
+            const trimmed = String(message || "").trim();
+            if (!trimmed) return "⚠️ Live result unavailable";
+            return trimmed.startsWith("⚠️") ? trimmed : `⚠️ ${trimmed}`;
+          };
           const normalize = (s: string | undefined | null): string =>
             (s || "").replace(/\s+/g, "").trim();
           const getNodeTextWithoutResults = (node: ProseMirrorNode): string => {
@@ -301,9 +306,9 @@ export const ResultsDecoratorExtension = Extension.create({
                 }
 
                 if (!lineStatus?.hasError) continue;
-                const blockedReason = String(
+                const blockedReason = formatWarningText(
                   lineStatus.errorMessage || lineStatus.display || "Live result unavailable"
-                ).trim();
+                );
                 const anchor = info.start + info.text.length;
                 decorations.push(
                   Decoration.widget(
@@ -317,7 +322,7 @@ export const ResultsDecoratorExtension = Extension.create({
                       container.className = "semantic-result-container";
                       container.setAttribute("contenteditable", "false");
                       const span = document.createElement("span");
-                      span.className = "semantic-live-blocked-display";
+                      span.className = "semantic-live-blocked-display semantic-error-result";
                       span.setAttribute("contenteditable", "false");
                       span.setAttribute("data-result", blockedReason);
                       span.setAttribute("title", blockedReason);

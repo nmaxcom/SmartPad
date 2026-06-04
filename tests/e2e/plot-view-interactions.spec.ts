@@ -175,6 +175,74 @@ test.describe("Plot view interactions", () => {
     expect(after).toBeGreaterThan(before + 20);
   });
 
+  test("updates the current-value marker when the plotted x value changes", async ({ page }) => {
+    const renderMoneyPlot = async (roi: number) => {
+      await setEditorContent(
+        page,
+        [
+          "<p>capital = €54440</p>",
+          `<p>roi = ${roi}%</p>`,
+          "<p>win = capital * roi</p>",
+          "<p>@view plot y=win x=roi</p>",
+        ].join("")
+      );
+    };
+
+    await renderMoneyPlot(44);
+    await expect(page.locator(".plot-view-dot").first()).toBeVisible();
+    const before = await page
+      .locator(".plot-view-dot")
+      .first()
+      .evaluate((dot) => ({
+        cx: Number(dot.getAttribute("cx")),
+        cy: Number(dot.getAttribute("cy")),
+      }));
+
+    await renderMoneyPlot(55);
+    await expect(page.locator(".plot-view-dot").first()).toBeVisible();
+    const after = await page
+      .locator(".plot-view-dot")
+      .first()
+      .evaluate((dot) => ({
+        cx: Number(dot.getAttribute("cx")),
+        cy: Number(dot.getAttribute("cy")),
+      }));
+
+    expect(after).not.toEqual(before);
+  });
+
+  test("does not reuse an incompatible x-view after changing plot x variable", async ({
+    page,
+  }) => {
+    await setEditorContent(
+      page,
+      [
+        "<p>capital = €54440</p>",
+        "<p>roi = 44%</p>",
+        "<p>win = capital * roi</p>",
+        "<p>@view plot y=win x=roi</p>",
+      ].join("")
+    );
+
+    await expect(page.locator(".plot-view-line").first()).toBeVisible();
+    await wheelPlotCenter(page, -800);
+    await page.waitForTimeout(200);
+
+    await setEditorContent(
+      page,
+      [
+        "<p>capital = €54440</p>",
+        "<p>roi = 44%</p>",
+        "<p>win = capital * roi</p>",
+        "<p>@view plot y=win x=capital</p>",
+      ].join("")
+    );
+
+    await expect(page.locator(".plot-view-disconnected")).toHaveCount(0);
+    await expect(page.locator(".plot-view")).not.toContainText("No plottable data");
+    await expect(page.locator(".plot-view-line").first()).toBeVisible();
+  });
+
   test("keeps automatic y scale stable during numeric scrubbing so slope changes are visible", async ({
     page,
   }) => {

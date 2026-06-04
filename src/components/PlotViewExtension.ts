@@ -320,7 +320,13 @@ const buildPlotDataKey = (model: PlotViewModel): string =>
       const pointKey = points
         .map((point) => `${point.x}:${point.y ?? "null"}`)
         .join(",");
-      return [series.expression || "", points.length, pointKey || "none"].join(":");
+      return [
+        series.expression || "",
+        points.length,
+        pointKey || "none",
+        model.currentX ?? "no-current-x",
+        series.currentY ?? "no-current-y",
+      ].join(":");
     })
     .join("|");
 
@@ -1856,8 +1862,18 @@ const createPlotWidget = (
       const rect = svg.getBoundingClientRect();
       const pixelX = rect.width ? (screenX / (plotLayout?.width || 1)) * rect.width : 0;
       const pixelY = rect.height ? (screenY / (plotLayout?.height || 1)) * rect.height : 0;
-      tooltip.style.left = `${Math.round(pixelX + 12)}px`;
-      tooltip.style.top = `${Math.round(pixelY - 24)}px`;
+      const chartRect = chart.getBoundingClientRect();
+      const tooltipWidth = tooltip.offsetWidth || 180;
+      const tooltipHeight = tooltip.offsetHeight || 64;
+      const preferredLeft = pixelX + 12;
+      const preferredTop = pixelY - 24;
+      const left =
+        preferredLeft + tooltipWidth + 8 > chartRect.width
+          ? Math.max(8, pixelX - tooltipWidth - 12)
+          : Math.max(8, preferredLeft);
+      const top = Math.max(8, Math.min(preferredTop, chartRect.height - tooltipHeight - 8));
+      tooltip.style.left = `${Math.round(left)}px`;
+      tooltip.style.top = `${Math.round(top)}px`;
       tooltip.style.opacity = "1";
     };
 
@@ -2547,9 +2563,9 @@ export const PlotViewExtension = Extension.create({
             pluginState.viewNodes.forEach((plotNode) => {
               const info = lineIndex[plotNode.line];
               if (!info) return;
-              const overrideKey = `persistent-${plotNode.line}`;
-              const override = pluginState.overrides?.[overrideKey];
               let model = buildPlotModel(plotNode, "persistent");
+              const overrideKey = buildStablePlotKey(model, plotNode.line);
+              const override = pluginState.overrides?.[overrideKey];
               if (model.kind === "plot" && model.targetLine && model.x) {
                 const settings = buildSettingsSnapshot(getSettings());
                 const seriesDefinitions = plotNode.series?.map((entry) => ({
@@ -2599,15 +2615,19 @@ export const PlotViewExtension = Extension.create({
 
             if (pluginState.transient) {
               const settings = buildSettingsSnapshot(getSettings());
-              const overrideKey = `transient-${pluginState.transient.targetLine}`;
-              const override = pluginState.overrides?.[overrideKey];
+              const pendingOverrideKey = [
+                "plot-transient",
+                pluginState.transient.targetLine,
+                pluginState.transient.xVariable,
+              ].join("-");
+              const pendingOverride = pluginState.overrides?.[pendingOverrideKey];
               const model = computeModelFromExpression(
                 pluginState.transient.targetLine,
                 pluginState.transient.xVariable,
-                override?.domain || pluginState.transient.domain,
-                override?.view,
-                override?.yDomain,
-                override?.yView,
+                pendingOverride?.domain || pluginState.transient.domain,
+                pendingOverride?.view,
+                pendingOverride?.yDomain,
+                pendingOverride?.yView,
                 "transient",
                 "md",
                 undefined,
@@ -2619,6 +2639,11 @@ export const PlotViewExtension = Extension.create({
               if (model) {
                 const info = lineIndex[pluginState.transient.targetLine];
                 if (info) {
+                  const overrideKey = buildStablePlotKey(model, pluginState.transient.targetLine);
+                  const override = pluginState.overrides?.[overrideKey];
+                  if (override) {
+                    applyPlotOverride(model, override);
+                  }
                   const widget = Decoration.widget(
                     info.insertPos,
                     () =>

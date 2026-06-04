@@ -254,7 +254,7 @@ const parseSingleValue = (input: string): SemanticValue | null => {
     trimmed.match(new RegExp(`^[+-]?\\s*${groupedNumberPattern}\\s*[\$€£¥₹₿]$`)) ||
     trimmed.match(
       new RegExp(
-        `^[+-]?\\s*${groupedNumberPattern}\\s+(USD|EUR|GBP|JPY|INR|BTC|CHF|CAD|AUD)$`,
+        `^[+-]?\\s*${groupedNumberPattern}\\s*(USD|EUR|GBP|JPY|INR|BTC|CHF|CAD|AUD)$`,
         "i"
       )
     ) ||

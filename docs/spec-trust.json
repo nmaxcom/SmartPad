@@ -59,7 +59,9 @@
         "tests/e2e/result-reference-drag-only.spec.ts",
         "tests/e2e/result-reference.spec.ts",
         "tests/e2e/results-decorator-regression.spec.ts",
-        "tests/unit/semanticHighlightTokenization.test.ts"
+        "tests/unit/semanticHighlightTokenization.test.ts",
+        "tests/e2e/semantic-highlighting.spec.ts",
+        "tests/e2e/live-result.spec.ts"
       ]
     },
     {
@@ -68,7 +70,12 @@
       "sourceSpec": "docs/Specs/Currency.spec.md",
       "canonicalSpec": "docs/Specs/implemented/currency-and-fx.md",
       "mappedGroups": ["Currency And FX"],
-      "testRefs": ["tests/unit/currency-expression-evaluator.test.ts", "tests/unit/currencyFx.test.ts"]
+      "testRefs": [
+        "tests/unit/currency-expression-evaluator.test.ts",
+        "tests/unit/currencyFx.test.ts",
+        "tests/unit/currencyValue.test.ts",
+        "tests/unit/semanticHighlightTokenization.test.ts"
+      ]
     },
     {
       "id": "lists",

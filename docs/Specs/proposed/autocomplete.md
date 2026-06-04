@@ -61,7 +61,9 @@ Typing `comp` should suggest `compound(principal, rate, years)` and insert `comp
 
 ### Units and conversions
 
-After conversion keywords, autocomplete should prefer unit symbols and aliases.
+After conversion keywords, autocomplete should prefer targets compatible with the source value.
+Unit and duration sources should prefer unit symbols and aliases; currency sources should prefer
+currency codes and currency symbols.
 
 Examples:
 
@@ -71,6 +73,14 @@ distance to k
 ```
 
 Typing `k` after `to` should suggest `km`.
+
+```smartpad
+seed = 35430 EUR
+seed in U
+```
+
+Typing `U` after `in` should suggest currency targets such as `USD` and `USDT`, not unrelated
+units such as kilos or Celsius.
 
 ### View directives
 
@@ -122,6 +132,9 @@ ranking above `msr`, and `msr` ranking above generic substring matches.
 3. Do not insert `=>` automatically.
 4. Do not rewrite variable names unless the user explicitly accepts a suggestion.
 5. Do not block normal typing when no useful suggestion exists.
+6. Do not open the menu only because the user clicks a variable or moves the caret.
+7. If the query ends with whitespace, do not keep suggesting the exact completed variable; only
+   suggest longer phrase continuations such as `roi tax` for `roi `.
 
 ## Acceptance tests
 
@@ -131,5 +144,8 @@ ranking above `msr`, and `msr` ranking above generic substring matches.
 4. `@view hist values=ye` suggests list variable `years`.
 5. `@view plot x=pr` suggests scalar variable `price`, not list variable `years`.
 6. `distance to k` suggests `km`.
-7. `# tax` returns no suggestions.
-8. Editing `tax r = 21%` with the cursor before `=` returns no suggestions.
+7. `seed in U` where `seed` is currency suggests currency targets and not unit targets.
+8. `win = roi ` does not keep suggesting exact variable `roi` when no longer phrase match exists.
+9. Moving the caret onto an existing variable does not open suggestions.
+10. `# tax` returns no suggestions.
+11. Editing `tax r = 21%` with the cursor before `=` returns no suggestions.

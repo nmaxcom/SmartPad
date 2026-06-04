@@ -9,10 +9,18 @@ import { Decoration, DecorationSet } from "prosemirror-view";
 import { Node as ProseMirrorNode } from "prosemirror-model";
 import { Variable } from "../state/types";
 import { parseLine } from "../parsing/astParser";
-import { isVariableAssignmentNode, isCombinedAssignmentNode } from "../parsing/ast";
+import { isVariableAssignmentNode, isCombinedAssignmentNode, isCommentNode } from "../parsing/ast";
 import { extractTokensFromASTNode } from "./SemanticHighlightExtension";
 
 const variableHoverPluginKey = new PluginKey("variableHover");
+
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const isVariableBoundary = (char: string | undefined) =>
+  !char || /[\s+\-*/^%=<>()\[\]{},.:;!?]/.test(char);
+
+const hasDecoration = (decorations: Decoration[], from: number, to: number) =>
+  decorations.some((decoration) => decoration.from === from && decoration.to === to);
 
 /**
  * A Tiptap extension that adds hover-to-highlight functionality for variables.
@@ -82,6 +90,7 @@ export const VariableHoverExtension = Extension.create({
                   if (node.type.name === "paragraph") {
                     const text = node.textContent;
                     const astNode = parseLine(text, 0);
+                    if (isCommentNode(astNode)) return;
                     
 
                     // Highlight declaration
@@ -103,8 +112,7 @@ export const VariableHoverExtension = Extension.create({
                         const from = offset + token.start + 1;
                         const to = offset + token.end + 1;
 
-                        const isDeclaration = decorations.some(d => d.from === from && d.to === to);
-                        if (!isDeclaration) {
+                        if (!hasDecoration(decorations, from, to)) {
                             decorations.push(
                                 Decoration.inline(from, to, {
                                     class: "variable-highlight-reference",
@@ -113,6 +121,29 @@ export const VariableHoverExtension = Extension.create({
                         }
                       }
                     });
+
+                    const variableRegex = new RegExp(escapeRegExp(variableName), "g");
+                    let match: RegExpExecArray | null;
+                    while ((match = variableRegex.exec(text))) {
+                      const start = match.index;
+                      const end = start + variableName.length;
+                      if (
+                        !isVariableBoundary(text[start - 1]) ||
+                        !isVariableBoundary(text[end])
+                      ) {
+                        continue;
+                      }
+                      const from = offset + start + 1;
+                      const to = offset + end + 1;
+                      if (hasDecoration(decorations, from, to)) {
+                        continue;
+                      }
+                      decorations.push(
+                        Decoration.inline(from, to, {
+                          class: "variable-highlight-reference",
+                        })
+                      );
+                    }
                   }
                 });
 

@@ -33,6 +33,9 @@ const variables = new Map<string, Variable>([
   ["tax rate", variable("tax rate", "21%", "percentage")],
   ["years", variable("years", "1, 2, 3", "list")],
   ["price", variable("price", "$10", "currency")],
+  ["roi", variable("roi", "44%", "percentage")],
+  ["roi tax", variable("roi tax", "21%", "percentage")],
+  ["seed", variable("seed", "35430 EUR", "currency")],
 ]);
 
 const functions = new Map<string, FunctionDefinitionNode>([
@@ -129,6 +132,50 @@ describe("autocomplete suggestions", () => {
 
     expect(suggestions.some((suggestion) => suggestion.kind === "unit" && suggestion.label === "km")).toBe(
       true
+    );
+  });
+
+  test("does not keep suggesting an exact variable after a trailing space", () => {
+    const localVariables = new Map<string, Variable>([
+      ["roi", variable("roi", "44%", "percentage")],
+    ]);
+    const suggestions = getAutocompleteSuggestions({
+      lineText: "win = roi ",
+      cursorOffset: "win = roi ".length,
+      variables: localVariables,
+      functions,
+    });
+
+    expect(suggestions.map((suggestion) => suggestion.label)).not.toContain("roi");
+  });
+
+  test("keeps suggesting phrase continuations after a trailing space", () => {
+    const suggestions = getAutocompleteSuggestions({
+      lineText: "win = roi ",
+      cursorOffset: "win = roi ".length,
+      variables,
+      functions,
+    });
+
+    expect(suggestions.map((suggestion) => suggestion.label)).toContain("roi tax");
+  });
+
+  test("suggests currency targets for currency conversions", () => {
+    const suggestions = getAutocompleteSuggestions({
+      lineText: "seed in U",
+      cursorOffset: "seed in U".length,
+      variables,
+      functions,
+    });
+
+    expect(suggestions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "currency", label: "USD" }),
+        expect.objectContaining({ kind: "currency", label: "USDT" }),
+      ])
+    );
+    expect(suggestions.some((suggestion) => suggestion.kind === "unit" && suggestion.label === "µm")).toBe(
+      false
     );
   });
 

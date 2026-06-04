@@ -48,4 +48,39 @@ test.describe("Autocomplete", () => {
     const text = await page.locator(".ProseMirror").innerText();
     expect(text).toContain("growth = compound(");
   });
+
+  test("does not open just by moving the caret onto an existing variable", async ({ page }) => {
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      editor.commands.setContent("roi = 44%\nwin = roi");
+      editor.commands.focus("end");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      const documentEnd = editor.state.doc.content.size;
+      editor.commands.setTextSelection(Math.max(1, documentEnd - 1));
+    });
+
+    await expect(page.locator(".smartpad-autocomplete-menu")).toBeHidden();
+  });
+
+  test("closes exact variable suggestions after a trailing space", async ({ page }) => {
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      editor.commands.setContent("roi = 44%\n");
+      editor.commands.focus("end");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("win = roi");
+    await expect(page.locator(".smartpad-autocomplete-menu")).toBeVisible();
+
+    await page.keyboard.type(" ");
+    await expect(page.locator(".smartpad-autocomplete-menu")).toBeHidden();
+  });
 });

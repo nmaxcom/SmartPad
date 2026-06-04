@@ -2,11 +2,19 @@ import type { FunctionDefinitionNode } from "../../parsing/ast";
 import type { Variable } from "../../state/types";
 import { searchUnits } from "../../syntax/registry";
 
-export type AutocompleteKind = "variable" | "function" | "unit" | "directive";
+export type AutocompleteKind = "variable" | "function" | "unit" | "directive" | "currency";
+type ConversionSourceKind = "currency" | "unit" | "unknown";
 
 export type AutocompleteContext =
   | { type: "expression"; query: string; replaceFrom: number; replaceTo: number }
-  | { type: "conversionTarget"; query: string; replaceFrom: number; replaceTo: number }
+  | {
+      type: "conversionTarget";
+      query: string;
+      replaceFrom: number;
+      replaceTo: number;
+      sourceExpression: string;
+      sourceKind: ConversionSourceKind;
+    }
   | { type: "viewParam"; key: string; query: string; replaceFrom: number; replaceTo: number }
   | { type: "directive"; query: string; replaceFrom: number; replaceTo: number }
   | { type: "none"; query: string; replaceFrom: number; replaceTo: number };
@@ -35,6 +43,25 @@ const DIRECTIVES = [
   { label: "@view hist", detail: "Histogram view", insertText: "@view hist " },
   { label: "@view scatter", detail: "Scatter view", insertText: "@view scatter " },
 ];
+const CURRENCY_SUGGESTIONS = [
+  { label: "USD", detail: "US dollar" },
+  { label: "EUR", detail: "Euro" },
+  { label: "GBP", detail: "British pound" },
+  { label: "JPY", detail: "Japanese yen" },
+  { label: "CHF", detail: "Swiss franc" },
+  { label: "CAD", detail: "Canadian dollar" },
+  { label: "AUD", detail: "Australian dollar" },
+  { label: "BTC", detail: "Bitcoin" },
+  { label: "ETH", detail: "Ethereum" },
+  { label: "USDT", detail: "Tether" },
+  { label: "USDC", detail: "USD Coin" },
+  { label: "$", detail: "US dollar symbol" },
+  { label: "€", detail: "Euro symbol" },
+  { label: "£", detail: "Pound symbol" },
+  { label: "¥", detail: "Yen symbol" },
+  { label: "₿", detail: "Bitcoin symbol" },
+];
+const CURRENCY_TEXT_REGEX = /(?:[$€£¥₹₿]|(?:^|[^A-Za-z])(?:USD|EUR|GBP|JPY|CHF|CAD|AUD|BTC|ETH|USDT|USDC)\b)/i;
 
 function normalizeText(value: string): string {
   return value.replace(/\s+/g, " ").trim().toLowerCase();
@@ -46,6 +73,49 @@ function getValueType(variable: Variable): string {
     return String(value.getType());
   }
   return "value";
+}
+
+function isCurrencyType(type: string): boolean {
+  return type === "currency" || type === "currencyUnit";
+}
+
+function isUnitLikeType(type: string): boolean {
+  return type === "unit" || type === "duration";
+}
+
+function inferConversionSourceKind(sourceExpression: string): ConversionSourceKind {
+  if (CURRENCY_TEXT_REGEX.test(sourceExpression)) {
+    return "currency";
+  }
+  if (/\b(?:kg|g|mg|lb|oz|m|km|cm|mm|ft|in|mi|s|sec|min|h|hr|day|days|c|f|k|°c|°f)\b/i.test(sourceExpression)) {
+    return "unit";
+  }
+  return "unknown";
+}
+
+function resolveConversionSourceKind(
+  sourceExpression: string,
+  variables: Map<string, Variable>
+): ConversionSourceKind {
+  const trimmed = sourceExpression.trim();
+  const directKind = inferConversionSourceKind(trimmed);
+  if (directKind !== "unknown") {
+    return directKind;
+  }
+
+  const variable = variables.get(trimmed);
+  if (!variable) {
+    return "unknown";
+  }
+
+  const type = getValueType(variable);
+  if (isCurrencyType(type)) {
+    return "currency";
+  }
+  if (isUnitLikeType(type)) {
+    return "unit";
+  }
+  return "unknown";
 }
 
 function getVariableDetail(variable: Variable): string {
@@ -185,14 +255,17 @@ export function getAutocompleteContext(
     return { type: "none", query: "", replaceFrom: clampedOffset, replaceTo: clampedOffset };
   }
 
-  const conversionMatch = beforeCursor.match(/(?:^|[\s(])(?:to|in)\s+([A-Za-z°µμΩ$€£¥₹₿\/^*-]*)$/i);
+  const conversionMatch = beforeCursor.match(/\b(?:to|in)\s+([A-Za-z°µμΩ$€£¥₹₿\/^*-]*)$/i);
   if (conversionMatch && conversionMatch.index !== undefined) {
     const query = conversionMatch[1] || "";
+    const sourceExpression = beforeCursor.slice(0, conversionMatch.index).trim();
     return {
       type: "conversionTarget",
       query,
       replaceFrom: clampedOffset - query.length,
       replaceTo: clampedOffset,
+      sourceExpression,
+      sourceKind: inferConversionSourceKind(sourceExpression),
     };
   }
 
@@ -210,6 +283,8 @@ function variableItems(
     return [];
   }
   const key = context.type === "viewParam" ? context.key : "";
+  const queryHasTrailingWhitespace = /\s$/.test(context.query);
+  const normalizedQuery = normalizeText(context.query);
   return Array.from(variables.values())
     .filter((variable) => !key || isVariableEligibleForViewKey(variable, key))
     .map((variable) => ({
@@ -221,6 +296,7 @@ function variableItems(
       replaceFrom: context.replaceFrom,
       replaceTo: context.replaceTo,
     }))
+    .filter((item) => !(queryHasTrailingWhitespace && normalizeText(item.label) === normalizedQuery))
     .filter((item) => item.score > boost);
 }
 
@@ -254,6 +330,9 @@ function unitItems(context: AutocompleteContext): AutocompleteItem[] {
   if (context.type !== "conversionTarget") {
     return [];
   }
+  if (context.sourceKind === "currency") {
+    return [];
+  }
   return searchUnits(context.query || "")
     .slice(0, 24)
     .map((unit) => ({
@@ -266,6 +345,22 @@ function unitItems(context: AutocompleteContext): AutocompleteItem[] {
       replaceTo: context.replaceTo,
     }))
     .filter((item) => item.score > 10);
+}
+
+function currencyItems(context: AutocompleteContext): AutocompleteItem[] {
+  if (context.type !== "conversionTarget" || context.sourceKind !== "currency") {
+    return [];
+  }
+
+  return CURRENCY_SUGGESTIONS.map((currency) => ({
+    kind: "currency" as const,
+    label: currency.label,
+    insertText: currency.label,
+    detail: currency.detail,
+    score: fuzzyScore(`${currency.label} ${currency.detail}`, context.query) + 10,
+    replaceFrom: context.replaceFrom,
+    replaceTo: context.replaceTo,
+  })).filter((item) => item.score > 10);
 }
 
 function directiveItems(context: AutocompleteContext): AutocompleteItem[] {
@@ -284,14 +379,21 @@ function directiveItems(context: AutocompleteContext): AutocompleteItem[] {
 }
 
 export function getAutocompleteSuggestions(input: AutocompleteInput): AutocompleteItem[] {
-  const context = getAutocompleteContext(input.lineText, input.cursorOffset);
+  let context = getAutocompleteContext(input.lineText, input.cursorOffset);
   if (context.type === "none") {
     return [];
+  }
+  if (context.type === "conversionTarget" && context.sourceKind === "unknown") {
+    context = {
+      ...context,
+      sourceKind: resolveConversionSourceKind(context.sourceExpression, input.variables),
+    };
   }
 
   const items = [
     ...variableItems(input.variables, context),
     ...functionItems(input.functions, context),
+    ...currencyItems(context),
     ...unitItems(context),
     ...directiveItems(context),
   ];

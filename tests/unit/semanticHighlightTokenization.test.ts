@@ -164,6 +164,15 @@ describe("Semantic highlight tokenization", () => {
     expect(tokens.find((token) => token.text === "EUR")?.type).toBe("currency");
   });
 
+  test("keeps compact amount-code literals currency-colored", () => {
+    const tokens = tokenizeExpression("35430EUR + USD15", 0, makeContext(["EUR", "USD"]) as any);
+    const currencyTokens = tokens
+      .filter((token) => token.type === "currency")
+      .map((token) => token.text.toUpperCase());
+
+    expect(currencyTokens).toEqual(["EUR", "USD"]);
+  });
+
   test("highlights @view keyword and variables inside view directives", () => {
     const ast = parseLine("@view plot x=time y=take home size=md", 1);
     const tokens = extractTokensFromASTNode(

@@ -123,8 +123,11 @@ export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
             if (meta && typeof meta === "object") {
               return { ...previous, ...meta };
             }
-            if (tr.docChanged || tr.selectionSet) {
+            if (tr.docChanged) {
               return buildState(newState, options);
+            }
+            if (tr.selectionSet) {
+              return emptyState;
             }
             return previous;
           },

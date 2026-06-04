@@ -339,15 +339,15 @@ export class CurrencyValue extends SemanticValue {
       return new CurrencyValue(symbol, amount);
     }
     
-    // Try code-last format: "100 CHF", "50.25 CAD", "20 EUR"
-    match = str.match(/^(-?\d{1,3}(?:,\d{3})*(?:\.\d+)?|-?\d+(?:\.\d+)?)\s+(USD|EUR|GBP|JPY|INR|BTC|CHF|CAD|AUD)$/i);
+    // Try code-last format: "100 CHF", "50.25 CAD", "20 EUR", "20EUR"
+    match = str.match(/^(-?\d{1,3}(?:,\d{3})*(?:\.\d+)?|-?\d+(?:\.\d+)?)\s*(USD|EUR|GBP|JPY|INR|BTC|CHF|CAD|AUD)$/i);
     if (match) {
       const amount = parseFloat(match[1].replace(/,/g, ""));
       const symbol = match[2].toUpperCase() as CurrencySymbol;
       return new CurrencyValue(symbol, amount);
     }
 
-    // Try code-first format: "USD 100", "EUR 50.25"
+    // Try code-first format: "USD 100", "EUR 50.25", "EUR50.25"
     match = str.match(/^(USD|EUR|GBP|JPY|INR|BTC|CHF|CAD|AUD)\s*(-?\d{1,3}(?:,\d{3})*(?:\.\d+)?|-?\d+(?:\.\d+)?)$/i);
     if (match) {
       const symbol = match[1].toUpperCase() as CurrencySymbol;
