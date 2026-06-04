@@ -170,11 +170,11 @@ test.describe("Live Result", () => {
       const style = window.getComputedStyle(el as HTMLElement);
       return {
         opacity: Number.parseFloat(style.opacity || "0"),
-        maxWidth: Number.parseFloat(style.maxWidth || "0"),
+        position: style.position,
       };
     });
     expect(actionsBeforeHover.opacity).toBeLessThan(0.2);
-    expect(actionsBeforeHover.maxWidth).toBeGreaterThan(10);
+    expect(actionsBeforeHover.position).toBe("absolute");
 
     await liveChip.hover();
     await page.waitForTimeout(220);
@@ -189,11 +189,11 @@ test.describe("Live Result", () => {
       const style = window.getComputedStyle(el as HTMLElement);
       return {
         opacity: Number.parseFloat(style.opacity || "0"),
-        maxWidth: Number.parseFloat(style.maxWidth || "0"),
+        position: style.position,
       };
     });
     expect(actionsAfterHover.opacity).toBeGreaterThan(0.5);
-    expect(Math.abs(actionsAfterHover.maxWidth - actionsBeforeHover.maxWidth)).toBeLessThanOrEqual(1);
+    expect(actionsAfterHover.position).toBe("absolute");
 
     const copyButtonStyles = await copyButton.evaluate((el) => {
       const style = window.getComputedStyle(el as HTMLElement);

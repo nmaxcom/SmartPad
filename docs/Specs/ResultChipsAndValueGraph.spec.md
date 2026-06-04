@@ -227,9 +227,9 @@ Flow:
    - Numeric-list results expose highlighted visual suggestions such as `Plot as histogram`.
    - Equal-length numeric-list pairs expose highlighted scatter suggestions such as `Plot as scatter vs study hours`.
 6. Planned commands that are not implemented yet may be shown disabled.
-7. Revealing hover actions must not change the rendered chip width or force a line wrap. The chip
-   reserves stable action space and only changes action visibility, preventing hover/out flicker
-   loops near line endings.
+7. Revealing hover actions must not change the rendered chip width or force a line wrap. Actions
+   render outside normal text flow, preventing hover/out flicker loops near line endings without
+   turning result chips into elongated bars.
 
 Guardrails:
 
