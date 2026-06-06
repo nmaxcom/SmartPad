@@ -6082,3 +6082,33 @@
 *   Risks/blockers:
     *   No desktop package exists yet.
     *   Cross-platform artifacts, signing/notarization, and auto-update remain open release-operation decisions.
+
+## Entry J-2026-06-06-06
+
+*   Timestamp: 2026-06-06 12:59 CEST / 2026-06-06 10:59 UTC
+*   Summary:
+    *   Continued launch readiness by creating root-level release operations artifacts.
+    *   Added `RELEASE_CHECKLIST.md` with web, desktop beta, versioning, changelog, publication, rollback, and support intake policy.
+    *   Added initial `CHANGELOG.md` and updated launch docs/backlog so release ops are now an audit/dry-run item instead of a missing artifact.
+*   Decisions:
+    *   Use semantic versioning from `package.json`.
+    *   Use `-beta.N` for public beta builds and `-rc.N` for release candidates.
+    *   Default launch path is web release candidate first, then public web/marketing launch, then desktop beta artifacts after the Electron shell passes smoke checks.
+    *   Default support intake is GitHub bug reports and feature requests, with private/signup issues routed through the future update/signup reply path.
+*   User directives:
+    *   Continue working toward the launch/publication plan objective, including stable release process and continuous development.
+*   Assistant commitments:
+    *   Keep release operations open until the checklist is dry-run on a launch candidate and actual artifacts/URLs are confirmed.
+    *   Keep changelog entries user-facing and tied to release verification.
+*   Artifacts changed:
+    *   `RELEASE_CHECKLIST.md`
+    *   `CHANGELOG.md`
+    *   `aidocs/LAUNCH_PLAN.md`
+    *   `aidocs/LAUNCH_SCOPE_MATRIX.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Pending items:
+    *   `T-2026-06-06-06` moved to `in_progress`; next step is release-candidate dry run plus privacy/security/support/signup finalization.
+*   Risks/blockers:
+    *   Release checklist has not yet been dry-run.
+    *   Marketing homepage, signup provider, desktop artifact generation, and final support path still need implementation/confirmation.

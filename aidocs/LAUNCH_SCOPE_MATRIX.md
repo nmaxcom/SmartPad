@@ -2,7 +2,7 @@
 
 This matrix turns `aidocs/LAUNCH_PLAN.md` into a verifiable launch checklist.
 
-Release-candidate stability checks for the `audit` rows live in `aidocs/LAUNCH_STABILITY_AUDIT.md`. Desktop packaging direction lives in `aidocs/DESKTOP_PACKAGING_DECISION.md`.
+Release-candidate stability checks for the `audit` rows live in `aidocs/LAUNCH_STABILITY_AUDIT.md`. Desktop packaging direction lives in `aidocs/DESKTOP_PACKAGING_DECISION.md`. Release operations live in `RELEASE_CHECKLIST.md` and `CHANGELOG.md`.
 
 Status meanings:
 
@@ -44,7 +44,7 @@ Status meanings:
 | Screenshots/video assets | Should ship | gap | `public/smartpad.png`, `smartpad.png`; no launch asset inventory | Capture reproducible screenshots and short demo clips from launch demo sheets. |
 | SEO/Open Graph | Should ship | gap | Docusaurus site exists; no launch OG asset inventory found | Add title/description/OG image for homepage and docs. |
 | Issue intake | Must ship | ready | `.github/ISSUE_TEMPLATE/bug_report.yml`, `.github/ISSUE_TEMPLATE/feature_request.md` | Review templates for public beta wording and expected repro details. |
-| Changelog/versioning | Must ship | gap | No `CHANGELOG.md` or release checklist found | Add changelog/versioning policy and release checklist. |
+| Changelog/versioning | Must ship | audit | `RELEASE_CHECKLIST.md`, `CHANGELOG.md` | Dry-run the checklist on a release candidate and keep changelog entries current before tagging. |
 | Privacy/security notes | Must ship | audit | `website/docs/guides/privacy-and-portability.md`, `docs/ABOUT.md` | Add public-facing privacy note for local storage, FX provider behavior, website analytics, and signup. |
 | CI/reliability gates | Must ship | ready | `.github/workflows/ci.yml`, `scripts/verify-changed.js`, `aidocs/AI_RELIABILITY_SYSTEM.md` | Keep as launch release gate; add release-candidate checklist that names exact commands. |
 | Desktop packaging | Should ship as beta | gap | `aidocs/DESKTOP_PACKAGING_DECISION.md`; no Electron/Tauri package files found | Start with a minimal Electron shell after settings/onboarding polish is underway, then package an unsigned macOS beta and document cross-platform CI/release steps. |
@@ -74,7 +74,7 @@ P0 blockers:
 1. Settings IA and first-run polish are not launch-grade yet.
 2. Marketing homepage, signup, and launch assets do not exist yet.
 3. Desktop packaging path is undecided and unimplemented.
-4. Release checklist/changelog/versioning are missing.
+4. Release checklist/changelog/versioning exist but need a release-candidate dry run.
 5. Launch scope still needs user confirmation.
 
 P1 blockers:
