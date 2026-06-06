@@ -5997,3 +5997,31 @@
 *   Risks/blockers:
     *   User has not yet confirmed the launch scope.
     *   Desktop packaging provider, signup provider, support path, and auto-update requirements remain open decisions.
+
+## Entry J-2026-06-06-03
+
+*   Timestamp: 2026-06-06 12:51 CEST / 2026-06-06 10:51 UTC
+*   Summary:
+    *   Continued launch planning by creating a verifiable scope matrix that maps launch decisions to current repo evidence.
+    *   Matrix classifies product/project areas as `ready`, `audit`, `gap`, or `defer`, and identifies p0 blockers: settings/onboarding polish, marketing homepage/signup/assets, desktop packaging, release checklist/versioning, and user scope confirmation.
+    *   Linked the matrix from `aidocs/LAUNCH_PLAN.md` and updated `T-2026-06-06-01` to point to both launch artifacts.
+*   Decisions:
+    *   Core calculation behavior is mostly launch-ready or audit-level because implemented specs and tests exist.
+    *   Launch risk is concentrated in public-product surface area: settings/onboarding, website, desktop packaging, release operations, privacy/support copy, and final user confirmation.
+    *   Proposed features such as tables, auto-suggested plots, AI-assisted formulas, date keywords/timezones/business days, and unit decision forks should not be marketed as shipped launch behavior.
+*   User directives:
+    *   Continue working toward the launch/publication plan objective.
+*   Assistant commitments:
+    *   Use `aidocs/LAUNCH_SCOPE_MATRIX.md` as the next launch readiness checklist.
+    *   Keep launch scope open until the user confirms the ready/audit/gap/defer decisions.
+*   Artifacts changed:
+    *   `aidocs/LAUNCH_SCOPE_MATRIX.md`
+    *   `aidocs/LAUNCH_PLAN.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Pending items:
+    *   `T-2026-06-06-01` remains `in_progress`; next user-facing step is scope confirmation.
+    *   `T-2026-06-06-02` can start from the `audit` rows in the scope matrix.
+*   Risks/blockers:
+    *   No machine blocker for planning docs.
+    *   The launch objective is not complete until scope is confirmed and p0 blockers are resolved or deliberately deferred.

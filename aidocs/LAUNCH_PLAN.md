@@ -41,6 +41,8 @@ Reasoning:
 
 ## Scope Rules
 
+Detailed scope evidence lives in `aidocs/LAUNCH_SCOPE_MATRIX.md`.
+
 ### Must Ship For Public Launch
 
 - Stable editor typing, selection, paste, undo/redo, and sheet persistence.
