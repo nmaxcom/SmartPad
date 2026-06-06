@@ -269,8 +269,9 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
         </div>
       </div>
 
-      <div className="settings-section settings-section--currency">
-        <h3 className="settings-section-title">Display Options</h3>
+      <div className="settings-section settings-section--wide">
+        <h3 className="settings-section-title">Results And Formatting</h3>
+        <h4 className="settings-subsection-title">Result display</h4>
 
         <div className="settings-item settings-item-stack">
           <div className="settings-item-info">
@@ -363,6 +364,8 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
           </div>
         </div>
 
+        <h4 className="settings-subsection-title">Reuse and export</h4>
+
         <div className="settings-item settings-item-stack">
           <div className="settings-item-info">
             <label htmlFor={`${idPrefix}-chip-insert-mode`} className="settings-label">
@@ -416,6 +419,8 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
           </div>
         </div>
 
+        <h4 className="settings-subsection-title">Lists and limits</h4>
+
         <div className="settings-item settings-item-stack">
           <div className="settings-item-info">
             <label htmlFor={`${idPrefix}-list-max-length`} className="settings-label">
@@ -437,6 +442,8 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
             />
           </div>
         </div>
+
+        <h4 className="settings-subsection-title">Scientific notation</h4>
 
         <div className="settings-item">
           <div className="settings-item-info">
@@ -504,7 +511,7 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
       </div>
 
       <div className="settings-section">
-        <h3 className="settings-section-title">Date Parsing</h3>
+        <h3 className="settings-section-title">Dates And Locale</h3>
 
         <div className="settings-item">
           <div className="settings-item-info">
@@ -585,7 +592,7 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
       </div>
 
       <div className="settings-section">
-        <h3 className="settings-section-title">Currency</h3>
+        <h3 className="settings-section-title">Currency And External Data</h3>
 
         <div className="settings-item">
           <div className="settings-item-info">
@@ -632,7 +639,7 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
       </div>
 
       <div className="settings-section">
-        <h3 className="settings-section-title">Results Feedback</h3>
+        <h3 className="settings-section-title">Result Styling</h3>
 
         <div className="settings-item">
           <div className="settings-item-info">
@@ -746,7 +753,7 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
       </div>
 
       <div className="settings-section">
-        <h3 className="settings-section-title">Plots</h3>
+        <h3 className="settings-section-title">Advanced Plotting</h3>
 
         <div className="settings-item">
           <div className="settings-item-info">
@@ -1000,7 +1007,7 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
       </div>
 
       <div className="settings-section">
-        <h3 className="settings-section-title">Layout</h3>
+        <h3 className="settings-section-title">Panels</h3>
 
         <div className="settings-item">
           <div className="settings-item-info">

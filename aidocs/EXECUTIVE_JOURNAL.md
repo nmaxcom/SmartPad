@@ -6230,3 +6230,46 @@
 *   Risks/blockers:
     *   Roadmap is complete enough to execute, but launch itself is not complete.
     *   User confirmation, product polish, stability checks, homepage implementation, docs/support patches, release dry-run, and desktop beta implementation remain open.
+
+## Entry J-2026-06-06-11
+
+*   Timestamp: 2026-06-06 13:26 CEST / 2026-06-06 11:26 UTC
+*   Summary:
+    *   Implemented the first settings/onboarding launch-polish pass for `T-2026-06-06-03`.
+    *   Reorganized settings into launch-oriented headings and subsections without changing persisted settings keys or defaults.
+    *   Updated the Quick Tour opening copy so first-time users get one clear first action before inspecting the rest of the demo sheet.
+    *   Modernized stale e2e coverage for the current icon header, settings modal selectors, default Quick Tour startup content, and current template catalog.
+*   Decisions:
+    *   Keep advanced settings available, but visually subordinate them with section/subsection hierarchy instead of hiding or removing them.
+    *   Treat the current settings/onboarding work as ready for review, not complete, until screenshots/accessibility checks and user confirmation are done.
+    *   Do not commit generated `dist/index.html` from the build because the build only changed asset hashes and no matching tracked asset files were part of this task.
+*   User directives:
+    *   Continue launch/publication work in this thread, prioritizing product polish and a healthy release process.
+*   Assistant commitments:
+    *   Keep `T-2026-06-06-03` open until desktop/mobile screenshots, accessibility pass, and explicit user confirmation are complete.
+    *   Continue using `aidocs/LAUNCH_EXECUTION_ROADMAP.md` as the launch execution view.
+*   Artifacts changed:
+    *   `src/components/ui/SettingsSections.tsx`
+    *   `src/components/ui/SettingsModal.css`
+    *   `src/templates/quickTourTemplate.ts`
+    *   `tests/e2e/settings-integration.spec.ts`
+    *   `tests/e2e/template-basic-functionality.spec.ts`
+    *   `aidocs/LAUNCH_SCOPE_MATRIX.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/settingsStore.test.ts tests/unit/quickTourTemplate.test.ts --runInBand`
+    *   `npx playwright test tests/e2e/settings-integration.spec.ts tests/e2e/grouped-input-and-date-settings.spec.ts tests/e2e/quick-tour-template.spec.ts tests/e2e/template-basic-functionality.spec.ts --project=chromium --config=playwright.config.ts --workers=1`
+    *   `npm run docs:map`
+    *   `npm run docs:drift`
+    *   `npm run spec:test`
+    *   `npm run spec:trust`
+    *   `npm run verify:changed`
+    *   `npm run build`
+*   Pending items:
+    *   Capture launch screenshots for settings/Quick Tour on desktop and mobile.
+    *   Run accessibility pass on settings modal/sidebar and Quick Tour first-run path.
+    *   Ask the user to review and confirm whether this settings/onboarding baseline is acceptable for launch.
+*   Risks/blockers:
+    *   Human gate remains open.
+    *   Homepage assets, support docs, release dry-run, and desktop beta remain downstream launch tasks.

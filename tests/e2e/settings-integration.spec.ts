@@ -11,6 +11,16 @@
 import { test, expect } from "@playwright/test";
 import { waitForUIRenderComplete } from "./utils";
 
+const selectAllShortcut = process.platform === "darwin" ? "Meta+a" : "Control+a";
+
+const clearEditor = async (page: import("@playwright/test").Page) => {
+  const editor = page.locator(".ProseMirror");
+  await editor.click();
+  await page.keyboard.press(selectAllShortcut);
+  await page.keyboard.press("Backspace");
+  await waitForUIRenderComplete(page);
+};
+
 test.describe("Settings Integration", () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to the app
@@ -21,52 +31,52 @@ test.describe("Settings Integration", () => {
   });
 
   test("renders settings button in header", async ({ page }) => {
-    const settingsButton = page.getByLabel("Open settings");
+    const settingsButton = page.getByLabel("Open Settings", { exact: true });
     await expect(settingsButton).toBeVisible();
-    await expect(settingsButton).toContainText("⚙️");
+    await expect(settingsButton.locator(".fa-cog")).toBeVisible();
   });
 
   test("opens settings modal when button clicked", async ({ page }) => {
-    const settingsButton = page.getByLabel("Open settings");
+    const settingsButton = page.getByLabel("Open Settings", { exact: true });
     await settingsButton.click();
 
-    await expect(page.getByText("Settings")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
     await expect(page.getByLabel("Decimal Places")).toBeVisible();
   });
 
   test("closes settings modal with close button", async ({ page }) => {
     // Open modal
-    const settingsButton = page.getByLabel("Open settings");
+    const settingsButton = page.getByLabel("Open Settings", { exact: true });
     await settingsButton.click();
 
-    await expect(page.getByText("Settings")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
 
     // Close modal
     const closeButton = page.getByLabel("Close settings");
     await closeButton.click();
 
-    await expect(page.getByText("Settings")).not.toBeVisible();
+    await expect(page.getByRole("heading", { name: "Settings" })).not.toBeVisible();
   });
 
   test("closes settings modal with Escape key", async ({ page }) => {
     // Open modal
-    const settingsButton = page.getByLabel("Open settings");
+    const settingsButton = page.getByLabel("Open Settings", { exact: true });
     await settingsButton.click();
 
-    await expect(page.getByText("Settings")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
 
     // Press Escape
     await page.keyboard.press("Escape");
 
-    await expect(page.getByText("Settings")).not.toBeVisible();
+    await expect(page.getByRole("heading", { name: "Settings" })).not.toBeVisible();
   });
 
   test("changes decimal places setting", async ({ page }) => {
     // Open settings
-    const settingsButton = page.getByLabel("Open settings");
+    const settingsButton = page.getByLabel("Open Settings", { exact: true });
     await settingsButton.click();
 
-    await expect(page.getByText("Settings")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
 
     // Find the number input (default should be 2)
     const numberInput = page.getByLabel("Decimal Places");
@@ -93,7 +103,7 @@ test.describe("Settings Integration", () => {
     await page.waitForSelector('[data-testid="smart-pad-editor"]');
 
     // Open settings
-    const settingsButton = page.getByLabel("Open settings");
+    const settingsButton = page.getByLabel("Open Settings", { exact: true });
     await settingsButton.click();
 
     // Check that the number input reflects the loaded setting
@@ -103,10 +113,10 @@ test.describe("Settings Integration", () => {
 
   test("resets settings to defaults", async ({ page }) => {
     // Open settings
-    const settingsButton = page.getByLabel("Open settings");
+    const settingsButton = page.getByLabel("Open Settings", { exact: true });
     await settingsButton.click();
 
-    await expect(page.getByText("Settings")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
 
     // Find number input for assertions
     const numberInput = page.getByLabel("Decimal Places");
@@ -146,6 +156,7 @@ test.describe("Settings Integration", () => {
     await page.waitForSelector('[data-testid="smart-pad-editor"]');
 
     // Type an expression that will result in a decimal
+    await clearEditor(page);
     const editor = page.locator('[data-testid="smart-pad-editor"]');
     await editor.click();
     await page.keyboard.type("10/3 =>");
@@ -173,7 +184,7 @@ test.describe("Settings Integration", () => {
     await expect(variablePanel.getByText("3.142")).toBeVisible();
 
     // Change setting to 1 decimal place
-    const settingsButton = page.getByLabel("Open settings");
+    const settingsButton = page.getByLabel("Open Settings", { exact: true });
     await settingsButton.click();
 
     const numberInput = page.getByLabel("Decimal Places");
@@ -195,7 +206,7 @@ test.describe("Settings Integration", () => {
     );
 
     // Check that variable panel also shows 1 decimal place
-    await expect(variablePanel.getByText("3.1")).toBeVisible();
+    await expect(variablePanel.getByText("3.1", { exact: true })).toBeVisible();
   });
 
   test("decimal places setting affects new calculations immediately", async ({ page }) => {
@@ -209,6 +220,7 @@ test.describe("Settings Integration", () => {
     await page.waitForSelector('[data-testid="smart-pad-editor"]');
 
     // Type a new calculation
+    await clearEditor(page);
     const editor = page.locator('[data-testid="smart-pad-editor"]');
     await editor.click();
     await page.keyboard.type("22/7 =>");
@@ -227,6 +239,7 @@ test.describe("Settings Integration", () => {
     await page.waitForSelector('[data-testid="smart-pad-editor"]');
 
     // Create some content with 2 decimal places
+    await clearEditor(page);
     const editor = page.locator('[data-testid="smart-pad-editor"]');
     await editor.click();
     await page.keyboard.type("10/3 =>");
@@ -246,10 +259,10 @@ test.describe("Settings Integration", () => {
 
     // Check variable panel
     const variablePanel = page.locator('[data-testid="variable-panel"]');
-    await expect(variablePanel.getByText("3.14")).toBeVisible();
+    await expect(variablePanel.getByText("3.14", { exact: true })).toBeVisible();
 
     // Change setting to 3 decimal places
-    const settingsButton = page.getByLabel("Open settings");
+    const settingsButton = page.getByLabel("Open Settings", { exact: true });
     await settingsButton.click();
 
     const numberInput = page.getByLabel("Decimal Places");
@@ -271,7 +284,7 @@ test.describe("Settings Integration", () => {
       "data-result",
       /3\.142$/
     );
-    await expect(variablePanel.getByText("3.142")).toBeVisible();
+    await expect(variablePanel.getByText("3.142", { exact: true })).toBeVisible();
   });
 
   test("has modern header layout", async ({ page }) => {
@@ -280,16 +293,15 @@ test.describe("Settings Integration", () => {
     await expect(header).toBeVisible();
 
     await expect(page.getByText("SmartPad")).toBeVisible();
-    await expect(
-      page.getByText("Text-based calculator with real-time mathematical calculations")
-    ).toBeVisible();
+    await expect(page.getByLabel("Open documentation")).toBeVisible();
+    await expect(page.getByLabel("Report a bug")).toBeVisible();
   });
 
   test("has constrained editor container", async ({ page }) => {
     const editorContainer = page.locator(".editor-container");
     await expect(editorContainer).toBeVisible();
 
-    const mainContainer = page.locator(".app-main");
+    const mainContainer = page.locator(".app-layout");
     await expect(mainContainer).toBeVisible();
   });
 

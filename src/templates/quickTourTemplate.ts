@@ -1,6 +1,6 @@
-export const QUICK_TOUR_TEMPLATE = `# Quick Tour: SmartPad in 3 minutes
-# Scrubbing: hover any number and drag left/right to change it.
-# Start by scrubbing attendees base or ticket list and watch the whole sheet react.
+export const QUICK_TOUR_TEMPLATE = `# Start Here: SmartPad Quick Tour
+# First action: hover attendees base or ticket list and drag left/right.
+# Watch the dependent results, currency math, date ranges, and chart update together.
 
 # 1) Workshop launch: currency + percentages + conversion + chart
 attendees base = 140
