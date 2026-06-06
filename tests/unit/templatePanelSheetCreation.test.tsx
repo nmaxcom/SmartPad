@@ -80,4 +80,23 @@ describe("TemplatePanel", () => {
     expect(title).toBe("Investment Lab");
     expect(makeActive).toBe(true);
   });
+
+  test("includes a plottable Currency FX function example", () => {
+    const createSheetFromContent = jest.fn().mockResolvedValue(undefined);
+    (useSheetContext as jest.Mock).mockReturnValue({
+      createSheetFromContent,
+    });
+
+    render(<TemplatePanel />);
+    fireEvent.click(screen.getByRole("button", { name: /Currency FX/i }));
+
+    expect(createSheetFromContent).toHaveBeenCalledTimes(1);
+    const [content, title, makeActive] = createSheetFromContent.mock.calls[0];
+    expect(content).toContain("usd_total(month) = usd price * month");
+    expect(content).toContain("eur_total(month) = eur price * month");
+    expect(content).toContain("@view plot y=usd_total,eur_total domain=0..12 size=md");
+    expect(content).not.toContain("months = 0..12");
+    expect(title).toBe("Currency FX");
+    expect(makeActive).toBe(true);
+  });
 });

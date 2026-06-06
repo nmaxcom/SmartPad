@@ -4,7 +4,7 @@ import { PlotViewEvaluator } from "../../src/eval/plotViewEvaluator";
 import { ReactiveVariableStore } from "../../src/state/variableStore";
 import { EvaluationContext } from "../../src/eval/registry";
 import { Variable } from "../../src/state/types";
-import { ListValue, NumberValue, SemanticValue, UnitValue } from "../../src/types";
+import { CurrencyValue, ListValue, NumberValue, SemanticValue, UnitValue } from "../../src/types";
 import { SmartPadQuantity } from "../../src/units/unitsnetAdapter";
 import { FunctionDefinitionNode } from "../../src/parsing/ast";
 
@@ -135,6 +135,44 @@ describe("PlotViewEvaluator", () => {
       expect(plottable.length).toBeGreaterThan(2);
       expect(Math.max(...plottable.map((point) => point.y as number))).toBeGreaterThan(2500);
       expect(result.currentY).toBeCloseTo(Math.PI * 30 ** 2, 2);
+    }
+  });
+
+  test("plots currency-backed FX helper functions over a numeric domain", () => {
+    const astNodes = [
+      parseLine("usd_total(month) = usd price * month", 1),
+      parseLine("eur_total(month) = eur price * month", 2),
+      parseLine("@view plot y=usd_total,eur_total domain=0..12 size=md", 3),
+    ];
+    const functionStore = new Map<string, FunctionDefinitionNode>([
+      ["usd_total", astNodes[0] as FunctionDefinitionNode],
+      ["eur_total", astNodes[1] as FunctionDefinitionNode],
+    ]);
+    const variables = new Map<string, Variable>([
+      ["usd price", createVariable("usd price", CurrencyValue.fromString("$9.99"), "$9.99")],
+      ["eur price", createVariable("eur price", CurrencyValue.fromString("8.33 EUR"), "usd price in EUR")],
+    ]);
+    const evaluator = new PlotViewEvaluator();
+
+    const result = evaluator.evaluate(
+      astNodes[2],
+      createContext(astNodes, variables, functionStore)
+    );
+
+    expect(result?.type).toBe("plotView");
+    if (result?.type === "plotView") {
+      expect(result.status).toBe("connected");
+      expect(result.series).toHaveLength(2);
+      expect(result.series?.[0]?.label).toBe("usd_total(month)");
+      expect(result.series?.[1]?.label).toBe("eur_total(month)");
+      const usdData = result.series?.[0]?.data;
+      const eurData = result.series?.[1]?.data;
+      const usdLastY = usdData?.at(-1)?.y;
+      const eurLastY = eurData?.at(-1)?.y;
+      expect(usdLastY).toBeDefined();
+      expect(eurLastY).toBeDefined();
+      expect(usdLastY as number).toBeCloseTo(119.88, 2);
+      expect(eurLastY as number).toBeCloseTo(99.96, 1);
     }
   });
 

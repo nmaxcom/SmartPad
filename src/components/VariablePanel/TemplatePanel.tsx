@@ -532,12 +532,13 @@ fees in USD/month =>
 total(fees) in USD =>
 
 # Plotting with FX
-months = 0..12
 usd price = $9.99
 eur price = usd price in EUR
-total usd = usd price * months
-total eur = eur price * months
-@view plot x=months y=total usd, total eur
+usd_total(month) = usd price * month
+eur_total(month) = eur price * month
+total usd at 12 months = usd_total(12) =>
+total eur at 12 months = eur_total(12) =>
+@view plot y=usd_total,eur_total domain=0..12 size=md
 `,
   },
   {
