@@ -1,7 +1,7 @@
 ---
 title: "Lists"
 description: "Model repeated values with aggregation, mapping, filtering, and zip math."
-sidebar_position: 13
+sidebar_position: 15
 ---
 
 import ExamplePlayground from "@site/src/components/ExamplePlayground";

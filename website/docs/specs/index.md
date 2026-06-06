@@ -1,6 +1,6 @@
 ---
 title: "Feature Contracts"
-sidebar_position: 7
+sidebar_position: 9
 description: "Deep behavior guarantees for every major SmartPad feature."
 ---
 

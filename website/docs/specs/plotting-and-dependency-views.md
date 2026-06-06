@@ -1,7 +1,7 @@
 ---
 title: "Plotting and Dependency Views"
 description: "Turn expressions into exploratory views with `@view` directives."
-sidebar_position: 10
+sidebar_position: 12
 ---
 
 import ExamplePlayground from "@site/src/components/ExamplePlayground";

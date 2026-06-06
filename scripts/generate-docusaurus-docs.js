@@ -1,5 +1,6 @@
 const fs = require("node:fs");
 const path = require("node:path");
+const { spawnSync } = require("node:child_process");
 
 const repoRoot = process.cwd();
 const specsDir = path.join(repoRoot, "docs", "Specs");
@@ -541,6 +542,8 @@ const LINEAR_DOC_ORDER = [
   "guides/everyday-calculations",
   "guides/privacy-and-portability",
   "guides/troubleshooting",
+  "guides/known-limitations",
+  "guides/support",
   "specs/index",
   ...SPEC_CATALOG.map((entry) => `specs/${entry.slug}`),
 ];
@@ -557,9 +560,18 @@ const ensureDir = (dirPath) => {
   }
 };
 
+const trashPath = (targetPath) => {
+  if (!fs.existsSync(targetPath)) return;
+  const result = spawnSync("trash", [targetPath], { encoding: "utf8" });
+  if (result.status !== 0) {
+    const message = result.stderr || result.stdout || "`trash` command failed";
+    throw new Error(`Unable to move generated path to trash: ${targetPath}\n${message}`);
+  }
+};
+
 const resetGeneratedDirs = () => {
-  fs.rmSync(specsOutDir, { recursive: true, force: true });
-  fs.rmSync(guidesOutDir, { recursive: true, force: true });
+  trashPath(specsOutDir);
+  trashPath(guidesOutDir);
   ensureDir(specsOutDir);
   ensureDir(guidesOutDir);
 };
@@ -745,7 +757,9 @@ const renderIntroPage = () => {
     "2. **[Syntax Playbook](./guides/syntax-playbook)**: write robust expressions and avoid common pitfalls.",
     "3. **[Everyday Calculations](./guides/everyday-calculations)**: practical examples for budgeting, planning, and analysis.",
     "4. **[Privacy and Portability](./guides/privacy-and-portability)**: understand durability, export, and local ownership.",
-    "5. **[Feature Contracts](./specs)**: deep behavior guarantees for each major capability.",
+    "5. **[Known Limitations](./guides/known-limitations)**: check what is shipped, beta, planned, or intentionally unsupported.",
+    "6. **[Support](./guides/support)**: report bugs, request features, and share reproducible examples safely.",
+    "7. **[Feature Contracts](./specs)**: deep behavior guarantees for each major capability.",
     "",
     "## What SmartPad is not",
     "",
@@ -987,12 +1001,40 @@ const renderGuidePages = () => {
         "- **No proprietary lock-in format**: content remains plain Markdown text.",
         "- **Import/export flexibility**: individual `.md` download plus bulk zip workflows.",
         "- **Recoverability**: trash/restore flows prevent accidental hard deletion.",
+        "- **No hidden sheet telemetry**: the app does not send sheet text, calculations, variables, or imported files to a SmartPad backend.",
         "",
         "## Durability model",
         "",
         "1. Typing is autosaved after idle debounce (default spec target: 1500ms).",
         "2. Multi-tab synchronization uses broadcast events to prevent stale tab overwrite.",
         "3. Sheet identity is stable even when titles change.",
+        "4. Browser storage durability depends on the browser profile, device, and storage cleanup settings.",
+        "",
+        "## Website signup and analytics",
+        "",
+        "SmartPad can have a public website, docs, and update signup separate from the app itself.",
+        "",
+        "- Signing up for updates should not be required to use the app.",
+        "- Website analytics, if enabled, should measure website usage only.",
+        "- Website analytics must not collect sheet content, calculation text, imported files, or local sheet metadata.",
+        "- Any signup provider or analytics provider should be documented on the launch website before it is enabled.",
+        "",
+        "## Currency and external rates",
+        "",
+        "Currency conversion may use external FX providers and cached data:",
+        "",
+        "- Fiat and crypto rate availability depends on provider uptime and network access.",
+        "- When offline or unavailable, SmartPad can use cached rates when present.",
+        "- FX rates are useful for planning, but they are not guaranteed market quotes.",
+        "- Do not use SmartPad FX output as financial, tax, legal, or investment advice.",
+        "",
+        "## Desktop beta status",
+        "",
+        "The desktop app is planned as a beta distribution path, not a current launch guarantee.",
+        "",
+        "- Web launch remains the primary distribution path until packaged builds exist.",
+        "- Early desktop builds may be unsigned and may show operating-system warnings.",
+        "- Desktop release notes should state which platforms were actually built and smoke-tested.",
         "",
         "## What to do before sharing publicly",
         "",
@@ -1005,6 +1047,10 @@ const renderGuidePages = () => {
         "- Keep important models in descriptive Markdown headings.",
         "- Prefer explicit units/currencies so values retain meaning outside SmartPad UI.",
         "- Store long-term archives as exported `.md` files in your own versioned storage.",
+        "",
+        "## When to ask for help",
+        "",
+        "Use [Support](../support) for wrong calculations, storage/import/export problems, settings bugs, docs errors, or launch beta feedback.",
         "",
         "## Related deep contract",
         "",
@@ -1062,6 +1108,132 @@ const renderGuidePages = () => {
         "",
         ...SPEC_CATALOG.map((entry) => `- [${entry.title}](../../specs/${entry.slug})`),
         "",
+        "## Report a reproducible problem",
+        "",
+        "If the issue still reproduces after simplification, open [Support](../support) and include the smallest sheet text that demonstrates the behavior.",
+        "",
+        "For wrong calculations, data loss, storage/import/export problems, settings issues, or docs errors, use the linked bug report form from the support page.",
+        "",
+      ].join("\n"),
+    },
+    {
+      file: "known-limitations.md",
+      body: [
+        "---",
+        'title: "Known Limitations"',
+        "sidebar_position: 7",
+        'description: "Understand what SmartPad supports today, what is planned, and how to protect important work."',
+        "---",
+        "",
+        "# Known Limitations",
+        "",
+        "SmartPad is ready to use as a local-first calculation workspace, but the public launch should be explicit about current boundaries.",
+        "",
+        "## Storage and accounts",
+        "",
+        "- SmartPad does not have accounts, cloud sync, team workspaces, or collaboration.",
+        "- Sheets are stored locally in the browser profile with IndexedDB.",
+        "- Browser profile resets, device migrations, private browsing, or storage cleanup tools can remove local data.",
+        "- Export important work with `Download All` before browser/profile/device migrations.",
+        "",
+        "## Privacy and telemetry",
+        "",
+        "- The app does not send sheet content to a SmartPad backend.",
+        "- There is no hidden in-app telemetry for sheet text, calculations, variables, or imported files.",
+        "- Any future website signup or analytics must be documented separately from app usage.",
+        "",
+        "## Currency and external data",
+        "",
+        "- Currency conversions can depend on external FX providers and cached rates.",
+        "- Offline/cached FX behavior is shown in the app when rates are unavailable.",
+        "- FX values are practical planning data, not financial advice or guaranteed market quotes.",
+        "",
+        "## Desktop app status",
+        "",
+        "- Desktop packaging is planned as a beta path, starting with Electron.",
+        "- Until a signed artifact exists, the public launch should not promise polished native installers.",
+        "- Unsigned beta builds may trigger operating-system warnings and should be labeled as beta.",
+        "",
+        "## Features not shipped yet",
+        "",
+        "These are roadmap or proposed ideas, not public-launch promises:",
+        "",
+        "- Cloud sync, accounts, and collaboration",
+        "- Full structured tables",
+        "- AI-generated formulas",
+        "- Auto-suggested plots as a finished workflow",
+        "- Timezone and business-day date keywords",
+        "- Plugin marketplace or plugin system",
+        "- Signed desktop installers for every operating system",
+        "",
+        "## Practical guardrails",
+        "",
+        "- Keep important models in plain Markdown exports.",
+        "- Remove sensitive data before posting screenshots, videos, or issue examples.",
+        "- Check [Support](../support) when a calculation looks wrong, storage behaves unexpectedly, or import/export does not work.",
+        "",
+      ].join("\n"),
+    },
+    {
+      file: "support.md",
+      body: [
+        "---",
+        'title: "Support"',
+        "sidebar_position: 8",
+        'description: "Report bugs, request features, and share reproducible SmartPad examples safely."',
+        "---",
+        "",
+        "# Support",
+        "",
+        "SmartPad support starts with GitHub issues during public beta.",
+        "",
+        "## Report a bug",
+        "",
+        "Use the [bug report form](https://github.com/nmaxcom/SmartPad/issues/new?template=bug_report.yml) when SmartPad gives a wrong result, fails to load, loses expected local state, or breaks an import/export/settings workflow.",
+        "",
+        "Include:",
+        "",
+        "- App URL or build where it happened",
+        "- Browser and operating system",
+        "- Exact sheet text needed to reproduce the issue",
+        "- Expected result and actual result",
+        "- Screenshot or short recording when the issue is visual",
+        "- Exported `.md` sample only if it does not contain sensitive data",
+        "",
+        "## Request a feature",
+        "",
+        "Use the [feature request form](https://github.com/nmaxcom/SmartPad/issues/new?template=feature_request.md) for new workflows, syntax requests, platform requests, or launch-roadmap ideas.",
+        "",
+        "Useful feature requests explain:",
+        "",
+        "- The job you are trying to complete",
+        "- Why current SmartPad behavior is not enough",
+        "- A small example sheet or screenshot",
+        "- Whether the request matters for web, desktop, mobile, or all platforms",
+        "",
+        "## Priority triage",
+        "",
+        "Launch support should prioritize:",
+        "",
+        "1. Wrong calculations or misleading results",
+        "2. App load failures",
+        "3. Storage, trash/restore, import, export, or download issues",
+        "4. Settings, locale/date, currency, or first-run onboarding problems",
+        "5. Docs routing, broken links, and unclear examples",
+        "6. Visual polish and enhancement requests",
+        "",
+        "## Privacy before sharing",
+        "",
+        "SmartPad sheets are plain text. Remove personal, financial, client, or credential-like content before pasting examples into public issues.",
+        "",
+        "When a private example is required to reproduce a problem, first reduce it to the smallest anonymous sheet that still fails.",
+        "",
+        "## Related pages",
+        "",
+        "- [Troubleshooting](../troubleshooting)",
+        "- [Known Limitations](../known-limitations)",
+        "- [Privacy and Portability](../privacy-and-portability)",
+        "",
       ].join("\n"),
     },
   ];
@@ -1071,7 +1243,7 @@ const renderSpecIndexPage = (entries) => {
   const lines = [
     "---",
     'title: "Feature Contracts"',
-    "sidebar_position: 7",
+    "sidebar_position: 9",
     'description: "Deep behavior guarantees for every major SmartPad feature."',
     "---",
     "",
@@ -1161,7 +1333,8 @@ const writeSidebar = () => {
 const writeDocs = () => {
   fs.writeFileSync(path.join(docsRoot, "intro.md"), renderIntroPage(), "utf8");
 
-  renderGuidePages().forEach((page) => {
+  const guidePages = renderGuidePages();
+  guidePages.forEach((page) => {
     fs.writeFileSync(path.join(guidesOutDir, page.file), page.body, "utf8");
   });
 
@@ -1169,21 +1342,25 @@ const writeDocs = () => {
 
   SPEC_CATALOG.forEach((entry, index) => {
     const content = readSpecContent(entry.fileName);
-    const sidebarPosition = 8 + index;
+    const sidebarPosition = 10 + index;
     fs.writeFileSync(
       path.join(specsOutDir, `${entry.slug}.md`),
       renderSpecPage(entry, content, sidebarPosition),
       "utf8",
     );
   });
+
+  return guidePages.length;
 };
 
 const main = () => {
   ensureDir(docsRoot);
   resetGeneratedDirs();
-  writeDocs();
+  const guidePageCount = writeDocs();
   writeSidebar();
-  console.log(`Generated docs: ${SPEC_CATALOG.length} feature pages, 5 guide pages, flat sidebar.`);
+  console.log(
+    `Generated docs: ${SPEC_CATALOG.length} feature pages, ${guidePageCount} guide pages, flat sidebar.`
+  );
 };
 
 main();

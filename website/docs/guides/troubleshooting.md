@@ -41,3 +41,9 @@ Open the precise behavior contract for that feature:
 - [Ranges](../../specs/ranges)
 - [Locale Date and Time](../../specs/locale-date-time)
 - [File Management](../../specs/file-management)
+
+## Report a reproducible problem
+
+If the issue still reproduces after simplification, open [Support](../support) and include the smallest sheet text that demonstrates the behavior.
+
+For wrong calculations, data loss, storage/import/export problems, settings issues, or docs errors, use the linked bug report form from the support page.

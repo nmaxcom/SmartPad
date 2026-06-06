@@ -1,7 +1,7 @@
 ---
 title: "Ranges"
 description: "Generate numeric/date/time lists with predictable `..` span semantics."
-sidebar_position: 14
+sidebar_position: 16
 ---
 
 import ExamplePlayground from "@site/src/components/ExamplePlayground";

@@ -1,7 +1,7 @@
 ---
 title: "Result Chips and References"
 description: "Reuse results as draggable, copyable chips with stable dependency links."
-sidebar_position: 9
+sidebar_position: 11
 ---
 
 import ExamplePlayground from "@site/src/components/ExamplePlayground";

@@ -6273,3 +6273,51 @@
 *   Risks/blockers:
     *   Human gate remains open.
     *   Homepage assets, support docs, release dry-run, and desktop beta remain downstream launch tasks.
+
+## Entry J-2026-06-06-12
+
+*   Timestamp: 2026-06-06 13:37 CEST / 2026-06-06 11:37 UTC
+*   Summary:
+    *   Continued launch publication work by implementing the public docs/support gap from `T-2026-06-06-07`.
+    *   Added generated public docs pages for Known Limitations and Support, expanded Privacy and Portability with local storage, FX, signup/analytics, and desktop beta status, and linked the pages from Start Here, Troubleshooting, sidebar, and generated `public/docs`.
+    *   Updated `docs/ABOUT.md` with the launch settings grouping and current Quick Tour first-action copy so UI/settings drift is documented.
+    *   Updated docs generation/sync scripts to move generated directories to `trash` instead of hard-deleting them.
+*   Decisions:
+    *   Support defaults to GitHub bug report and feature request templates for public beta.
+    *   Desktop is documented as planned/beta until a real artifact exists; homepage should not imply polished native installers yet.
+    *   Website signup/analytics are documented as separate from app usage and must not collect sheet content.
+*   User directives:
+    *   Continue working toward launch/publication planning and execution, including accessible docs, support, stability, website, and standalone app path.
+*   Assistant commitments:
+    *   Keep `T-2026-06-06-07` open until homepage links, mobile docs checks, and homepage-to-docs-to-app journey are verified.
+    *   Continue using `trash` for generated-directory cleanup in docs scripts.
+*   Artifacts changed:
+    *   `scripts/generate-docusaurus-docs.js`
+    *   `scripts/sync-docusaurus-build.js`
+    *   `website/docs/intro.md`
+    *   `website/docs/guides/privacy-and-portability.md`
+    *   `website/docs/guides/troubleshooting.md`
+    *   `website/docs/guides/known-limitations.md`
+    *   `website/docs/guides/support.md`
+    *   `website/sidebars.ts`
+    *   `public/docs/`
+    *   `docs/ABOUT.md`
+    *   `aidocs/LAUNCH_SCOPE_MATRIX.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run docs:docusaurus:publish-local`
+    *   `npm run docs:docusaurus:publish-prod`
+    *   `npm run docs:map`
+    *   `npm run docs:drift -- HEAD`
+    *   `npm run spec:test`
+    *   `npm run spec:trust`
+    *   `npm run verify:changed -- HEAD`
+    *   Content spot checks confirmed `public/docs/guides/known-limitations/index.html`, `public/docs/guides/support/index.html`, and updated privacy/sidebar links exist.
+*   Pending items:
+    *   Link Known Limitations and Support from the future launch homepage.
+    *   Verify docs mobile navigation/screenshots.
+    *   Script the homepage-to-docs-to-app beginner journey once homepage exists.
+*   Risks/blockers:
+    *   Public docs/support are materially improved, but homepage and signup path are still missing.
+    *   Default `npm run docs:drift` will pass after this commit because the current worktree docs updates are not visible to the default `HEAD~1...HEAD` range until committed.

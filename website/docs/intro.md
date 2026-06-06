@@ -32,7 +32,9 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 2. **[Syntax Playbook](./guides/syntax-playbook)**: write robust expressions and avoid common pitfalls.
 3. **[Everyday Calculations](./guides/everyday-calculations)**: practical examples for budgeting, planning, and analysis.
 4. **[Privacy and Portability](./guides/privacy-and-portability)**: understand durability, export, and local ownership.
-5. **[Feature Contracts](./specs)**: deep behavior guarantees for each major capability.
+5. **[Known Limitations](./guides/known-limitations)**: check what is shipped, beta, planned, or intentionally unsupported.
+6. **[Support](./guides/support)**: report bugs, request features, and share reproducible examples safely.
+7. **[Feature Contracts](./specs)**: deep behavior guarantees for each major capability.
 
 ## What SmartPad is not
 

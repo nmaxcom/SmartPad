@@ -1,7 +1,7 @@
 ---
 title: "Live Results"
 description: "See valid results while typing, without adding `=>` on every line."
-sidebar_position: 8
+sidebar_position: 10
 ---
 
 import ExamplePlayground from "@site/src/components/ExamplePlayground";

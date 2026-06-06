@@ -14,14 +14,16 @@ Recent template updates:
 - Clicking a quick template now opens it in a new sheet and makes that new sheet active, preserving the current sheet content.
 - When multiple right-side panels are open, the `Quick Templates` panel is pinned at the top for faster access.
 - The `Quick Tour` template was condensed into practical mini-scenarios and now starts with a short scrubbing primer.
+- Launch settings are grouped by user intent: results/formatting, reuse/export, lists/limits, scientific notation, dates/locale, currency/external data, result styling, advanced plotting, and panels.
+- The `Quick Tour` template now opens with a `Start Here` first action that tells users to scrub `attendees base` or `ticket list` and watch dependent results, currency math, date ranges, and the chart update together.
 - The `New stuff` template demonstrates live-bound result plots, direct one-argument function plots (`@view plot y=f`), direct curve plots without dummy `x = 0` assignments, histogram/scatter suggestions, and one-variable goal-seek from result chips using conventional currency examples such as `3000 EUR`.
 - The `Goal Seek` template focuses on progressively richer one-variable target solving, from checkout totals to runway, pricing, campaign planning, range design, recipes, and direct source-expression goals.
 - The `Investment Lab` template is dedicated to ROI, compound interest, investor costs, Spain-style savings-tax examples, net totals, live wealth curves, monthly-contribution goal seek, and low/base/high return sensitivity; its rates use editable percentage literals such as `7%`, `0.35%`, and `21%`.
 
 These are some examples of its syntax:
-# Quick Tour: a guided walkthrough
-# Core idea: write naturally; live results preview most valid lines.
-# Use "=>" for explicit intent, explicit errors, and solve/equation workflows.
+# Start Here: SmartPad Quick Tour
+# First action: hover attendees base or ticket list and drag left/right.
+# Watch the dependent results, currency math, date ranges, and chart update together.
 
 2 + 3 => 5
 sqrt(16) + 2.5 => 6.5

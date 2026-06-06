@@ -1,7 +1,7 @@
 ---
 title: "File Management"
 description: "Local-first sheet durability with autosave, trash, import, and export."
-sidebar_position: 16
+sidebar_position: 18
 ---
 
 import ExamplePlayground from "@site/src/components/ExamplePlayground";

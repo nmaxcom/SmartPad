@@ -8,6 +8,8 @@ const sidebars: SidebarsConfig = {
     "guides/everyday-calculations",
     "guides/privacy-and-portability",
     "guides/troubleshooting",
+    "guides/known-limitations",
+    "guides/support",
     "specs/index",
     "specs/live-results",
     "specs/result-chips-and-references",

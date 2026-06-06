@@ -1,7 +1,7 @@
 ---
 title: "Locale Date and Time"
 description: "Parse locale-friendly dates and route temporal ranges reliably."
-sidebar_position: 15
+sidebar_position: 17
 ---
 
 import ExamplePlayground from "@site/src/components/ExamplePlayground";

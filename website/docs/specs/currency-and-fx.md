@@ -1,7 +1,7 @@
 ---
 title: "Currency and FX"
 description: "Treat currency as first-class units with live FX + manual overrides."
-sidebar_position: 11
+sidebar_position: 13
 ---
 
 import ExamplePlayground from "@site/src/components/ExamplePlayground";
