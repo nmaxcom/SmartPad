@@ -5971,3 +5971,29 @@
     *   Autocomplete task `T-2026-06-04-01` remains pending user review/confirmation and may affect launch stability scope.
     *   Platform packaging requires a separate decision on Electron vs Tauri, release signing, and update channels.
     *   Signup/analytics choices must preserve the product's local-first trust posture.
+
+## Entry J-2026-06-06-02
+
+*   Timestamp: 2026-06-06 12:48 CEST / 2026-06-06 10:48 UTC
+*   Summary:
+    *   Continued the launch/publication objective by creating a central launch plan artifact.
+    *   The plan defines positioning, target audience, launch channel, must/should/defer/hide scope rules, p0/p1 execution order, desktop packaging decision criteria, continuous development rules, release gates, trust rules, and open decisions.
+    *   Updated `T-2026-06-06-01` from `todo` to `in_progress` because the launch plan memo is drafted but still requires user confirmation and spec mapping.
+*   Decisions:
+    *   Launch should start as public web app plus beta desktop build unless user chooses a stricter desktop-first requirement.
+    *   Electron is the recommended first packaging path unless a short Tauri spike proves lower risk for the current Vite/React app.
+    *   During launch hardening, fixes and polish outrank new capability unless the feature directly strengthens the launch promise and can be specified, tested, and documented.
+*   User directives:
+    *   Continue working toward the launch/publication plan objective.
+*   Assistant commitments:
+    *   Next launch planning work should review the scope matrix with the user, then map launch-critical features to implemented/proposed specs.
+    *   Keep `T-2026-06-06-01` open until explicit user confirmation satisfies the human gate.
+*   Artifacts changed:
+    *   `aidocs/LAUNCH_PLAN.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Pending items:
+    *   `T-2026-06-06-01` remains `in_progress`; next review the launch scope decisions with the user and map critical features to specs.
+*   Risks/blockers:
+    *   User has not yet confirmed the launch scope.
+    *   Desktop packaging provider, signup provider, support path, and auto-update requirements remain open decisions.
