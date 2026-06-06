@@ -41,7 +41,7 @@ Reasoning:
 
 ## Scope Rules
 
-Detailed scope evidence lives in `aidocs/LAUNCH_SCOPE_MATRIX.md`. Release-candidate stability checks live in `aidocs/LAUNCH_STABILITY_AUDIT.md`. Desktop packaging direction lives in `aidocs/DESKTOP_PACKAGING_DECISION.md`. Release operations live in `RELEASE_CHECKLIST.md` and `CHANGELOG.md`.
+Detailed scope evidence lives in `aidocs/LAUNCH_SCOPE_MATRIX.md`. Release-candidate stability checks live in `aidocs/LAUNCH_STABILITY_AUDIT.md`. Desktop packaging direction lives in `aidocs/DESKTOP_PACKAGING_DECISION.md`. Release operations live in `RELEASE_CHECKLIST.md` and `CHANGELOG.md`. Web launch direction lives in `aidocs/WEB_LAUNCH_BRIEF.md`.
 
 ### Must Ship For Public Launch
 
@@ -149,6 +149,7 @@ Deliverables:
 - Real product screenshots captured from reproducible demo sheets.
 - Lightweight signup flow: Buttondown, ConvertKit, Mailchimp, GitHub Discussions, or a static form backend. Decision should favor operational simplicity.
 - SEO/Open Graph basics.
+- Detailed brief: `aidocs/WEB_LAUNCH_BRIEF.md`.
 
 Done when:
 

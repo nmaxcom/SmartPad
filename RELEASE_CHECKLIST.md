@@ -53,6 +53,7 @@ Before tagging a web release candidate:
 - [ ] `aidocs/LAUNCH_STABILITY_AUDIT.md` P0 checks have been run or intentionally scoped for the candidate.
 - [ ] Public docs beginner path and known limitations are current.
 - [ ] Privacy copy covers local storage, FX behavior, website analytics, and signup.
+- [ ] Web launch brief in `aidocs/WEB_LAUNCH_BRIEF.md` is implemented or scoped for the candidate.
 - [ ] Marketing homepage links to app, docs, updates/signup, support, and release notes.
 - [ ] Screenshots/video assets are captured from a verified build.
 - [ ] Support path is visible.

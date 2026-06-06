@@ -2,7 +2,7 @@
 
 This matrix turns `aidocs/LAUNCH_PLAN.md` into a verifiable launch checklist.
 
-Release-candidate stability checks for the `audit` rows live in `aidocs/LAUNCH_STABILITY_AUDIT.md`. Desktop packaging direction lives in `aidocs/DESKTOP_PACKAGING_DECISION.md`. Release operations live in `RELEASE_CHECKLIST.md` and `CHANGELOG.md`.
+Release-candidate stability checks for the `audit` rows live in `aidocs/LAUNCH_STABILITY_AUDIT.md`. Desktop packaging direction lives in `aidocs/DESKTOP_PACKAGING_DECISION.md`. Release operations live in `RELEASE_CHECKLIST.md` and `CHANGELOG.md`. Web launch direction lives in `aidocs/WEB_LAUNCH_BRIEF.md`.
 
 Status meanings:
 
@@ -39,10 +39,10 @@ Status meanings:
 | --- | --- | --- | --- | --- |
 | Public web app | Must ship | audit | `.github/workflows/deploy-pages.yml`, `package.json`, `vite.config.ts` | Run deploy-path smoke and confirm final public URL, routing, docs link, and cache behavior. |
 | Public documentation | Must ship | audit | `website/docs/`, `public/docs/`, `tests/e2e/docs-ia.spec.ts`, `package.json` docs scripts | Add beginner journey and known limitations audit; run docs build/drift/link checks. |
-| Marketing homepage | Must ship | gap | `website/` exists as docs site; no launch homepage artifact dedicated to acquisition | Build homepage with real app screenshots/video, app/docs/download CTAs, privacy copy, and signup. |
-| Update signup | Must ship for audience growth | gap | No provider/config found | Decide provider and hosting constraints; prefer simple static-compatible signup. |
-| Screenshots/video assets | Should ship | gap | `public/smartpad.png`, `smartpad.png`; no launch asset inventory | Capture reproducible screenshots and short demo clips from launch demo sheets. |
-| SEO/Open Graph | Should ship | gap | Docusaurus site exists; no launch OG asset inventory found | Add title/description/OG image for homepage and docs. |
+| Marketing homepage | Must ship | gap | `aidocs/WEB_LAUNCH_BRIEF.md`; `website/` exists as docs site; no launch homepage artifact dedicated to acquisition | Build Docusaurus-first launch homepage with real app screenshots/video, app/docs/download CTAs, privacy copy, and signup. |
+| Update signup | Must ship for audience growth | gap | `aidocs/WEB_LAUNCH_BRIEF.md`; no provider/config found | Decide provider and hosting constraints; prefer simple static-compatible signup. |
+| Screenshots/video assets | Should ship | gap | `aidocs/WEB_LAUNCH_BRIEF.md`; `public/smartpad.png`, `smartpad.png`; no launch asset inventory | Capture reproducible screenshots and short demo clips from verified launch demo sheets after settings/onboarding polish. |
+| SEO/Open Graph | Should ship | gap | `aidocs/WEB_LAUNCH_BRIEF.md`; Docusaurus site exists; no launch OG asset inventory found | Add title/description/OG image for homepage and docs. |
 | Issue intake | Must ship | ready | `.github/ISSUE_TEMPLATE/bug_report.yml`, `.github/ISSUE_TEMPLATE/feature_request.md` | Review templates for public beta wording and expected repro details. |
 | Changelog/versioning | Must ship | audit | `RELEASE_CHECKLIST.md`, `CHANGELOG.md` | Dry-run the checklist on a release candidate and keep changelog entries current before tagging. |
 | Privacy/security notes | Must ship | audit | `website/docs/guides/privacy-and-portability.md`, `docs/ABOUT.md` | Add public-facing privacy note for local storage, FX provider behavior, website analytics, and signup. |

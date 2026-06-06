@@ -6112,3 +6112,35 @@
 *   Risks/blockers:
     *   Release checklist has not yet been dry-run.
     *   Marketing homepage, signup provider, desktop artifact generation, and final support path still need implementation/confirmation.
+
+## Entry J-2026-06-06-07
+
+*   Timestamp: 2026-06-06 13:02 CEST / 2026-06-06 11:02 UTC
+*   Summary:
+    *   Continued launch readiness by creating a web launch brief for the promotional site, signup, assets, privacy/tracking, and homepage verification.
+    *   Confirmed the current `website/` is a Docusaurus docs site, not yet a product acquisition homepage.
+    *   Updated launch plan, scope matrix, release checklist, and backlog so website/assets work is now planned and in progress, but not implemented.
+*   Decisions:
+    *   Use a Docusaurus-first launch homepage unless implementation proves too constrained.
+    *   The homepage should lead with real product visuals and CTAs to app/docs/signup, not docs-first navigation.
+    *   Screenshots and video should be captured only from verified builds after settings/onboarding polish.
+    *   Website analytics/signup tracking may exist only with clear privacy copy and must not add hidden app telemetry.
+*   User directives:
+    *   Continue working toward launch/publication planning, including promotional website and user-growth path.
+*   Assistant commitments:
+    *   Use `aidocs/WEB_LAUNCH_BRIEF.md` as the source for homepage IA, asset inventory, signup decision, and verification.
+    *   Keep `T-2026-06-06-04` and `T-2026-06-06-08` open until the site/assets are implemented and verified.
+*   Artifacts changed:
+    *   `aidocs/WEB_LAUNCH_BRIEF.md`
+    *   `aidocs/LAUNCH_PLAN.md`
+    *   `aidocs/LAUNCH_SCOPE_MATRIX.md`
+    *   `RELEASE_CHECKLIST.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Pending items:
+    *   `T-2026-06-06-04` moved to `in_progress`; next step is implementing the homepage and signup decision.
+    *   `T-2026-06-06-08` moved to `in_progress`; next step is capturing verified launch assets and documenting analytics/signup boundaries.
+*   Risks/blockers:
+    *   Marketing homepage is not implemented yet.
+    *   Signup provider, final privacy copy, analytics approach, and launch assets remain undecided/unbuilt.
+    *   Settings/onboarding polish remains a dependency for final screenshots.
