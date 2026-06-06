@@ -26,11 +26,11 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 ## Runnable examples
 
-<ExamplePlayground title={"Numeric scenarios"} description={"Build sensitivity ranges with custom step size."} code={"1..5 =>\n0..10 step 2 =>\n(1..5) * 2 =>\nsum(1..5) =>"} />
+<ExamplePlayground title={"Numeric scenarios"} description={"Build sensitivity ranges with custom step size."} code={"1..5\n0..10 step 2\n(1..5) * 2\nsum(1..5)"} />
 
-<ExamplePlayground title={"Descending ranges"} description={"Default step follows direction when omitted."} code={"6..2 =>\n10..0 step -2 =>"} />
+<ExamplePlayground title={"Descending ranges"} description={"Default step follows direction when omitted."} code={"6..2\n10..0 step -2"} />
 
-<ExamplePlayground title={"Range + unit annotation"} description={"Annotate generated unitless ranges with target units."} code={"1..5 to kg =>\n0..10 step 2 to m/s =>"} />
+<ExamplePlayground title={"Range + unit annotation"} description={"Annotate generated unitless ranges with target units."} code={"1..5 to kg\n0..10 step 2 to m/s"} />
 
 ## Guardrail examples
 

@@ -26,11 +26,11 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 ## Runnable examples
 
-<ExamplePlayground title={"Travel planning"} description={"Convert spending between currencies while preserving units."} code={"hotel = EUR 240\nmeals = EUR 180\ntrip spend eur = hotel + meals =>\ntrip spend eur in USD =>"} />
+<ExamplePlayground title={"Travel planning"} description={"Convert spending between currencies while preserving units."} code={"hotel = EUR 240\nmeals = EUR 180\ntrip spend eur = hotel + meals\ntrip spend eur in USD"} />
 
-<ExamplePlayground title={"Manual FX override"} description={"Pin rates for a fixed-budget scenario."} code={"EUR = 1.10 USD\nmeal = EUR 18\nmeal in USD =>\nbudget = USD 1500\nbudget in EUR =>"} />
+<ExamplePlayground title={"Manual FX override"} description={"Pin rates for a fixed-budget scenario."} code={"EUR = 1.10 USD\nmeal = EUR 18\nmeal in USD\nbudget = USD 1500\nbudget in EUR"} />
 
-<ExamplePlayground title={"Currency with rates"} description={"Convert only currency portion inside compound units."} code={"hourly = $85/hour\nhourly in EUR/hour =>\nmonthly hours = 168 h\npay = hourly * monthly hours =>"} />
+<ExamplePlayground title={"Currency with rates"} description={"Convert only currency portion inside compound units."} code={"hourly = $85/hour\nhourly in EUR/hour\nmonthly hours = 168 h\npay = hourly * monthly hours"} />
 
 ## Guardrail examples
 

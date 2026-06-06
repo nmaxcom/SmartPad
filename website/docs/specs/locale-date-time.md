@@ -26,15 +26,15 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 ## Runnable examples
 
-<ExamplePlayground title={"Locale-aware literal parsing"} description={"es-ES style date inputs resolve deterministically."} code={"d = 01-02-2023\nd =>\ndt = 01-02-2023 09:30\ndt =>"} />
+<ExamplePlayground title={"Locale-aware literal parsing"} description={"es-ES style date inputs resolve deterministically."} code={"d = 01-02-2023\nd\ndt = 01-02-2023 09:30\ndt"} />
 
-<ExamplePlayground title={"Time slot generation"} description={"Temporal ranges with explicit duration step."} code={"09:00..11:00 step 30 min =>\n2026-01-01..2026-01-05 step 1 day =>"} />
+<ExamplePlayground title={"Time slot generation"} description={"Temporal ranges with explicit duration step."} code={"09:00..11:00 step 30 min\n2026-01-01..2026-01-05 step 1 day"} />
 
-<ExamplePlayground title={"Month-end anchored stepping"} description={"Anchor day is preserved with clamp-to-month-end behavior."} code={"2026-01-31..2026-05-31 step 1 month =>"} />
+<ExamplePlayground title={"Month-end anchored stepping"} description={"Anchor day is preserved with clamp-to-month-end behavior."} code={"2026-01-31..2026-05-31 step 1 month"} />
 
 ## Guardrail examples
 
-<ExamplePlayground title={"Missing temporal step"} description={"Date/time ranges require explicit duration steps."} code={"2026-01-01..2026-01-05 =>\n09:00..11:00 =>"} />
+<ExamplePlayground title={"Missing temporal step"} description={"Date/time ranges require explicit duration steps."} code={"2026-01-01..2026-01-05\n09:00..11:00"} />
 
 <ExamplePlayground title={"Invalid locale date"} description={"Bad literals should produce targeted date errors."} code={"d = 32-02-2023 =>"} />
 

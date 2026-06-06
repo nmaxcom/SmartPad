@@ -25,7 +25,7 @@ const SPEC_CATALOG = [
       "Turning `liveResultEnabled` off restores explicit-only behavior.",
     ],
     checklist: [
-      "Use explicit `=>` on lines where you want deliberate, explicit result intent.",
+      "Use explicit `=>` only when a command, guardrail check, or intentional error needs it.",
       "Keep assignment lines readable so live feedback highlights intent quickly.",
       "Expect no preview for notes/comments/plain text lines.",
     ],
@@ -551,8 +551,17 @@ const LINEAR_DOC_ORDER = [
 const escapeYaml = (value) => value.replace(/"/g, '\\"');
 const mdxStringProp = (value) => `{${JSON.stringify(value)}}`;
 
-const renderPlayground = ({ title, description, code }) =>
-  `<ExamplePlayground title=${mdxStringProp(title)} description=${mdxStringProp(description)} code=${mdxStringProp(code)} />`;
+const stripUnneededExplicitTriggers = (code) => code.replace(/[ \t]+=>$/gm, "");
+
+const shouldKeepExplicitTriggers = ({ title, description }) =>
+  /(explicit trigger|guardrail|invalid|fail|failing|rejected|mismatch|error|unsupported|malformed|broken|cycle|typo)/i.test(
+    `${title} ${description ?? ""}`,
+  );
+
+const renderPlayground = ({ title, description, code }) => {
+  const playgroundCode = shouldKeepExplicitTriggers({ title, description }) ? code : stripUnneededExplicitTriggers(code);
+  return `<ExamplePlayground title=${mdxStringProp(title)} description=${mdxStringProp(description)} code=${mdxStringProp(playgroundCode)} />`;
+};
 
 const ensureDir = (dirPath) => {
   if (!fs.existsSync(dirPath)) {
@@ -699,11 +708,11 @@ const renderUnitsReferenceSection = () => {
   lines.push("### Rate patterns");
   lines.push("");
   lines.push("```smartpad");
-  lines.push("download = 6 Mbit/s * 2 h =>");
-  lines.push("download to MB =>");
+  lines.push("download = 6 Mbit/s * 2 h");
+  lines.push("download to MB");
   lines.push("egress = $0.09/GB");
   lines.push("traffic = 12 TB/month");
-  lines.push("cost = egress * (traffic in GB/month) =>");
+  lines.push("cost = egress * (traffic in GB/month)");
   lines.push("```");
   lines.push("");
 
@@ -799,8 +808,8 @@ const renderGuidePages = () => {
         "",
         "1. Write a fact or assumption as plain text math.",
         "2. Let live results validate your direction while typing.",
-        "3. Add `=>` when you want explicit result intent on a line.",
-        "4. Reuse prior results by clicking/dragging chips instead of retyping.",
+        "3. Reuse prior results by clicking/dragging chips instead of retyping.",
+        "4. Add `=>` only for commands or guardrail checks that need an explicit result.",
         "",
         renderPlayground({
           title: "First complete workflow",
@@ -833,11 +842,11 @@ const renderGuidePages = () => {
           ].join("\n"),
         }),
         "",
-        "## When to use `=>` explicitly",
+        "## When `=>` is still useful",
         "",
-        "- Final outputs you plan to share or screenshot.",
-        "- Lines where explicit trigger improves readability for reviewers.",
+        "- Commands and function-like workflows that require an explicit trigger.",
         "- Guardrail checks where you want intentional error surfacing.",
+        "- Reviewer-facing examples where you need to prove a specific line was deliberately evaluated.",
         "",
         "## Continue",
         "",

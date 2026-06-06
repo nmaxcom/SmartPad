@@ -26,11 +26,11 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 ## Runnable examples
 
-<ExamplePlayground title={"Investment growth exploration"} description={"Track growth sensitivity by varying years."} code={"principal = $12000\nannual return = 9%\nyears = 18\nestimated value = principal * (1 + annual return)^years =>\n@view plot x=years domain=0..40"} />
+<ExamplePlayground title={"Investment growth exploration"} description={"Track growth sensitivity by varying years."} code={"principal = $12000\nannual return = 9%\nyears = 18\nestimated value = principal * (1 + annual return)^years\n@view plot x=years domain=0..40"} />
 
 <ExamplePlayground title={"Two-series comparison"} description={"Compare linear and quadratic behavior in one view."} code={"x = 4\nf = 2*x + 1\ng = x^2\n@view plot x=x y=f,g"} />
 
-<ExamplePlayground title={"Viewport control"} description={"Persist exploration zoom and y-axis intent."} code={"principal = $8000\nrate = 6%\nyears = 30\nfuture = principal * (1 + rate)^years =>\n@view plot x=years domain=0..40 view=5..25 ydomain=0..50000"} />
+<ExamplePlayground title={"Viewport control"} description={"Persist exploration zoom and y-axis intent."} code={"principal = $8000\nrate = 6%\nyears = 30\nfuture = principal * (1 + rate)^years\n@view plot x=years domain=0..40 view=5..25 ydomain=0..50000"} />
 
 ## Guardrail examples
 

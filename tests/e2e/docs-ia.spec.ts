@@ -7,6 +7,8 @@ const expectedSidebarOrder = [
   "Everyday Calculations",
   "Privacy and Portability",
   "Troubleshooting",
+  "Known Limitations",
+  "Support",
   "Feature Contracts",
   "Live Results",
   "Result Chips and References",
@@ -39,6 +41,7 @@ test.describe("Docs information architecture", () => {
 
   test("renders rich example content on start and feature pages", async ({ page }) => {
     await expect(page.getByRole("heading", { name: "Start Here" })).toBeVisible();
+    await expect(page.locator("#__docusaurus-base-url-issue-banner")).toHaveCount(0);
     await expect(page.locator(".example-playground")).toHaveCount(1);
 
     await page.getByRole("link", { name: "Currency and FX" }).click();

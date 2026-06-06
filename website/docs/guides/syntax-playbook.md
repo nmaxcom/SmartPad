@@ -15,7 +15,7 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 - Use lists (`a, b, c`) and ranges (`1..10`) instead of manual repetition.
 - Use phrase operators for business math (`tax on`, `discount off`, `as %`).
 
-<ExamplePlayground title={"Syntax essentials"} description={"Common patterns you will use daily."} code={"subtotal = $128\ntax = 8.5%\ntotal = subtotal + subtotal * tax =>\ndistance = 42 km\ndistance in mi =>\nscores = 71, 77, 84, 90, 94\navg(scores) =>"} />
+<ExamplePlayground title={"Syntax essentials"} description={"Common patterns you will use daily."} code={"subtotal = $128\ntax = 8.5%\ntotal = subtotal + subtotal * tax\ndistance = 42 km\ndistance in mi\nscores = 71, 77, 84, 90, 94\navg(scores)"} />
 
 ## Prevent avoidable mistakes
 
@@ -170,10 +170,10 @@ SmartPad treats units and currencies as semantic value types. Conversions and op
 ### Rate patterns
 
 ```smartpad
-download = 6 Mbit/s * 2 h =>
-download to MB =>
+download = 6 Mbit/s * 2 h
+download to MB
 egress = $0.09/GB
 traffic = 12 TB/month
-cost = egress * (traffic in GB/month) =>
+cost = egress * (traffic in GB/month)
 ```
 

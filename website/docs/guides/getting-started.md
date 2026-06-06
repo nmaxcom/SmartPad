@@ -14,10 +14,10 @@ SmartPad works best when you treat each line like a thought you can compute, not
 
 1. Write a fact or assumption as plain text math.
 2. Let live results validate your direction while typing.
-3. Add `=>` when you want explicit result intent on a line.
-4. Reuse prior results by clicking/dragging chips instead of retyping.
+3. Reuse prior results by clicking/dragging chips instead of retyping.
+4. Add `=>` only for commands or guardrail checks that need an explicit result.
 
-<ExamplePlayground title={"First complete workflow"} description={"A full mini-model using currency, percentages, and conversion."} code={"hours = 40\nrate = $82/hour\ngross = hours * rate =>\ntax = 22% on gross =>\nnet = gross - tax =>\nnet in EUR =>"} />
+<ExamplePlayground title={"First complete workflow"} description={"A full mini-model using currency, percentages, and conversion."} code={"hours = 40\nrate = $82/hour\ngross = hours * rate\ntax = 22% on gross\nnet = gross - tax\nnet in EUR"} />
 
 ## Practical defaults
 
@@ -25,13 +25,13 @@ SmartPad works best when you treat each line like a thought you can compute, not
 - Keep one concept per line and chain values with references.
 - Use units and currencies directly in the value to avoid hidden assumptions.
 
-<ExamplePlayground title={"Range + list quick analysis"} description={"Generate, transform, and summarize without leaving plain text."} code={"commute mins = 28, 31, 26, 34, 29\navg(commute mins) =>\nlate days = commute mins where > 30 =>\ncount(late days) =>\nweeks = 1..4 =>"} />
+<ExamplePlayground title={"Range + list quick analysis"} description={"Generate, transform, and summarize without leaving plain text."} code={"commute mins = 28, 31, 26, 34, 29\navg(commute mins)\nlate days = commute mins where > 30\ncount(late days)\nweeks = 1..4"} />
 
-## When to use `=>` explicitly
+## When `=>` is still useful
 
-- Final outputs you plan to share or screenshot.
-- Lines where explicit trigger improves readability for reviewers.
+- Commands and function-like workflows that require an explicit trigger.
 - Guardrail checks where you want intentional error surfacing.
+- Reviewer-facing examples where you need to prove a specific line was deliberately evaluated.
 
 ## Continue
 

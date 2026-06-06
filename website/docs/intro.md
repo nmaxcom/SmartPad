@@ -24,7 +24,7 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 ## First 90-second win
 
-<ExamplePlayground title={"Personal weekly plan"} description={"Type naturally, then nudge values to explore options."} code={"hours = 38\nrate = $95/hour\nweekly pay = hours * rate =>\ntax = 8.5% on weekly pay =>\ntake home = weekly pay - tax =>\ntake home in EUR =>"} />
+<ExamplePlayground title={"Personal weekly plan"} description={"Type naturally, then nudge values to explore options."} code={"hours = 38\nrate = $95/hour\nweekly pay = hours * rate\ntax = 8.5% on weekly pay\ntake home = weekly pay - tax\ntake home in EUR"} />
 
 ## Learn in this order
 

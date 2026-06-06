@@ -37,9 +37,9 @@ Existing validation:
 | Area | Current state | Launch gap | Required action |
 | --- | --- | --- | --- |
 | Beginner journey | Start Here and Getting Started exist | Journey is docs-first and not yet tied to launch homepage CTAs | Add scripted homepage -> docs -> app example journey after homepage exists. |
-| Known limitations | Mentioned in launch planning only | No public known-limitations page | Add `website/docs/guides/known-limitations.md` before public launch. |
-| Support path | GitHub templates exist | Docs do not clearly tell users where to report bugs or request features | Add support section/page and link it from troubleshooting/footer/homepage. |
-| Privacy/tracking | Privacy and portability covers local storage/import/export | Missing website analytics, signup, FX external dependency, and desktop beta warning copy | Expand privacy docs after signup/analytics decisions. |
+| Known limitations | Public page now exists in `website/docs/guides/known-limitations.md` and generated `public/docs` | Needs user review and homepage link | Review wording before launch and link from homepage. |
+| Support path | Public page now exists in `website/docs/guides/support.md`; GitHub templates exist | Needs user review, issue-template wording review, and homepage link | Review support copy/templates and link support from troubleshooting/footer/homepage. |
+| Privacy/tracking | Privacy and portability covers local storage/import/export, FX, planned signup/analytics boundaries, and desktop beta status | Signup provider/analytics decision is still pending | Keep copy aligned with the final signup/analytics decision before launch. |
 | Desktop beta | Planned in launch docs | Public docs do not explain desktop status or unsigned beta warnings | Add only after a desktop artifact exists; until then say planned/waitlist only. |
 | Proposed-vs-shipped | Specs split exists | Launch funnel could expose proposed features as if shipped | Ensure homepage/docs link primarily to implemented guides/specs. |
 | Troubleshooting | Syntax/conversion/range troubleshooting exists | Missing issue escalation and “what to include in a bug report” | Add escalation steps and link bug template. |

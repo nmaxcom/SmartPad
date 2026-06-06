@@ -26,11 +26,11 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 ## Runnable examples
 
-<ExamplePlayground title={"Duration conversion"} description={"Convert composite durations into scalar target units."} code={"prep = 3h 7min 12s\nprep to min =>\nprep to s =>"} />
+<ExamplePlayground title={"Duration conversion"} description={"Convert composite durations into scalar target units."} code={"prep = 3h 7min 12s\nprep to min\nprep to s"} />
 
-<ExamplePlayground title={"Time-of-day rollover"} description={"Time plus duration wraps with day context."} code={"start = 19:30\nduration = 5h 20min 3s\nfinish = start + duration =>"} />
+<ExamplePlayground title={"Time-of-day rollover"} description={"Time plus duration wraps with day context."} code={"start = 19:30\nduration = 5h 20min 3s\nfinish = start + duration"} />
 
-<ExamplePlayground title={"Datetime with natural duration"} description={"Subtract duration phrases directly from datetime literals."} code={"meeting = 01/04/2025 19:30\ntravel back = meeting - 2hours 1min =>"} />
+<ExamplePlayground title={"Datetime with natural duration"} description={"Subtract duration phrases directly from datetime literals."} code={"meeting = 01/04/2025 19:30\ntravel back = meeting - 2hours 1min"} />
 
 ## Guardrail examples
 

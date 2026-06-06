@@ -53,7 +53,7 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 ## Power-user checklist
 
-- Use explicit `=>` on lines where you want deliberate, explicit result intent.
+- Use explicit `=>` only when a command, guardrail check, or intentional error needs it.
 - Keep assignment lines readable so live feedback highlights intent quickly.
 - Expect no preview for notes/comments/plain text lines.
 

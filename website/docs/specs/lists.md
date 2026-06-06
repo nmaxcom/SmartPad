@@ -26,15 +26,15 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 ## Runnable examples
 
-<ExamplePlayground title={"Monthly expense summary"} description={"Aggregate costs, inspect max, and compute average quickly."} code={"rent = $1250\nutilities = $185\ninternet = $75\nsubscriptions = $49.99\nexpenses = rent, utilities, internet, subscriptions\nsum(expenses) =>\navg(expenses) =>\nmax(expenses) =>"} />
+<ExamplePlayground title={"Monthly expense summary"} description={"Aggregate costs, inspect max, and compute average quickly."} code={"rent = $1250\nutilities = $185\ninternet = $75\nsubscriptions = $49.99\nexpenses = rent, utilities, internet, subscriptions\nsum(expenses)\navg(expenses)\nmax(expenses)"} />
 
-<ExamplePlayground title={"Percent distribution"} description={"Turn category totals into contribution percentages."} code={"expenses = $1250, $185, $75, $49.99\ntotal = sum(expenses) =>\nexpenses / total as % =>"} />
+<ExamplePlayground title={"Percent distribution"} description={"Turn category totals into contribution percentages."} code={"expenses = $1250, $185, $75, $49.99\ntotal = sum(expenses)\nexpenses / total as %"} />
 
-<ExamplePlayground title={"Fitness volume via zip multiply"} description={"Element-wise list math for set planning."} code={"weights = 80 kg, 85 kg, 90 kg\nreps = 5, 5, 3\nvolume = weights * reps =>\nsum(volume) =>"} />
+<ExamplePlayground title={"Fitness volume via zip multiply"} description={"Element-wise list math for set planning."} code={"weights = 80 kg, 85 kg, 90 kg\nreps = 5, 5, 3\nvolume = weights * reps\nsum(volume)"} />
 
 ## Guardrail examples
 
-<ExamplePlayground title={"Nested list rejection"} description={"Aggregators reject nested list shapes."} code={"rent = 1200, 1200\nutilities = 200, 200\nexpenses = rent, utilities\nsum(expenses) =>"} />
+<ExamplePlayground title={"Nested list rejection"} description={"Aggregators reject nested list shapes."} code={"rent = 1200, 1200\nutilities = 200, 200\nexpenses = rent, utilities\nsum(expenses)"} />
 
 <ExamplePlayground title={"Zip length mismatch"} description={"Pairwise operations require equal list lengths."} code={"a = 1, 2, 3\nb = 10, 20\na + b =>"} />
 

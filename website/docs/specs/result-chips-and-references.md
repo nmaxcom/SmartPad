@@ -26,11 +26,11 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 ## Runnable examples
 
-<ExamplePlayground title={"Reference-first budgeting"} description={"Build totals by inserting chips instead of retyping values."} code={"monthly rent = $2500\nphone bill = $45\nfood/day = $50\nfood total = food/day * 30 =>\nmonthly total = monthly rent + phone bill + food total =>"} />
+<ExamplePlayground title={"Reference-first budgeting"} description={"Build totals by inserting chips instead of retyping values."} code={"monthly rent = $2500\nphone bill = $45\nfood/day = $50\nfood total = food/day * 30\nmonthly total = monthly rent + phone bill + food total"} />
 
-<ExamplePlayground title={"Percent workflows with chip reuse"} description={"Use prior results as clean inputs for taxes and discounts."} code={"subtotal = $420\ntax = 8.5% on subtotal =>\ndiscount = 15% off subtotal =>\nfinal total = subtotal + tax - discount =>"} />
+<ExamplePlayground title={"Percent workflows with chip reuse"} description={"Use prior results as clean inputs for taxes and discounts."} code={"subtotal = $420\ntax = 8.5% on subtotal\ndiscount = 15% off subtotal\nfinal total = subtotal + tax - discount"} />
 
-<ExamplePlayground title={"Reference chains across units"} description={"Referenced values keep semantic types (currency/unit/list)."} code={"distance = 42 km\ntime = 52 min\nspeed = distance / time =>\nspeed in km/h =>"} />
+<ExamplePlayground title={"Reference chains across units"} description={"Referenced values keep semantic types (currency/unit/list)."} code={"distance = 42 km\ntime = 52 min\nspeed = distance / time\nspeed in km/h"} />
 
 ## Guardrail examples
 

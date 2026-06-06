@@ -41,6 +41,7 @@ export default function ExamplePlayground({ title, description, code }: ExampleP
     () => buildInlinePreviewUrl(appBasePath, code, title, inlineReloadKey),
     [appBasePath, code, title, inlineReloadKey],
   );
+  const previewHeight = Math.min(500, Math.max(210, 130 + code.split("\n").length * 40));
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(code);
@@ -67,11 +68,7 @@ export default function ExamplePlayground({ title, description, code }: ExampleP
           </a>
         </div>
       </header>
-      <pre>
-        <code className="language-smartpad">{code}</code>
-      </pre>
       <div className="example-playground__inline">
-        <div className="example-playground__inline-label">Live SmartPad Preview (interactive)</div>
         <iframe
           key={inlineUrl}
           src={inlineUrl}
@@ -79,6 +76,7 @@ export default function ExamplePlayground({ title, description, code }: ExampleP
           loading="lazy"
           className="example-playground__iframe"
           scrolling="no"
+          style={{ height: `${previewHeight}px` }}
         />
       </div>
     </section>

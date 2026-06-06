@@ -109,7 +109,7 @@ Exit criteria:
 
 ## Phase 3: Public Docs And Support
 
-Status: audit drafted, public docs not patched.
+Status: first public docs/support pass patched; pending user review, homepage links, and journey verification.
 
 Primary task:
 
@@ -119,13 +119,18 @@ Inputs:
 
 - `aidocs/DOCS_SUPPORT_LAUNCH_AUDIT.md`
 
-Actions:
+Completed so far:
 
 1. Add Known Limitations page.
 2. Add Support page or support section.
 3. Expand Privacy and Portability with FX, signup/analytics, and desktop beta status.
-4. Update sidebar and future homepage links.
-5. Add or update journey verification after homepage exists.
+
+Remaining actions:
+
+1. Review public docs/support wording with the user.
+2. Link support, known limitations, and privacy pages from the future launch homepage.
+3. Add or update journey verification after homepage exists.
+4. Keep local docs generated with `/docs/` base URL; use `/SmartPad/docs/` only for production deploy builds.
 
 Exit criteria:
 
@@ -256,9 +261,9 @@ P0:
 
 P1:
 
-- Known limitations/support docs are not implemented.
 - Release checklist has not been dry-run.
-- Privacy/signup/analytics policy is not finalized in public docs.
+- Support/known limitations/privacy docs need user review and homepage links.
+- Signup/analytics policy is documented as not wired yet; final provider decision is still pending.
 - Autocomplete remains pending user confirmation/spec-status reconciliation before headline use.
 
 ## What Not To Do Yet

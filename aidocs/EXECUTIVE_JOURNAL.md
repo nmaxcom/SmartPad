@@ -6321,3 +6321,34 @@
 *   Risks/blockers:
     *   Public docs/support are materially improved, but homepage and signup path are still missing.
     *   Default `npm run docs:drift` will pass after this commit because the current worktree docs updates are not visible to the default `HEAD~1...HEAD` range until committed.
+
+## Entry J-2026-06-06-13
+
+*   Timestamp: 2026-06-06 14:05 CEST / 2026-06-06 12:05 UTC
+*   Summary:
+    *   User corrected the launch-thread collaboration process after prior changes moved too quickly across product/docs/web work.
+    *   Adopted a block-based workflow: define the block, implement only that block, present a user-review checkpoint, apply requested corrections, and commit only after explicit user confirmation.
+    *   Audited the latest launch commits and found real docs regressions: stale docs IA E2E expectations and checked-in `public/docs` generated with the production `/SmartPad/docs/` base URL, which breaks local `/docs/index.html`.
+    *   User also requested docs playground cleanup: remove the duplicated static code panel from example blocks and update examples to avoid unnecessary explicit triggers.
+*   Decisions:
+    *   Do not continue homepage or new launch features until the current correction block is reviewed.
+    *   Ask before making visible product, design, or strategy assumptions.
+    *   Keep checked-in `public/docs` locally usable with `/docs/`; production `/SmartPad/docs/` output remains a deploy/build concern.
+    *   Public docs examples should rely on live results by default; keep `=>` only where a command, guardrail, or intentional error needs an explicit trigger.
+*   Artifacts changed in the correction block:
+    *   `public/docs/`
+    *   `website/src/components/ExamplePlayground.tsx`
+    *   `website/src/css/custom.css`
+    *   `scripts/generate-docusaurus-docs.js`
+    *   `website/docs/`
+    *   `tests/e2e/docs-ia.spec.ts`
+    *   `aidocs/LAUNCH_EXECUTION_ROADMAP.md`
+    *   `aidocs/DOCS_SUPPORT_LAUNCH_AUDIT.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run docs:docusaurus:publish-local` passed.
+    *   Spot-check confirmed checked-in `public/docs` no longer contains `/SmartPad/docs/` references and uses `/docs/` local paths.
+    *   `npx playwright test tests/e2e/docs-ia.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed.
+    *   `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, `npm run spec:trust`, and `npm run verify:changed` passed.
+*   Risks/blockers:
+    *   Human gate is mandatory before committing this correction block.

@@ -26,15 +26,15 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 ## Runnable examples
 
-<ExamplePlayground title={"Markdown-first sheet"} description={"A sheet remains plain text and portable."} code={"# Weekly planning\nhours = 38\nrate = $95/hour\nweekly pay = hours * rate =>"} />
+<ExamplePlayground title={"Markdown-first sheet"} description={"A sheet remains plain text and portable."} code={"# Weekly planning\nhours = 38\nrate = $95/hour\nweekly pay = hours * rate"} />
 
-<ExamplePlayground title={"Import-ready notebook"} description={"Structure sheets so zip/md imports stay clean and conflict-resistant."} code={"# Trip budget\nhotel = EUR 240\nmeals = EUR 180\ntotal = hotel + meals =>"} />
+<ExamplePlayground title={"Import-ready notebook"} description={"Structure sheets so zip/md imports stay clean and conflict-resistant."} code={"# Trip budget\nhotel = EUR 240\nmeals = EUR 180\ntotal = hotel + meals"} />
 
-<ExamplePlayground title={"Multi-tab safe editing"} description={"Behavioral expectation: updates synchronize across tabs."} code={"# Shared plan\nbaseline = 1200\ntax = 8%\ntotal = baseline + baseline * tax =>"} />
+<ExamplePlayground title={"Multi-tab safe editing"} description={"Behavioral expectation: updates synchronize across tabs."} code={"# Shared plan\nbaseline = 1200\ntax = 8%\ntotal = baseline + baseline * tax"} />
 
 ## Guardrail examples
 
-<ExamplePlayground title={"Title collision import"} description={"Conflicting names should be suffixed instead of overwritten."} code={"# Budget\nrent = $1250\nutilities = $185\nsum(rent, utilities) =>"} />
+<ExamplePlayground title={"Title collision import"} description={"Conflicting names should be suffixed instead of overwritten."} code={"# Budget\nrent = $1250\nutilities = $185\nsum(rent, utilities)"} />
 
 <ExamplePlayground title={"Trash safety workflow"} description={"Deletion should move to trash first, not hard delete by default."} code={"# Notes\nbackup = 1"} />
 
