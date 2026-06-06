@@ -4,6 +4,8 @@
 
 Publish SmartPad as a credible public product while preserving a healthy development loop for continued feature work.
 
+Execution order and critical path live in `aidocs/LAUNCH_EXECUTION_ROADMAP.md`.
+
 Launch should prove three things:
 
 1. A new user understands the product in less than one minute.

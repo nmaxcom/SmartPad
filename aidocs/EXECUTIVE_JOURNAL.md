@@ -6202,3 +6202,31 @@
 *   Risks/blockers:
     *   Settings/onboarding brief is drafted but not implemented.
     *   Launch screenshots, web homepage visuals, and desktop wrapper QA should wait for this product polish.
+
+## Entry J-2026-06-06-10
+
+*   Timestamp: 2026-06-06 13:12 CEST / 2026-06-06 11:12 UTC
+*   Summary:
+    *   Consolidated the launch planning artifacts into a single execution roadmap.
+    *   Added `aidocs/LAUNCH_EXECUTION_ROADMAP.md` with phases, dependencies, critical path, blockers, and what not to do yet.
+    *   Updated `aidocs/LAUNCH_PLAN.md` and `T-2026-06-06-01` to point to the roadmap as the main execution view.
+*   Decisions:
+    *   Launch should execute web-first unless the user explicitly makes standalone desktop mandatory for day one.
+    *   Settings/onboarding implementation is the next product-critical implementation step because it blocks screenshots, homepage visuals, and desktop wrapper QA.
+    *   Desktop beta should follow product polish and release-candidate stability, not precede them.
+*   User directives:
+    *   Continue working toward the launch/publication plan objective and keep priorities ordered.
+*   Assistant commitments:
+    *   Use `aidocs/LAUNCH_EXECUTION_ROADMAP.md` as the current critical-path guide.
+    *   Keep the goal active because implementation, verification, and user scope confirmation remain incomplete.
+*   Artifacts changed:
+    *   `aidocs/LAUNCH_EXECUTION_ROADMAP.md`
+    *   `aidocs/LAUNCH_PLAN.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Pending items:
+    *   `T-2026-06-06-01` remains `in_progress`; next step is user confirmation of scope and critical path.
+    *   Next implementation priority remains `T-2026-06-06-03` settings/onboarding polish.
+*   Risks/blockers:
+    *   Roadmap is complete enough to execute, but launch itself is not complete.
+    *   User confirmation, product polish, stability checks, homepage implementation, docs/support patches, release dry-run, and desktop beta implementation remain open.
