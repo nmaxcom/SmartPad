@@ -6053,3 +6053,32 @@
 *   Risks/blockers:
     *   Audit checklist is drafted but not yet executed.
     *   Machine gates for current planning docs are lightweight; product gates are required when implementation or public assets change.
+
+## Entry J-2026-06-06-05
+
+*   Timestamp: 2026-06-06 12:56 CEST / 2026-06-06 10:56 UTC
+*   Summary:
+    *   Continued launch readiness by creating a desktop packaging decision memo.
+    *   The memo recommends Electron first for the desktop beta because SmartPad is already Vite/React/browser-storage oriented and Electron minimizes launch-time architectural churn.
+    *   Updated launch plan, scope matrix, and `T-2026-06-06-05` to reflect the decision and next implementation spike.
+*   Decisions:
+    *   Start desktop beta work with Electron.
+    *   Treat Tauri as a future optimization candidate, not the first launch implementation path.
+    *   Desktop wrapper work should wait until settings/onboarding polish is underway or complete, so launch screenshots and desktop QA are not duplicated against a weak first-run surface.
+    *   Auto-update, signing/notarization, file associations, and deep links can wait unless the user decides desktop stable release must ship with public launch.
+*   User directives:
+    *   Continue working toward the launch/publication plan objective, including standalone app planning.
+*   Assistant commitments:
+    *   Use `aidocs/DESKTOP_PACKAGING_DECISION.md` as the source for desktop packaging order and acceptance criteria.
+    *   Do not mark desktop packaging complete until an Electron shell/package exists and packaged-build smoke checks pass.
+*   Artifacts changed:
+    *   `aidocs/DESKTOP_PACKAGING_DECISION.md`
+    *   `aidocs/LAUNCH_PLAN.md`
+    *   `aidocs/LAUNCH_SCOPE_MATRIX.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Pending items:
+    *   `T-2026-06-06-05` moved to `in_progress`; next implementation step is a minimal Electron shell after settings/onboarding polish is underway.
+*   Risks/blockers:
+    *   No desktop package exists yet.
+    *   Cross-platform artifacts, signing/notarization, and auto-update remain open release-operation decisions.

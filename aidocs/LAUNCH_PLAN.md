@@ -41,7 +41,7 @@ Reasoning:
 
 ## Scope Rules
 
-Detailed scope evidence lives in `aidocs/LAUNCH_SCOPE_MATRIX.md`. Release-candidate stability checks live in `aidocs/LAUNCH_STABILITY_AUDIT.md`.
+Detailed scope evidence lives in `aidocs/LAUNCH_SCOPE_MATRIX.md`. Release-candidate stability checks live in `aidocs/LAUNCH_STABILITY_AUDIT.md`. Desktop packaging direction lives in `aidocs/DESKTOP_PACKAGING_DECISION.md`.
 
 ### Must Ship For Public Launch
 
@@ -165,6 +165,7 @@ Recommended path:
 - Use the existing Vite/React app as renderer.
 - Keep local data, import/export, docs links, and offline behavior equivalent to web.
 - Treat signing/notarization and auto-update as release operations, not invisible follow-ups.
+- Detailed decision memo: `aidocs/DESKTOP_PACKAGING_DECISION.md`.
 
 Decision criteria:
 
