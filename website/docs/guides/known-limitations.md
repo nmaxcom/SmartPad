@@ -1,41 +1,41 @@
 ---
 title: "Known Limitations"
 sidebar_position: 7
-description: "Understand what SmartPad supports today, what is planned, and how to protect important work."
+description: "A plain-language view of what works today, where SmartPad is careful, and how to protect important work."
 ---
 
 # Known Limitations
 
-SmartPad is ready to use as a local-first calculation workspace, but the public launch should be explicit about current boundaries.
+SmartPad is useful today, but it is better to be clear about its edges. This page is here so you know what to trust, what to double-check, and what is not part of the app yet.
 
-## Storage and accounts
+## Your sheets live in this browser
 
-- SmartPad does not have accounts, cloud sync, team workspaces, or collaboration.
+- SmartPad does not currently have accounts, cloud sync, team workspaces, or collaboration.
 - Sheets are stored locally in the browser profile with IndexedDB.
 - Browser profile resets, device migrations, private browsing, or storage cleanup tools can remove local data.
-- Export important work with `Download All` before browser/profile/device migrations.
+- Use `Download All` before changing browsers, devices, or profiles.
 
-## Privacy and telemetry
+## Privacy boundaries
 
 - The app does not send sheet content to a SmartPad backend.
 - There is no hidden in-app telemetry for sheet text, calculations, variables, or imported files.
-- Any future website signup or analytics must be documented separately from app usage.
+- If the website later offers update signup or analytics, that should be explained separately from app usage.
 
 ## Currency and external data
 
 - Currency conversions can depend on external FX providers and cached rates.
-- Offline/cached FX behavior is shown in the app when rates are unavailable.
-- FX values are practical planning data, not financial advice or guaranteed market quotes.
+- If rates are unavailable, SmartPad should make that visible instead of pretending nothing happened.
+- Treat FX values as planning data, not financial advice or guaranteed market quotes.
 
-## Desktop app status
+## Desktop app
 
-- Desktop packaging is planned as a beta path, starting with Electron.
-- Until a signed artifact exists, the public launch should not promise polished native installers.
-- Unsigned beta builds may trigger operating-system warnings and should be labeled as beta.
+- Desktop packaging is expected to start as a beta path.
+- Until signed installers exist, use the web app as the main version.
+- Unsigned beta builds may trigger operating-system warnings and should be labeled clearly.
 
-## Features not shipped yet
+## Not in the app yet
 
-These are roadmap or proposed ideas, not public-launch promises:
+These are common things people may expect, but they are not part of SmartPad today:
 
 - Cloud sync, accounts, and collaboration
 - Full structured tables
@@ -45,8 +45,8 @@ These are roadmap or proposed ideas, not public-launch promises:
 - Plugin marketplace or plugin system
 - Signed desktop installers for every operating system
 
-## Practical guardrails
+## Good habits
 
-- Keep important models in plain Markdown exports.
+- Keep important models backed up as plain Markdown exports.
 - Remove sensitive data before posting screenshots, videos, or issue examples.
 - Check [Support](../support) when a calculation looks wrong, storage behaves unexpectedly, or import/export does not work.

@@ -1,26 +1,22 @@
 ---
-title: "Feature Contracts"
+title: "Feature Guides"
 sidebar_position: 9
-description: "Deep behavior guarantees for every major SmartPad feature."
+description: "A deeper, user-facing guide to each major SmartPad feature."
 ---
 
-# Feature Contracts
+# Feature Guides
 
-Each page below translates the authoritative spec into a practical guide with runnable examples and guardrail scenarios.
+These pages go deeper than the quick guides. Use them when you want to understand one SmartPad feature well enough to rely on it in a real sheet.
 
 ## Read in order
 
-1. [Live Results](./live-results) - See valid results while typing, without adding `=>` on every line.
-2. [Result Chips and References](./result-chips-and-references) - Reuse results as draggable, copyable chips with stable dependency links.
-3. [Plotting and Dependency Views](./plotting-and-dependency-views) - Turn expressions into exploratory views with `@view` directives.
-4. [Currency and FX](./currency-and-fx) - Treat currency as first-class units with live FX + manual overrides.
-5. [Duration and Time Values](./duration-and-time-values) - Work with duration literals, time-of-day math, and datetime arithmetic.
-6. [Lists](./lists) - Model repeated values with aggregation, mapping, filtering, and zip math.
-7. [Ranges](./ranges) - Generate numeric/date/time lists with predictable `..` span semantics.
-8. [Locale Date and Time](./locale-date-time) - Parse locale-friendly dates and route temporal ranges reliably.
-9. [File Management](./file-management) - Local-first sheet durability with autosave, trash, import, and export.
-
-## Source of truth
-
-Canonical spec documents live under `docs/Specs/*.spec.md` in the repository.
+1. [Live Results](./live-results) - See useful results while you type, without adding `=>` to every line.
+2. [Result Chips and References](./result-chips-and-references) - Reuse previous results without retyping values or losing where they came from.
+3. [Plotting and Dependency Views](./plotting-and-dependency-views) - Turn a sheet into something you can explore, not just read.
+4. [Currency and FX](./currency-and-fx) - Work with money naturally, including conversions and fallback rates.
+5. [Duration and Time Values](./duration-and-time-values) - Add, compare, and plan with durations, times, and dates.
+6. [Lists](./lists) - Work with repeated values without turning the sheet into a grid.
+7. [Ranges](./ranges) - Generate number, date, and time sequences with `..`.
+8. [Locale Date and Time](./locale-date-time) - Write dates in familiar formats and keep date ranges predictable.
+9. [File Management](./file-management) - Keep sheets saved locally, recoverable, and easy to export.
 

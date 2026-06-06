@@ -27,9 +27,23 @@ Existing coverage:
 
 Launch gap:
 
-- Settings expose many real controls, but the structure reads like implementation categories rather than public-user decisions.
+- Settings expose many real controls, but the current surface does not yet feel like a professional app settings experience.
+- The first launch IA pass improved grouping, but it is not enough for public launch; Settings needs a from-scratch visual and interaction redesign.
 - First-run quick tour is feature-dense and useful, but it needs product-level framing so a new user knows what to do first.
-- Final launch screenshots should wait until settings/onboarding polish lands.
+- Final launch screenshots should wait until the professional Settings redesign lands.
+
+## Settings Redesign Direction
+
+Settings must be redesigned from scratch as a professional app surface, not iterated as a web-project modal.
+
+Before implementation, get user review for:
+
+- Overall layout model.
+- Density and spacing.
+- Section hierarchy.
+- Control styling and interaction states.
+- What belongs in basic vs advanced settings.
+- Screenshot-worthy first viewport.
 
 ## Settings IA Recommendation
 

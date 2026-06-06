@@ -6352,3 +6352,47 @@
     *   `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, `npm run spec:trust`, and `npm run verify:changed` passed.
 *   Risks/blockers:
     *   Human gate is mandatory before committing this correction block.
+
+## Entry J-2026-06-06-14
+
+*   Timestamp: 2026-06-06 14:45 CEST / 2026-06-06 12:45 UTC
+*   Summary:
+    *   User corrected two launch strategy assumptions: the promotional website must be a separate product website built from scratch, not Docusaurus, and it must be the final launch step.
+    *   User clarified that Settings needs a from-scratch professional app redesign, not another incremental polish pass.
+    *   User requested Docusaurus visual cleanup: background `#222450`, remove stacked page backgrounds, and set table-of-contents text to `1rem`.
+    *   User flagged that Docusaurus under-explained SmartPad's unit support by showing the short named-unit table without explaining dynamic SI prefixes and compound unit algebra.
+    *   User clarified that SmartPad example blocks in Docusaurus should be interactive playgrounds, and asked to use the units section to show a more complex conversion.
+    *   User approved a broader editorial pass to make public documentation feel human, practical, and user-facing instead of synthetic or internally framed.
+*   Decisions:
+    *   Docusaurus remains documentation infrastructure only.
+    *   Promotional website work waits until product UI, stability, docs/support, release operations, and desktop beta status are settled.
+    *   Visible product/design/strategy decisions continue to require user checkpoints before implementation.
+    *   The units reference should frame the named-unit table as a quick reference only; the real capability includes runtime SI-prefix resolution, dimensional checks, compatible conversions, and compound-unit parsing.
+    *   Docusaurus examples that demonstrate SmartPad syntax should use `ExamplePlayground` unless they are not meant to be runnable.
+    *   Public docs should avoid internal launch/spec/roadmap language. Deep pages are now presented as user-facing "Feature Guides" rather than "Feature Contracts".
+*   Artifacts changed in this block:
+    *   `scripts/generate-docusaurus-docs.js`
+    *   `website/docs/guides/syntax-playbook.md`
+    *   `website/docs/intro.md`
+    *   `website/docs/guides/`
+    *   `website/docs/specs/`
+    *   `website/src/css/custom.css`
+    *   `aidocs/LAUNCH_EXECUTION_ROADMAP.md`
+    *   `aidocs/WEB_LAUNCH_BRIEF.md`
+    *   `aidocs/LAUNCH_SCOPE_MATRIX.md`
+    *   `aidocs/SETTINGS_ONBOARDING_LAUNCH_BRIEF.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+    *   `public/docs/` after local docs regeneration
+*   Validation:
+    *   `npm run docs:docusaurus:publish-local` passed.
+    *   Generated Syntax Playbook now shows populated SI prefix groups, compound unit algebra examples, and a "Named-unit quick reference" label before the old table.
+    *   Generated Syntax Playbook now renders the compound-unit and rate examples as interactive playgrounds, including `kg/m^2` to `g/cm^2` and `9L/min*18min` to `m^3`.
+    *   Generated public docs no longer contain the checked phrases `roadmap`, `public-launch`, `Feature Contract(s)`, `authoritative`, `Canonical spec`, `guardrail`, `Critical behavior`, `Power-user`, `proposed ideas`, `this spec`, or `proposed extension`.
+    *   Docs IA test was updated from `Feature Contracts` to `Feature Guides`.
+    *   `npm run test:unit -- tests/unit/definitions.test.ts tests/unit/quantity.test.ts tests/unit/implicitMultiplicationAndCompactRate.test.ts tests/unit/unitAliasEdgeCases.test.ts --runInBand` passed.
+    *   Screenshot check on `/docs/guides/syntax-playbook/` confirmed the flat `#222450` Docusaurus background, no stacked H1 backdrop, and larger table-of-contents text.
+    *   `npx playwright test tests/e2e/docs-ia.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed.
+    *   `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, `npm run spec:trust`, `npm run build`, and `npm run verify:changed` passed.
+*   Risks/blockers:
+    *   Human gate is mandatory before committing this correction block.

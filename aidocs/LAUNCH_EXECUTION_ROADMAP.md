@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This is the single execution view for the SmartPad launch thread. It orders the launch work across product polish, stability, public website, docs/support, desktop beta, release operations, and post-launch development.
+This is the single execution view for the SmartPad launch thread. It orders the launch work across product polish, stability, docs/support, desktop beta, release operations, a final standalone promotional website, and post-launch development.
 
 Detailed source artifacts:
 
@@ -19,9 +19,10 @@ Detailed source artifacts:
 Ship in this order:
 
 1. **Web-first public launch candidate**
-2. **Public website/docs/support launch**
+2. **Public docs/support and release operations**
 3. **Desktop beta after product first-run polish is stable**
-4. **Continuous post-launch feature/reliability loop**
+4. **Standalone promotional product website as the final launch step**
+5. **Continuous post-launch feature/reliability loop**
 
 The desktop beta is important, but it should not block the web-first launch unless the user explicitly decides that standalone apps are mandatory for day one.
 
@@ -54,7 +55,7 @@ Exit criteria:
 
 ## Phase 1: Product First-Run Polish
 
-Status: next implementation priority.
+Status: first IA pass exists but is not launch-grade; settings need a from-scratch professional app redesign.
 
 Primary task:
 
@@ -71,11 +72,12 @@ Inputs:
 
 Actions:
 
-1. Reorganize settings around user intent.
-2. Make advanced controls visually subordinate.
-3. Add lightweight first-run guidance without blocking typing.
-4. Verify settings persistence/reset/date locale/reuse controls.
-5. Capture first-run and settings screenshots after implementation.
+1. Redesign Settings from scratch as a professional app surface, not a web-project settings modal.
+2. Define the visible settings IA, density, interaction states, and hierarchy with user review before implementation.
+3. Make advanced controls visually subordinate without hiding important launch controls.
+4. Add lightweight first-run guidance without blocking typing.
+5. Verify settings persistence/reset/date locale/reuse controls.
+6. Capture first-run and settings screenshots after implementation.
 
 Exit criteria:
 
@@ -137,36 +139,7 @@ Exit criteria:
 - Public docs expose limitations, support, privacy, and beginner journey.
 - Docs build/drift/spec gates pass.
 
-## Phase 4: Web Launch Site And Assets
-
-Status: brief drafted, implementation missing.
-
-Primary tasks:
-
-- `T-2026-06-06-04`
-- `T-2026-06-06-08`
-
-Inputs:
-
-- `aidocs/WEB_LAUNCH_BRIEF.md`
-- Product screenshots from Phase 1 and Phase 2.
-
-Actions:
-
-1. Decide signup provider or link-out path.
-2. Build Docusaurus-first launch homepage unless constrained.
-3. Add real screenshots/video from verified build.
-4. Add Open Graph metadata and launch assets.
-5. Verify homepage CTAs, docs/app/support/release links, responsive layout, and privacy copy.
-
-Exit criteria:
-
-- Homepage builds and deploy path is verified.
-- Signup/update path works or is intentionally link-out.
-- Assets render correctly at desktop/mobile widths.
-- App remains free of hidden telemetry.
-
-## Phase 5: Release Candidate Dry Run
+## Phase 4: Release Candidate Dry Run
 
 Status: checklist exists, no dry run yet.
 
@@ -178,14 +151,14 @@ Inputs:
 
 - `RELEASE_CHECKLIST.md`
 - `CHANGELOG.md`
-- Phase 1-4 verification results.
+- Phase 1-3 verification results.
 
 Actions:
 
 1. Update changelog for release candidate.
 2. Run checklist commands.
 3. Confirm Pages build/deploy path.
-4. Confirm public app/docs/homepage/support/signup links.
+4. Confirm public app/docs/support links.
 5. Record known limitations.
 
 Exit criteria:
@@ -194,7 +167,7 @@ Exit criteria:
 - Changelog and release notes are current.
 - Candidate can be tagged or explicitly held with reasons.
 
-## Phase 6: Desktop Beta
+## Phase 5: Desktop Beta
 
 Status: decision made, implementation missing.
 
@@ -221,6 +194,37 @@ Exit criteria:
 - Unsigned warnings are documented.
 - Website desktop CTA is accurate for actual artifact status.
 
+## Phase 6: Standalone Promotional Product Website
+
+Status: direction corrected; implementation intentionally last.
+
+Primary tasks:
+
+- `T-2026-06-06-04`
+- `T-2026-06-06-08`
+
+Inputs:
+
+- `aidocs/WEB_LAUNCH_BRIEF.md`
+- Finalized product UI from Phase 1.
+- Verified launch candidate and desktop artifact status from Phases 4-5.
+
+Actions:
+
+1. Decide signup provider or link-out path.
+2. Build a separate promotional product website from scratch; it must not be a Docusaurus page and must not share the docs IA.
+3. Make the site aesthetically modern and product-led, with real videos using the app and interactive examples.
+4. Add real screenshots/video from verified build.
+5. Add Open Graph metadata and launch assets.
+6. Verify CTAs, app/docs/support/download/signup links, responsive layout, privacy copy, and media loading.
+
+Exit criteria:
+
+- Promotional site builds and deploy path is verified.
+- Signup/update path works or is intentionally link-out.
+- Assets render correctly at desktop/mobile widths.
+- App remains free of hidden telemetry.
+
 ## Phase 7: Continuous Development After Launch
 
 Status: policy exists, operational discipline required.
@@ -242,33 +246,33 @@ Rules:
 ## Current Critical Path
 
 1. Confirm scope with user.
-2. Implement settings/onboarding polish.
+2. Redesign Settings from scratch as a professional app surface.
 3. Run launch stability checks.
 4. Patch docs/support/known limitations.
-5. Build homepage and capture assets.
-6. Dry-run release checklist.
-7. Implement desktop beta shell.
+5. Dry-run release checklist.
+6. Implement desktop beta shell.
+7. Build standalone promotional website and capture final assets.
 
 ## Current Blockers
 
 P0:
 
 - Launch scope lacks explicit user confirmation.
-- Settings/onboarding polish is not implemented.
+- Settings needs a from-scratch professional redesign.
 - Launch stability checks have not been executed.
-- Homepage/signup/assets are not implemented.
 - Desktop packaging is not implemented.
+- Standalone promotional website/signup/assets are not implemented and intentionally come last.
 
 P1:
 
 - Release checklist has not been dry-run.
-- Support/known limitations/privacy docs need user review and homepage links.
+- Support/known limitations/privacy docs need user review and eventual promotional-site links.
 - Signup/analytics policy is documented as not wired yet; final provider decision is still pending.
 - Autocomplete remains pending user confirmation/spec-status reconciliation before headline use.
 
 ## What Not To Do Yet
 
-- Do not capture final marketing screenshots before settings/onboarding polish.
+- Do not capture final marketing screenshots before Settings is professionally redesigned and the launch candidate is stable.
 - Do not promise desktop downloads before an artifact exists.
 - Do not add hidden app telemetry.
 - Do not market proposed features as shipped.

@@ -8,30 +8,30 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 # Getting Started
 
-SmartPad works best when you treat each line like a thought you can compute, not a cell you have to manage.
+SmartPad works best when you treat each line like a thought you can compute, not a cell you have to babysit.
 
-## Core loop
+## The basic rhythm
 
-1. Write a fact or assumption as plain text math.
-2. Let live results validate your direction while typing.
-3. Reuse prior results by clicking/dragging chips instead of retyping.
-4. Add `=>` only for commands or guardrail checks that need an explicit result.
+1. Write a fact or assumption in plain text.
+2. Let the live result tell you whether the line makes sense.
+3. Reuse prior results by clicking or dragging chips instead of retyping values.
+4. Add `=>` when you want to force a result, run a command, or show an intentional error.
 
 <ExamplePlayground title={"First complete workflow"} description={"A full mini-model using currency, percentages, and conversion."} code={"hours = 40\nrate = $82/hour\ngross = hours * rate\ntax = 22% on gross\nnet = gross - tax\nnet in EUR"} />
 
-## Practical defaults
+## Habits that age well
 
-- Use descriptive variable names (`monthly rent`, `fuel cost`) to keep sheets readable.
-- Keep one concept per line and chain values with references.
-- Use units and currencies directly in the value to avoid hidden assumptions.
+- Use names you would understand next month (`monthly rent`, `fuel cost`).
+- Keep one idea per line, then build from previous lines.
+- Put units and currencies directly on the value so assumptions are visible.
 
 <ExamplePlayground title={"Range + list quick analysis"} description={"Generate, transform, and summarize without leaving plain text."} code={"commute mins = 28, 31, 26, 34, 29\navg(commute mins)\nlate days = commute mins where > 30\ncount(late days)\nweeks = 1..4"} />
 
-## When `=>` is still useful
+## When `=>` is still worth using
 
-- Commands and function-like workflows that require an explicit trigger.
-- Guardrail checks where you want intentional error surfacing.
-- Reviewer-facing examples where you need to prove a specific line was deliberately evaluated.
+- Commands and workflows that need an explicit run.
+- Examples where you want to show the exact error SmartPad gives.
+- Notes you are sharing with someone else, where an explicit result makes the sheet easier to read.
 
 ## Continue
 

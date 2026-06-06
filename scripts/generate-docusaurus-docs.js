@@ -13,7 +13,7 @@ const SPEC_CATALOG = [
     fileName: "LiveResult.spec.md",
     slug: "live-results",
     title: "Live Results",
-    summary: "See valid results while typing, without adding `=>` on every line.",
+    summary: "See useful results while you type, without adding `=>` to every line.",
     focus: [
       "Fast feedback while you type",
       "Success-only live rendering (no noisy live errors)",
@@ -25,7 +25,7 @@ const SPEC_CATALOG = [
       "Turning `liveResultEnabled` off restores explicit-only behavior.",
     ],
     checklist: [
-      "Use explicit `=>` only when a command, guardrail check, or intentional error needs it.",
+      "Use explicit `=>` only when you want SmartPad to show a deliberate result or a deliberate error.",
       "Keep assignment lines readable so live feedback highlights intent quickly.",
       "Expect no preview for notes/comments/plain text lines.",
     ],
@@ -65,9 +65,9 @@ const SPEC_CATALOG = [
     fileName: "ResultChipsAndValueGraph.spec.md",
     slug: "result-chips-and-references",
     title: "Result Chips and References",
-    summary: "Reuse results as draggable, copyable chips with stable dependency links.",
+    summary: "Reuse previous results without retyping values or losing where they came from.",
     focus: [
-      "Live and trigger results share one interaction contract",
+      "Live and triggered results behave the same once SmartPad has enough information",
       "Click/drag/paste chips to build formulas",
       "Stable source-linked references survive reorder and edits",
     ],
@@ -138,7 +138,7 @@ const SPEC_CATALOG = [
     fileName: "Plotting.spec.md",
     slug: "plotting-and-dependency-views",
     title: "Plotting and Dependency Views",
-    summary: "Turn expressions into exploratory views with `@view` directives.",
+    summary: "Turn a sheet into something you can explore, not just read.",
     focus: [
       "Explore how results depend on chosen inputs",
       "Persist key insights as detached `@view` blocks",
@@ -202,7 +202,7 @@ const SPEC_CATALOG = [
     fileName: "Currency.spec.md",
     slug: "currency-and-fx",
     title: "Currency and FX",
-    summary: "Treat currency as first-class units with live FX + manual overrides.",
+    summary: "Work with money naturally, including conversions and fallback rates.",
     focus: [
       "Currency behaves like unit-aware data, not plain strings",
       "`to`/`in` conversions use live FX with deterministic fallback",
@@ -259,7 +259,7 @@ const SPEC_CATALOG = [
     fileName: "duration.spec.md",
     slug: "duration-and-time-values",
     title: "Duration and Time Values",
-    summary: "Work with duration literals, time-of-day math, and datetime arithmetic.",
+    summary: "Add, compare, and plan with durations, times, and dates.",
     focus: [
       "Duration is a first-class value with flexible literal forms",
       "Time-of-day arithmetic supports rollovers with clear hints",
@@ -311,7 +311,7 @@ const SPEC_CATALOG = [
     fileName: "Lists.spec.md",
     slug: "lists",
     title: "Lists",
-    summary: "Model repeated values with aggregation, mapping, filtering, and zip math.",
+    summary: "Work with repeated values without turning the sheet into a grid.",
     focus: [
       "Lists make one-line calculations scale to many values",
       "Aggregators reduce lists to scalar decisions",
@@ -381,10 +381,10 @@ const SPEC_CATALOG = [
     fileName: "Ranges.spec.md",
     slug: "ranges",
     title: "Ranges",
-    summary: "Generate numeric/date/time lists with predictable `..` span semantics.",
+    summary: "Generate number, date, and time sequences with `..`.",
     focus: [
       "`..` builds sequences faster than manual list typing",
-      "Step semantics are explicit, directional, and guardrailed",
+      "Steps are explicit, directional, and designed to fail clearly when they do not make sense",
       "Range outputs compose with list math and conversions",
     ],
     syntax: [
@@ -433,7 +433,7 @@ const SPEC_CATALOG = [
     fileName: "Locale.spec.md",
     slug: "locale-date-time",
     title: "Locale Date and Time",
-    summary: "Parse locale-friendly dates and route temporal ranges reliably.",
+    summary: "Write dates in familiar formats and keep date ranges predictable.",
     focus: [
       "Locale-aware parsing handles real-world date input",
       "Range routing prevents parser misclassification",
@@ -485,7 +485,7 @@ const SPEC_CATALOG = [
     fileName: "FileManagement.spec.md",
     slug: "file-management",
     title: "File Management",
-    summary: "Local-first sheet durability with autosave, trash, import, and export.",
+    summary: "Keep sheets saved locally, recoverable, and easy to export.",
     focus: [
       "No-save-button workflow via debounced persistence",
       "Flat sidebar navigation with fast rename/trash/export actions",
@@ -664,6 +664,49 @@ const loadSupportedUnits = () => {
   return Function(`\"use strict\"; return (${literal});`)();
 };
 
+const extractArrayLiteral = (source, marker) => {
+  const start = source.indexOf(marker);
+  if (start === -1) {
+    throw new Error(`Marker not found: ${marker}`);
+  }
+
+  const assignment = source.indexOf("=", start);
+  if (assignment === -1) {
+    throw new Error(`Assignment not found for: ${marker}`);
+  }
+
+  const openBracket = source.indexOf("[", assignment);
+  if (openBracket === -1) {
+    throw new Error(`Opening bracket not found for: ${marker}`);
+  }
+
+  let depth = 0;
+  let closeBracket = -1;
+
+  for (let i = openBracket; i < source.length; i += 1) {
+    const ch = source[i];
+    if (ch === "[") depth += 1;
+    if (ch === "]") depth -= 1;
+    if (depth === 0) {
+      closeBracket = i;
+      break;
+    }
+  }
+
+  if (closeBracket === -1) {
+    throw new Error(`Closing bracket not found for: ${marker}`);
+  }
+
+  return source.slice(openBracket, closeBracket + 1);
+};
+
+const loadSiPrefixes = () => {
+  const definitionsPath = path.join(repoRoot, "src", "units", "definitions.ts");
+  const source = fs.readFileSync(definitionsPath, "utf8");
+  const literal = extractArrayLiteral(source, "const SI_PREFIXES");
+  return Function(`\"use strict\"; return (${literal});`)();
+};
+
 const loadSupportedCurrencySymbols = () => {
   const currencyPath = path.join(repoRoot, "src", "types", "CurrencyValue.ts");
   const source = fs.readFileSync(currencyPath, "utf8");
@@ -680,19 +723,69 @@ const loadSupportedCurrencySymbols = () => {
 
 const renderUnitsReferenceSection = () => {
   const units = loadSupportedUnits();
+  const siPrefixes = loadSiPrefixes();
   const currencies = loadSupportedCurrencySymbols();
   const categories = Object.values(units).filter((category) => category?.name && Array.isArray(category.units));
+  const prefixGroups = [
+    ["Large", siPrefixes.filter((prefix) => prefix.factor > 1)],
+    ["Small", siPrefixes.filter((prefix) => prefix.factor < 1)],
+  ];
 
   const lines = [
     "## Units and rates reference",
     "",
-    "SmartPad treats units and currencies as semantic value types. Conversions and operations stay type-aware instead of string-based.",
+    "SmartPad treats units and currencies as semantic value types. Conversions and operations stay type-aware instead of string-based: compatible units convert, incompatible additions/subtractions are rejected, and multiplication/division creates derived units.",
+    "",
+    "The tables below are a practical quick reference, not the full boundary of what the engine can parse. The runtime also resolves SI prefixes dynamically for registered unit symbols, so families like `m`, `s`, `Pa`, `W`, `A`, `V`, `J`, `Wh`, `Hz`, `L`, `mol`, and `cd` can be used with metric prefixes where the conversion is dimensionally valid.",
+    "",
+    "### SI prefixes",
+    "",
+    "| Group | Prefixes |\n| --- | --- |",
+    ...prefixGroups.map(([label, prefixes]) => {
+      const rendered = prefixes.map((prefix) => `\`${prefix.symbol}\` ${prefix.name}`).join(", ");
+      return `| ${label} | ${rendered} |`;
+    }),
+    "",
+    "Prefix examples: `nm`, `mm`, `cm`, `km`, `ms`, `kPa`, `MW`, `mA`, `uA`, `µA`, `kWh`, `MHz`.",
+    "",
+    "### Compound unit algebra",
+    "",
+    "SmartPad understands products, divisions, powers, compact units, and explicit conversion targets:",
+    "",
+    renderPlayground({
+      title: "Compound units and conversions",
+      description: "Mix prefixes, derived units, compact rates, and conversion targets.",
+      code: [
+        "distance = 120 km",
+        "time = 90 min",
+        "speed = distance / time",
+        "speed in m/s",
+        "acceleration = 9.8 m/s^2",
+        "force = 75 kg * acceleration",
+        "force in N",
+        "energy = force * 3 m",
+        "energy in J",
+        "pressure = 101.3 kPa",
+        "pressure in psi",
+        "surface load = 5 kg/m^2",
+        "surface load in g/cm^2",
+        "batch volume = 9L/min*18min",
+        "batch volume in m^3",
+      ].join("\n"),
+    }),
+    "",
+    "Composite units can also be converted across prefixes when the dimensions match, for example `kg/m^2` to `g/cm^2`, `m^3` to `L`, `kWh/month` to `Wh/day`, or `$0.09/GB * 12 TB/month` after converting the traffic side to a compatible rate.",
+    "",
+    "Unknown plain-word labels are treated as count-style units when they are safe to interpret that way, which lets domain examples such as `task`, `ticket`, or `user/month` behave like unit-bearing values. Use explicit aliases when a project needs a stable business meaning.",
     "",
     "### Currency symbols/codes",
     "",
     currencies.map((symbol) => `\`${symbol}\``).join(", "),
     "",
   ];
+
+  lines.push("### Named-unit quick reference");
+  lines.push("");
 
   categories.forEach((category) => {
     lines.push(`### ${category.name}`);
@@ -707,13 +800,20 @@ const renderUnitsReferenceSection = () => {
 
   lines.push("### Rate patterns");
   lines.push("");
-  lines.push("```smartpad");
-  lines.push("download = 6 Mbit/s * 2 h");
-  lines.push("download to MB");
-  lines.push("egress = $0.09/GB");
-  lines.push("traffic = 12 TB/month");
-  lines.push("cost = egress * (traffic in GB/month)");
-  lines.push("```");
+  lines.push(
+    renderPlayground({
+      title: "Rates across units",
+      description: "Use rates as first-class values, then normalize the unit side before multiplying.",
+      code: [
+        "download = 6 Mbit/s * 2 h",
+        "download in MB",
+        "egress = $0.09/GB",
+        "traffic = 12 TB/month",
+        "billable traffic = traffic in GB/month",
+        "monthly cost = egress * billable traffic",
+      ].join("\n"),
+    }),
+  );
   lines.push("");
 
   return lines.join("\n");
@@ -723,7 +823,7 @@ const renderIntroPage = () => {
   const lines = [
     "---",
     'title: "Start Here"',
-    'description: "Understand what SmartPad is, why it is local-first, and how to learn it in a practical order."',
+        'description: "A gentle first pass through SmartPad: what it is, why it is local-first, and where to begin."',
     "sidebar_position: 1",
     "slug: /",
     "---",
@@ -735,15 +835,15 @@ const renderIntroPage = () => {
     '<div className="doc-hero doc-hero--wide">',
     '<p className="doc-hero__kicker">SmartPad in one minute</p>',
     "<h2>Plain-text thinking with live, trustworthy math</h2>",
-    "<p>SmartPad is a text-native calculation workspace. You write normal lines, get semantic results immediately, and keep everything as portable Markdown you control.</p>",
+        "<p>SmartPad is a plain-text place for working things out. You write the thought, SmartPad keeps the math honest, and the sheet stays readable tomorrow.</p>",
     "</div>",
     "",
-    "## Why people pick SmartPad",
+        "## Why it feels different",
     "",
-    "- **Local-first by default**: your sheets persist in browser storage on your machine, not in a forced cloud backend.",
-    "- **Plain-text portability**: files remain human-readable Markdown (`.md`), so your data stays future-proof.",
-    "- **Semantic math**: units, currencies, durations, lists, ranges, and locale-aware dates behave like real values.",
-    "- **Explorable models**: chips, references, and `@view` directives turn static notes into interactive decision tools.",
+        "- **Your work stays close**: sheets live in browser storage on your machine by default.",
+        "- **The file still makes sense outside the app**: exports are human-readable Markdown (`.md`).",
+        "- **Numbers carry meaning**: units, currencies, durations, lists, ranges, and dates behave like values, not decoration.",
+        "- **You can poke at assumptions**: chips, references, and views make a sheet easier to explore without rewriting it.",
     "",
     "## First 90-second win",
     "",
@@ -760,15 +860,15 @@ const renderIntroPage = () => {
       ].join("\n"),
     }),
     "",
-    "## Learn in this order",
+        "## A good path through the docs",
     "",
     "1. **[Getting Started](./guides/getting-started)**: core mental model + first useful workflows.",
     "2. **[Syntax Playbook](./guides/syntax-playbook)**: write robust expressions and avoid common pitfalls.",
     "3. **[Everyday Calculations](./guides/everyday-calculations)**: practical examples for budgeting, planning, and analysis.",
     "4. **[Privacy and Portability](./guides/privacy-and-portability)**: understand durability, export, and local ownership.",
-    "5. **[Known Limitations](./guides/known-limitations)**: check what is shipped, beta, planned, or intentionally unsupported.",
-    "6. **[Support](./guides/support)**: report bugs, request features, and share reproducible examples safely.",
-    "7. **[Feature Contracts](./specs)**: deep behavior guarantees for each major capability.",
+        "5. **[Known Limitations](./guides/known-limitations)**: know where SmartPad is careful, unfinished, or intentionally quiet.",
+        "6. **[Support](./guides/support)**: report bugs, request features, and share examples safely.",
+        "7. **[Feature Guides](./specs)**: go deeper on each major capability when you need the details.",
     "",
     "## What SmartPad is not",
     "",
@@ -802,14 +902,14 @@ const renderGuidePages = () => {
         "",
         "# Getting Started",
         "",
-        "SmartPad works best when you treat each line like a thought you can compute, not a cell you have to manage.",
+        "SmartPad works best when you treat each line like a thought you can compute, not a cell you have to babysit.",
         "",
-        "## Core loop",
+        "## The basic rhythm",
         "",
-        "1. Write a fact or assumption as plain text math.",
-        "2. Let live results validate your direction while typing.",
-        "3. Reuse prior results by clicking/dragging chips instead of retyping.",
-        "4. Add `=>` only for commands or guardrail checks that need an explicit result.",
+        "1. Write a fact or assumption in plain text.",
+        "2. Let the live result tell you whether the line makes sense.",
+        "3. Reuse prior results by clicking or dragging chips instead of retyping values.",
+        "4. Add `=>` when you want to force a result, run a command, or show an intentional error.",
         "",
         renderPlayground({
           title: "First complete workflow",
@@ -824,11 +924,11 @@ const renderGuidePages = () => {
           ].join("\n"),
         }),
         "",
-        "## Practical defaults",
+        "## Habits that age well",
         "",
-        "- Use descriptive variable names (`monthly rent`, `fuel cost`) to keep sheets readable.",
-        "- Keep one concept per line and chain values with references.",
-        "- Use units and currencies directly in the value to avoid hidden assumptions.",
+        "- Use names you would understand next month (`monthly rent`, `fuel cost`).",
+        "- Keep one idea per line, then build from previous lines.",
+        "- Put units and currencies directly on the value so assumptions are visible.",
         "",
         renderPlayground({
           title: "Range + list quick analysis",
@@ -842,11 +942,11 @@ const renderGuidePages = () => {
           ].join("\n"),
         }),
         "",
-        "## When `=>` is still useful",
+        "## When `=>` is still worth using",
         "",
-        "- Commands and function-like workflows that require an explicit trigger.",
-        "- Guardrail checks where you want intentional error surfacing.",
-        "- Reviewer-facing examples where you need to prove a specific line was deliberately evaluated.",
+        "- Commands and workflows that need an explicit run.",
+        "- Examples where you want to show the exact error SmartPad gives.",
+        "- Notes you are sharing with someone else, where an explicit result makes the sheet easier to read.",
         "",
         "## Continue",
         "",
@@ -861,23 +961,23 @@ const renderGuidePages = () => {
         "---",
         'title: "Syntax Playbook"',
         "sidebar_position: 3",
-        'description: "Write SmartPad syntax that remains readable and robust as models grow."',
+        'description: "Write SmartPad sheets that stay readable as they grow."',
         "---",
         "",
         'import ExamplePlayground from "@site/src/components/ExamplePlayground";',
         "",
         "# Syntax Playbook",
         "",
-        "## Reliable expression patterns",
+        "## Patterns worth remembering",
         "",
-        "- Attach units/currency directly to values (`$85/hour`, `9 L/min`).",
-        "- Use `to` / `in` for explicit conversions.",
-        "- Use lists (`a, b, c`) and ranges (`1..10`) instead of manual repetition.",
-        "- Use phrase operators for business math (`tax on`, `discount off`, `as %`).",
+        "- Put units and currency right next to the value (`$85/hour`, `9 L/min`).",
+        "- Use `to` or `in` when you want a conversion.",
+        "- Use lists (`a, b, c`) and ranges (`1..10`) instead of hand-writing repeated values.",
+        "- Use plain phrases for everyday math (`tax on`, `discount off`, `as %`).",
         "",
         renderPlayground({
           title: "Syntax essentials",
-          description: "Common patterns you will use daily.",
+          description: "Small patterns that make a sheet easier to read and change.",
           code: [
             "subtotal = $128",
             "tax = 8.5%",
@@ -889,16 +989,16 @@ const renderGuidePages = () => {
           ].join("\n"),
         }),
         "",
-        "## Prevent avoidable mistakes",
+        "## A few things to watch",
         "",
-        "- Do not use `->` for conversions; use `to`/`in`.",
-        "- Keep list lengths aligned for pairwise operations.",
-        "- Add explicit `step` for temporal ranges.",
-        "- Prefer `min` for minutes when `m` could mean meters.",
+        "- Use `to` or `in` for conversions; `->` is just text to SmartPad.",
+        "- When you multiply two lists together, make sure they have matching lengths.",
+        "- Give time ranges an explicit `step` so the interval is unambiguous.",
+        "- Write `min` for minutes when `m` could be read as meters.",
         "",
         renderPlayground({
-          title: "Guardrail sampler",
-          description: "Examples that should fail clearly.",
+          title: "Clear errors are useful",
+          description: "These examples are intentionally wrong, so you can see how SmartPad responds.",
           code: ["1...5 =>", "a = 1, 2, 3", "b = 10, 20", "a + b =>", "2026-01-01..2026-01-05 =>"].join("\n"),
         }),
         "",
@@ -912,20 +1012,20 @@ const renderGuidePages = () => {
         "---",
         'title: "Everyday Calculations"',
         "sidebar_position: 4",
-        'description: "Runnable SmartPad examples for real life budgeting, planning, and analysis."',
+        'description: "Practical SmartPad examples for budgeting, planning, travel, work, and data."',
         "---",
         "",
         'import ExamplePlayground from "@site/src/components/ExamplePlayground";',
         "",
         "# Everyday Calculations",
         "",
-        "These examples are spec-grounded and use valid SmartPad syntax so you can copy, run, and adapt immediately.",
+        "The fastest way to learn SmartPad is to start from a real little sheet and change the assumptions. Every example here is meant to be copied, opened, and edited.",
         "",
         "## Personal finance",
         "",
         renderPlayground({
           title: "Monthly budget with category shares",
-          description: "Compute totals and contribution percentages.",
+          description: "A small budget you can adjust without building a spreadsheet.",
           code: [
             "rent = $1250",
             "utilities = $185",
@@ -941,7 +1041,7 @@ const renderGuidePages = () => {
         "",
         renderPlayground({
           title: "Trip cost with FX",
-          description: "Mix local costs and convert to your reporting currency.",
+          description: "Add costs in one currency, then view the trip in another.",
           code: [
             "hotel = EUR 240",
             "food = EUR 180",
@@ -955,7 +1055,7 @@ const renderGuidePages = () => {
         "",
         renderPlayground({
           title: "Hourly rate planning",
-          description: "Project weekly/monthly scenarios from one base rate.",
+          description: "Turn one hourly rate into weekly and monthly planning numbers.",
           code: [
             "hourly = $85/hour",
             "weekly hours = 38",
@@ -969,7 +1069,7 @@ const renderGuidePages = () => {
         "",
         renderPlayground({
           title: "Time slots and date ranges",
-          description: "Generate planning windows with explicit temporal steps.",
+          description: "Generate planning windows without hand-writing every date or time.",
           code: [
             "slots = 09:00..11:00 step 30 min =>",
             "sprint days = 2026-01-01..2026-01-14 step 1 day =>",
@@ -981,7 +1081,7 @@ const renderGuidePages = () => {
         "",
         renderPlayground({
           title: "Bandwidth and storage",
-          description: "Use compound units and convert cleanly.",
+          description: "Let rates, storage units, and billing units do the bookkeeping.",
           code: [
             "download = 6 Mbit/s * 2 h =>",
             "download to GB =>",
@@ -999,34 +1099,31 @@ const renderGuidePages = () => {
         "---",
         'title: "Privacy and Portability"',
         "sidebar_position: 5",
-        'description: "Understand SmartPad’s local-first storage model and plain-text portability."',
+        'description: "How SmartPad stores your work, what stays local, and how to keep important sheets portable."',
         "---",
         "",
         "# Privacy and Portability",
         "",
-        "SmartPad is designed so your work remains yours:",
+        "SmartPad is built around a simple idea: your notes and calculations should still belong to you after the tool is closed.",
         "",
-        "- **Local-first persistence**: sheets are stored in your browser via IndexedDB.",
-        "- **No proprietary lock-in format**: content remains plain Markdown text.",
-        "- **Import/export flexibility**: individual `.md` download plus bulk zip workflows.",
-        "- **Recoverability**: trash/restore flows prevent accidental hard deletion.",
-        "- **No hidden sheet telemetry**: the app does not send sheet text, calculations, variables, or imported files to a SmartPad backend.",
+        "- **Local-first storage**: sheets are saved in your browser using IndexedDB.",
+        "- **Readable exports**: your content remains plain Markdown text.",
+        "- **Easy escape hatch**: download one sheet as `.md`, or export everything as a zip.",
+        "- **Recoverable deletes**: trash/restore flows help prevent accidental permanent loss.",
+        "- **No hidden sheet telemetry**: SmartPad does not send sheet text, calculations, variables, or imported files to a SmartPad backend.",
         "",
-        "## Durability model",
+        "## How saving works",
         "",
-        "1. Typing is autosaved after idle debounce (default spec target: 1500ms).",
-        "2. Multi-tab synchronization uses broadcast events to prevent stale tab overwrite.",
-        "3. Sheet identity is stable even when titles change.",
-        "4. Browser storage durability depends on the browser profile, device, and storage cleanup settings.",
+        "SmartPad autosaves after you pause typing, keeps the same sheet identity when a title changes, and coordinates updates across tabs. The main thing to remember is that browser storage belongs to the browser profile, so profile resets, private browsing, or cleanup tools can remove local data.",
         "",
-        "## Website signup and analytics",
+        "## Signup and analytics",
         "",
-        "SmartPad can have a public website, docs, and update signup separate from the app itself.",
+        "A future update signup belongs to the website, not to your sheets.",
         "",
-        "- Signing up for updates should not be required to use the app.",
-        "- Website analytics, if enabled, should measure website usage only.",
-        "- Website analytics must not collect sheet content, calculation text, imported files, or local sheet metadata.",
-        "- Any signup provider or analytics provider should be documented on the launch website before it is enabled.",
+        "- You should not need to sign up just to use SmartPad.",
+        "- Website analytics, if enabled, should measure the website only.",
+        "- Analytics should not collect sheet content, calculation text, imported files, or local sheet metadata.",
+        "- Any provider used for updates or analytics should be disclosed where people sign up.",
         "",
         "## Currency and external rates",
         "",
@@ -1039,11 +1136,10 @@ const renderGuidePages = () => {
         "",
         "## Desktop beta status",
         "",
-        "The desktop app is planned as a beta distribution path, not a current launch guarantee.",
+        "Desktop builds are still a beta path. Use the web app as the dependable default until packaged builds are clearly marked and tested.",
         "",
-        "- Web launch remains the primary distribution path until packaged builds exist.",
         "- Early desktop builds may be unsigned and may show operating-system warnings.",
-        "- Desktop release notes should state which platforms were actually built and smoke-tested.",
+        "- Release notes should say exactly which platforms were built and smoke-tested.",
         "",
         "## What to do before sharing publicly",
         "",
@@ -1051,17 +1147,17 @@ const renderGuidePages = () => {
         "- Use `Download All` before browser/profile migrations.",
         "- Confirm sensitive notes are removed from examples before posting screenshots.",
         "",
-        "## Future-proofing checklist",
+        "## Make sheets easier to keep",
         "",
-        "- Keep important models in descriptive Markdown headings.",
-        "- Prefer explicit units/currencies so values retain meaning outside SmartPad UI.",
-        "- Store long-term archives as exported `.md` files in your own versioned storage.",
+        "- Give important models clear Markdown headings.",
+        "- Keep units and currencies explicit so values make sense outside the UI.",
+        "- Archive long-lived work as exported `.md` files in storage you control.",
         "",
         "## When to ask for help",
         "",
-        "Use [Support](../support) for wrong calculations, storage/import/export problems, settings bugs, docs errors, or launch beta feedback.",
+        "Use [Support](../support) for wrong calculations, storage/import/export problems, settings bugs, docs errors, or beta feedback.",
         "",
-        "## Related deep contract",
+        "## Related details",
         "",
         "- [File Management](../../specs/file-management)",
         "",
@@ -1073,30 +1169,30 @@ const renderGuidePages = () => {
         "---",
         'title: "Troubleshooting"',
         "sidebar_position: 6",
-        'description: "Fast diagnosis patterns for SmartPad syntax, conversion, and range issues."',
+        'description: "Simple ways to narrow down syntax, conversion, and range issues."',
         "---",
         "",
         'import ExamplePlayground from "@site/src/components/ExamplePlayground";',
         "",
         "# Troubleshooting",
         "",
-        "## If a conversion fails",
+        "## If a conversion does not work",
         "",
-        "- Check target syntax (`to`/`in`) and unit/currency spelling.",
-        "- Ensure source and target dimensions are compatible.",
-        "- For FX conversions, confirm rate source or manual override availability.",
+        "- Check that you used `to` or `in`, and that the unit or currency is spelled the way SmartPad expects.",
+        "- Make sure the units are the same kind of thing. `km` can become `m`; `kg` cannot become `s`.",
+        "- For currency conversion, rates need either a live source or cached data.",
         "",
         "## If a range fails",
         "",
-        "- Use `..` (not `to`) for generation.",
-        "- For temporal ranges, include explicit duration step.",
-        "- Verify step sign matches direction.",
+        "- Use `..` to generate a range.",
+        "- For dates and times, include a duration step such as `step 1 day` or `step 30 min`.",
+        "- Make sure the step moves in the same direction as the range.",
         "",
         "## If list math fails",
         "",
-        "- Validate list lengths for pairwise operations.",
-        "- Avoid nested lists in aggregators unless operation supports them.",
-        "- Keep unit dimensions compatible inside one list operation.",
+        "- Pairwise list math works best when both lists have the same length.",
+        "- Start with flat lists before trying nested ones.",
+        "- Keep units compatible inside the same list operation.",
         "",
         renderPlayground({
           title: "Debug by simplification",
@@ -1111,15 +1207,15 @@ const renderGuidePages = () => {
           ].join("\n"),
         }),
         "",
-        "## If behavior still feels off",
+        "## If something still feels off",
         "",
-        "Open the precise behavior contract for that feature:",
+        "These deeper pages can help when you want the exact behavior for one feature:",
         "",
         ...SPEC_CATALOG.map((entry) => `- [${entry.title}](../../specs/${entry.slug})`),
         "",
         "## Report a reproducible problem",
         "",
-        "If the issue still reproduces after simplification, open [Support](../support) and include the smallest sheet text that demonstrates the behavior.",
+        "If the issue still happens after simplification, open [Support](../support) and include the smallest sheet text that demonstrates the behavior.",
         "",
         "For wrong calculations, data loss, storage/import/export problems, settings issues, or docs errors, use the linked bug report form from the support page.",
         "",
@@ -1131,41 +1227,41 @@ const renderGuidePages = () => {
         "---",
         'title: "Known Limitations"',
         "sidebar_position: 7",
-        'description: "Understand what SmartPad supports today, what is planned, and how to protect important work."',
+        'description: "A plain-language view of what works today, where SmartPad is careful, and how to protect important work."',
         "---",
         "",
         "# Known Limitations",
         "",
-        "SmartPad is ready to use as a local-first calculation workspace, but the public launch should be explicit about current boundaries.",
+        "SmartPad is useful today, but it is better to be clear about its edges. This page is here so you know what to trust, what to double-check, and what is not part of the app yet.",
         "",
-        "## Storage and accounts",
+        "## Your sheets live in this browser",
         "",
-        "- SmartPad does not have accounts, cloud sync, team workspaces, or collaboration.",
+        "- SmartPad does not currently have accounts, cloud sync, team workspaces, or collaboration.",
         "- Sheets are stored locally in the browser profile with IndexedDB.",
         "- Browser profile resets, device migrations, private browsing, or storage cleanup tools can remove local data.",
-        "- Export important work with `Download All` before browser/profile/device migrations.",
+        "- Use `Download All` before changing browsers, devices, or profiles.",
         "",
-        "## Privacy and telemetry",
+        "## Privacy boundaries",
         "",
         "- The app does not send sheet content to a SmartPad backend.",
         "- There is no hidden in-app telemetry for sheet text, calculations, variables, or imported files.",
-        "- Any future website signup or analytics must be documented separately from app usage.",
+        "- If the website later offers update signup or analytics, that should be explained separately from app usage.",
         "",
         "## Currency and external data",
         "",
         "- Currency conversions can depend on external FX providers and cached rates.",
-        "- Offline/cached FX behavior is shown in the app when rates are unavailable.",
-        "- FX values are practical planning data, not financial advice or guaranteed market quotes.",
+        "- If rates are unavailable, SmartPad should make that visible instead of pretending nothing happened.",
+        "- Treat FX values as planning data, not financial advice or guaranteed market quotes.",
         "",
-        "## Desktop app status",
+        "## Desktop app",
         "",
-        "- Desktop packaging is planned as a beta path, starting with Electron.",
-        "- Until a signed artifact exists, the public launch should not promise polished native installers.",
-        "- Unsigned beta builds may trigger operating-system warnings and should be labeled as beta.",
+        "- Desktop packaging is expected to start as a beta path.",
+        "- Until signed installers exist, use the web app as the main version.",
+        "- Unsigned beta builds may trigger operating-system warnings and should be labeled clearly.",
         "",
-        "## Features not shipped yet",
+        "## Not in the app yet",
         "",
-        "These are roadmap or proposed ideas, not public-launch promises:",
+        "These are common things people may expect, but they are not part of SmartPad today:",
         "",
         "- Cloud sync, accounts, and collaboration",
         "- Full structured tables",
@@ -1175,9 +1271,9 @@ const renderGuidePages = () => {
         "- Plugin marketplace or plugin system",
         "- Signed desktop installers for every operating system",
         "",
-        "## Practical guardrails",
+        "## Good habits",
         "",
-        "- Keep important models in plain Markdown exports.",
+        "- Keep important models backed up as plain Markdown exports.",
         "- Remove sensitive data before posting screenshots, videos, or issue examples.",
         "- Check [Support](../support) when a calculation looks wrong, storage behaves unexpectedly, or import/export does not work.",
         "",
@@ -1194,7 +1290,7 @@ const renderGuidePages = () => {
         "",
         "# Support",
         "",
-        "SmartPad support starts with GitHub issues during public beta.",
+        "For now, SmartPad support happens through GitHub issues. The most helpful reports are small, specific, and safe to share publicly.",
         "",
         "## Report a bug",
         "",
@@ -1211,7 +1307,7 @@ const renderGuidePages = () => {
         "",
         "## Request a feature",
         "",
-        "Use the [feature request form](https://github.com/nmaxcom/SmartPad/issues/new?template=feature_request.md) for new workflows, syntax requests, platform requests, or launch-roadmap ideas.",
+        "Use the [feature request form](https://github.com/nmaxcom/SmartPad/issues/new?template=feature_request.md) for new workflows, syntax ideas, platform requests, or anything that would make SmartPad more useful in your day-to-day work.",
         "",
         "Useful feature requests explain:",
         "",
@@ -1220,9 +1316,9 @@ const renderGuidePages = () => {
         "- A small example sheet or screenshot",
         "- Whether the request matters for web, desktop, mobile, or all platforms",
         "",
-        "## Priority triage",
+        "## What gets looked at first",
         "",
-        "Launch support should prioritize:",
+        "When several issues arrive at once, the most serious ones should come first:",
         "",
         "1. Wrong calculations or misleading results",
         "2. App load failures",
@@ -1251,22 +1347,18 @@ const renderGuidePages = () => {
 const renderSpecIndexPage = (entries) => {
   const lines = [
     "---",
-    'title: "Feature Contracts"',
+    'title: "Feature Guides"',
     "sidebar_position: 9",
-    'description: "Deep behavior guarantees for every major SmartPad feature."',
+    'description: "A deeper, user-facing guide to each major SmartPad feature."',
     "---",
     "",
-    "# Feature Contracts",
+    "# Feature Guides",
     "",
-    "Each page below translates the authoritative spec into a practical guide with runnable examples and guardrail scenarios.",
+    "These pages go deeper than the quick guides. Use them when you want to understand one SmartPad feature well enough to rely on it in a real sheet.",
     "",
     "## Read in order",
     "",
     ...entries.map((entry, idx) => `${idx + 1}. [${entry.title}](./${entry.slug}) - ${entry.summary}`),
-    "",
-    "## Source of truth",
-    "",
-    "Canonical spec documents live under `docs/Specs/*.spec.md` in the repository.",
     "",
   ];
 
@@ -1274,10 +1366,6 @@ const renderSpecIndexPage = (entries) => {
 };
 
 const renderSpecPage = (entry, content, sidebarPosition) => {
-  const sections = extractSectionTitles(content);
-  const contractBullets = extractContractBullets(content);
-  const contractSection = (contractBullets.length ? contractBullets : sections).slice(0, 10);
-
   const lines = [
     "---",
     `title: \"${escapeYaml(entry.title)}\"`,
@@ -1288,34 +1376,28 @@ const renderSpecPage = (entry, content, sidebarPosition) => {
     'import ExamplePlayground from "@site/src/components/ExamplePlayground";',
     "",
     `<div className=\"doc-hero\">`,
-    `<p className=\"doc-hero__kicker\">Feature Contract</p>`,
+    `<p className=\"doc-hero__kicker\">Feature Guide</p>`,
     `<h2>${entry.title}</h2>`,
     `<p>${entry.summary}</p>`,
     "</div>",
     "",
-    "## What this feature gives you",
+    "## What this helps with",
     "",
     ...entry.focus.map((item) => `- ${item}`),
     "",
-    "## Syntax and usage contract",
+    "## How to use it",
     "",
     ...entry.syntax.map((item) => `- ${item}`),
     "",
-    "## Runnable examples",
+    "## Examples to try",
     "",
     ...entry.examples.success.flatMap((example) => [renderPlayground(example), ""]),
-    "## Guardrail examples",
+    "## When SmartPad should push back",
     "",
     ...entry.examples.guardrails.flatMap((example) => [renderPlayground(example), ""]),
-    "## Critical behavior rules",
-    "",
-    ...contractSection.map((rule) => `- ${rule}`),
-    "",
-    "## Power-user checklist",
+    "## Good habits",
     "",
     ...entry.checklist.map((item) => `- ${item}`),
-    "",
-    `<p className=\"doc-footnote\">Authoritative spec: <a href=\"https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/${entry.fileName}\">docs/Specs/${entry.fileName}</a></p>`,
     "",
   ];
 

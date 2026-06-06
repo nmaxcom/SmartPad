@@ -1,30 +1,30 @@
 ---
 title: "Currency and FX"
-description: "Treat currency as first-class units with live FX + manual overrides."
+description: "Work with money naturally, including conversions and fallback rates."
 sidebar_position: 13
 ---
 
 import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 <div className="doc-hero">
-<p className="doc-hero__kicker">Feature Contract</p>
+<p className="doc-hero__kicker">Feature Guide</p>
 <h2>Currency and FX</h2>
-<p>Treat currency as first-class units with live FX + manual overrides.</p>
+<p>Work with money naturally, including conversions and fallback rates.</p>
 </div>
 
-## What this feature gives you
+## What this helps with
 
 - Currency behaves like unit-aware data, not plain strings
 - `to`/`in` conversions use live FX with deterministic fallback
 - Manual pair rates override live providers when explicitly defined
 
-## Syntax and usage contract
+## How to use it
 
 - Use `to` or `in` for conversion suffixes (`EUR 50 to USD`).
 - Manual overrides are normal assignments (`EUR = 1.08 USD`).
 - Currency can combine with rates (`$85/hour`, `EUR 1.89/liter`).
 
-## Runnable examples
+## Examples to try
 
 <ExamplePlayground title={"Travel planning"} description={"Convert spending between currencies while preserving units."} code={"hotel = EUR 240\nmeals = EUR 180\ntrip spend eur = hotel + meals\ntrip spend eur in USD"} />
 
@@ -32,29 +32,14 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 <ExamplePlayground title={"Currency with rates"} description={"Convert only currency portion inside compound units."} code={"hourly = $85/hour\nhourly in EUR/hour\nmonthly hours = 168 h\npay = hourly * monthly hours"} />
 
-## Guardrail examples
+## When SmartPad should push back
 
 <ExamplePlayground title={"Unsupported conversion target"} description={"Invalid or unknown targets should surface clear errors."} code={"budget = $1200\nbudget in ABC =>"} />
 
 <ExamplePlayground title={"Missing FX rate context"} description={"Cross-currency conversion fails when no rate source is available."} code={"amount = GBP 79\namount in BTC =>"} />
 
-## Critical behavior rules
-
-- Use live FX rates by default, with Frankfurter as primary and ECB as backup.
-- Symbols remain the default display unless the user explicitly targets a code.
-- ISO code literals may include or omit whitespace between amount and code: `35430 EUR`,
-- Cross-currency conversion requires an FX rate.
-- If live rates are unavailable, show a clear error (unless manual overrides exist).
-- Scope and precedence follow normal SmartPad variable rules (nearest wins).
-- Default display uses symbols unless the user targets a code.
-- Preserve the user's requested unit target in output.
-- Amber status when ECB is active (fallback).
-- Unknown currency code => error with suggestion.
-
-## Power-user checklist
+## Good habits
 
 - Define manual rates in-sheet when you need fixed scenario planning.
 - Keep target currency explicit in stakeholder-facing outputs.
 - Prefer one base reporting currency for long documents.
-
-<p className="doc-footnote">Authoritative spec: <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/Currency.spec.md">docs/Specs/Currency.spec.md</a></p>

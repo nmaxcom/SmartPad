@@ -1,34 +1,31 @@
 ---
 title: "Privacy and Portability"
 sidebar_position: 5
-description: "Understand SmartPad’s local-first storage model and plain-text portability."
+description: "How SmartPad stores your work, what stays local, and how to keep important sheets portable."
 ---
 
 # Privacy and Portability
 
-SmartPad is designed so your work remains yours:
+SmartPad is built around a simple idea: your notes and calculations should still belong to you after the tool is closed.
 
-- **Local-first persistence**: sheets are stored in your browser via IndexedDB.
-- **No proprietary lock-in format**: content remains plain Markdown text.
-- **Import/export flexibility**: individual `.md` download plus bulk zip workflows.
-- **Recoverability**: trash/restore flows prevent accidental hard deletion.
-- **No hidden sheet telemetry**: the app does not send sheet text, calculations, variables, or imported files to a SmartPad backend.
+- **Local-first storage**: sheets are saved in your browser using IndexedDB.
+- **Readable exports**: your content remains plain Markdown text.
+- **Easy escape hatch**: download one sheet as `.md`, or export everything as a zip.
+- **Recoverable deletes**: trash/restore flows help prevent accidental permanent loss.
+- **No hidden sheet telemetry**: SmartPad does not send sheet text, calculations, variables, or imported files to a SmartPad backend.
 
-## Durability model
+## How saving works
 
-1. Typing is autosaved after idle debounce (default spec target: 1500ms).
-2. Multi-tab synchronization uses broadcast events to prevent stale tab overwrite.
-3. Sheet identity is stable even when titles change.
-4. Browser storage durability depends on the browser profile, device, and storage cleanup settings.
+SmartPad autosaves after you pause typing, keeps the same sheet identity when a title changes, and coordinates updates across tabs. The main thing to remember is that browser storage belongs to the browser profile, so profile resets, private browsing, or cleanup tools can remove local data.
 
-## Website signup and analytics
+## Signup and analytics
 
-SmartPad can have a public website, docs, and update signup separate from the app itself.
+A future update signup belongs to the website, not to your sheets.
 
-- Signing up for updates should not be required to use the app.
-- Website analytics, if enabled, should measure website usage only.
-- Website analytics must not collect sheet content, calculation text, imported files, or local sheet metadata.
-- Any signup provider or analytics provider should be documented on the launch website before it is enabled.
+- You should not need to sign up just to use SmartPad.
+- Website analytics, if enabled, should measure the website only.
+- Analytics should not collect sheet content, calculation text, imported files, or local sheet metadata.
+- Any provider used for updates or analytics should be disclosed where people sign up.
 
 ## Currency and external rates
 
@@ -41,11 +38,10 @@ Currency conversion may use external FX providers and cached data:
 
 ## Desktop beta status
 
-The desktop app is planned as a beta distribution path, not a current launch guarantee.
+Desktop builds are still a beta path. Use the web app as the dependable default until packaged builds are clearly marked and tested.
 
-- Web launch remains the primary distribution path until packaged builds exist.
 - Early desktop builds may be unsigned and may show operating-system warnings.
-- Desktop release notes should state which platforms were actually built and smoke-tested.
+- Release notes should say exactly which platforms were built and smoke-tested.
 
 ## What to do before sharing publicly
 
@@ -53,16 +49,16 @@ The desktop app is planned as a beta distribution path, not a current launch gua
 - Use `Download All` before browser/profile migrations.
 - Confirm sensitive notes are removed from examples before posting screenshots.
 
-## Future-proofing checklist
+## Make sheets easier to keep
 
-- Keep important models in descriptive Markdown headings.
-- Prefer explicit units/currencies so values retain meaning outside SmartPad UI.
-- Store long-term archives as exported `.md` files in your own versioned storage.
+- Give important models clear Markdown headings.
+- Keep units and currencies explicit so values make sense outside the UI.
+- Archive long-lived work as exported `.md` files in storage you control.
 
 ## When to ask for help
 
-Use [Support](../support) for wrong calculations, storage/import/export problems, settings bugs, docs errors, or launch beta feedback.
+Use [Support](../support) for wrong calculations, storage/import/export problems, settings bugs, docs errors, or beta feedback.
 
-## Related deep contract
+## Related details
 
 - [File Management](../../specs/file-management)

@@ -1,30 +1,30 @@
 ---
 title: "File Management"
-description: "Local-first sheet durability with autosave, trash, import, and export."
+description: "Keep sheets saved locally, recoverable, and easy to export."
 sidebar_position: 18
 ---
 
 import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 <div className="doc-hero">
-<p className="doc-hero__kicker">Feature Contract</p>
+<p className="doc-hero__kicker">Feature Guide</p>
 <h2>File Management</h2>
-<p>Local-first sheet durability with autosave, trash, import, and export.</p>
+<p>Keep sheets saved locally, recoverable, and easy to export.</p>
 </div>
 
-## What this feature gives you
+## What this helps with
 
 - No-save-button workflow via debounced persistence
 - Flat sidebar navigation with fast rename/trash/export actions
 - Safe recovery paths through trash view and restore
 
-## Syntax and usage contract
+## How to use it
 
 - Sheets are plain Markdown; title inferred from first heading.
 - Autosave commits after 1500ms idle typing by default.
 - Drag-and-drop import supports `.md` and `.zip` bundles.
 
-## Runnable examples
+## Examples to try
 
 <ExamplePlayground title={"Markdown-first sheet"} description={"A sheet remains plain text and portable."} code={"# Weekly planning\nhours = 38\nrate = $95/hour\nweekly pay = hours * rate"} />
 
@@ -32,21 +32,14 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 <ExamplePlayground title={"Multi-tab safe editing"} description={"Behavioral expectation: updates synchronize across tabs."} code={"# Shared plan\nbaseline = 1200\ntax = 8%\ntotal = baseline + baseline * tax"} />
 
-## Guardrail examples
+## When SmartPad should push back
 
 <ExamplePlayground title={"Title collision import"} description={"Conflicting names should be suffixed instead of overwritten."} code={"# Budget\nrent = $1250\nutilities = $185\nsum(rent, utilities)"} />
 
 <ExamplePlayground title={"Trash safety workflow"} description={"Deletion should move to trash first, not hard delete by default."} code={"# Notes\nbackup = 1"} />
 
-## Critical behavior rules
-
-- `is_trashed`: Boolean (Default: `false`).
-- No proprietary metadata should be injected into the text. The title should be inferred from the content, not stored separately in the file text.
-
-## Power-user checklist
+## Good habits
 
 - Treat sheet headings as the public names you expect to export/share.
 - Use `Download All` before major migrations or browser profile changes.
 - Check Trash before assuming data loss in deletion scenarios.
-
-<p className="doc-footnote">Authoritative spec: <a href="https://github.com/nmaxcom/SmartPad/blob/main/docs/Specs/FileManagement.spec.md">docs/Specs/FileManagement.spec.md</a></p>

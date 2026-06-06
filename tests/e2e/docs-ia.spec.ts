@@ -9,7 +9,7 @@ const expectedSidebarOrder = [
   "Troubleshooting",
   "Known Limitations",
   "Support",
-  "Feature Contracts",
+  "Feature Guides",
   "Live Results",
   "Result Chips and References",
   "Plotting and Dependency Views",

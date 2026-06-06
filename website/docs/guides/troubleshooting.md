@@ -1,36 +1,36 @@
 ---
 title: "Troubleshooting"
 sidebar_position: 6
-description: "Fast diagnosis patterns for SmartPad syntax, conversion, and range issues."
+description: "Simple ways to narrow down syntax, conversion, and range issues."
 ---
 
 import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 # Troubleshooting
 
-## If a conversion fails
+## If a conversion does not work
 
-- Check target syntax (`to`/`in`) and unit/currency spelling.
-- Ensure source and target dimensions are compatible.
-- For FX conversions, confirm rate source or manual override availability.
+- Check that you used `to` or `in`, and that the unit or currency is spelled the way SmartPad expects.
+- Make sure the units are the same kind of thing. `km` can become `m`; `kg` cannot become `s`.
+- For currency conversion, rates need either a live source or cached data.
 
 ## If a range fails
 
-- Use `..` (not `to`) for generation.
-- For temporal ranges, include explicit duration step.
-- Verify step sign matches direction.
+- Use `..` to generate a range.
+- For dates and times, include a duration step such as `step 1 day` or `step 30 min`.
+- Make sure the step moves in the same direction as the range.
 
 ## If list math fails
 
-- Validate list lengths for pairwise operations.
-- Avoid nested lists in aggregators unless operation supports them.
-- Keep unit dimensions compatible inside one list operation.
+- Pairwise list math works best when both lists have the same length.
+- Start with flat lists before trying nested ones.
+- Keep units compatible inside the same list operation.
 
 <ExamplePlayground title={"Debug by simplification"} description={"Split a failing expression into explicit intermediate lines."} code={"prices = $10, $20, $30\nqty = 2, 1, 3\nline totals = prices * qty =>\nsum(line totals) =>\nbad qty = 2, 1\nprices * bad qty =>"} />
 
-## If behavior still feels off
+## If something still feels off
 
-Open the precise behavior contract for that feature:
+These deeper pages can help when you want the exact behavior for one feature:
 
 - [Live Results](../../specs/live-results)
 - [Result Chips and References](../../specs/result-chips-and-references)
@@ -44,6 +44,6 @@ Open the precise behavior contract for that feature:
 
 ## Report a reproducible problem
 
-If the issue still reproduces after simplification, open [Support](../support) and include the smallest sheet text that demonstrates the behavior.
+If the issue still happens after simplification, open [Support](../support) and include the smallest sheet text that demonstrates the behavior.
 
 For wrong calculations, data loss, storage/import/export problems, settings issues, or docs errors, use the linked bug report form from the support page.

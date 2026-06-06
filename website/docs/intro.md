@@ -1,6 +1,6 @@
 ---
 title: "Start Here"
-description: "Understand what SmartPad is, why it is local-first, and how to learn it in a practical order."
+description: "A gentle first pass through SmartPad: what it is, why it is local-first, and where to begin."
 sidebar_position: 1
 slug: /
 ---
@@ -12,29 +12,29 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 <div className="doc-hero doc-hero--wide">
 <p className="doc-hero__kicker">SmartPad in one minute</p>
 <h2>Plain-text thinking with live, trustworthy math</h2>
-<p>SmartPad is a text-native calculation workspace. You write normal lines, get semantic results immediately, and keep everything as portable Markdown you control.</p>
+<p>SmartPad is a plain-text place for working things out. You write the thought, SmartPad keeps the math honest, and the sheet stays readable tomorrow.</p>
 </div>
 
-## Why people pick SmartPad
+## Why it feels different
 
-- **Local-first by default**: your sheets persist in browser storage on your machine, not in a forced cloud backend.
-- **Plain-text portability**: files remain human-readable Markdown (`.md`), so your data stays future-proof.
-- **Semantic math**: units, currencies, durations, lists, ranges, and locale-aware dates behave like real values.
-- **Explorable models**: chips, references, and `@view` directives turn static notes into interactive decision tools.
+- **Your work stays close**: sheets live in browser storage on your machine by default.
+- **The file still makes sense outside the app**: exports are human-readable Markdown (`.md`).
+- **Numbers carry meaning**: units, currencies, durations, lists, ranges, and dates behave like values, not decoration.
+- **You can poke at assumptions**: chips, references, and views make a sheet easier to explore without rewriting it.
 
 ## First 90-second win
 
 <ExamplePlayground title={"Personal weekly plan"} description={"Type naturally, then nudge values to explore options."} code={"hours = 38\nrate = $95/hour\nweekly pay = hours * rate\ntax = 8.5% on weekly pay\ntake home = weekly pay - tax\ntake home in EUR"} />
 
-## Learn in this order
+## A good path through the docs
 
 1. **[Getting Started](./guides/getting-started)**: core mental model + first useful workflows.
 2. **[Syntax Playbook](./guides/syntax-playbook)**: write robust expressions and avoid common pitfalls.
 3. **[Everyday Calculations](./guides/everyday-calculations)**: practical examples for budgeting, planning, and analysis.
 4. **[Privacy and Portability](./guides/privacy-and-portability)**: understand durability, export, and local ownership.
-5. **[Known Limitations](./guides/known-limitations)**: check what is shipped, beta, planned, or intentionally unsupported.
-6. **[Support](./guides/support)**: report bugs, request features, and share reproducible examples safely.
-7. **[Feature Contracts](./specs)**: deep behavior guarantees for each major capability.
+5. **[Known Limitations](./guides/known-limitations)**: know where SmartPad is careful, unfinished, or intentionally quiet.
+6. **[Support](./guides/support)**: report bugs, request features, and share examples safely.
+7. **[Feature Guides](./specs)**: go deeper on each major capability when you need the details.
 
 ## What SmartPad is not
 

@@ -1,5 +1,5 @@
 # Similar apps
-antinote, p, figr.app, aybo.app, calca.io, numi.app, Soulver 3, notepadcalculator.com, mathnotepad.com, bbodi.github.io/notecalc3, numbat.dev, hissab.io, numpad.io
+antinote, p, figr.app, aybo.app, calca.io, numi.app, Soulver 3, notepadcalculator.com, mathnotepad.com, bbodi.github.io/notecalc3, numbat.dev, hissab.io, numpad.io, https://github.com/bornova/numara-calculator
 
 ---
 # UI inspiration

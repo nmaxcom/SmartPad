@@ -3,9 +3,9 @@
   --ifm-heading-font-family: "Space Grotesk", "Manrope", sans-serif;
   --ifm-code-font-size: 92%;
 
-  --sp-bg-0: #090b16;
-  --sp-bg-1: #0d1226;
-  --sp-bg-2: #121a35;
+  --sp-bg-0: #222450;
+  --sp-bg-1: #222450;
+  --sp-bg-2: #222450;
   --sp-surface-1: rgba(20, 24, 48, 0.84);
   --sp-surface-2: rgba(25, 32, 62, 0.76);
   --sp-surface-3: rgba(31, 40, 77, 0.72);
@@ -37,12 +37,12 @@
 html,
 body,
 .main-wrapper,
-.theme-doc-page,
+.theme-doc-page {
+  background: #222450;
+}
+
 .theme-doc-markdown {
-  background:
-    radial-gradient(circle at 12% -5%, rgba(125, 90, 255, 0.2), transparent 32%),
-    radial-gradient(circle at 86% -8%, rgba(77, 148, 255, 0.15), transparent 32%),
-    linear-gradient(180deg, var(--sp-bg-0), var(--sp-bg-1) 45%, var(--sp-bg-2));
+  background: transparent;
 }
 
 body {
@@ -89,6 +89,7 @@ a:hover {
 
 .table-of-contents {
   border-left: 1px solid rgba(147, 119, 255, 0.22);
+  font-size: 1rem;
 }
 
 .menu__link {

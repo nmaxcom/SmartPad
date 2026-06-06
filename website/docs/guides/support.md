@@ -6,7 +6,7 @@ description: "Report bugs, request features, and share reproducible SmartPad exa
 
 # Support
 
-SmartPad support starts with GitHub issues during public beta.
+For now, SmartPad support happens through GitHub issues. The most helpful reports are small, specific, and safe to share publicly.
 
 ## Report a bug
 
@@ -23,7 +23,7 @@ Include:
 
 ## Request a feature
 
-Use the [feature request form](https://github.com/nmaxcom/SmartPad/issues/new?template=feature_request.md) for new workflows, syntax requests, platform requests, or launch-roadmap ideas.
+Use the [feature request form](https://github.com/nmaxcom/SmartPad/issues/new?template=feature_request.md) for new workflows, syntax ideas, platform requests, or anything that would make SmartPad more useful in your day-to-day work.
 
 Useful feature requests explain:
 
@@ -32,9 +32,9 @@ Useful feature requests explain:
 - A small example sheet or screenshot
 - Whether the request matters for web, desktop, mobile, or all platforms
 
-## Priority triage
+## What gets looked at first
 
-Launch support should prioritize:
+When several issues arrive at once, the most serious ones should come first:
 
 1. Wrong calculations or misleading results
 2. App load failures

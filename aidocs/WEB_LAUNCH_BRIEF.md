@@ -2,13 +2,13 @@
 
 ## Goal
 
-Create a public homepage that explains SmartPad quickly, shows the real product, sends users to the app/docs/downloads, and captures update subscribers without weakening the local-first trust promise.
+Create a standalone promotional product website that explains SmartPad quickly, shows the real product, sends users to the app/docs/downloads, and captures update subscribers without weakening the local-first trust promise.
 
-The current `website/` app is a Docusaurus docs site. It is useful for documentation, but it is not yet a promotional launch site.
+The current `website/` app is a Docusaurus docs site. It remains documentation infrastructure only. The promotional website must be a separate product-led experience, built from scratch, and it is intentionally the final launch step after product UI, stability, docs/support, release operations, and desktop beta status are settled.
 
 ## Launch Website Jobs
 
-The first public website must:
+The promotional website must:
 
 1. Explain what SmartPad is in one first viewport.
 2. Show real app screenshots or short clips, not abstract illustrations.
@@ -19,13 +19,22 @@ The first public website must:
 7. Prepare a future desktop beta/download section without promising unavailable installers.
 8. Link support and release notes.
 
+## Required Product Website Direction
+
+- Build a separate promotional product site from scratch.
+- Do not implement it as a Docusaurus page or docs homepage.
+- It must look aesthetically modern and product-grade, not like documentation or an internal project page.
+- Use real videos of the app in use and interactive examples as first-class content.
+- Treat this as the last launch step so visuals reflect the final Settings redesign, release candidate, and desktop beta status.
+- Ask for user approval before major visual direction, positioning, signup provider, or hero composition decisions.
+
 ## Recommended Site Structure
 
 ### Homepage
 
 Route:
 
-- Prefer the public app route for product use and a dedicated marketing route for acquisition, or use the Docusaurus home route if the docs site becomes the main public website.
+- Prefer the public app route for product use and a dedicated marketing route/site for acquisition.
 - Avoid burying the product behind docs-first navigation.
 
 First viewport:
@@ -98,7 +107,7 @@ Required before implementation:
 | Short demo clip | Show typing-to-result loop | Real app launch demo sheet | missing |
 | Result chip screenshot | Explain reuse/traceability | Real app launch demo sheet | missing |
 | Plot screenshot | Show visual mode if stable | `@view` demo sheet | missing |
-| Settings screenshot | Only after settings polish | Settings/onboarding work | blocked by `T-2026-06-06-03` |
+| Settings screenshot | Only after the from-scratch professional Settings redesign | Settings redesign work | blocked by `T-2026-06-06-03` |
 | Docs embed screenshot | Show docs/app integration | Current docs site | missing |
 | Mobile/narrow screenshot | Responsive proof | Launch candidate | missing |
 | Open Graph image | Link preview | Product screenshot composition | missing |
@@ -110,7 +119,7 @@ Asset capture rules:
 - Do not capture internal debug controls.
 - Do not capture proposed/unconfirmed autocomplete behavior as a headline feature.
 - Use stable demo content that is covered by launch tests.
-- Re-capture after settings/onboarding polish if first viewport changes.
+- Re-capture after Settings redesign if first viewport changes.
 
 ## Signup Decision
 
@@ -150,55 +159,23 @@ Minimum privacy copy:
 - FX behavior may use an external rate source and cached/offline data.
 - Desktop beta may have unsigned-build warnings until signing is configured.
 
-## Implementation Options
+## Implementation Direction
 
-### Option A: Docusaurus Homepage
+Build a standalone product marketing site outside Docusaurus. Docusaurus stays dedicated to docs under `/docs/`.
 
-Use `website/` as the launch site and keep docs under docs routes.
+Open implementation decisions for a later, user-reviewed block:
 
-Pros:
-
-- Reuses existing Docusaurus setup and docs build/deploy.
-- Good for docs navigation and SEO basics.
-- Lower implementation overhead.
-
-Cons:
-
-- Docusaurus styling can feel documentation-first unless carefully customized.
-- Product homepage must avoid looking like an internal docs landing page.
-
-Recommended if:
-
-- Launch speed matters more than a separate marketing stack.
-
-### Option B: Vite Marketing Route
-
-Build homepage inside the main Vite app and keep Docusaurus for `/docs/`.
-
-Pros:
-
-- Full control over product-first visual design.
-- Can share app styles/components/assets.
-
-Cons:
-
-- Must coordinate app routing, docs routing, and GitHub Pages base path carefully.
-- Marketing code lives with product runtime.
-
-Recommended if:
-
-- The homepage needs richer product visuals than Docusaurus can support cleanly.
-
-### Current Recommendation
-
-Use Docusaurus for the first launch homepage unless implementation proves too constrained. The repo already builds and deploys Docusaurus docs to `public/docs`, and a Docusaurus homepage can link to the app, docs, changelog, GitHub issues, and signup without new routing risk.
+- Whether the promotional site lives inside the main Vite app, a separate Vite package, or a separate deployable workspace.
+- Exact route/domain strategy.
+- Signup provider.
+- Video capture format and hosting.
+- Hero layout and art direction.
 
 ## Verification
 
-Before marking the web launch site ready:
+Before marking the promotional website ready:
 
 ```bash
-npm run docs:docusaurus:publish-prod
 npm run build
 npm run docs:map
 npm run docs:drift
@@ -209,7 +186,7 @@ npm run verify:changed
 
 Browser checks:
 
-- Homepage at production base path.
+- Promotional site at production base path.
 - App CTA opens SmartPad.
 - Docs CTA opens generated docs under `/SmartPad/docs/`.
 - Signup CTA/form works or clearly links out.
@@ -223,20 +200,21 @@ Browser checks:
 
 Must happen before final screenshots:
 
-- `T-2026-06-06-03` settings/onboarding polish.
+- `T-2026-06-06-03` professional Settings redesign.
 - Stability checks for result chips, plotting, quick tour, docs embeds, and deployment path.
 
 Can happen in parallel:
 
 - Signup provider decision.
-- Homepage IA/copy.
+- Promotional-site IA/copy.
 - Changelog/release note route.
 - Support link review.
 
-Should wait:
+Must wait:
 
 - Desktop download CTA until an actual beta artifact exists.
 - Analytics until privacy copy is finalized.
+- Final promotional website implementation until product UI, launch candidate, docs/support, release operations, and desktop beta status are reviewed.
 
 ## Done Criteria
 
