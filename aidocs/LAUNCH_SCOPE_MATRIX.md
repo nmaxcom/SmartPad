@@ -2,7 +2,7 @@
 
 This matrix turns `aidocs/LAUNCH_PLAN.md` into a verifiable launch checklist.
 
-Release-candidate stability checks for the `audit` rows live in `aidocs/LAUNCH_STABILITY_AUDIT.md`. Desktop packaging direction lives in `aidocs/DESKTOP_PACKAGING_DECISION.md`. Release operations live in `RELEASE_CHECKLIST.md` and `CHANGELOG.md`. Web launch direction lives in `aidocs/WEB_LAUNCH_BRIEF.md`.
+Release-candidate stability checks for the `audit` rows live in `aidocs/LAUNCH_STABILITY_AUDIT.md`. Desktop packaging direction lives in `aidocs/DESKTOP_PACKAGING_DECISION.md`. Release operations live in `RELEASE_CHECKLIST.md` and `CHANGELOG.md`. Web launch direction lives in `aidocs/WEB_LAUNCH_BRIEF.md`. Docs/support readiness lives in `aidocs/DOCS_SUPPORT_LAUNCH_AUDIT.md`.
 
 Status meanings:
 
@@ -38,19 +38,19 @@ Status meanings:
 | Area | Launch decision | Current status | Evidence | Launch action |
 | --- | --- | --- | --- | --- |
 | Public web app | Must ship | audit | `.github/workflows/deploy-pages.yml`, `package.json`, `vite.config.ts` | Run deploy-path smoke and confirm final public URL, routing, docs link, and cache behavior. |
-| Public documentation | Must ship | audit | `website/docs/`, `public/docs/`, `tests/e2e/docs-ia.spec.ts`, `package.json` docs scripts | Add beginner journey and known limitations audit; run docs build/drift/link checks. |
+| Public documentation | Must ship | audit | `aidocs/DOCS_SUPPORT_LAUNCH_AUDIT.md`, `website/docs/`, `public/docs/`, `tests/e2e/docs-ia.spec.ts`, `package.json` docs scripts | Add known limitations/support pages, expand privacy copy, verify beginner journey, and run docs build/drift/link checks. |
 | Marketing homepage | Must ship | gap | `aidocs/WEB_LAUNCH_BRIEF.md`; `website/` exists as docs site; no launch homepage artifact dedicated to acquisition | Build Docusaurus-first launch homepage with real app screenshots/video, app/docs/download CTAs, privacy copy, and signup. |
 | Update signup | Must ship for audience growth | gap | `aidocs/WEB_LAUNCH_BRIEF.md`; no provider/config found | Decide provider and hosting constraints; prefer simple static-compatible signup. |
 | Screenshots/video assets | Should ship | gap | `aidocs/WEB_LAUNCH_BRIEF.md`; `public/smartpad.png`, `smartpad.png`; no launch asset inventory | Capture reproducible screenshots and short demo clips from verified launch demo sheets after settings/onboarding polish. |
 | SEO/Open Graph | Should ship | gap | `aidocs/WEB_LAUNCH_BRIEF.md`; Docusaurus site exists; no launch OG asset inventory found | Add title/description/OG image for homepage and docs. |
 | Issue intake | Must ship | ready | `.github/ISSUE_TEMPLATE/bug_report.yml`, `.github/ISSUE_TEMPLATE/feature_request.md` | Review templates for public beta wording and expected repro details. |
 | Changelog/versioning | Must ship | audit | `RELEASE_CHECKLIST.md`, `CHANGELOG.md` | Dry-run the checklist on a release candidate and keep changelog entries current before tagging. |
-| Privacy/security notes | Must ship | audit | `website/docs/guides/privacy-and-portability.md`, `docs/ABOUT.md` | Add public-facing privacy note for local storage, FX provider behavior, website analytics, and signup. |
+| Privacy/security notes | Must ship | audit | `aidocs/DOCS_SUPPORT_LAUNCH_AUDIT.md`, `website/docs/guides/privacy-and-portability.md`, `docs/ABOUT.md` | Add public-facing privacy note for local storage, FX provider behavior, website analytics, signup, and desktop beta status. |
 | CI/reliability gates | Must ship | ready | `.github/workflows/ci.yml`, `scripts/verify-changed.js`, `aidocs/AI_RELIABILITY_SYSTEM.md` | Keep as launch release gate; add release-candidate checklist that names exact commands. |
 | Desktop packaging | Should ship as beta | gap | `aidocs/DESKTOP_PACKAGING_DECISION.md`; no Electron/Tauri package files found | Start with a minimal Electron shell after settings/onboarding polish is underway, then package an unsigned macOS beta and document cross-platform CI/release steps. |
 | Auto-update | Defer unless cheap | defer | No desktop release pipeline yet | Do not block first public web launch; document desktop beta update process manually. |
 | Signing/notarization | Required for polished desktop, optional for beta | gap | No signing config found | Decide beta warning tolerance; document signing plan before stable desktop release. |
-| Support path | Must ship | gap | GitHub issue templates exist, but no public support promise found | Choose public support route: GitHub issues, email, discussions, or signup replies. |
+| Support path | Must ship | audit | `aidocs/DOCS_SUPPORT_LAUNCH_AUDIT.md`, `.github/ISSUE_TEMPLATE/bug_report.yml`, `.github/ISSUE_TEMPLATE/feature_request.md` | Add public support page/section and link bug/feature request templates from docs/homepage. |
 
 ## Explicit Defer Or Hide List
 
@@ -81,7 +81,7 @@ P1 blockers:
 
 1. Docs need a beginner-journey and known-limitations audit.
 2. Privacy copy needs explicit website analytics/signup/FX/local-storage coverage.
-3. Public support path needs a decision.
+3. Public support path has default GitHub intake but needs visible docs/homepage links.
 4. Autocomplete needs user confirmation and spec-status reconciliation before being messaged as shipped.
 
 ## Recommended Next Work

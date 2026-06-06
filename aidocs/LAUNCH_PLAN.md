@@ -41,7 +41,7 @@ Reasoning:
 
 ## Scope Rules
 
-Detailed scope evidence lives in `aidocs/LAUNCH_SCOPE_MATRIX.md`. Release-candidate stability checks live in `aidocs/LAUNCH_STABILITY_AUDIT.md`. Desktop packaging direction lives in `aidocs/DESKTOP_PACKAGING_DECISION.md`. Release operations live in `RELEASE_CHECKLIST.md` and `CHANGELOG.md`. Web launch direction lives in `aidocs/WEB_LAUNCH_BRIEF.md`.
+Detailed scope evidence lives in `aidocs/LAUNCH_SCOPE_MATRIX.md`. Release-candidate stability checks live in `aidocs/LAUNCH_STABILITY_AUDIT.md`. Desktop packaging direction lives in `aidocs/DESKTOP_PACKAGING_DECISION.md`. Release operations live in `RELEASE_CHECKLIST.md` and `CHANGELOG.md`. Web launch direction lives in `aidocs/WEB_LAUNCH_BRIEF.md`. Public docs/support readiness lives in `aidocs/DOCS_SUPPORT_LAUNCH_AUDIT.md`.
 
 ### Must Ship For Public Launch
 
@@ -211,6 +211,7 @@ Deliverables:
 - Public "known limitations" page for honest launch expectations.
 - Support route: GitHub issues, email, discussions, or signup reply path.
 - Docs accessibility and broken-link checks.
+- Detailed audit: `aidocs/DOCS_SUPPORT_LAUNCH_AUDIT.md`.
 
 Done when:
 

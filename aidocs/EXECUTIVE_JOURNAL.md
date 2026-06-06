@@ -6144,3 +6144,32 @@
     *   Marketing homepage is not implemented yet.
     *   Signup provider, final privacy copy, analytics approach, and launch assets remain undecided/unbuilt.
     *   Settings/onboarding polish remains a dependency for final screenshots.
+
+## Entry J-2026-06-06-08
+
+*   Timestamp: 2026-06-06 13:05 CEST / 2026-06-06 11:05 UTC
+*   Summary:
+    *   Continued launch readiness by auditing public docs and support readiness.
+    *   Confirmed existing docs cover Start Here, Getting Started, Syntax, Everyday Calculations, Privacy/Portability, Troubleshooting, and implemented specs, but lack public Known Limitations and visible Support paths.
+    *   Added `aidocs/DOCS_SUPPORT_LAUNCH_AUDIT.md` and updated launch plan, scope matrix, and backlog.
+*   Decisions:
+    *   Public docs should add Known Limitations before launch.
+    *   Support should be visible from docs and homepage, defaulting to GitHub bug report and feature request templates.
+    *   Privacy/portability docs must expand to cover website signup/analytics, FX external dependency/cache behavior, and desktop beta status.
+    *   Proposed features should not sit on the main launch funnel unless clearly labeled as roadmap.
+*   User directives:
+    *   Continue working toward launch/publication planning, including accessible docs and support.
+*   Assistant commitments:
+    *   Use `aidocs/DOCS_SUPPORT_LAUNCH_AUDIT.md` as the source for docs/support gaps and done criteria.
+    *   Keep `T-2026-06-06-07` open until public docs pages are implemented and verified.
+*   Artifacts changed:
+    *   `aidocs/DOCS_SUPPORT_LAUNCH_AUDIT.md`
+    *   `aidocs/LAUNCH_PLAN.md`
+    *   `aidocs/LAUNCH_SCOPE_MATRIX.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Pending items:
+    *   `T-2026-06-06-07` moved to `in_progress`; next step is adding Known Limitations/Support docs and expanding privacy docs.
+*   Risks/blockers:
+    *   Docs/support audit is drafted but public docs are not patched yet.
+    *   Homepage does not exist yet, so homepage-to-docs-to-app journey cannot be scripted yet.
