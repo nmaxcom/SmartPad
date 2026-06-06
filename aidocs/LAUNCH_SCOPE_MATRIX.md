@@ -2,7 +2,7 @@
 
 This matrix turns `aidocs/LAUNCH_PLAN.md` into a verifiable launch checklist.
 
-Release-candidate stability checks for the `audit` rows live in `aidocs/LAUNCH_STABILITY_AUDIT.md`. Desktop packaging direction lives in `aidocs/DESKTOP_PACKAGING_DECISION.md`. Release operations live in `RELEASE_CHECKLIST.md` and `CHANGELOG.md`. Web launch direction lives in `aidocs/WEB_LAUNCH_BRIEF.md`. Docs/support readiness lives in `aidocs/DOCS_SUPPORT_LAUNCH_AUDIT.md`.
+Release-candidate stability checks for the `audit` rows live in `aidocs/LAUNCH_STABILITY_AUDIT.md`. Desktop packaging direction lives in `aidocs/DESKTOP_PACKAGING_DECISION.md`. Release operations live in `RELEASE_CHECKLIST.md` and `CHANGELOG.md`. Web launch direction lives in `aidocs/WEB_LAUNCH_BRIEF.md`. Docs/support readiness lives in `aidocs/DOCS_SUPPORT_LAUNCH_AUDIT.md`. Settings/onboarding direction lives in `aidocs/SETTINGS_ONBOARDING_LAUNCH_BRIEF.md`.
 
 Status meanings:
 
@@ -29,7 +29,7 @@ Status meanings:
 | Result chips and references | Must ship | audit | `docs/Specs/ResultChipsAndValueGraph.spec.md`, `docs/Specs/implemented/result-chips-and-references.md`, `tests/e2e/result-reference.spec.ts`, `tests/e2e/result-reference-drag-only.spec.ts`, `tests/e2e/live-result.spec.ts` | Finish `T-2026-06-04-01` user review and known chip parity/caret tasks before treating as launch-polished. |
 | Sheets and local persistence | Must ship | audit | `docs/Specs/FileManagement.spec.md`, `docs/Specs/implemented/file-management.md`, `src/storage/sheetsDb.ts`, `src/components/SheetSync.tsx`, `tests/e2e/save-load-buttons.spec.ts`, `tests/e2e/migration-verification.spec.ts` | Run release-candidate persistence/import/export smoke across fresh profile and upgraded profile. |
 | Import/export portability | Must ship | audit | `docs/Specs/FileManagement.spec.md`, `docs/Specs/implemented/file-management.md`, `tests/e2e/save-load-buttons.spec.ts`, `website/docs/guides/privacy-and-portability.md` | Verify copy says user owns files and explains backup limitations. |
-| Settings | Must ship | gap | `src/components/ui/SettingsSections.tsx`, `src/state/settingsStore.ts`, `tests/unit/settingsStore.test.ts`, `tests/e2e/settings-integration.spec.ts` | Redesign IA and copy per `T-2026-06-06-03`; add launch screenshots and accessibility checks. |
+| Settings | Must ship | gap | `aidocs/SETTINGS_ONBOARDING_LAUNCH_BRIEF.md`, `src/components/ui/SettingsSections.tsx`, `src/state/settingsStore.ts`, `tests/unit/settingsStore.test.ts`, `tests/e2e/settings-integration.spec.ts` | Redesign IA and copy per launch brief; add launch screenshots and accessibility checks. |
 | First-run onboarding | Must ship | audit | `src/templates/quickTourTemplate.ts`, `tests/unit/quickTourTemplate.test.ts`, `tests/e2e/quick-tour-template.spec.ts` | Pair quick tour with product-level onboarding/empty-state copy so users know what to do first. |
 | Autocomplete | Should ship if confirmed | audit | `docs/Specs/proposed/autocomplete.md`, `tests/unit/autocompleteSuggestions.test.ts`, `tests/e2e/autocomplete.spec.ts`, backlog `T-2026-06-04-01` | Keep as beta/proposed until user confirms current behavior and spec status is reconciled. |
 

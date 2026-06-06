@@ -41,7 +41,7 @@ Reasoning:
 
 ## Scope Rules
 
-Detailed scope evidence lives in `aidocs/LAUNCH_SCOPE_MATRIX.md`. Release-candidate stability checks live in `aidocs/LAUNCH_STABILITY_AUDIT.md`. Desktop packaging direction lives in `aidocs/DESKTOP_PACKAGING_DECISION.md`. Release operations live in `RELEASE_CHECKLIST.md` and `CHANGELOG.md`. Web launch direction lives in `aidocs/WEB_LAUNCH_BRIEF.md`. Public docs/support readiness lives in `aidocs/DOCS_SUPPORT_LAUNCH_AUDIT.md`.
+Detailed scope evidence lives in `aidocs/LAUNCH_SCOPE_MATRIX.md`. Release-candidate stability checks live in `aidocs/LAUNCH_STABILITY_AUDIT.md`. Desktop packaging direction lives in `aidocs/DESKTOP_PACKAGING_DECISION.md`. Release operations live in `RELEASE_CHECKLIST.md` and `CHANGELOG.md`. Web launch direction lives in `aidocs/WEB_LAUNCH_BRIEF.md`. Public docs/support readiness lives in `aidocs/DOCS_SUPPORT_LAUNCH_AUDIT.md`. Settings/onboarding polish direction lives in `aidocs/SETTINGS_ONBOARDING_LAUNCH_BRIEF.md`.
 
 ### Must Ship For Public Launch
 
@@ -133,6 +133,7 @@ Deliverables:
 - First-run onboarding that teaches the core loop without modal friction.
 - Empty/error/offline states that sound intentional and actionable.
 - Accessibility pass for labels, focus, keyboard use, contrast, and responsive layout.
+- Detailed brief: `aidocs/SETTINGS_ONBOARDING_LAUNCH_BRIEF.md`.
 
 Done when:
 

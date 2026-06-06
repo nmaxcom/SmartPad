@@ -6173,3 +6173,32 @@
 *   Risks/blockers:
     *   Docs/support audit is drafted but public docs are not patched yet.
     *   Homepage does not exist yet, so homepage-to-docs-to-app journey cannot be scripted yet.
+
+## Entry J-2026-06-06-09
+
+*   Timestamp: 2026-06-06 13:08 CEST / 2026-06-06 11:08 UTC
+*   Summary:
+    *   Continued launch readiness by auditing settings and first-run onboarding.
+    *   Confirmed settings functionality and tests exist, but current organization is still more implementation-oriented than public-launch-oriented.
+    *   Added `aidocs/SETTINGS_ONBOARDING_LAUNCH_BRIEF.md` and updated launch plan, scope matrix, and backlog.
+*   Decisions:
+    *   Settings should be grouped by user intent: Appearance, Results/Formatting, Reuse/Export, Dates/Locale, Lists/Limits, Currency/External Data, Panels, and Advanced Plotting.
+    *   Advanced plotting controls should be visually subordinate for launch.
+    *   Onboarding should be lightweight and non-blocking, with one clear first action and a link to Getting Started.
+    *   Final homepage screenshots should wait until settings/onboarding polish is implemented.
+*   User directives:
+    *   Continue working toward launch/publication planning, including product polish and first-run quality.
+*   Assistant commitments:
+    *   Use `aidocs/SETTINGS_ONBOARDING_LAUNCH_BRIEF.md` as the source for settings/onboarding implementation and verification.
+    *   Keep `T-2026-06-06-03` open until implementation, tests, and screenshots pass.
+*   Artifacts changed:
+    *   `aidocs/SETTINGS_ONBOARDING_LAUNCH_BRIEF.md`
+    *   `aidocs/LAUNCH_PLAN.md`
+    *   `aidocs/LAUNCH_SCOPE_MATRIX.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Pending items:
+    *   `T-2026-06-06-03` moved to `in_progress`; next step is implementing settings IA/onboarding polish.
+*   Risks/blockers:
+    *   Settings/onboarding brief is drafted but not implemented.
+    *   Launch screenshots, web homepage visuals, and desktop wrapper QA should wait for this product polish.
