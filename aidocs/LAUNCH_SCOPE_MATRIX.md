@@ -2,6 +2,8 @@
 
 This matrix turns `aidocs/LAUNCH_PLAN.md` into a verifiable launch checklist.
 
+Release-candidate stability checks for the `audit` rows live in `aidocs/LAUNCH_STABILITY_AUDIT.md`.
+
 Status meanings:
 
 - `ready`: existing evidence is strong enough for launch scope, subject to final release gates.

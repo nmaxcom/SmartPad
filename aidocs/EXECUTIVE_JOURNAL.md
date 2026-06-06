@@ -6025,3 +6025,31 @@
 *   Risks/blockers:
     *   No machine blocker for planning docs.
     *   The launch objective is not complete until scope is confirmed and p0 blockers are resolved or deliberately deferred.
+
+## Entry J-2026-06-06-04
+
+*   Timestamp: 2026-06-06 12:54 CEST / 2026-06-06 10:54 UTC
+*   Summary:
+    *   Continued launch readiness by drafting the P0 release-candidate stability audit.
+    *   The audit maps launch-risk areas to existing targeted unit/e2e/docs/build commands and defines what blocks launch for each area.
+    *   Linked the audit from the launch plan and scope matrix, and moved `T-2026-06-06-02` to `in_progress`.
+*   Decisions:
+    *   Launch stability should be evaluated with targeted checks plus docs/spec/build gates, not only the generic full suite.
+    *   Settings/onboarding, autocomplete confirmation, FX copy, desktop packaging, launch screenshots, and proposed-doc clarity remain explicit launch risks.
+    *   Screenshot/video capture should wait until product polish and stability checks are clean.
+*   User directives:
+    *   Continue working toward the launch/publication plan objective.
+*   Assistant commitments:
+    *   Use `aidocs/LAUNCH_STABILITY_AUDIT.md` as the release-candidate stability checklist.
+    *   Do not mark `T-2026-06-06-02` complete until the listed checks are run on a launch candidate and p0 findings are resolved or explicitly documented.
+*   Artifacts changed:
+    *   `aidocs/LAUNCH_STABILITY_AUDIT.md`
+    *   `aidocs/LAUNCH_SCOPE_MATRIX.md`
+    *   `aidocs/LAUNCH_PLAN.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Pending items:
+    *   `T-2026-06-06-02` remains `in_progress`; next step is executing the P0 release-candidate checks and converting failures into scoped tasks.
+*   Risks/blockers:
+    *   Audit checklist is drafted but not yet executed.
+    *   Machine gates for current planning docs are lightweight; product gates are required when implementation or public assets change.

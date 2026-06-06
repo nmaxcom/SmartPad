@@ -41,7 +41,7 @@ Reasoning:
 
 ## Scope Rules
 
-Detailed scope evidence lives in `aidocs/LAUNCH_SCOPE_MATRIX.md`.
+Detailed scope evidence lives in `aidocs/LAUNCH_SCOPE_MATRIX.md`. Release-candidate stability checks live in `aidocs/LAUNCH_STABILITY_AUDIT.md`.
 
 ### Must Ship For Public Launch
 
