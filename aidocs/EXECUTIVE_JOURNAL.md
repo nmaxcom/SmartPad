@@ -6546,6 +6546,48 @@
 *   Risks/blockers:
     *   Launch scope still lacks an explicit final channel decision: web public beta first vs web+desktop beta vs desktop-ready release.
 
+## Entry J-2026-06-08-05
+
+*   Timestamp: 2026-06-08 16:47 CEST
+*   Summary:
+    *   User asked for the next proposal: Settings/first-run redesign.
+    *   Assistant inspected current Settings components and settings state before proposing a visible product/design direction.
+*   Decisions:
+    *   No product code changes before user approves the Settings IA/design direction.
+    *   Proposal should treat Settings as a professional app surface, not a long technical options list.
+*   Artifacts changed:
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Pending:
+    *   User review of the Settings/first-run proposal.
+
+## Entry J-2026-06-08-06
+
+*   Timestamp: 2026-06-08 17:09 CEST
+*   Summary:
+    *   User approved the first Settings block after the proposal: layout and information architecture only, without first-run/onboarding yet.
+    *   Assistant redesigned the Settings modal as a professional preferences surface with section navigation and reorganized the existing controls without changing settings behavior.
+    *   A visual issue where the modal blended with app content was traced to modal layering/animation timing and corrected by mounting the modal through a body portal and raising its backdrop layer.
+*   Decisions:
+    *   Settings now uses a bounded review checkpoint before commit, per the launch workflow.
+    *   Existing settings behavior and labels remain intact for compatibility; this block is visual/IA only.
+*   Artifacts changed:
+    *   `src/components/ui/SettingsSections.tsx`
+    *   `src/components/ui/SettingsModal.tsx`
+    *   `src/components/ui/SettingsModal.css`
+    *   `src/components/ui/SettingsPanel.css`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run build` passed.
+    *   `npx playwright test tests/e2e/settings-integration.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed.
+    *   `npx jest tests/unit/settingsStore.test.ts --runInBand --no-watchman` passed after the first run failed because Watchman tried to write outside the sandbox.
+    *   `npm run verify:changed` passed for the default range.
+    *   Desktop and mobile screenshots were generated for review: `/tmp/smartpad-settings-redesign.png` and `/tmp/smartpad-settings-redesign-mobile.png`.
+*   Pending:
+    *   User approved the Settings layout checkpoint on 2026-06-08 19:37 CEST.
+    *   Commit is authorized for the scoped Settings block.
+*   Risks/blockers:
+    *   First-run/onboarding remains out of scope for this block and should be proposed separately after Settings is approved.
+
 ## Entry J-2026-06-06-14
 
 *   Timestamp: 2026-06-06 14:45 CEST / 2026-06-06 12:45 UTC

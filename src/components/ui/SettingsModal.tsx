@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useSettingsContext } from "../../state/SettingsContext";
 import { SettingsSections } from "./SettingsSections";
 import "./SettingsModal.css";
@@ -63,7 +64,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="settings-modal-backdrop" onClick={handleBackdropClick}>
       <div
         ref={modalRef}
@@ -98,6 +99,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

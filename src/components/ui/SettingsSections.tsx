@@ -14,6 +14,15 @@ interface SettingsSectionsProps {
   idPrefix?: string;
 }
 
+const SETTINGS_NAV = [
+  { id: "results", label: "Results", description: "Precision, live answers, chips" },
+  { id: "appearance", label: "Appearance", description: "Interface and editor themes" },
+  { id: "dates", label: "Dates", description: "Locale and date format" },
+  { id: "privacy", label: "Files & Privacy", description: "External data status" },
+  { id: "advanced", label: "Advanced", description: "Limits and plotting" },
+  { id: "panels", label: "Panels", description: "Visible workspace panels" },
+] as const;
+
 export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProps) {
   const { settings, updateSetting } = useSettingsContext();
   const fxStatus = useFxStatus();
@@ -192,9 +201,280 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
   );
 
   return (
-    <>
-      <div className="settings-section">
+    <div className="settings-shell">
+      <nav className="settings-nav" aria-label="Settings sections">
+        {SETTINGS_NAV.map((item) => (
+          <a key={item.id} className="settings-nav-item" href={`#${idPrefix}-${item.id}`}>
+            <span className="settings-nav-label">{item.label}</span>
+            <span className="settings-nav-description">{item.description}</span>
+          </a>
+        ))}
+      </nav>
+
+      <div className="settings-sections-list">
+        <div id={`${idPrefix}-results`} className="settings-section settings-section--wide settings-section--results">
+          <h3 className="settings-section-title">Results</h3>
+          <p className="settings-section-intro">
+            Tune how SmartPad shows answers while you work, from decimal precision to reusable result
+            chips.
+          </p>
+          <h4 className="settings-subsection-title">Result display</h4>
+
+          <div className="settings-item settings-item-stack">
+            <div className="settings-item-info">
+              <label htmlFor={`${idPrefix}-decimal-places`} className="settings-label">
+                Decimal Places
+              </label>
+              <p className="settings-description">
+                Number of decimal places to show in results and variable panel (0-10). If a non-zero
+                value would round to 0, SmartPad forces scientific notation instead.
+              </p>
+            </div>
+            <div className="settings-control">
+              <input
+                id={`${idPrefix}-decimal-places`}
+                type="number"
+                min="0"
+                max="10"
+                value={settings.decimalPlaces}
+                onChange={(e) => handleDecimalPlacesChange(parseInt(e.target.value) || 0)}
+                className="settings-number-input"
+              />
+            </div>
+          </div>
+
+          <div className="settings-item settings-item-stack">
+            <div className="settings-item-info">
+              <label htmlFor={`${idPrefix}-group-thousands`} className="settings-label">
+                Group thousands with commas
+              </label>
+              <p className="settings-description">
+                Insert comma separators (e.g., 1,234,567) in standard notation results for readability.
+              </p>
+            </div>
+            <div className="settings-control">
+              <label className="toggle-switch">
+                <input
+                  id={`${idPrefix}-group-thousands`}
+                  type="checkbox"
+                  checked={settings.groupThousands}
+                  onChange={(e) => handleGroupThousandsToggle(e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div className="settings-item settings-item-stack">
+            <div className="settings-item-info">
+              <label htmlFor={`${idPrefix}-live-result-enabled`} className="settings-label">
+                Live Result
+              </label>
+              <p className="settings-description">
+                Show expression results while typing on lines without =&gt;. Live previews suppress
+                errors until expressions are complete.
+              </p>
+            </div>
+            <div className="settings-control">
+              <label className="toggle-switch">
+                <input
+                  id={`${idPrefix}-live-result-enabled`}
+                  type="checkbox"
+                  checked={settings.liveResultEnabled}
+                  onChange={(e) => updateSetting("liveResultEnabled", e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div className="settings-item settings-item-stack">
+            <div className="settings-item-info">
+              <label htmlFor={`${idPrefix}-result-lane-enabled`} className="settings-label">
+                Result Lane
+              </label>
+              <p className="settings-description">
+                Align result chips into a consistent right-side lane on wide screens. SmartPad
+                automatically falls back to inline chips on narrow screens.
+              </p>
+            </div>
+            <div className="settings-control">
+              <label className="toggle-switch">
+                <input
+                  id={`${idPrefix}-result-lane-enabled`}
+                  type="checkbox"
+                  checked={settings.resultLaneEnabled}
+                  onChange={(e) => updateSetting("resultLaneEnabled", e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <h4 className="settings-subsection-title">Reuse and export</h4>
+
+          <div className="settings-item settings-item-stack">
+            <div className="settings-item-info">
+              <label htmlFor={`${idPrefix}-chip-insert-mode`} className="settings-label">
+                Result chip drag/drop insert mode
+              </label>
+              <p className="settings-description">
+                Choose what gets inserted when you drag a result chip: a live reference chip (keeps
+                tracking updates) or the current plain value snapshot.
+              </p>
+            </div>
+            <div className="settings-control">
+              <select
+                id={`${idPrefix}-chip-insert-mode`}
+                value={settings.chipInsertMode}
+                onChange={(e) =>
+                  updateSetting("chipInsertMode", e.target.value === "value" ? "value" : "reference")
+                }
+                className="settings-select"
+              >
+                <option value="reference">Insert reference chip</option>
+                <option value="value">Insert plain value</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="settings-item settings-item-stack">
+            <div className="settings-item-info">
+              <label htmlFor={`${idPrefix}-reference-text-export-mode`} className="settings-label">
+                Reference text copy/export
+              </label>
+              <p className="settings-description">
+                Preserve keeps stable SmartPad reference tokens in plain text. Readable flattens
+                references to visible values.
+              </p>
+            </div>
+            <div className="settings-control">
+              <select
+                id={`${idPrefix}-reference-text-export-mode`}
+                value={settings.referenceTextExportMode}
+                onChange={(e) =>
+                  updateSetting(
+                    "referenceTextExportMode",
+                    e.target.value === "readable" ? "readable" : "preserve"
+                  )
+                }
+                className="settings-select"
+              >
+                <option value="preserve">Preserve references</option>
+                <option value="readable">Readable values</option>
+              </select>
+            </div>
+          </div>
+
+          <h4 className="settings-subsection-title">Result appearance</h4>
+
+          <div className="settings-item">
+            <div className="settings-item-info">
+              <label htmlFor={`${idPrefix}-show-result-pulse`} className="settings-label">
+                Flash on Result Change
+              </label>
+              <p className="settings-description">Brief pulse animation when a result value updates</p>
+            </div>
+            <div className="settings-control">
+              <label className="toggle-switch">
+                <input
+                  id={`${idPrefix}-show-result-pulse`}
+                  type="checkbox"
+                  checked={settings.showResultPulse}
+                  onChange={(e) => updateSetting("showResultPulse", e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div className="settings-item">
+            <div className="settings-item-info">
+              <label htmlFor={`${idPrefix}-show-result-borders`} className="settings-label">
+                Result Borders
+              </label>
+              <p className="settings-description">Toggle the border outline around results</p>
+            </div>
+            <div className="settings-control">
+              <label className="toggle-switch">
+                <input
+                  id={`${idPrefix}-show-result-borders`}
+                  type="checkbox"
+                  checked={settings.showResultBorders}
+                  onChange={(e) => updateSetting("showResultBorders", e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div className="settings-item">
+            <div className="settings-item-info">
+              <label htmlFor={`${idPrefix}-show-result-background`} className="settings-label">
+                Result Backgrounds
+              </label>
+              <p className="settings-description">Toggle the filled background behind results</p>
+            </div>
+            <div className="settings-control">
+              <label className="toggle-switch">
+                <input
+                  id={`${idPrefix}-show-result-background`}
+                  type="checkbox"
+                  checked={settings.showResultBackground}
+                  onChange={(e) => updateSetting("showResultBackground", e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div className="settings-item">
+            <div className="settings-item-info">
+              <label htmlFor={`${idPrefix}-show-error-borders`} className="settings-label">
+                Error Borders
+              </label>
+              <p className="settings-description">Toggle the border outline around errors</p>
+            </div>
+            <div className="settings-control">
+              <label className="toggle-switch">
+                <input
+                  id={`${idPrefix}-show-error-borders`}
+                  type="checkbox"
+                  checked={settings.showErrorBorders}
+                  onChange={(e) => updateSetting("showErrorBorders", e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div className="settings-item">
+            <div className="settings-item-info">
+              <label htmlFor={`${idPrefix}-show-error-background`} className="settings-label">
+                Error Backgrounds
+              </label>
+              <p className="settings-description">Toggle the filled background behind errors</p>
+            </div>
+            <div className="settings-control">
+              <label className="toggle-switch">
+                <input
+                  id={`${idPrefix}-show-error-background`}
+                  type="checkbox"
+                  checked={settings.showErrorBackground}
+                  onChange={(e) => updateSetting("showErrorBackground", e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+      <div id={`${idPrefix}-appearance`} className="settings-section">
         <h3 className="settings-section-title">Appearance</h3>
+        <p className="settings-section-intro">
+          Choose the app theme and the editor colors separately, so the workspace can feel right
+          without sacrificing code-like readability.
+        </p>
 
         <div className="settings-item settings-item-stack">
           <div className="settings-item-info">
@@ -269,249 +549,11 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
         </div>
       </div>
 
-      <div className="settings-section settings-section--wide">
-        <h3 className="settings-section-title">Results And Formatting</h3>
-        <h4 className="settings-subsection-title">Result display</h4>
-
-        <div className="settings-item settings-item-stack">
-          <div className="settings-item-info">
-            <label htmlFor={`${idPrefix}-decimal-places`} className="settings-label">
-              Decimal Places
-            </label>
-            <p className="settings-description">
-              Number of decimal places to show in results and variable panel (0-10). If a non-zero
-              value would round to 0, SmartPad forces scientific notation instead.
-            </p>
-          </div>
-          <div className="settings-control">
-            <input
-              id={`${idPrefix}-decimal-places`}
-              type="number"
-              min="0"
-              max="10"
-              value={settings.decimalPlaces}
-              onChange={(e) => handleDecimalPlacesChange(parseInt(e.target.value) || 0)}
-              className="settings-number-input"
-            />
-          </div>
-        </div>
-
-        <div className="settings-item settings-item-stack">
-          <div className="settings-item-info">
-            <label htmlFor={`${idPrefix}-group-thousands`} className="settings-label">
-              Group thousands with commas
-            </label>
-            <p className="settings-description">
-              Insert comma separators (e.g., 1,234,567) in standard notation results for readability.
-            </p>
-          </div>
-          <div className="settings-control">
-            <label className="toggle-switch">
-              <input
-                id={`${idPrefix}-group-thousands`}
-                type="checkbox"
-                checked={settings.groupThousands}
-                onChange={(e) => handleGroupThousandsToggle(e.target.checked)}
-              />
-              <span className="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
-
-        <div className="settings-item settings-item-stack">
-          <div className="settings-item-info">
-            <label htmlFor={`${idPrefix}-live-result-enabled`} className="settings-label">
-              Live Result
-            </label>
-            <p className="settings-description">
-              Show expression results while typing on lines without =&gt;. Live previews suppress
-              errors until expressions are complete.
-            </p>
-          </div>
-          <div className="settings-control">
-            <label className="toggle-switch">
-              <input
-                id={`${idPrefix}-live-result-enabled`}
-                type="checkbox"
-                checked={settings.liveResultEnabled}
-                onChange={(e) => updateSetting("liveResultEnabled", e.target.checked)}
-              />
-              <span className="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
-
-        <div className="settings-item settings-item-stack">
-          <div className="settings-item-info">
-            <label htmlFor={`${idPrefix}-result-lane-enabled`} className="settings-label">
-              Result Lane
-            </label>
-            <p className="settings-description">
-              Align result chips into a consistent right-side lane on wide screens. SmartPad
-              automatically falls back to inline chips on narrow screens.
-            </p>
-          </div>
-          <div className="settings-control">
-            <label className="toggle-switch">
-              <input
-                id={`${idPrefix}-result-lane-enabled`}
-                type="checkbox"
-                checked={settings.resultLaneEnabled}
-                onChange={(e) => updateSetting("resultLaneEnabled", e.target.checked)}
-              />
-              <span className="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
-
-        <h4 className="settings-subsection-title">Reuse and export</h4>
-
-        <div className="settings-item settings-item-stack">
-          <div className="settings-item-info">
-            <label htmlFor={`${idPrefix}-chip-insert-mode`} className="settings-label">
-              Result chip drag/drop insert mode
-            </label>
-            <p className="settings-description">
-              Choose what gets inserted when you drag a result chip: a live reference chip (keeps
-              tracking updates) or the current plain value snapshot.
-            </p>
-          </div>
-          <div className="settings-control">
-            <select
-              id={`${idPrefix}-chip-insert-mode`}
-              value={settings.chipInsertMode}
-              onChange={(e) =>
-                updateSetting("chipInsertMode", e.target.value === "value" ? "value" : "reference")
-              }
-              className="settings-select"
-            >
-              <option value="reference">Insert reference chip</option>
-              <option value="value">Insert plain value</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="settings-item settings-item-stack">
-          <div className="settings-item-info">
-            <label htmlFor={`${idPrefix}-reference-text-export-mode`} className="settings-label">
-              Reference text copy/export
-            </label>
-            <p className="settings-description">
-              Preserve keeps stable SmartPad reference tokens in plain text. Readable flattens
-              references to visible values.
-            </p>
-          </div>
-          <div className="settings-control">
-            <select
-              id={`${idPrefix}-reference-text-export-mode`}
-              value={settings.referenceTextExportMode}
-              onChange={(e) =>
-                updateSetting(
-                  "referenceTextExportMode",
-                  e.target.value === "readable" ? "readable" : "preserve"
-                )
-              }
-              className="settings-select"
-            >
-              <option value="preserve">Preserve references</option>
-              <option value="readable">Readable values</option>
-            </select>
-          </div>
-        </div>
-
-        <h4 className="settings-subsection-title">Lists and limits</h4>
-
-        <div className="settings-item settings-item-stack">
-          <div className="settings-item-info">
-            <label htmlFor={`${idPrefix}-list-max-length`} className="settings-label">
-              Max items per list
-            </label>
-            <p className="settings-description">
-              Cap the number of entries a list can contain before throwing an error.
-            </p>
-          </div>
-          <div className="settings-control">
-            <input
-              id={`${idPrefix}-list-max-length`}
-              type="number"
-              min="5"
-              max="1000"
-              value={settings.listMaxLength}
-              onChange={(e) => handleListMaxLengthChange(parseInt(e.target.value) || 0)}
-              className="settings-number-input"
-            />
-          </div>
-        </div>
-
-        <h4 className="settings-subsection-title">Scientific notation</h4>
-
-        <div className="settings-item">
-          <div className="settings-item-info">
-            <label htmlFor={`${idPrefix}-scientific-upper-exponent`} className="settings-label">
-              Scientific Upper Exponent (10^N)
-            </label>
-            <p className="settings-description">
-              Use scientific notation when values are at or above 10^N
-            </p>
-          </div>
-          <div className="settings-control">
-            <input
-              id={`${idPrefix}-scientific-upper-exponent`}
-              type="number"
-              step="1"
-              value={settings.scientificUpperExponent}
-              onChange={(e) => handleScientificUpperChange(parseFloat(e.target.value))}
-              className="settings-number-input"
-            />
-          </div>
-        </div>
-
-        <div className="settings-item">
-          <div className="settings-item-info">
-            <label htmlFor={`${idPrefix}-scientific-lower-exponent`} className="settings-label">
-              Scientific Lower Exponent (10^N)
-            </label>
-            <p className="settings-description">
-              Use scientific notation when values are below 10^N
-            </p>
-          </div>
-          <div className="settings-control">
-            <input
-              id={`${idPrefix}-scientific-lower-exponent`}
-              type="number"
-              step="1"
-              value={settings.scientificLowerExponent}
-              onChange={(e) => handleScientificLowerChange(parseFloat(e.target.value))}
-              className="settings-number-input"
-            />
-          </div>
-        </div>
-
-        <div className="settings-item">
-          <div className="settings-item-info">
-            <label htmlFor={`${idPrefix}-scientific-trim-zeros`} className="settings-label">
-              Trim Scientific Trailing Zeros
-            </label>
-            <p className="settings-description">
-              When enabled, 5.000e+3 renders as 5e+3. Disable to keep fixed mantissa decimals.
-            </p>
-          </div>
-          <div className="settings-control">
-            <label className="toggle-switch">
-              <input
-                id={`${idPrefix}-scientific-trim-zeros`}
-                type="checkbox"
-                checked={settings.scientificTrimTrailingZeros}
-                onChange={(e) => updateSetting("scientificTrimTrailingZeros", e.target.checked)}
-              />
-              <span className="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <div className="settings-section">
-        <h3 className="settings-section-title">Dates And Locale</h3>
+      <div id={`${idPrefix}-dates`} className="settings-section">
+        <h3 className="settings-section-title">Dates</h3>
+        <p className="settings-section-intro">
+          Pick how SmartPad reads ambiguous dates and how dates should appear in your sheets.
+        </p>
 
         <div className="settings-item">
           <div className="settings-item-info">
@@ -591,8 +633,12 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
         </div>
       </div>
 
-      <div className="settings-section">
-        <h3 className="settings-section-title">Currency And External Data</h3>
+      <div id={`${idPrefix}-privacy`} className="settings-section">
+        <h3 className="settings-section-title">Files & Privacy</h3>
+        <p className="settings-section-intro">
+          SmartPad keeps your sheets local. Currency conversion uses external rate providers when
+          live data is available.
+        </p>
 
         <div className="settings-item">
           <div className="settings-item-info">
@@ -638,122 +684,100 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
         </div>
       </div>
 
-      <div className="settings-section">
-        <h3 className="settings-section-title">Result Styling</h3>
+      <div id={`${idPrefix}-advanced`} className="settings-section">
+        <h3 className="settings-section-title">Advanced</h3>
+        <p className="settings-section-intro">
+          Keep everyday settings simple, and adjust performance or workspace details only when you
+          need them.
+        </p>
+
+        <h4 className="settings-subsection-title">Lists and limits</h4>
+
+        <div className="settings-item settings-item-stack">
+          <div className="settings-item-info">
+            <label htmlFor={`${idPrefix}-list-max-length`} className="settings-label">
+              Max items per list
+            </label>
+            <p className="settings-description">
+              Cap the number of entries a list can contain before throwing an error.
+            </p>
+          </div>
+          <div className="settings-control">
+            <input
+              id={`${idPrefix}-list-max-length`}
+              type="number"
+              min="5"
+              max="1000"
+              value={settings.listMaxLength}
+              onChange={(e) => handleListMaxLengthChange(parseInt(e.target.value) || 0)}
+              className="settings-number-input"
+            />
+          </div>
+        </div>
+
+        <h4 className="settings-subsection-title">Scientific notation</h4>
 
         <div className="settings-item">
           <div className="settings-item-info">
-            <label htmlFor={`${idPrefix}-show-result-pulse`} className="settings-label">
-              Flash on Result Change
+            <label htmlFor={`${idPrefix}-scientific-upper-exponent`} className="settings-label">
+              Scientific Upper Exponent (10^N)
+            </label>
+            <p className="settings-description">Use scientific notation when values are at or above 10^N</p>
+          </div>
+          <div className="settings-control">
+            <input
+              id={`${idPrefix}-scientific-upper-exponent`}
+              type="number"
+              step="1"
+              value={settings.scientificUpperExponent}
+              onChange={(e) => handleScientificUpperChange(parseFloat(e.target.value))}
+              className="settings-number-input"
+            />
+          </div>
+        </div>
+
+        <div className="settings-item">
+          <div className="settings-item-info">
+            <label htmlFor={`${idPrefix}-scientific-lower-exponent`} className="settings-label">
+              Scientific Lower Exponent (10^N)
+            </label>
+            <p className="settings-description">Use scientific notation when values are below 10^N</p>
+          </div>
+          <div className="settings-control">
+            <input
+              id={`${idPrefix}-scientific-lower-exponent`}
+              type="number"
+              step="1"
+              value={settings.scientificLowerExponent}
+              onChange={(e) => handleScientificLowerChange(parseFloat(e.target.value))}
+              className="settings-number-input"
+            />
+          </div>
+        </div>
+
+        <div className="settings-item">
+          <div className="settings-item-info">
+            <label htmlFor={`${idPrefix}-scientific-trim-zeros`} className="settings-label">
+              Trim Scientific Trailing Zeros
             </label>
             <p className="settings-description">
-              Brief pulse animation when a result value updates
+              When enabled, 5.000e+3 renders as 5e+3. Disable to keep fixed mantissa decimals.
             </p>
           </div>
           <div className="settings-control">
             <label className="toggle-switch">
               <input
-                id={`${idPrefix}-show-result-pulse`}
+                id={`${idPrefix}-scientific-trim-zeros`}
                 type="checkbox"
-                checked={settings.showResultPulse}
-                onChange={(e) => updateSetting("showResultPulse", e.target.checked)}
+                checked={settings.scientificTrimTrailingZeros}
+                onChange={(e) => updateSetting("scientificTrimTrailingZeros", e.target.checked)}
               />
               <span className="toggle-slider"></span>
             </label>
           </div>
         </div>
 
-        <div className="settings-item">
-          <div className="settings-item-info">
-            <label htmlFor={`${idPrefix}-show-result-borders`} className="settings-label">
-              Result Borders
-            </label>
-            <p className="settings-description">
-              Toggle the border outline around results
-            </p>
-          </div>
-          <div className="settings-control">
-            <label className="toggle-switch">
-              <input
-                id={`${idPrefix}-show-result-borders`}
-                type="checkbox"
-                checked={settings.showResultBorders}
-                onChange={(e) => updateSetting("showResultBorders", e.target.checked)}
-              />
-              <span className="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
-
-        <div className="settings-item">
-          <div className="settings-item-info">
-            <label htmlFor={`${idPrefix}-show-result-background`} className="settings-label">
-              Result Backgrounds
-            </label>
-            <p className="settings-description">
-              Toggle the filled background behind results
-            </p>
-          </div>
-          <div className="settings-control">
-            <label className="toggle-switch">
-              <input
-                id={`${idPrefix}-show-result-background`}
-                type="checkbox"
-                checked={settings.showResultBackground}
-                onChange={(e) => updateSetting("showResultBackground", e.target.checked)}
-              />
-              <span className="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
-
-        <div className="settings-item">
-          <div className="settings-item-info">
-            <label htmlFor={`${idPrefix}-show-error-borders`} className="settings-label">
-              Error Borders
-            </label>
-            <p className="settings-description">
-              Toggle the border outline around errors
-            </p>
-          </div>
-          <div className="settings-control">
-            <label className="toggle-switch">
-              <input
-                id={`${idPrefix}-show-error-borders`}
-                type="checkbox"
-                checked={settings.showErrorBorders}
-                onChange={(e) => updateSetting("showErrorBorders", e.target.checked)}
-              />
-              <span className="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
-
-        <div className="settings-item">
-          <div className="settings-item-info">
-            <label htmlFor={`${idPrefix}-show-error-background`} className="settings-label">
-              Error Backgrounds
-            </label>
-            <p className="settings-description">
-              Toggle the filled background behind errors
-            </p>
-          </div>
-          <div className="settings-control">
-            <label className="toggle-switch">
-              <input
-                id={`${idPrefix}-show-error-background`}
-                type="checkbox"
-                checked={settings.showErrorBackground}
-                onChange={(e) => updateSetting("showErrorBackground", e.target.checked)}
-              />
-              <span className="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <div className="settings-section">
-        <h3 className="settings-section-title">Advanced Plotting</h3>
+        <h4 className="settings-subsection-title">Plotting</h4>
 
         <div className="settings-item">
           <div className="settings-item-info">
@@ -1006,8 +1030,11 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
         </div>
       </div>
 
-      <div className="settings-section">
+      <div id={`${idPrefix}-panels`} className="settings-section">
         <h3 className="settings-section-title">Panels</h3>
+        <p className="settings-section-intro">
+          Decide which supporting panels should stay visible around the editor.
+        </p>
 
         <div className="settings-item">
           <div className="settings-item-info">
@@ -1075,6 +1102,7 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
           </div>
         </div>
       </div>
-    </>
+      </div>
+    </div>
   );
 }

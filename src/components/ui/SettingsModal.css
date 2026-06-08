@@ -8,7 +8,7 @@
   bottom: 0;
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(8px);
-  z-index: 1000;
+  z-index: 3000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -19,11 +19,11 @@
 .settings-modal {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 16px;
+  border-radius: 12px;
   box-shadow: var(--shadow-lg);
-  max-width: 1100px;
-  width: min(1100px, 94vw);
-  max-height: 80vh;
+  max-width: 1160px;
+  width: min(1160px, 94vw);
+  max-height: 84vh;
   display: flex;
   flex-direction: column;
   outline: none;
@@ -35,7 +35,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.5rem 2rem 1rem;
+  padding: 1.25rem 1.5rem 1rem;
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -72,29 +72,72 @@
 /* Content */
 .settings-content {
   flex: 1;
-  padding: 1.5rem 2.5rem 2rem;
+  padding: 0;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+.settings-shell {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  align-items: start;
-  gap: 1.25rem;
+  grid-template-columns: 220px minmax(0, 1fr);
+  min-height: 0;
+}
+
+.settings-nav {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem;
+  border-right: 1px solid var(--color-border);
+}
+
+.settings-nav-item {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.settings-nav-item:hover,
+.settings-nav-item:focus-visible {
+  background: var(--color-surface-hover);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+  outline: none;
+}
+
+.settings-nav-label {
+  color: var(--color-text-primary);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.settings-nav-description {
+  font-size: 0.74rem;
+  line-height: 1.3;
+}
+
+.settings-sections-list {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem 1.25rem 1.5rem;
 }
 
 .settings-section {
   margin-bottom: 0;
+  scroll-margin-top: 1rem;
   background: var(--color-surface-light);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 1.5rem 1.5rem 0.75rem;
+  border-radius: 8px;
+  padding: 1.25rem 1.25rem 0.55rem;
   break-inside: avoid;
-}
-
-.settings-content > .settings-section--wide,
-.settings-content > .settings-section--currency {
-  grid-column: 1 / -1 !important;
-  width: 100%;
-  min-width: 0;
 }
 
 .settings-section--wide .settings-label,
@@ -110,20 +153,28 @@
 }
 
 .settings-section-title {
-  margin: 0 0 1.25rem 0;
-  font-size: 0.75rem;
+  margin: 0;
+  font-size: 0.78rem;
   font-weight: 600;
   color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
 
+.settings-section-intro {
+  max-width: 62ch;
+  margin: 0.45rem 0 1rem;
+  color: var(--color-text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
 .settings-subsection-title {
-  margin: 1.15rem 0 0.15rem;
-  padding-top: 0.85rem;
+  margin: 1.05rem 0 0.1rem;
+  padding-top: 0.9rem;
   border-top: 1px solid var(--color-border);
   color: var(--color-text-primary);
-  font-size: 0.8rem;
+  font-size: 0.86rem;
   font-weight: 600;
   letter-spacing: 0;
 }
@@ -136,11 +187,11 @@
 
 .settings-item {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  column-gap: 1.25rem;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, auto);
+  column-gap: 1.5rem;
   row-gap: 0.35rem;
   align-items: center;
-  padding: 0.9rem 0;
+  padding: 0.95rem 0;
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -498,8 +549,30 @@
     padding: 1rem 1.5rem 0.75rem;
   }
   
-  .settings-content {
-    padding: 0.75rem 1.5rem;
+  .settings-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-nav {
+    position: static;
+    flex-direction: row;
+    gap: 0.4rem;
+    overflow-x: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    padding: 0.75rem;
+  }
+
+  .settings-nav-item {
+    min-width: 132px;
+  }
+
+  .settings-sections-list {
+    padding: 0.85rem;
+  }
+
+  .settings-section {
+    padding: 1rem 1rem 0.4rem;
   }
   
   .settings-footer {
@@ -507,12 +580,12 @@
   }
   
   .settings-item {
-    flex-direction: column;
-    align-items: flex-start;
+    grid-template-columns: 1fr;
+    align-items: stretch;
     gap: 0.75rem;
   }
   
   .settings-control {
-    align-self: flex-end;
+    justify-self: start;
   }
 }
