@@ -4,7 +4,7 @@
 
 Make SmartPad understandable and supportable for public users who arrive from the launch homepage with no project context.
 
-The current docs are a strong feature reference and beginner guide, but launch requires explicit support paths, known limitations, privacy/tracking notes, and a verified journey from homepage to working example.
+The current docs are a user-approved public manual for launch. Remaining launch work is mostly integration: link the docs from the future promotional homepage, keep privacy/support copy aligned with signup/analytics decisions, and verify the full homepage-to-docs-to-app journey once the homepage exists.
 
 ## Current State
 
@@ -12,11 +12,12 @@ Existing public docs:
 
 - `website/docs/intro.md`
 - `website/docs/guides/getting-started.md`
-- `website/docs/guides/syntax-playbook.md`
+- `website/docs/guides/core-interactions.md`
 - `website/docs/guides/everyday-calculations.md`
-- `website/docs/guides/privacy-and-portability.md`
+- `website/docs/guides/syntax-reference.md`
+- `website/docs/guides/files-and-privacy.md`
 - `website/docs/guides/troubleshooting.md`
-- `website/docs/specs/*`
+- `website/docs/guides/support.md`
 
 Existing support entry points:
 
@@ -27,84 +28,64 @@ Existing support entry points:
 Existing validation:
 
 - `tests/e2e/docs-ia.spec.ts`
+- `scripts/validate-docusaurus-examples.ts`
+- `npm run docs:docusaurus:validate-examples`
 - `npm run docs:docusaurus:publish-local`
 - `npm run docs:docusaurus:publish-prod`
 - `npm run docs:map`
 - `npm run docs:drift`
+- `npm run verify:changed`
 
 ## Launch Gaps
 
 | Area | Current state | Launch gap | Required action |
 | --- | --- | --- | --- |
-| Beginner journey | Start Here and Getting Started exist | Journey is docs-first and not yet tied to launch homepage CTAs | Add scripted homepage -> docs -> app example journey after homepage exists. |
-| Known limitations | Public page now exists in `website/docs/guides/known-limitations.md` and generated `public/docs` | Needs user review and homepage link | Review wording before launch and link from homepage. |
-| Support path | Public page now exists in `website/docs/guides/support.md`; GitHub templates exist | Needs user review, issue-template wording review, and homepage link | Review support copy/templates and link support from troubleshooting/footer/homepage. |
-| Privacy/tracking | Privacy and portability covers local storage/import/export, FX, planned signup/analytics boundaries, and desktop beta status | Signup provider/analytics decision is still pending | Keep copy aligned with the final signup/analytics decision before launch. |
-| Desktop beta | Planned in launch docs | Public docs do not explain desktop status or unsigned beta warnings | Add only after a desktop artifact exists; until then say planned/waitlist only. |
-| Proposed-vs-shipped | Specs split exists | Launch funnel could expose proposed features as if shipped | Ensure homepage/docs link primarily to implemented guides/specs. |
-| Troubleshooting | Syntax/conversion/range troubleshooting exists | Missing issue escalation and “what to include in a bug report” | Add escalation steps and link bug template. |
-| Accessibility | Docs are structured | No launch-specific accessibility pass recorded | Verify docs/homepage keyboard, mobile, contrast, link text, and embedded previews. |
+| Beginner journey | Start Here, First Sheet, Core Interactions, Everyday Examples, and Syntax Reference exist | Journey is docs-first and not yet tied to launch homepage CTAs | Add scripted homepage -> docs -> app example journey after homepage exists. |
+| Limitations and privacy | Files & Privacy covers local storage, backups, no accounts/cloud sync, FX dependency, current desktop beta status, and current limits | Signup provider/analytics decision is still pending | Keep copy aligned with the final signup/analytics decision before launch. |
+| Support path | Support page exists; Troubleshooting links escalation; GitHub templates exist | Homepage/footer links missing until promotional site exists | Link support from future homepage and review GitHub issue-template wording during release dry run. |
+| Desktop beta | Planned in launch docs; public docs describe beta status without promising artifacts | Artifact-specific warnings cannot be final until packaging exists | Update Files & Privacy and homepage copy only after a desktop artifact exists. |
+| Proposed-vs-shipped | Public Docusaurus output no longer exposes per-spec Feature Guides | Future homepage could still overpromise advanced/proposed features | Keep homepage copy tied to implemented guides and verified launch behavior. |
+| Accessibility | Docs IA test covers desktop/mobile sanity | Full homepage/docs/app journey accessibility cannot run until homepage exists | Verify keyboard, mobile, contrast, link text, and embedded previews after homepage exists. |
 
-## Required Public Docs Changes
+## Current Public Docs Shape
 
-### 1. Known Limitations Page
+The approved Docusaurus sidebar is:
 
-Proposed file:
+1. Start Here
+2. First Sheet
+3. Core Interactions
+4. Everyday Examples
+5. Syntax Reference
+6. Files & Privacy
+7. Troubleshooting
+8. Support
 
-- `website/docs/guides/known-limitations.md`
+The docs intentionally do not publish per-spec Feature Guides. Internal specs remain project source material; public docs stay focused on product users.
 
-Must include:
+## Remaining Public Docs Work
 
-- Desktop app is planned/beta depending on artifact status.
-- No accounts/cloud sync/collaboration.
-- No hidden app telemetry.
-- FX conversions may depend on external rates/cached data.
-- Proposed features are roadmap/spec ideas, not shipped behavior.
-- Browser local storage durability depends on browser/profile/device.
-- Export important work before browser/profile migrations.
-- Unsupported features: tables, AI formulas, auto-suggested plots, timezone/business-day date keywords, full plugin system.
-
-### 2. Support Page Or Troubleshooting Expansion
-
-Preferred file:
-
-- `website/docs/guides/support.md`
-
-Minimum content:
-
-- Bug report link.
-- Feature request link.
-- What to include: app URL/version, browser/OS, exact sheet text, expected/actual result, screenshot/video, export if safe.
-- Triage priorities: data loss, wrong calculations, app load/storage/import/export, docs routing, settings/onboarding, polish.
-- Privacy note: remove sensitive data before attaching examples.
-
-### 3. Privacy And Portability Expansion
+### 1. Homepage Links
 
 Update:
 
-- `website/docs/guides/privacy-and-portability.md`
-
-Add:
-
-- Website signup is separate from app usage.
-- Website analytics, if enabled, track website events only and not sheet content.
-- App stores sheets locally unless user imports/exports.
-- FX rate behavior and offline/cache explanation.
-- Desktop beta unsigned warning policy once artifacts exist.
-
-### 4. Sidebar And Homepage Links
-
-Update:
-
-- `website/sidebars.ts`
 - Future homepage from `aidocs/WEB_LAUNCH_BRIEF.md`
 
 Add links to:
 
-- Known Limitations
+- Start Here
+- Syntax Reference
+- Files & Privacy
 - Support
-- Privacy and Portability
 - Changelog/Release notes
+
+### 2. Release-Dry-Run Copy Review
+
+During release candidate dry run, confirm:
+
+- Support page issue links still resolve.
+- Files & Privacy still matches actual signup/analytics/desktop status.
+- Troubleshooting points users to support when simplification does not resolve a problem.
+- Public docs do not mention proposed features as shipped behavior.
 
 ## User Journey To Verify
 
@@ -118,7 +99,7 @@ After homepage exists:
 6. User opens SmartPad from docs/homepage.
 7. User understands local-first storage and export guidance.
 8. User can find support/bug report.
-9. User can find known limitations.
+9. User can find current limitations and privacy guidance in Files & Privacy.
 
 This should be verified by Playwright once the homepage and docs pages exist.
 
@@ -130,7 +111,6 @@ Public docs should:
 - Include runnable examples for shipped behavior.
 - Avoid proposed feature examples unless clearly labeled.
 - Prefer positive examples plus guardrails.
-- Link to implemented specs for deep details.
 - Keep limitations honest and concise.
 - Avoid internal implementation terms unless they help users make decisions.
 
@@ -150,10 +130,10 @@ npm run verify:changed
 
 Browser checks:
 
-- Docs sidebar includes Support and Known Limitations.
+- Docs sidebar includes Files & Privacy, Troubleshooting, and Support.
 - Links to bug report and feature request resolve.
-- Privacy page mentions signup/analytics only if those features exist or are planned with clear status.
-- Proposed specs are not on the main launch path unless marked as roadmap.
+- Files & Privacy mentions signup/analytics only if those features exist or are planned with clear status.
+- Public Docusaurus output does not expose per-spec Feature Guides as the main launch path.
 - Mobile docs navigation works at 390px width.
 - Embedded examples do not create persistent sheets.
 
@@ -161,9 +141,8 @@ Browser checks:
 
 `T-2026-06-06-07` is done when:
 
-- Known limitations page exists.
+- Files & Privacy covers local storage, FX, signup/analytics status, current limitations, and desktop beta status accurately.
 - Support path is visible from docs and launch homepage.
-- Privacy/portability page covers local storage, FX, signup/analytics, and desktop beta status accurately.
 - Sidebar and homepage link the right user-support pages.
 - A scripted beginner journey from homepage to working SmartPad example passes.
 - Docs build, docs drift/spec gates, and release-candidate docs checks pass.

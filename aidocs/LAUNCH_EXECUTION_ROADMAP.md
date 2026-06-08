@@ -111,7 +111,7 @@ Exit criteria:
 
 ## Phase 3: Public Docs And Support
 
-Status: first public docs/support pass patched; pending user review, homepage links, and journey verification.
+Status: public docs copy and IA are user-approved; pending future homepage links and end-to-end journey verification.
 
 Primary task:
 
@@ -123,16 +123,17 @@ Inputs:
 
 Completed so far:
 
-1. Add Known Limitations page.
-2. Add Support page or support section.
-3. Expand Privacy and Portability with FX, signup/analytics, and desktop beta status.
+1. Reworked public docs into the approved user-facing IA: Start Here, First Sheet, Core Interactions, Everyday Examples, Syntax Reference, Files & Privacy, Troubleshooting, Support.
+2. Removed public Feature Guides/spec pages from Docusaurus output.
+3. Expanded Syntax Reference with lists, ranges, dates, `where`, `as %`, `make`, views, units, derived units, SI prefixes, and compound unit examples.
+4. Added Support path and merged privacy, portability, backups, limitations, FX caveats, and current desktop status into Files & Privacy.
+5. Added docs example validation so public `ExamplePlayground` snippets run through the SmartPad evaluator.
 
 Remaining actions:
 
-1. Review public docs/support wording with the user.
-2. Link support, known limitations, and privacy pages from the future launch homepage.
-3. Add or update journey verification after homepage exists.
-4. Keep local docs generated with `/docs/` base URL; use `/SmartPad/docs/` only for production deploy builds.
+1. Link docs/support/privacy from the future launch homepage.
+2. Add or update homepage -> docs -> app journey verification after homepage exists.
+3. Keep local docs generated with `/docs/` base URL; use `/SmartPad/docs/` only for production deploy builds.
 
 Exit criteria:
 
@@ -248,10 +249,10 @@ Rules:
 1. Confirm scope with user.
 2. Redesign Settings from scratch as a professional app surface.
 3. Run launch stability checks.
-4. Patch docs/support/known limitations.
-5. Dry-run release checklist.
-6. Implement desktop beta shell.
-7. Build standalone promotional website and capture final assets.
+4. Dry-run release checklist.
+5. Implement desktop beta shell.
+6. Build standalone promotional website and capture final assets.
+7. Link approved docs/support/privacy pages from the promotional site and verify the full journey.
 
 ## Current Blockers
 
@@ -266,7 +267,7 @@ P0:
 P1:
 
 - Release checklist has not been dry-run.
-- Support/known limitations/privacy docs need user review and eventual promotional-site links.
+- Docs/support/privacy pages are approved but still need eventual promotional-site links and homepage journey verification.
 - Signup/analytics policy is documented as not wired yet; final provider decision is still pending.
 - Autocomplete remains pending user confirmation/spec-status reconciliation before headline use.
 

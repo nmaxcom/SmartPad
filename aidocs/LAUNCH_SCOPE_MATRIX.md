@@ -28,7 +28,7 @@ Status meanings:
 | Plotting and dependency views | Should ship | audit | `docs/Specs/Plotting.spec.md`, `docs/Specs/implemented/plotting-and-dependency-views.md`, `tests/unit/plotViewEvaluator.test.ts`, `tests/e2e/plot-view-interactions.spec.ts`, `tests/e2e/visual-insights-template.spec.ts` | Use screenshots/video if release-candidate visual checks pass; otherwise frame as beta/advanced. |
 | Result chips and references | Must ship | audit | `docs/Specs/ResultChipsAndValueGraph.spec.md`, `docs/Specs/implemented/result-chips-and-references.md`, `tests/e2e/result-reference.spec.ts`, `tests/e2e/result-reference-drag-only.spec.ts`, `tests/e2e/live-result.spec.ts` | Finish `T-2026-06-04-01` user review and known chip parity/caret tasks before treating as launch-polished. |
 | Sheets and local persistence | Must ship | audit | `docs/Specs/FileManagement.spec.md`, `docs/Specs/implemented/file-management.md`, `src/storage/sheetsDb.ts`, `src/components/SheetSync.tsx`, `tests/e2e/save-load-buttons.spec.ts`, `tests/e2e/migration-verification.spec.ts` | Run release-candidate persistence/import/export smoke across fresh profile and upgraded profile. |
-| Import/export portability | Must ship | audit | `docs/Specs/FileManagement.spec.md`, `docs/Specs/implemented/file-management.md`, `tests/e2e/save-load-buttons.spec.ts`, `website/docs/guides/privacy-and-portability.md` | Verify copy says user owns files and explains backup limitations. |
+| Import/export portability | Must ship | audit | `docs/Specs/FileManagement.spec.md`, `docs/Specs/implemented/file-management.md`, `tests/e2e/save-load-buttons.spec.ts`, `website/docs/guides/files-and-privacy.md` | Verify copy says user owns files and explains backup limitations. |
 | Settings | Must ship | gap | `aidocs/SETTINGS_ONBOARDING_LAUNCH_BRIEF.md`, `src/components/ui/SettingsSections.tsx`, `src/state/settingsStore.ts`, `tests/unit/settingsStore.test.ts`, `tests/e2e/settings-integration.spec.ts` | First IA pass is not enough for launch; redesign Settings from scratch as a professional app surface, with visible design/strategy checkpoints before implementation. |
 | First-run onboarding | Must ship | audit | `src/templates/quickTourTemplate.ts`, `tests/unit/quickTourTemplate.test.ts`, `tests/e2e/quick-tour-template.spec.ts` | Pair quick tour with product-level onboarding/empty-state copy so users know what to do first. |
 | Autocomplete | Should ship if confirmed | audit | `docs/Specs/proposed/autocomplete.md`, `tests/unit/autocompleteSuggestions.test.ts`, `tests/e2e/autocomplete.spec.ts`, backlog `T-2026-06-04-01` | Keep as beta/proposed until user confirms current behavior and spec status is reconciled. |
@@ -38,14 +38,14 @@ Status meanings:
 | Area | Launch decision | Current status | Evidence | Launch action |
 | --- | --- | --- | --- | --- |
 | Public web app | Must ship | audit | `.github/workflows/deploy-pages.yml`, `package.json`, `vite.config.ts` | Run deploy-path smoke and confirm final public URL, routing, docs link, and cache behavior. |
-| Public documentation | Must ship | audit | `aidocs/DOCS_SUPPORT_LAUNCH_AUDIT.md`, `website/docs/`, `public/docs/`, `tests/e2e/docs-ia.spec.ts`, `package.json` docs scripts | Known limitations/support/privacy launch pages are generated and linked in docs; next verify mobile docs navigation and homepage-to-docs-to-app journey after homepage exists. |
+| Public documentation | Must ship | ready | `aidocs/DOCS_SUPPORT_LAUNCH_AUDIT.md`, `website/docs/`, `public/docs/`, `tests/e2e/docs-ia.spec.ts`, `package.json` docs scripts | Public docs IA/copy are user-approved; keep docs generated, link from future homepage, and verify homepage-to-docs-to-app journey after homepage exists. |
 | Promotional product website | Must ship last | gap | `aidocs/WEB_LAUNCH_BRIEF.md`; `website/` exists as docs site only; no standalone promotional product site exists | Build a separate, modern product website from scratch as the final launch step, with real app videos, interactive examples, app/docs/download CTAs, privacy copy, and signup. |
 | Update signup | Must ship for audience growth | gap | `aidocs/WEB_LAUNCH_BRIEF.md`; no provider/config found | Decide provider and hosting constraints; prefer simple static-compatible signup. |
 | Screenshots/video assets | Should ship | gap | `aidocs/WEB_LAUNCH_BRIEF.md`; `public/smartpad.png`, `smartpad.png`; no launch asset inventory | Capture reproducible screenshots and short demo clips from verified launch demo sheets after settings/onboarding polish. |
 | SEO/Open Graph | Should ship | gap | `aidocs/WEB_LAUNCH_BRIEF.md`; Docusaurus site exists; no launch OG asset inventory found | Add title/description/OG image for homepage and docs. |
 | Issue intake | Must ship | ready | `.github/ISSUE_TEMPLATE/bug_report.yml`, `.github/ISSUE_TEMPLATE/feature_request.md` | Review templates for public beta wording and expected repro details. |
 | Changelog/versioning | Must ship | audit | `RELEASE_CHECKLIST.md`, `CHANGELOG.md` | Dry-run the checklist on a release candidate and keep changelog entries current before tagging. |
-| Privacy/security notes | Must ship | ready | `website/docs/guides/privacy-and-portability.md`, `website/docs/guides/known-limitations.md`, `public/docs/guides/privacy-and-portability/index.html`, `public/docs/guides/known-limitations/index.html` | Keep in sync when signup/analytics provider or desktop artifact status changes. |
+| Privacy/security notes | Must ship | ready | `website/docs/guides/files-and-privacy.md`, `public/docs/guides/files-and-privacy/index.html` | Keep in sync when signup/analytics provider or desktop artifact status changes. |
 | CI/reliability gates | Must ship | ready | `.github/workflows/ci.yml`, `scripts/verify-changed.js`, `aidocs/AI_RELIABILITY_SYSTEM.md` | Keep as launch release gate; add release-candidate checklist that names exact commands. |
 | Desktop packaging | Should ship as beta | gap | `aidocs/DESKTOP_PACKAGING_DECISION.md`; no Electron/Tauri package files found | Start with a minimal Electron shell after settings/onboarding polish is underway, then package an unsigned macOS beta and document cross-platform CI/release steps. |
 | Auto-update | Defer unless cheap | defer | No desktop release pipeline yet | Do not block first public web launch; document desktop beta update process manually. |
@@ -79,15 +79,15 @@ P0 blockers:
 
 P1 blockers:
 
-1. Docs need a beginner-journey and known-limitations audit.
-2. Privacy copy needs explicit website analytics/signup/FX/local-storage coverage.
-3. Public support path has default GitHub intake but needs visible docs/promotional-site links.
+1. Public docs/support/privacy are approved but still need visible promotional-site links after the homepage exists.
+2. Signup/analytics copy must stay aligned with the final provider decision.
+3. Public support path has GitHub intake but still needs homepage/footer links in the promotional site.
 4. Autocomplete needs user confirmation and spec-status reconciliation before being messaged as shipped.
 
 ## Recommended Next Work
 
-1. Review this matrix with the user and confirm launch scope.
-2. Start the launch stability audit from the `audit` rows above.
-3. Redesign Settings from scratch before marketing screenshots.
+1. Confirm launch scope with the user.
+2. Redesign Settings from scratch before marketing screenshots.
+3. Start the launch stability audit from the remaining `audit` rows.
 4. Build the standalone promotional product website last, after product screenshots/video are stable.
-5. Run desktop packaging spike after website direction is set, unless desktop beta becomes the launch-critical channel.
+5. Run desktop packaging spike after settings/onboarding polish is underway, unless desktop beta becomes the launch-critical channel.
