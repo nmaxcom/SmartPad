@@ -94,3 +94,4 @@ Steps:
 - Include at least one positive and one edge-case example.
 - Note behavior changes with dates.
 - Keep language user-facing and concrete.
+- Public product docs must speak directly to the person using SmartPad. Do not use internal/meta documentation language such as "what belongs in the docs", "what belongs in templates", "docs teach", "capability labs", "spec-like", "roadmap", "source of truth", or similar process framing on public Docusaurus pages. Rephrase those ideas as user benefits, next actions, or task-oriented guidance.

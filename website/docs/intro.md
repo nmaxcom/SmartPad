@@ -20,21 +20,21 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 - **Your work stays close**: sheets live in browser storage on your machine by default.
 - **The file still makes sense outside the app**: exports are human-readable Markdown (`.md`).
 - **Numbers carry meaning**: units, currencies, durations, lists, ranges, and dates behave like values, not decoration.
-- **You can poke at assumptions**: chips, references, and views make a sheet easier to explore without rewriting it.
+- **You can poke at assumptions**: result chips, references, and views make a sheet easier to explore without rewriting it.
 
 ## First 90-second win
 
-<ExamplePlayground title={"Personal weekly plan"} description={"Type naturally, then nudge values to explore options."} code={"hours = 38\nrate = $95/hour\nweekly pay = hours * rate\ntax = 8.5% on weekly pay\ntake home = weekly pay - tax\ntake home in EUR"} />
+<ExamplePlayground title={"Personal weekly plan"} description={"Type naturally, then nudge values to explore options."} code={"hours = 38\nrate = $95/hour\nweekly pay = hours * rate\ntax = 8.5% on weekly pay\ntake home = weekly pay - tax"} />
 
 ## A good path through the docs
 
-1. **[Getting Started](./guides/getting-started)**: core mental model + first useful workflows.
-2. **[Syntax Playbook](./guides/syntax-playbook)**: write robust expressions and avoid common pitfalls.
-3. **[Everyday Calculations](./guides/everyday-calculations)**: practical examples for budgeting, planning, and analysis.
-4. **[Privacy and Portability](./guides/privacy-and-portability)**: understand durability, export, and local ownership.
-5. **[Known Limitations](./guides/known-limitations)**: know where SmartPad is careful, unfinished, or intentionally quiet.
-6. **[Support](./guides/support)**: report bugs, request features, and share examples safely.
-7. **[Feature Guides](./specs)**: go deeper on each major capability when you need the details.
+1. **[First Sheet](./guides/getting-started)**: make one useful sheet without learning app vocabulary first.
+2. **[Core Interactions](./guides/core-interactions)**: understand chips, copy, references, menus, and scrubbing.
+3. **[Everyday Examples](./guides/everyday-calculations)**: copy practical sheets and adjust them.
+4. **[Syntax Reference](./guides/syntax-reference)**: look up units, conversions, lists, ranges, dates, `where`, `as`, `make`, and common patterns.
+5. **[Files & Privacy](./guides/files-and-privacy)**: understand local storage, exports, backups, and current limits.
+6. **[Troubleshooting](./guides/troubleshooting)**: narrow down syntax, conversion, and range issues.
+7. **[Support](./guides/support)**: report bugs, request features, and share examples safely.
 
 ## What SmartPad is not
 
@@ -44,5 +44,5 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
 ## Next
 
-Continue with [Getting Started](./guides/getting-started).
+Continue with [First Sheet](./guides/getting-started).
 

@@ -52,5 +52,4 @@ When a private example is required to reproduce a problem, first reduce it to th
 ## Related pages
 
 - [Troubleshooting](../troubleshooting)
-- [Known Limitations](../known-limitations)
-- [Privacy and Portability](../privacy-and-portability)
+- [Files & Privacy](../files-and-privacy)

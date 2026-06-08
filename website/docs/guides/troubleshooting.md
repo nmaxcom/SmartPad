@@ -1,6 +1,6 @@
 ---
 title: "Troubleshooting"
-sidebar_position: 6
+sidebar_position: 7
 description: "Simple ways to narrow down syntax, conversion, and range issues."
 ---
 
@@ -26,21 +26,7 @@ import ExamplePlayground from "@site/src/components/ExamplePlayground";
 - Start with flat lists before trying nested ones.
 - Keep units compatible inside the same list operation.
 
-<ExamplePlayground title={"Debug by simplification"} description={"Split a failing expression into explicit intermediate lines."} code={"prices = $10, $20, $30\nqty = 2, 1, 3\nline totals = prices * qty =>\nsum(line totals) =>\nbad qty = 2, 1\nprices * bad qty =>"} />
-
-## If something still feels off
-
-These deeper pages can help when you want the exact behavior for one feature:
-
-- [Live Results](../../specs/live-results)
-- [Result Chips and References](../../specs/result-chips-and-references)
-- [Plotting and Dependency Views](../../specs/plotting-and-dependency-views)
-- [Currency and FX](../../specs/currency-and-fx)
-- [Duration and Time Values](../../specs/duration-and-time-values)
-- [Lists](../../specs/lists)
-- [Ranges](../../specs/ranges)
-- [Locale Date and Time](../../specs/locale-date-time)
-- [File Management](../../specs/file-management)
+<ExamplePlayground title={"Debug by simplification"} description={"Split a failing expression into explicit intermediate lines."} code={"prices = $10, $20, $30\nqty = 2, 1, 3\nline totals = prices * qty\nsum(line totals)\nshort qty = 2, 1\nsum(short qty)"} />
 
 ## Report a reproducible problem
 

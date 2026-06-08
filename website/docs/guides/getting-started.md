@@ -1,39 +1,40 @@
 ---
-title: "Getting Started"
+title: "First Sheet"
 sidebar_position: 2
-description: "Set up your first useful SmartPad sheets and understand the core writing loop."
+description: "Build your first SmartPad sheet from zero, without needing to know any app vocabulary first."
 ---
 
 import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
-# Getting Started
+# First Sheet
 
-SmartPad works best when you treat each line like a thought you can compute, not a cell you have to babysit.
+Start with plain text. If a line looks like something SmartPad can calculate, it shows the result next to the line. You do not need a grid, cell names, or a formula bar.
 
-## The basic rhythm
+## Write one useful line
 
-1. Write a fact or assumption in plain text.
-2. Let the live result tell you whether the line makes sense.
-3. Reuse prior results by clicking or dragging chips instead of retyping values.
-4. Add `=>` when you want to force a result, run a command, or show an intentional error.
+A SmartPad sheet grows one readable line at a time. Give important values names, then build from those names.
 
-<ExamplePlayground title={"First complete workflow"} description={"A full mini-model using currency, percentages, and conversion."} code={"hours = 40\nrate = $82/hour\ngross = hours * rate\ntax = 22% on gross\nnet = gross - tax\nnet in EUR"} />
+<ExamplePlayground title={"A tiny weekly model"} description={"Change any assumption and the rest of the sheet follows."} code={"hours = 40\nrate = $82/hour\ngross = hours * rate\ntax = 22% on gross\nnet = gross - tax"} />
 
-## Habits that age well
+## Results appear as chips
 
-- Use names you would understand next month (`monthly rent`, `fuel cost`).
-- Keep one idea per line, then build from previous lines.
-- Put units and currencies directly on the value so assumptions are visible.
+The small pill next to a computed line is a result chip. At first, you can just read it as the answer. Later, you can use the chip controls to copy the value or reuse it in another line.
 
-<ExamplePlayground title={"Range + list quick analysis"} description={"Generate, transform, and summarize without leaving plain text."} code={"commute mins = 28, 31, 26, 34, 29\navg(commute mins)\nlate days = commute mins where > 30\ncount(late days)\nweeks = 1..4"} />
+> GIF/video marker: show a simple line producing its first result chip.
 
-## When `=>` is still worth using
+## Explore without rewriting
 
-- Commands and workflows that need an explicit run.
-- Examples where you want to show the exact error SmartPad gives.
-- Notes you are sharing with someone else, where an explicit result makes the sheet easier to read.
+Numbers highlighted in the editor can be dragged left or right. That is called scrubbing: it lets you feel how a model changes before you decide on the exact value.
 
-## Continue
+<ExamplePlayground title={"Scrub the assumptions"} description={"Try dragging `40`, `82`, or `22` in the app."} code={"hours = 40\nrate = $82/hour\ngross = hours * rate\ntax = 22% on gross\nnet = gross - tax"} />
 
-- [Syntax Playbook](../syntax-playbook)
-- [Everyday Calculations](../everyday-calculations)
+## Reuse a result
+
+When you hover a result chip, SmartPad shows controls. The first icon is a drag handle. Drag it into another expression to create a reference that stays connected to the original result.
+
+> GIF/video marker: drag the first chip icon from `gross` into a new formula, then change `hours` and show the reference updating.
+
+## Keep going
+
+- Use [Core Interactions](../core-interactions) when you want the chip controls explained in one place.
+- Use [Everyday Examples](../everyday-calculations) when you want useful sheets to copy.

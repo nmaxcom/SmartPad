@@ -2,23 +2,13 @@ import { test, expect } from "@playwright/test";
 
 const expectedSidebarOrder = [
   "Start Here",
-  "Getting Started",
-  "Syntax Playbook",
-  "Everyday Calculations",
-  "Privacy and Portability",
+  "First Sheet",
+  "Core Interactions",
+  "Everyday Examples",
+  "Syntax Reference",
+  "Files & Privacy",
   "Troubleshooting",
-  "Known Limitations",
   "Support",
-  "Feature Guides",
-  "Live Results",
-  "Result Chips and References",
-  "Plotting and Dependency Views",
-  "Currency and FX",
-  "Duration and Time Values",
-  "Lists",
-  "Ranges",
-  "Locale Date and Time",
-  "File Management",
 ];
 
 test.describe("Docs information architecture", () => {
@@ -39,14 +29,14 @@ test.describe("Docs information architecture", () => {
     await expect(page.locator(".theme-doc-sidebar-menu .menu__caret")).toHaveCount(0);
   });
 
-  test("renders rich example content on start and feature pages", async ({ page }) => {
+  test("renders rich example content on start and guide pages", async ({ page }) => {
     await expect(page.getByRole("heading", { name: "Start Here" })).toBeVisible();
     await expect(page.locator("#__docusaurus-base-url-issue-banner")).toHaveCount(0);
     await expect(page.locator(".example-playground")).toHaveCount(1);
 
-    await page.getByRole("link", { name: "Currency and FX" }).click();
-    await expect(page.locator("h1", { hasText: "Currency and FX" })).toBeVisible();
-    await expect(page.locator(".example-playground")).toHaveCount(5);
+    await page.getByLabel("Docs sidebar").getByRole("link", { name: "Core Interactions" }).click();
+    await expect(page.locator("h1", { hasText: "Core Interactions" })).toBeVisible();
+    await expect(page.locator(".example-playground")).toHaveCount(2);
   });
 
   test("passes basic visual sanity checks for desktop and mobile", async ({ page }) => {

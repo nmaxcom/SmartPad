@@ -1,12 +1,12 @@
 ---
-title: "Everyday Calculations"
+title: "Everyday Examples"
 sidebar_position: 4
 description: "Practical SmartPad examples for budgeting, planning, travel, work, and data."
 ---
 
 import ExamplePlayground from "@site/src/components/ExamplePlayground";
 
-# Everyday Calculations
+# Everyday Examples
 
 The fastest way to learn SmartPad is to start from a real little sheet and change the assumptions. Every example here is meant to be copied, opened, and edited.
 
@@ -16,7 +16,7 @@ The fastest way to learn SmartPad is to start from a real little sheet and chang
 
 ## Travel
 
-<ExamplePlayground title={"Trip cost with FX"} description={"Add costs in one currency, then view the trip in another."} code={"hotel = EUR 240\nfood = EUR 180\ntransport = EUR 90\ntrip eur = hotel + food + transport\ntrip eur in USD"} />
+<ExamplePlayground title={"Trip cost with a fixed FX rate"} description={"Define the exchange rate in the sheet so the example is reproducible."} code={"hotel = 240 EUR\nfood = 180 EUR\ntransport = 90 EUR\nfx = 1.08 USD/EUR\ntrip eur = hotel + food + transport\ntrip usd = trip eur * fx"} />
 
 ## Work planning
 
@@ -28,4 +28,4 @@ The fastest way to learn SmartPad is to start from a real little sheet and chang
 
 ## Engineering/data
 
-<ExamplePlayground title={"Bandwidth and storage"} description={"Let rates, storage units, and billing units do the bookkeeping."} code={"download = 6 Mbit/s * 2 h\ndownload to GB\negress = $0.09/GB\ntraffic = 12 TB/month\nmonthly egress = egress * (traffic in GB/month)"} />
+<ExamplePlayground title={"Bandwidth and storage"} description={"Let rates, storage units, and billing units do the bookkeeping."} code={"download = 6 Mbit/s * 2 h\ndownload in GB\negress = $0.09/GB\ntraffic = 12 TB/month\nbillable traffic = traffic in GB/month\nmonthly egress = egress * billable traffic"} />
