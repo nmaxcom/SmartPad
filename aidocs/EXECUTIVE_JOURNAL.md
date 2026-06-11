@@ -23,6 +23,40 @@
 
 ---
 
+## Entry J-2026-06-11-01
+
+*   Timestamp: 2026-06-11 09:38 CEST
+*   Summary:
+    *   User reported that the sheet list consumes too much vertical space on iPad Pro and is worse on phones.
+    *   Assistant implemented responsive sheet navigation: desktop keeps the existing left sidebar, while tablet/phone use a compact current-sheet bar plus an overlay drawer or bottom sheet.
+    *   Assistant compacted the phone header so it no longer stacks logo and controls into two rows.
+    *   Assistant hid right-side panels on tablet/phone because they were falling below the editor and consuming the same critical viewport.
+*   Decisions:
+    *   Do not alter the desktop grid/sidebar behavior.
+    *   At `<=1024px`, remove the sheet list from normal document flow by making it an off-canvas overlay.
+    *   At phone widths, present sheet navigation from the bottom to preserve horizontal space and keep the editor visible.
+    *   Keep mobile/tablet focused on the editor; panels remain a desktop surface until a dedicated mobile panel launcher exists.
+*   User directives:
+    *   Fix the mobile/tablet sheet-navigation space problem without polluting desktop design.
+*   Assistant commitments:
+    *   Add targeted coverage for compact sheet navigation and run changed-file verification.
+*   Artifacts changed:
+    *   `src/App.tsx`
+    *   `src/App.css`
+    *   `src/components/Layout/AppHeader.css`
+    *   `tests/unit/sheetSidebarMobile.test.tsx`
+    *   `docs/ABOUT.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/sheetSidebarMobile.test.tsx --runInBand` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run build` ✅
+    *   Visual Playwright shell screenshots at `390x844` and `1024x1366` confirmed the sheet list no longer occupies normal vertical flow.
+    *   `npm run docs:drift` and `npm run spec:test` without a commit range are blocked by unrelated dirty `src/components/ui/Settings*` files; post-commit `verify:changed` will validate this commit range.
+*   Risks/blockers:
+    *   Existing unrelated generated docs/build/settings changes remain outside this task and must not be staged.
+
 ## Entry J-2026-02-11-01
 
 *   Timestamp: 2026-02-11 06:49:59 CET

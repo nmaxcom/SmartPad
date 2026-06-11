@@ -138,18 +138,39 @@
 @media (max-width: 720px) {
   .app-header.header-container {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .logo {
+    font-size: 1rem;
+  }
+
+  .logo-icon {
+    margin-right: 6px;
   }
 
   .header-controls {
-    width: 100%;
-    justify-content: space-between;
+    width: auto;
+    justify-content: flex-end;
+    gap: 10px;
   }
 
   .toggles-group {
-    padding-right: 16px;
+    gap: 8px;
+    padding-right: 10px;
+  }
+
+  .toggle-glow-icons button,
+  .header-settings-btn {
+    font-size: 1.05em;
+    padding: 6px;
+  }
+
+  .header-docs-btn,
+  .header-report-bug-btn {
+    padding: 6px 8px;
   }
 
   .header-report-bug-btn span {

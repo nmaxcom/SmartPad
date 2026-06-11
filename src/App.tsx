@@ -72,7 +72,7 @@ function AppContent() {
   const fxStatus = useFxStatus();
   const runtimeParams = useMemo(() => {
     if (typeof window === "undefined") {
-      return { embed: false, forceSpatialNeon: false };
+      return { embed: false, forceSpatialNeon: false, shouldImportExample: true };
     }
     return parseRuntimeModeParams(window.location.search);
   }, []);
@@ -237,7 +237,7 @@ function DocsExampleImporter({ runtimeParams }: { runtimeParams: RuntimeModePara
   return null;
 }
 
-function SheetSidebar() {
+export function SheetSidebar() {
   const { settings } = useSettingsContext();
   const { editor } = useEditorContext();
   const {
@@ -259,10 +259,15 @@ function SheetSidebar() {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [suppressHover, setSuppressHover] = useState(false);
+  const [isMobileSheetDrawerOpen, setIsMobileSheetDrawerOpen] = useState(false);
 
   const activeList = useMemo(
     () => sheets.filter((sheet) => sheet.is_trashed === isTrashView),
     [isTrashView, sheets]
+  );
+  const activeSheet = useMemo(
+    () => sheets.find((sheet) => sheet.id === activeSheetId) || null,
+    [activeSheetId, sheets]
   );
 
   const handleRenameStart = (id: string, title: string) => {
@@ -439,15 +444,60 @@ function SheetSidebar() {
   };
 
   return (
-    <aside className="left-sidebar">
-      <div className="left-sidebar-header panel-title">
-        <span>{isTrashView ? "Trash" : "My Sheets"}</span>
-        {!isTrashView && (
-          <button type="button" aria-label="Create new sheet" onClick={createSheet}>
-            +
-          </button>
-        )}
+    <>
+      <div className="mobile-sheet-bar" aria-label="Sheet navigation">
+        <button
+          type="button"
+          className="mobile-sheet-picker"
+          aria-expanded={isMobileSheetDrawerOpen}
+          aria-controls="sheet-navigation-panel"
+          onClick={() => setIsMobileSheetDrawerOpen(true)}
+        >
+          <span className="mobile-sheet-eyebrow">{isTrashView ? "Trash" : "Current sheet"}</span>
+          <span className="mobile-sheet-title">
+            {isTrashView ? "Trash" : activeSheet?.title || DEFAULT_SHEET_TITLE}
+          </span>
+          <i className="fas fa-chevron-down" aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          className="mobile-sheet-icon-button"
+          aria-label="Create new sheet"
+          onClick={createSheet}
+        >
+          +
+        </button>
       </div>
+      {isMobileSheetDrawerOpen && (
+        <button
+          type="button"
+          className="mobile-sheet-backdrop"
+          aria-label="Close sheet navigation"
+          onClick={() => setIsMobileSheetDrawerOpen(false)}
+        />
+      )}
+      <aside
+        id="sheet-navigation-panel"
+        className={isMobileSheetDrawerOpen ? "left-sidebar is-mobile-open" : "left-sidebar"}
+      >
+        <div className="left-sidebar-header panel-title">
+          <span>{isTrashView ? "Trash" : "My Sheets"}</span>
+          <div className="left-sidebar-header-actions">
+            {!isTrashView && (
+              <button type="button" aria-label="Create new sheet" onClick={createSheet}>
+                +
+              </button>
+            )}
+            <button
+              type="button"
+              className="mobile-sheet-close"
+              aria-label="Close sheet navigation"
+              onClick={() => setIsMobileSheetDrawerOpen(false)}
+            >
+              <i className="fas fa-times" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
       {isDragging && (
         <div className="drop-overlay">
           <div className="drop-overlay-content">Drop .md or .zip files to import</div>
@@ -469,6 +519,7 @@ function SheetSidebar() {
               if (event.button !== 0) return;
               if (!isTrashView) {
                 setActiveSheetId(sheet.id);
+                setIsMobileSheetDrawerOpen(false);
               }
             }}
             draggable={!isTrashView}
@@ -614,7 +665,8 @@ function SheetSidebar() {
           </>
         )}
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }
 

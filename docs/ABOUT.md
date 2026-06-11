@@ -20,6 +20,7 @@ Recent template updates:
 - The `Goal Seek` template focuses on progressively richer one-variable target solving, from checkout totals to runway, pricing, campaign planning, range design, recipes, and direct source-expression goals.
 - The `Investment Lab` template is dedicated to ROI, compound interest, investor costs, Spain-style savings-tax examples, net totals, live wealth curves, monthly-contribution goal seek, and low/base/high return sensitivity; its rates use editable percentage literals such as `7%`, `0.35%`, and `21%`.
 - The `Currency FX` template plots USD and EUR totals with function-backed series over a numeric month domain, avoiding date-like `0..12` assignment ambiguity.
+- On tablet and phone layouts, sheet navigation collapses into a compact current-sheet bar with an overlay drawer or bottom sheet so the editor keeps the main viewport.
 
 These are some examples of its syntax:
 # Start Here: SmartPad Quick Tour
