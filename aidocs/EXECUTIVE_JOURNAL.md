@@ -23,6 +23,37 @@
 
 ---
 
+## Entry J-2026-06-11-02
+
+*   Timestamp: 2026-06-11 15:30 CEST
+*   Summary:
+    *   User reported that sheet action buttons inside the small-screen drawer did not work because the drawer disappeared when pressing rename/delete/download actions.
+    *   Assistant fixed event handling so internal sheet controls no longer bubble their `mousedown` into the sheet-row selection handler.
+    *   Assistant made sheet action controls visible in the responsive drawer instead of relying on hover behavior on touch layouts.
+    *   Assistant added extensive small-screen regression coverage across unit and Playwright e2e flows.
+*   Decisions:
+    *   Sheet rows may close the drawer only when the row itself is selected, not when a nested control is pressed.
+    *   On tablet/phone drawers, sheet action controls should be visible without hover.
+*   User directives:
+    *   Fix the broken sheet action buttons and test the functionality extensively on small screens.
+*   Artifacts changed:
+    *   `src/App.tsx`
+    *   `src/App.css`
+    *   `tests/unit/sheetSidebarMobile.test.tsx`
+    *   `tests/e2e/mobile-sheet-navigation.spec.ts`
+    *   `docs/ABOUT.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/sheetSidebarMobile.test.tsx --runInBand` ✅
+    *   `npx playwright test tests/e2e/mobile-sheet-navigation.spec.ts --project=chromium --config=playwright.config.ts --workers=1` ✅
+    *   `npm run docs:map` ✅
+    *   `npm run docs:drift` ✅
+    *   `npm run spec:test` ✅
+    *   `npm run spec:trust` ✅
+    *   `npm run build` ✅
+*   Risks/blockers:
+    *   Unrelated launch docs and generated `dist/index.html` changes remain outside this task and must not be staged.
+
 ## Entry J-2026-06-11-01
 
 *   Timestamp: 2026-06-11 09:38 CEST

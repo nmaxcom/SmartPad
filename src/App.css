@@ -428,6 +428,10 @@
     transform: translateX(0);
   }
 
+  .left-sidebar .sheet-actions {
+    opacity: 1;
+  }
+
   .mobile-sheet-close {
     display: inline-flex;
     align-items: center;

@@ -443,6 +443,10 @@ export function SheetSidebar() {
     await reorderSheets(ids);
   };
 
+  const isSheetControlTarget = (target: EventTarget | null) =>
+    target instanceof HTMLElement &&
+    Boolean(target.closest("button, input, textarea, select, a"));
+
   return (
     <>
       <div className="mobile-sheet-bar" aria-label="Sheet navigation">
@@ -517,6 +521,7 @@ export function SheetSidebar() {
               .join(" ")}
             onMouseDown={(event) => {
               if (event.button !== 0) return;
+              if (isSheetControlTarget(event.target)) return;
               if (!isTrashView) {
                 setActiveSheetId(sheet.id);
                 setIsMobileSheetDrawerOpen(false);
@@ -584,6 +589,7 @@ export function SheetSidebar() {
                   className="sheet-action-button"
                   aria-label={`Restore ${sheet.title}`}
                   title="Restore"
+                  onMouseDown={(event) => event.stopPropagation()}
                   onClick={(event) => {
                     event.stopPropagation();
                     restoreSheet(sheet.id);
@@ -598,6 +604,7 @@ export function SheetSidebar() {
                     className="sheet-action-button"
                     aria-label={`Rename ${sheet.title}`}
                     title="Rename"
+                    onMouseDown={(event) => event.stopPropagation()}
                     onClick={(event) => {
                       event.stopPropagation();
                       handleRenameStart(sheet.id, sheet.title);
@@ -610,6 +617,7 @@ export function SheetSidebar() {
                     className="sheet-action-button"
                     aria-label={`Download ${sheet.title}`}
                     title="Download"
+                    onMouseDown={(event) => event.stopPropagation()}
                     onClick={(event) => {
                       event.stopPropagation();
                       downloadSheet(sheet.title, getExportContent(sheet.id, sheet.content || ""));
@@ -622,6 +630,7 @@ export function SheetSidebar() {
                     className="sheet-action-button"
                     aria-label={`Move ${sheet.title} to trash`}
                     title="Move to Trash"
+                    onMouseDown={(event) => event.stopPropagation()}
                     onClick={(event) => {
                       event.stopPropagation();
                       trashSheet(sheet.id);
