@@ -27,23 +27,25 @@ Existing coverage:
 
 Launch gap:
 
-- Settings expose many real controls, but the current surface does not yet feel like a professional app settings experience.
-- The first launch IA pass improved grouping, but it is not enough for public launch; Settings needs a from-scratch visual and interaction redesign.
-- First-run quick tour is feature-dense and useful, but it needs product-level framing so a new user knows what to do first.
-- Final launch screenshots should wait until the professional Settings redesign lands.
+- Settings now has an approved professional layout in commit `ed5511db`, with section navigation, responsive behavior, and existing controls preserved.
+- First-run quick tour is feature-dense and useful, but it still needs product-level framing so a new user knows what to do first.
+- Final launch screenshots should wait until first-run framing and release-candidate stability checks are complete.
 
-## Settings Redesign Direction
+## Settings Status
 
-Settings must be redesigned from scratch as a professional app surface, not iterated as a web-project modal.
+Settings has passed the first launch UI checkpoint.
 
-Before implementation, get user review for:
+Approved behavior:
 
-- Overall layout model.
-- Density and spacing.
-- Section hierarchy.
-- Control styling and interaction states.
-- What belongs in basic vs advanced settings.
-- Screenshot-worthy first viewport.
+- Professional modal layout with section navigation.
+- Responsive mobile layout with horizontal section access.
+- Existing settings behavior preserved.
+- Settings modal mounted above the app shell so editor overlays cannot visually bleed through it.
+
+Still verify during release candidate:
+
+- Keyboard open/close, Escape close, focus order, labels, reset confirmation, persistence, date locale, reuse/export, and mobile text fit.
+- Final screenshots after first-run framing is settled.
 
 ## Settings IA Recommendation
 

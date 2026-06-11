@@ -29,8 +29,8 @@ Status meanings:
 | Result chips and references | Must ship | audit | `docs/Specs/ResultChipsAndValueGraph.spec.md`, `docs/Specs/implemented/result-chips-and-references.md`, `tests/e2e/result-reference.spec.ts`, `tests/e2e/result-reference-drag-only.spec.ts`, `tests/e2e/live-result.spec.ts` | Finish `T-2026-06-04-01` user review and known chip parity/caret tasks before treating as launch-polished. |
 | Sheets and local persistence | Must ship | audit | `docs/Specs/FileManagement.spec.md`, `docs/Specs/implemented/file-management.md`, `src/storage/sheetsDb.ts`, `src/components/SheetSync.tsx`, `tests/e2e/save-load-buttons.spec.ts`, `tests/e2e/migration-verification.spec.ts` | Run release-candidate persistence/import/export smoke across fresh profile and upgraded profile. |
 | Import/export portability | Must ship | audit | `docs/Specs/FileManagement.spec.md`, `docs/Specs/implemented/file-management.md`, `tests/e2e/save-load-buttons.spec.ts`, `website/docs/guides/files-and-privacy.md` | Verify copy says user owns files and explains backup limitations. |
-| Settings | Must ship | gap | `aidocs/SETTINGS_ONBOARDING_LAUNCH_BRIEF.md`, `src/components/ui/SettingsSections.tsx`, `src/state/settingsStore.ts`, `tests/unit/settingsStore.test.ts`, `tests/e2e/settings-integration.spec.ts` | First IA pass is not enough for launch; redesign Settings from scratch as a professional app surface, with visible design/strategy checkpoints before implementation. |
-| First-run onboarding | Must ship | audit | `src/templates/quickTourTemplate.ts`, `tests/unit/quickTourTemplate.test.ts`, `tests/e2e/quick-tour-template.spec.ts` | Pair quick tour with product-level onboarding/empty-state copy so users know what to do first. |
+| Settings | Must ship | audit | `ed5511db`, `aidocs/SETTINGS_ONBOARDING_LAUNCH_BRIEF.md`, `src/components/ui/SettingsSections.tsx`, `src/components/ui/SettingsModal.tsx`, `src/state/settingsStore.ts`, `tests/unit/settingsStore.test.ts`, `tests/e2e/settings-integration.spec.ts` | Professional Settings layout is approved; keep persistence/reset/date locale/reuse coverage in release-candidate checks and capture final screenshots after first-run framing is stable. |
+| First-run onboarding | Must ship | gap | `src/templates/quickTourTemplate.ts`, `tests/unit/quickTourTemplate.test.ts`, `tests/e2e/quick-tour-template.spec.ts` | Pair quick tour with product-level onboarding/empty-state copy so users know what to do first, then review desktop/mobile first-run screenshots before launch assets are captured. |
 | Autocomplete | Should ship if confirmed | audit | `docs/Specs/proposed/autocomplete.md`, `tests/unit/autocompleteSuggestions.test.ts`, `tests/e2e/autocomplete.spec.ts`, backlog `T-2026-06-04-01` | Keep as beta/proposed until user confirms current behavior and spec status is reconciled. |
 
 ## Public Project Scope
@@ -71,7 +71,7 @@ Status meanings:
 
 P0 blockers:
 
-1. Settings needs a from-scratch professional redesign before launch screenshots.
+1. First-run onboarding needs product-level framing before launch screenshots.
 2. Standalone promotional product website, signup, and launch assets do not exist yet and intentionally come last.
 3. Desktop packaging path is undecided and unimplemented.
 4. Release checklist/changelog/versioning exist but need a release-candidate dry run.
@@ -87,7 +87,7 @@ P1 blockers:
 ## Recommended Next Work
 
 1. Confirm launch scope with the user.
-2. Redesign Settings from scratch before marketing screenshots.
+2. Add lightweight first-run onboarding/framing before marketing screenshots.
 3. Start the launch stability audit from the remaining `audit` rows.
 4. Build the standalone promotional product website last, after product screenshots/video are stable.
 5. Run desktop packaging spike after settings/onboarding polish is underway, unless desktop beta becomes the launch-critical channel.

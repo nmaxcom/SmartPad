@@ -55,7 +55,7 @@ Exit criteria:
 
 ## Phase 1: Product First-Run Polish
 
-Status: first IA pass exists but is not launch-grade; settings need a from-scratch professional app redesign.
+Status: Settings professional layout is approved and committed; first-run framing remains.
 
 Primary task:
 
@@ -72,18 +72,17 @@ Inputs:
 
 Actions:
 
-1. Redesign Settings from scratch as a professional app surface, not a web-project settings modal.
-2. Define the visible settings IA, density, interaction states, and hierarchy with user review before implementation.
-3. Make advanced controls visually subordinate without hiding important launch controls.
-4. Add lightweight first-run guidance without blocking typing.
-5. Verify settings persistence/reset/date locale/reuse controls.
-6. Capture first-run and settings screenshots after implementation.
+1. Completed: Settings was reorganized into a professional app preferences surface with section navigation, responsive layout, and existing behavior preserved in commit `ed5511db`.
+2. Completed: Settings desktop/mobile screenshots were reviewed and approved by the user.
+3. Add lightweight first-run guidance without blocking typing.
+4. Verify quick-tour entry, empty/default state, result-chip reuse hints, and Getting Started docs link.
+5. Capture first-run screenshots after implementation.
 
 Exit criteria:
 
-- Targeted settings/quick-tour tests pass.
+- Targeted quick-tour and onboarding-adjacent tests pass.
 - Build and relevant docs/spec gates pass.
-- Desktop/mobile screenshots are reviewed.
+- Desktop/mobile first-run screenshots are reviewed.
 
 ## Phase 2: Launch Stability Candidate
 
@@ -247,7 +246,7 @@ Rules:
 ## Current Critical Path
 
 1. Confirm scope with user.
-2. Redesign Settings from scratch as a professional app surface.
+2. Add lightweight first-run onboarding/framing.
 3. Run launch stability checks.
 4. Dry-run release checklist.
 5. Implement desktop beta shell.
@@ -259,7 +258,7 @@ Rules:
 P0:
 
 - Launch scope lacks explicit user confirmation.
-- Settings needs a from-scratch professional redesign.
+- First-run onboarding still needs a lightweight product-level frame around the quick tour.
 - Launch stability checks have not been executed.
 - Desktop packaging is not implemented.
 - Standalone promotional website/signup/assets are not implemented and intentionally come last.
@@ -273,7 +272,7 @@ P1:
 
 ## What Not To Do Yet
 
-- Do not capture final marketing screenshots before Settings is professionally redesigned and the launch candidate is stable.
+- Do not capture final marketing screenshots before first-run framing and the launch candidate are stable.
 - Do not promise desktop downloads before an artifact exists.
 - Do not add hidden app telemetry.
 - Do not market proposed features as shipped.
