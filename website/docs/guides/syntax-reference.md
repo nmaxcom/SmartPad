@@ -62,6 +62,18 @@ Dates and times can be used directly in calculations. Use ISO-style dates when y
 
 <ExamplePlayground title={"Simple plot view"} description={"The New stuff and Capability Sprint templates go deeper."} code={"x = 0\ngrowth(x) = 2*x + 5\n@view plot y=growth domain=0..10 size=md"} />
 
+### Chart navigation
+
+Plot views are interactive without changing the model text:
+
+- **Pan**: drag inside the chart body.
+- **Zoom X**: scroll over the chart.
+- **Pan with wheel**: hold Shift while scrolling.
+- **Adjust an axis**: drag the X or Y axis to resize that viewport. The cursor changes over the draggable axis area.
+- **Reset view**: click the small reset control or double-click the chart to return to the computed view.
+
+These interactions change the viewport only. Use `domain=`, `view=`, `ydomain=`, or `yview=` on the `@view` line when you want the chart range to be explicit in the sheet.
+
 ## Units and rates reference
 
 SmartPad treats units and currencies as semantic value types. Conversions and operations stay type-aware instead of string-based: compatible units convert, incompatible additions/subtractions are rejected, and multiplication/division creates derived units.

@@ -866,6 +866,16 @@ const createPlotSvg = (
   axisX.setAttribute("pointer-events", "stroke");
   svg.appendChild(axisX);
 
+  const axisXHit = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  axisXHit.setAttribute("x1", `${padding.left}`);
+  axisXHit.setAttribute("x2", `${width - padding.right}`);
+  axisXHit.setAttribute("y1", `${height - padding.bottom}`);
+  axisXHit.setAttribute("y2", `${height - padding.bottom}`);
+  axisXHit.setAttribute("class", "plot-view-axis-hit");
+  axisXHit.setAttribute("data-axis", "x");
+  axisXHit.setAttribute("pointer-events", "stroke");
+  svg.appendChild(axisXHit);
+
   const axisY = document.createElementNS("http://www.w3.org/2000/svg", "line");
   axisY.setAttribute("x1", `${padding.left}`);
   axisY.setAttribute("x2", `${padding.left}`);
@@ -875,6 +885,16 @@ const createPlotSvg = (
   axisY.setAttribute("data-axis", "y");
   axisY.setAttribute("pointer-events", "stroke");
   svg.appendChild(axisY);
+
+  const axisYHit = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  axisYHit.setAttribute("x1", `${padding.left}`);
+  axisYHit.setAttribute("x2", `${padding.left}`);
+  axisYHit.setAttribute("y1", `${padding.top}`);
+  axisYHit.setAttribute("y2", `${height - padding.bottom}`);
+  axisYHit.setAttribute("class", "plot-view-axis-hit");
+  axisYHit.setAttribute("data-axis", "y");
+  axisYHit.setAttribute("pointer-events", "stroke");
+  svg.appendChild(axisYHit);
 
   if (viewRange.min <= 0 && viewRange.max >= 0) {
     const zeroLine = document.createElementNS("http://www.w3.org/2000/svg", "line");

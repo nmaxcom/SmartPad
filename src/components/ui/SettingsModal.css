@@ -91,7 +91,6 @@
   flex-direction: column;
   gap: 0.25rem;
   padding: 1rem;
-  border-right: 1px solid var(--color-border);
 }
 
 .settings-nav-item {
@@ -134,7 +133,6 @@
   margin-bottom: 0;
   scroll-margin-top: 1rem;
   background: var(--color-surface-light);
-  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 1.25rem 1.25rem 0.55rem;
   break-inside: avoid;

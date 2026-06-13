@@ -1167,11 +1167,24 @@ body.number-scrubbing * {
   stroke-width: 1;
 }
 
+.plot-view-axis-hit {
+  stroke: transparent;
+  stroke-width: 14;
+}
+
 .plot-view-axis[data-axis="x"] {
   cursor: ew-resize;
 }
 
 .plot-view-axis[data-axis="y"] {
+  cursor: ns-resize;
+}
+
+.plot-view-axis-hit[data-axis="x"] {
+  cursor: ew-resize;
+}
+
+.plot-view-axis-hit[data-axis="y"] {
   cursor: ns-resize;
 }
 

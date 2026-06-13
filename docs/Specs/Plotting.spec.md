@@ -475,11 +475,15 @@ Pan/zoom only affects the **viewport**.
 
 ### 9.2 Interaction
 
-* Scroll = zoom X
-* Shift + scroll = pan
-* Small “Reset view” control restores viewport to computed view (instead of the full domain)
+* Drag inside the plot body = pan the current viewport.
+* Scroll = zoom X around the pointer position.
+* Shift + scroll = pan.
+* Drag the X axis = zoom/resize the visible X viewport.
+* Drag the Y axis = zoom/resize the visible Y viewport when a Y viewport exists.
+* Small “Reset view” control restores viewport to computed view (instead of the full domain).
 * Double-clicking the chart resets the user viewport to the computed view.
 * Rendered series, fills, bars, scatter dots, current-value dots, and intersection dots are clipped to the plot body. Axes, ticks, and labels remain above the clipped plot layer.
+* Axes with draggable viewport behavior must expose resize cursors and a practical pointer hit area, not just a one-pixel SVG line.
 
 ---
 

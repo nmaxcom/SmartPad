@@ -6625,6 +6625,35 @@
 *   Pending:
     *   User review of the Settings/first-run proposal.
 
+## Entry J-2026-06-13-02
+
+*   Timestamp: 2026-06-13 20:55 CEST
+*   Summary:
+    *   User requested chart navigation documentation, axis drag cursor affordance, and removal of borders from Settings nav/sections.
+    *   Assistant documented chart panning, scroll zoom, shift-scroll pan, axis drag viewport resizing, reset view, and double-click reset in plotting spec and public syntax reference generation.
+    *   Assistant added transparent SVG axis hit targets so draggable chart axes expose resize cursors over a practical pointer area.
+    *   Assistant removed visible borders from `.settings-nav` and `.settings-section` surfaces in modal/panel settings CSS.
+*   Decisions:
+    *   Axis cursor affordance is implemented as invisible wide hit lines with `data-axis`, preserving the visible chart rendering.
+    *   Public docs are updated through `scripts/generate-docusaurus-docs.js` so regenerated docs retain chart navigation guidance.
+*   Artifacts changed:
+    *   `docs/Specs/Plotting.spec.md`
+    *   `scripts/generate-docusaurus-docs.js`
+    *   `website/docs/guides/syntax-reference.md`
+    *   `src/components/PlotViewExtension.ts`
+    *   `src/components/Editor.css`
+    *   `src/components/ui/SettingsModal.css`
+    *   `src/components/ui/SettingsPanel.css`
+    *   `tests/e2e/plot-view-interactions.spec.ts`
+*   Validation:
+    *   `npx playwright test tests/e2e/plot-view-interactions.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed after correcting the axis-hit assertion to check DOM presence instead of visibility for transparent SVG lines.
+    *   `npm run test:unit -- tests/unit/settingsStore.test.ts` passed.
+    *   `npm run spec:test` passed.
+    *   `npm run spec:trust` passed.
+    *   `npm run build` passed; generated `dist/index.html` hash-only artifact was restored and not committed.
+*   Pending:
+    *   Run default docs/spec/verify gates after this commit so the default `HEAD~1...HEAD` range points at this block.
+
 ## Entry J-2026-06-13-01
 
 *   Timestamp: 2026-06-13 20:33 CEST

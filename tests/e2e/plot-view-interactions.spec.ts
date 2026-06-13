@@ -55,6 +55,12 @@ test.describe("Plot view interactions", () => {
 
     await expect(page.locator(".plot-view").first()).toBeVisible();
     await expect(page.locator(".plot-view-disconnected")).toHaveCount(0);
+    await expect(page.locator(".plot-view-axis-hit[data-axis='x']")).toHaveCount(1);
+    await expect(page.locator(".plot-view-axis-hit[data-axis='y']")).toHaveCount(1);
+    await expect(page.locator(".plot-view-axis-hit[data-axis='x']")).toHaveAttribute(
+      "pointer-events",
+      "stroke"
+    );
 
     const initialLabels = await getAxisLabels(page);
     const initialXLabels = await getXAxisLabels(page);
