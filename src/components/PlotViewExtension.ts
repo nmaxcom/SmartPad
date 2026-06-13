@@ -866,14 +866,14 @@ const createPlotSvg = (
   axisX.setAttribute("pointer-events", "stroke");
   svg.appendChild(axisX);
 
-  const axisXHit = document.createElementNS("http://www.w3.org/2000/svg", "line");
-  axisXHit.setAttribute("x1", `${padding.left}`);
-  axisXHit.setAttribute("x2", `${width - padding.right}`);
-  axisXHit.setAttribute("y1", `${height - padding.bottom}`);
-  axisXHit.setAttribute("y2", `${height - padding.bottom}`);
-  axisXHit.setAttribute("class", "plot-view-axis-hit");
+  const axisXHit = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  axisXHit.setAttribute("x", `${padding.left}`);
+  axisXHit.setAttribute("y", `${height - padding.bottom}`);
+  axisXHit.setAttribute("width", `${plotWidth}`);
+  axisXHit.setAttribute("height", `${padding.bottom}`);
+  axisXHit.setAttribute("class", "plot-view-axis-zone");
   axisXHit.setAttribute("data-axis", "x");
-  axisXHit.setAttribute("pointer-events", "stroke");
+  axisXHit.setAttribute("pointer-events", "all");
   svg.appendChild(axisXHit);
 
   const axisY = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -886,14 +886,16 @@ const createPlotSvg = (
   axisY.setAttribute("pointer-events", "stroke");
   svg.appendChild(axisY);
 
-  const axisYHit = document.createElementNS("http://www.w3.org/2000/svg", "line");
-  axisYHit.setAttribute("x1", `${padding.left}`);
-  axisYHit.setAttribute("x2", `${padding.left}`);
-  axisYHit.setAttribute("y1", `${padding.top}`);
-  axisYHit.setAttribute("y2", `${height - padding.bottom}`);
-  axisYHit.setAttribute("class", "plot-view-axis-hit");
-  axisYHit.setAttribute("data-axis", "y");
-  axisYHit.setAttribute("pointer-events", "stroke");
+  const axisYHit = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  axisYHit.setAttribute("x", "0");
+  axisYHit.setAttribute("y", `${padding.top}`);
+  axisYHit.setAttribute("width", `${padding.left}`);
+  axisYHit.setAttribute("height", `${plotHeight}`);
+  axisYHit.setAttribute("class", "plot-view-axis-zone");
+  if (model.yDomain) {
+    axisYHit.setAttribute("data-axis", "y");
+  }
+  axisYHit.setAttribute("pointer-events", "all");
   svg.appendChild(axisYHit);
 
   if (viewRange.min <= 0 && viewRange.max >= 0) {
@@ -2021,10 +2023,65 @@ const createPlotWidget = (
       return matches;
     };
 
+    const getAxisDragZone = (
+      position: { x: number; y: number },
+      target?: Element | null
+    ): "x" | "y" | null => {
+      if (!plotLayout) return null;
+      const withinPlotX =
+        position.x >= plotLayout.padding.left &&
+        position.x <= plotLayout.width - plotLayout.padding.right;
+      const withinPlotY =
+        position.y >= plotLayout.padding.top &&
+        position.y <= plotLayout.height - plotLayout.padding.bottom;
+      const insidePlotArea = withinPlotX && withinPlotY;
+      const inXAxisZone =
+        withinPlotX && position.y >= plotLayout.height - plotLayout.padding.bottom;
+      const inYAxisZone = withinPlotY && position.x <= plotLayout.padding.left;
+      const axisFromTarget = target?.closest?.("[data-axis]")?.getAttribute("data-axis");
+      if (axisFromTarget === "x" || axisFromTarget === "y") {
+        return axisFromTarget;
+      }
+      if (!insidePlotArea && (inXAxisZone || inYAxisZone)) {
+        return inXAxisZone ? "x" : "y";
+      }
+      return null;
+    };
+
+    const updateChartCursor = (
+      position: { x: number; y: number },
+      target?: Element | null
+    ) => {
+      if (dragMode === "pan") {
+        chart.style.cursor = "grabbing";
+        return;
+      }
+      if (dragMode === "zoom-x") {
+        chart.style.cursor = "ew-resize";
+        return;
+      }
+      if (dragMode === "zoom-y") {
+        chart.style.cursor = "ns-resize";
+        return;
+      }
+      const axis = getAxisDragZone(position, target);
+      if (axis === "x") {
+        chart.style.cursor = "ew-resize";
+        return;
+      }
+      if (axis === "y" && model.yDomain) {
+        chart.style.cursor = "ns-resize";
+        return;
+      }
+      chart.style.cursor = "";
+    };
+
     const handlePointerMove = (event: MouseEvent | PointerEvent) => {
       if (!plotLayout) return;
       const position = getPointerPosition(event);
       if (!position) return;
+      const target = event.target as Element | null;
+      updateChartCursor(position, target);
       const nearbyIntersections = findNearbyIntersections(position, 12);
 
       if (dragMode === "pan" && dragStartPos && dragStartXView) {
@@ -2230,24 +2287,7 @@ const createPlotWidget = (
       const target = event.target as Element | null;
       if (target?.closest?.(".plot-view-pin-overlay")) return;
       if (plotLayout) {
-        const withinPlotX =
-          position.x >= plotLayout.padding.left &&
-          position.x <= plotLayout.width - plotLayout.padding.right;
-        const withinPlotY =
-          position.y >= plotLayout.padding.top &&
-          position.y <= plotLayout.height - plotLayout.padding.bottom;
-        const insidePlotArea = withinPlotX && withinPlotY;
-        const inXAxisZone = withinPlotX && position.y >= plotLayout.height - plotLayout.padding.bottom;
-        const inYAxisZone = withinPlotY && position.x <= plotLayout.padding.left;
-        const axisFromTarget = target?.closest?.("[data-axis]")?.getAttribute("data-axis");
-        const axis =
-          axisFromTarget === "x" || axisFromTarget === "y"
-            ? axisFromTarget
-            : !insidePlotArea && (inXAxisZone || inYAxisZone)
-              ? inXAxisZone
-                ? "x"
-                : "y"
-              : null;
+        const axis = getAxisDragZone(position, target);
 
         if (axis) {
           if (axis === "y" && !model.yDomain) return;
@@ -2337,6 +2377,7 @@ const createPlotWidget = (
 
     chart.addEventListener("mousemove", handlePointerMove);
     chart.addEventListener("mouseleave", () => {
+      chart.style.cursor = "";
       if (!dragMode) hideHover();
     });
     chart.addEventListener("pointerdown", handlePointerDown);

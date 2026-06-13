@@ -1167,9 +1167,8 @@ body.number-scrubbing * {
   stroke-width: 1;
 }
 
-.plot-view-axis-hit {
-  stroke: transparent;
-  stroke-width: 14;
+.plot-view-axis-zone {
+  fill: transparent;
 }
 
 .plot-view-axis[data-axis="x"] {
@@ -1180,11 +1179,11 @@ body.number-scrubbing * {
   cursor: ns-resize;
 }
 
-.plot-view-axis-hit[data-axis="x"] {
+.plot-view-axis-zone[data-axis="x"] {
   cursor: ew-resize;
 }
 
-.plot-view-axis-hit[data-axis="y"] {
+.plot-view-axis-zone[data-axis="y"] {
   cursor: ns-resize;
 }
 

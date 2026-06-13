@@ -23,6 +23,31 @@
 
 ---
 
+## Entry J-2026-06-13-03
+
+*   Timestamp: 2026-06-13 21:26 CEST
+*   Summary:
+    *   User clarified that the chart cursor must reflect draggable axis behavior across the full active axis zone, not only on the visible axis line.
+    *   User reported that Docusaurus did not show the chart documentation updates.
+    *   Assistant changed chart axis affordances from narrow line hit targets to full transparent axis-zone rectangles and added cursor updates based on the same coordinate rules used by axis dragging.
+    *   Assistant ran the full local Docusaurus publish pipeline so `public/docs` now contains the chart navigation section.
+*   Decisions:
+    *   Cursor affordance should be computed from the real drag zone (`inXAxisZone` / `inYAxisZone`) and kept in sync with active drag mode.
+    *   Generated Docusaurus artifacts in `public/docs` must be committed when the user expects local `/docs/` to reflect documentation changes.
+*   Artifacts changed:
+    *   `src/components/PlotViewExtension.ts`
+    *   `src/components/Editor.css`
+    *   `tests/e2e/plot-view-interactions.spec.ts`
+    *   `public/docs/`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run docs:docusaurus:publish-local` passed and synced `public/docs`.
+    *   `rg` verified `Chart navigation` appears in `public/docs/guides/syntax-reference/index.html`.
+    *   `npx playwright test tests/e2e/plot-view-interactions.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed.
+    *   `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, and `npm run build` passed.
+*   Risks/blockers:
+    *   Unrelated `docs/notes.md` edits are present and intentionally excluded from this task.
+
 ## Entry J-2026-06-11-02
 
 *   Timestamp: 2026-06-11 15:30 CEST

@@ -55,12 +55,20 @@ test.describe("Plot view interactions", () => {
 
     await expect(page.locator(".plot-view").first()).toBeVisible();
     await expect(page.locator(".plot-view-disconnected")).toHaveCount(0);
-    await expect(page.locator(".plot-view-axis-hit[data-axis='x']")).toHaveCount(1);
-    await expect(page.locator(".plot-view-axis-hit[data-axis='y']")).toHaveCount(1);
-    await expect(page.locator(".plot-view-axis-hit[data-axis='x']")).toHaveAttribute(
+    await expect(page.locator(".plot-view-axis-zone[data-axis='x']")).toHaveCount(1);
+    await expect(page.locator(".plot-view-axis-zone[data-axis='y']")).toHaveCount(1);
+    await expect(page.locator(".plot-view-axis-zone[data-axis='x']")).toHaveAttribute(
       "pointer-events",
-      "stroke"
+      "all"
     );
+    const svgBox = await page.locator(".plot-view svg").first().boundingBox();
+    expect(svgBox).not.toBeNull();
+    await page.mouse.move(svgBox!.x + svgBox!.width / 2, svgBox!.y + svgBox!.height - 18);
+    await expect
+      .poll(() =>
+        page.locator(".plot-view-chart").first().evaluate((node) => getComputedStyle(node).cursor)
+      )
+      .toBe("ew-resize");
 
     const initialLabels = await getAxisLabels(page);
     const initialXLabels = await getXAxisLabels(page);
