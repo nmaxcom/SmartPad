@@ -75,6 +75,30 @@ test.describe("Live Result", () => {
     expect(values.some((value) => /6\.28/.test(value))).toBe(true);
   });
 
+  test("converts live results through user-defined unit aliases without =>", async ({ page }) => {
+    await setEditorContent(
+      page,
+      [
+        "<p>pallet = 50 boxes</p>",
+        "<p>box = 12 items</p>",
+        "<p>order = 1400 items</p>",
+        "<p>order in pallets</p>",
+        "<p></p>",
+        "<p>developermonth = 160 hours</p>",
+        "<p>feature scope = 400 hours</p>",
+        "<p>feature scope to developermonth</p>",
+      ].join("")
+    );
+
+    const liveValues = await page.$$eval(".semantic-live-result-display", (nodes) =>
+      nodes.map((node) => (node as HTMLElement).getAttribute("data-result") || "")
+    );
+
+    expect(liveValues.some((value) => /2\.33\s*pallets/.test(value))).toBe(true);
+    expect(liveValues.some((value) => /2\.5\s*developermonths/.test(value))).toBe(true);
+    expect(liveValues.some((value) => /1,?400\s*pallets/.test(value))).toBe(false);
+  });
+
   test("live result visuals match triggered results and flash on update", async ({ page }) => {
     const editor = page.locator('[data-testid="smart-pad-editor"]');
     await editor.click();

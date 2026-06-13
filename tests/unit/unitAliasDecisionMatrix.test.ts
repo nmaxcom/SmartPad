@@ -69,6 +69,28 @@ describe("Unit alias product decision matrix", () => {
       const toBox = expectMathResult(evaluateLine("12 units to box =>", context, 4));
       expect(toBox).toMatch(/1\s*box/);
     });
+
+    test("converts through chained countable aliases with plural input labels", () => {
+      const context = createContext();
+      evaluateLine("pallet = 50 boxes", context, 1);
+      evaluateLine("box = 12 items", context, 2);
+      evaluateLine("order = 1400 items", context, 3);
+
+      const pallets = expectMathResult(evaluateLine("order in pallets =>", context, 4));
+      expect(pallets).toMatch(/2\.333333\s*pallets/);
+      expect(pallets).not.toMatch(/1,?400\s*pallets/);
+    });
+  });
+
+  describe("2b. Custom duration aliases", () => {
+    test("converts duration values to user-defined one-word aliases", () => {
+      const context = createContext();
+      evaluateLine("developermonth = 160 hours", context, 1);
+      evaluateLine("feature scope = 400 hours", context, 2);
+
+      const months = expectMathResult(evaluateLine("feature scope to developermonth =>", context, 3));
+      expect(months).toMatch(/2\.5\s*developermonths/);
+    });
   });
 
   describe("3. Phrase Variables and Structural Parsing", () => {

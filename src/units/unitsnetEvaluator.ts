@@ -189,7 +189,10 @@ function rewriteTrailingUnitSuffix(expr: string): string {
 /**
  * Enhanced tokenizer that recognizes units and constants
  */
-export function tokenizeWithUnitsNet(expression: string): UnitsNetToken[] {
+export function tokenizeWithUnitsNet(
+  expression: string,
+  variableNames: Set<string> = new Set()
+): UnitsNetToken[] {
   const tokens: UnitsNetToken[] = [];
   let position = 0;
   const skipWhitespace = () => {
@@ -248,8 +251,15 @@ export function tokenizeWithUnitsNet(expression: string): UnitsNetToken[] {
       const scannedUnit = scanUnitExpression(expression, position);
       if (scannedUnit) {
         unitStr = scannedUnit;
+        const variableBoundary = unitStr.match(
+          /^(.*?)(\s+[*/]\s+)([A-Za-z_][A-Za-z0-9_]*)$/
+        );
+        if (variableBoundary && variableNames.has(variableBoundary[3])) {
+          unitStr = variableBoundary[1].trimEnd();
+        }
         position += scannedUnit.length;
 
+        let parsedQuantity = false;
         // Check if this is a valid unit or unit combination
         try {
           const value = parseFloat(numberStr);
@@ -260,6 +270,7 @@ export function tokenizeWithUnitsNet(expression: string): UnitsNetToken[] {
             position: numberStart,
             quantity,
           });
+          parsedQuantity = true;
         } catch (error) {
           // Unit parsing failed, treat as regular number
           tokens.push({
@@ -269,6 +280,9 @@ export function tokenizeWithUnitsNet(expression: string): UnitsNetToken[] {
           });
           // Reset position to try parsing the unit part as identifier
           position = unitStart;
+        }
+        if (parsedQuantity && unitStr !== scannedUnit) {
+          position = unitStart + unitStr.length;
         }
       } else {
         // No unit found, treat as regular number
@@ -756,7 +770,10 @@ export function evaluateUnitsNetExpression(
 
     const aliasedExprRewritten = aliasedExpr;
 
-    const tokens = tokenizeWithUnitsNet(aliasedExprRewritten);
+    const tokens = tokenizeWithUnitsNet(
+      aliasedExprRewritten,
+      new Set(Object.keys(aliasedVars))
+    );
     for (let i = 0; i < tokens.length; i += 1) {
       const token = tokens[i];
       if (token.type !== UnitsNetTokenType.OPERATOR || (token.value !== "+" && token.value !== "-")) {

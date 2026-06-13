@@ -217,7 +217,7 @@
       "sourceSpec": "docs/Specs/proposed/unit-aliases-and-ratio.md",
       "canonicalSpec": "docs/Specs/proposed/unit-aliases-and-ratio.md",
       "mappedGroups": ["Units And Conversions"],
-      "testRefs": ["tests/unit/unitAliasExamples.test.ts"]
+      "testRefs": ["tests/unit/unitAliasExamples.test.ts", "tests/unit/unitAliasDecisionMatrix.test.ts"]
     },
     {
       "id": "unit-decision-forks",

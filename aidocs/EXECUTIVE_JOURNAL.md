@@ -23,6 +23,34 @@
 
 ---
 
+## Entry J-2026-06-14-02
+
+*   Timestamp: 2026-06-14 00:00 CEST
+*   Summary:
+    *   User asked to proceed on unit alias behavior for examples like `pallet = 50 boxes`, `box = 12 items`, `order in pallets`, and `feature scope to developermonth`.
+    *   Assistant verified explicit conversions already supported chained countable aliases and one-word duration aliases.
+    *   Assistant added live-result regression coverage so no-`=>` lines keep converting through user-defined aliases instead of annotating the source value.
+    *   Assistant fixed spaced arithmetic with alias variables so `36 unit / dozen` uses the `dozen` variable value and cancels to `3`, while compact `unit/dozen` remains a compound unit.
+*   Decisions:
+    *   One-word user-defined unit aliases are supported as conversion targets.
+    *   Plural countable aliases are supported for chained domain-unit conversions.
+    *   In expressions, spaced operators with a known variable on the right prefer variable arithmetic over greedy compound-unit scanning.
+*   Artifacts changed:
+    *   `src/units/unitsnetEvaluator.ts`
+    *   `tests/unit/unitAliasDecisionMatrix.test.ts`
+    *   `tests/e2e/live-result.spec.ts`
+    *   `docs/Specs/proposed/unit-aliases-and-ratio.md`
+    *   `docs/spec-trust.json`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/unitAliasDecisionMatrix.test.ts tests/unit/unitAliasExamples.test.ts --runInBand` passed.
+    *   `npx playwright test tests/e2e/live-result.spec.ts --project=chromium --config=playwright.config.ts --grep "user-defined unit aliases|implicit expression lines" --workers=1` passed.
+    *   `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, and `npm run spec:trust` passed.
+    *   `npm run build` passed.
+    *   `npm run verify:changed` passed before commit.
+*   Risks/blockers:
+    *   Phrase aliases remain intentionally conservative because `to` / `in` inside phrase names still need careful structural parsing.
+
 ## Entry J-2026-06-14-01
 
 *   Timestamp: 2026-06-14 00:00 CEST

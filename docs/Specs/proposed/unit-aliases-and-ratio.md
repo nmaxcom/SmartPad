@@ -131,6 +131,19 @@ Unit aliases are **not substituted** in normal expression positions; the variabl
 
 Phrase variables (containing spaces) are valid in unit positions when defined, to keep syntax consistent with the rest of Smartpad.
 
+When an operator is written with whitespace around it and the right-hand token is a known variable, Smartpad treats that token as the variable value rather than extending the previous numeric unit literal. This keeps arithmetic readable:
+
+```text
+dozen = 12 unit
+36 unit / dozen => 3
+```
+
+Compact unit syntax still means "this is a compound unit":
+
+```text
+rate = 36 unit/dozen
+```
+
 ---
 
 ## 4. Resolution Rules (unambiguous)
@@ -619,6 +632,7 @@ b = 3 a
 dozen = 12 unit
 dozen + 5 unit => 17 unit   # allowed: dozen resolves to UnitValue
 5 unit + dozen => 17 unit   # same, just a normal UnitValue
+36 unit / dozen => 3        # spaced operator uses the variable value
 dozen in unit => 12 unit
 ```
 
