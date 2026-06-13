@@ -125,4 +125,23 @@ describe("Range-generated lists", () => {
     const summed = evaluateLine("sum(1..5) =>", context, 2);
     expect((summed as any).result).toBe("15");
   });
+
+  test("range assignment takes precedence over loose native date parsing", () => {
+    const context = createContext();
+
+    const assignment = evaluateLine("months = 1..12", context, 1);
+    expect(assignment?.type).toBe("variable");
+    expect((assignment as any).value).toBe("1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12");
+
+    const lookup = evaluateLine("months =>", context, 2);
+    expect((lookup as any).result).toBe("1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12");
+  });
+
+  test("parenthesized implicit multiplication is not parsed as a loose native date", () => {
+    const context = createContext();
+
+    const assignment = evaluateLine("carry = 2(44)", context, 1);
+    expect(assignment?.type).toBe("variable");
+    expect((assignment as any).value).toBe("88");
+  });
 });

@@ -42,6 +42,25 @@ describe("UnitsNet.js Evaluator", () => {
       expect(tokens[0].quantity?.getUnit()).toBe("km/h");
     });
 
+    test("should tokenize parenthesized compound units as one quantity", () => {
+      const tokens = tokenizeWithUnitsNet("7 kg/(m*s^2)");
+
+      expect(tokens[0].type).toBe(UnitsNetTokenType.QUANTITY);
+      expect(tokens[0].quantity?.getNumericValue()).toBe(7);
+      expect(tokens[0].quantity?.getUnit()).toBe("Pa");
+    });
+
+    test("stops compact unit scanning before arithmetic operators", () => {
+      const tokens = tokenizeWithUnitsNet("10 m/s*2");
+
+      expect(tokens[0].type).toBe(UnitsNetTokenType.QUANTITY);
+      expect(tokens[0].quantity?.getUnit()).toBe("m/s");
+      expect(tokens[1].type).toBe(UnitsNetTokenType.OPERATOR);
+      expect(tokens[1].value).toBe("*");
+      expect(tokens[2].type).toBe(UnitsNetTokenType.NUMBER);
+      expect(tokens[2].value).toBe("2");
+    });
+
     test("should tokenize regular numbers without units", () => {
       const tokens = tokenizeWithUnitsNet("42");
 
@@ -103,6 +122,24 @@ describe("UnitsNet.js Evaluator", () => {
       const quantity = result.value as UnitValue;
       expect(quantity.getNumericValue()).toBe(10);
       expect(quantity.getUnit()).toBe("m");
+    });
+
+    test("evaluates parenthesized pressure units to pascals", () => {
+      const result = evaluateUnitsNetExpression("7 kg/(m*s^2)");
+
+      expect(result.error).toBeUndefined();
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBe(7);
+      expect(quantity.getUnit()).toBe("Pa");
+    });
+
+    test("keeps unparenthesized multiply/divide unit precedence left-associative", () => {
+      const result = evaluateUnitsNetExpression("7 kg/m*s^2");
+
+      expect(result.error).toBeUndefined();
+      const quantity = result.value as UnitValue;
+      expect(quantity.getNumericValue()).toBe(7);
+      expect(quantity.getUnit()).toBe("kg*s^2/m");
     });
 
     test("should add compatible units", () => {

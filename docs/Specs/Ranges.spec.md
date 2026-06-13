@@ -70,6 +70,14 @@ Triple-dot typos are invalid and must not be auto-corrected:
 1...5 => ⚠️ Invalid range expression near "1...5"
 ```
 
+Range syntax wins over loose date parsing. A numeric range must never be interpreted through
+JavaScript/native date fallback:
+
+```text
+months = 1..12
+months => 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+```
+
 ### Postfix `to` behavior (unit annotation or conversion)
 
 ```text

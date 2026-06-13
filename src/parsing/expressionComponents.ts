@@ -7,6 +7,7 @@
 import { ExpressionComponent, ListAccessDetails } from './ast';
 import { CurrencyValue, SemanticParsers, parseListLiteral } from '../types';
 import { isReferencePlaceholder } from "../references/referenceIds";
+import { isUnitExpressionStart, scanUnitExpression } from "../units/unitExpressionScanner";
 
 /**
  * Token types for the lexer
@@ -44,7 +45,6 @@ function tokenize(expression: string): Token[] {
 
   const isWhitespace = (char: string) => /\s/.test(char);
   const isIdentChar = (char: string) => /[a-zA-Z0-9_]/.test(char);
-  const unitPattern = /^[a-zA-Z°µμΩ][a-zA-Z0-9°µμΩ\/\^\-\*\·]*/;
   const dateTimePattern = /^\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}(?:\s*(?:Z|UTC|GMT|local|[+-]\d{2}:?\d{2}))?)?/;
   const timePattern = /^\d{1,2}:\d{2}(?:\s*(?:Z|UTC|GMT|local|[+-]\d{2}:?\d{2}))?/;
 
@@ -203,18 +203,18 @@ function tokenize(expression: string): Token[] {
     }
 
     // Match units immediately after numbers (e.g., 10 m, 5 kg*m^2/s^2)
-    if (!matched && lastTokenType === 'number' && /[a-zA-Z°µμΩ]/.test(expression[pos])) {
-      const unitMatch = expression.substring(pos).match(unitPattern);
-      if (unitMatch && unitMatch[0].toLowerCase() !== "per") {
-        if (unitMatch[0].toLowerCase() === "mod") {
-          tokens.push({ type: 'operator', value: 'mod', start: pos, end: pos + unitMatch[0].length });
-          pos += unitMatch[0].length;
+    if (!matched && lastTokenType === 'number' && isUnitExpressionStart(expression[pos])) {
+      const unitText = scanUnitExpression(expression, pos);
+      if (unitText && unitText.toLowerCase() !== "per") {
+        if (unitText.toLowerCase() === "mod") {
+          tokens.push({ type: 'operator', value: 'mod', start: pos, end: pos + unitText.length });
+          pos += unitText.length;
           lastTokenType = 'operator';
           matched = true;
           continue;
         }
-        tokens.push({ type: 'unit', value: unitMatch[0], start: pos, end: pos + unitMatch[0].length });
-        pos += unitMatch[0].length;
+        tokens.push({ type: 'unit', value: unitText, start: pos, end: pos + unitText.length });
+        pos += unitText.length;
         lastTokenType = 'unit';
         matched = true;
       }

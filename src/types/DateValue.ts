@@ -221,6 +221,10 @@ export class DateValue extends SemanticValue {
       return null;
     }
 
+    if (trimmed.includes("..") || /[()]/.test(trimmed)) {
+      return null;
+    }
+
     if (/[$€£¥₹₿]/.test(trimmed)) {
       return null;
     }

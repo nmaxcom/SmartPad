@@ -122,6 +122,20 @@ A datetime literal is `DATE_LITERAL` + space + `TIME_LITERAL`:
 
 * In `es-ES`, `DD-MM-YYYY` is not ambiguous → always interpret as day-month-year.
 * If locale is unset, numeric slash/dash dates are parsed using the runtime/system locale order.
+* Loose/native date fallback must not parse strings containing range syntax (`..`) or math
+  parentheses. Those inputs belong to range/math parsing.
+
+Guardrail examples:
+
+```text
+months = 1..12
+months =>1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+```
+
+```text
+carry = 2(44)
+carry =>88
+```
 
 ### Tests (es-ES parsing)
 

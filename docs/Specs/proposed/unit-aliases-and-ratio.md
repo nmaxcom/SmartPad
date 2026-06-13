@@ -206,6 +206,27 @@ Examples that must remain valid compound-unit literals:
 1kg*m/s^2
 ```
 
+### 4.3.1 Parenthesized compound-unit groups
+
+Parentheses inside a compact unit literal are unit grouping syntax, not regular expression
+parentheses. The whole unit span should tokenize and highlight as a unit when it follows a
+number.
+
+```text
+7 kg/(m*s^2) => 7 Pa
+5 N/m^2 => 5 Pa
+```
+
+`*` and `/` remain left-associative inside unit algebra unless parentheses say otherwise.
+
+```text
+7 kg/m*s^2 => 7 kg*s^2/m
+7 kg/m/s^2 => 7 Pa
+```
+
+This keeps `10 m/s*2` as arithmetic (`(10 m/s) * 2`) rather than swallowing `*2` into the
+unit token.
+
 ### 4.4 Constant-vs-unit safety
 
 Trailing unit-suffix rewrites must only run when the left side is a complete operand.

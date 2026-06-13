@@ -173,6 +173,26 @@ describe("Semantic highlight tokenization", () => {
     expect(currencyTokens).toEqual(["EUR", "USD"]);
   });
 
+  test("highlights parenthesized compound units as a single unit token", () => {
+    const tokens = tokenizeExpression("7kg/(m*s^2)", 0, new Map());
+
+    expect(tokens.map((token) => [token.type, token.text])).toEqual([
+      ["scrubbableNumber", "7"],
+      ["unit", "kg/(m*s^2)"],
+    ]);
+  });
+
+  test("does not swallow arithmetic after a compact unit expression", () => {
+    const tokens = tokenizeExpression("10 m/s*2", 0, new Map());
+
+    expect(tokens.map((token) => [token.type, token.text])).toEqual([
+      ["scrubbableNumber", "10"],
+      ["unit", "m/s"],
+      ["operator", "*"],
+      ["scrubbableNumber", "2"],
+    ]);
+  });
+
   test("highlights @view keyword and variables inside view directives", () => {
     const ast = parseLine("@view plot x=time y=take home size=md", 1);
     const tokens = extractTokensFromASTNode(

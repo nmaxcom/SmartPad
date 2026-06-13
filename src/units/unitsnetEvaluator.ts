@@ -13,6 +13,7 @@ import {
 } from "./unitsnetAdapter";
 import { UnitValue, NumberValue } from "../types";
 import { parseUnitTargetWithScale } from "./unitConversionTarget";
+import { scanUnitExpression } from "./unitExpressionScanner";
 
 /**
  * Enhanced token types for units
@@ -191,21 +192,10 @@ function rewriteTrailingUnitSuffix(expr: string): string {
 export function tokenizeWithUnitsNet(expression: string): UnitsNetToken[] {
   const tokens: UnitsNetToken[] = [];
   let position = 0;
-  const unitStartRe = /[a-zA-Z°µμΩ]/;
-  const unitAtomRe = /[a-zA-Z0-9°µμΩ\^\-]/;
-
   const skipWhitespace = () => {
     while (position < expression.length && /\s/.test(expression[position])) {
       position++;
     }
-  };
-
-  const peekNextNonWhitespace = (start: number): string | null => {
-    let cursor = start;
-    while (cursor < expression.length && /\s/.test(expression[cursor])) {
-      cursor += 1;
-    }
-    return cursor < expression.length ? expression[cursor] : null;
   };
 
   while (position < expression.length) {
@@ -255,26 +245,10 @@ export function tokenizeWithUnitsNet(expression: string): UnitsNetToken[] {
       const unitStart = position;
 
       // Check for unit patterns like "m", "km/h", "°C", "m/s^2", "N*m", etc.
-      if (position < expression.length && unitStartRe.test(expression[position])) {
-        while (position < expression.length) {
-          const current = expression[position];
-          if (unitAtomRe.test(current)) {
-            unitStr += current;
-            position += 1;
-            continue;
-          }
-
-          if (current === "*" || current === "/" || current === "·") {
-            const next = peekNextNonWhitespace(position + 1);
-            if (next && unitStartRe.test(next)) {
-              unitStr += current;
-              position += 1;
-              continue;
-            }
-          }
-
-          break;
-        }
+      const scannedUnit = scanUnitExpression(expression, position);
+      if (scannedUnit) {
+        unitStr = scannedUnit;
+        position += scannedUnit.length;
 
         // Check if this is a valid unit or unit combination
         try {

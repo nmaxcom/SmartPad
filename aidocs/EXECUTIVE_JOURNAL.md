@@ -6625,6 +6625,42 @@
 *   Pending:
     *   User review of the Settings/first-run proposal.
 
+## Entry J-2026-06-13-01
+
+*   Timestamp: 2026-06-13 20:33 CEST
+*   Summary:
+    *   User clarified unit parsing expectations for pressure literals and date fallback regressions.
+    *   Assistant implemented shared compound-unit scanning so `kg/(m*s^2)` is tokenized/highlighted as one unit and evaluates to `Pa`.
+    *   Assistant preserved left-associative unit algebra for `kg/m*s^2`, which remains `kg*s^2/m`; pressure requires `kg/(m*s^2)` or `kg/m/s^2`.
+    *   Assistant blocked loose native date parsing for range syntax and math parentheses, fixing `months = 1..12` and `carry = 2(44)`.
+*   Decisions:
+    *   Parentheses inside compact unit literals are unit grouping syntax when they follow a number.
+    *   Native date fallback must lose to range/math syntax; explicit date formats remain supported.
+*   Artifacts changed:
+    *   `src/units/unitExpressionScanner.ts`
+    *   `src/units/unitsnetEvaluator.ts`
+    *   `src/parsing/expressionComponents.ts`
+    *   `src/components/SemanticHighlightExtension.ts`
+    *   `src/types/DateValue.ts`
+    *   `tests/unit/unitsnetEvaluator.test.ts`
+    *   `tests/unit/semanticHighlightTokenization.test.ts`
+    *   `tests/unit/range.test.ts`
+    *   `tests/unit/quantity.test.ts`
+    *   `docs/Specs/proposed/unit-aliases-and-ratio.md`
+    *   `docs/Specs/Ranges.spec.md`
+    *   `docs/Specs/Locale.spec.md`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/unitsnetEvaluator.test.ts` passed.
+    *   `npm run test:unit -- tests/unit/semanticHighlightTokenization.test.ts` passed.
+    *   `npm run test:unit -- tests/unit/range.test.ts tests/unit/quantity.test.ts` passed.
+    *   `npm run test:unit -- tests/unit/dateMathEvaluator.test.ts tests/unit/dateRange.test.ts tests/unit/localeDate.test.ts` passed.
+    *   `npm run test:unit -- tests/unit/semantic-result-issues.test.ts tests/unit/functions.test.ts tests/unit/list.test.ts` passed.
+    *   `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, and `npm run spec:trust` passed.
+    *   `npm run verify:changed` passed.
+    *   `npm run build` passed; generated `dist/index.html` hash-only artifact was restored and not committed.
+*   Pending:
+    *   User review/confirmation of the unit/date behavior.
+
 ## Entry J-2026-06-08-06
 
 *   Timestamp: 2026-06-08 17:09 CEST

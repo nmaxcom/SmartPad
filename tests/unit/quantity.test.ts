@@ -307,6 +307,10 @@ describe("UnitParser", () => {
 
     const pressureAlt = UnitParser.parse("kg/m/s^2");
     expect(pressureAlt.getDimension()).toEqual(DIMENSIONS.PRESSURE);
+
+    const leftAssociative = UnitParser.parse("kg/m*s^2");
+    expect(leftAssociative.getDimension()).not.toEqual(DIMENSIONS.PRESSURE);
+    expect(leftAssociative.toString()).toBe("kg*s^2/m");
   });
 
   test("should parse inverse units", () => {

@@ -12,6 +12,7 @@ import { Variable } from "../state/types";
 import { UnitValue } from "../types";
 import { parseLine } from "../parsing/astParser";
 import { isLikelyLiveExpression } from "../eval/liveResultPreview";
+import { scanUnitExpression } from "../units/unitExpressionScanner";
 import type { ASTNode } from "../parsing/ast";
 import {
   isPlainTextNode,
@@ -590,7 +591,6 @@ export function tokenizeExpression(
   const bracketRegex = /^[\[\]]/;
   const rangeOperatorRegex = /^\.\./;
   const triggerRegex = /^=>/;
-  const unitRegex = /^[a-zA-Z°µμΩ][a-zA-Z0-9°µμΩ\/\^\-\*\·]*/;
   const currencySymbolRegex = /^[\$€£¥₹₿]/;
   const currencyCodeRegex = /^(USD|EUR|GBP|JPY|INR|BTC|ETH|USDT|USDC|BNB|XRP|SOL|ADA|DOGE|LTC|DOT|AVAX|MATIC|TRX|LINK|CHF|CAD|AUD)(?=$|[^A-Za-z0-9_]|[0-9])/i;
   const isGoalSeekExpression = /^\s*make\b/i.test(expr);
@@ -852,10 +852,9 @@ export function tokenizeExpression(
           matched = true;
         }
 
-        const unitMatch = !matched ? expr.substring(pos).match(unitRegex) : null;
-        if (unitMatch) {
+        const unitText = !matched ? scanUnitExpression(expr, pos) : null;
+        if (unitText) {
           // Make sure it's not a variable name
-          const unitText = unitMatch[0];
           const unitIsKnown = UnitValue.isUnitString(`1${unitText}`);
           const preferUnit = unitIsKnown && lastToken?.type === "scrubbableNumber";
           if (preferUnit || !variableContext.has(unitText)) {
