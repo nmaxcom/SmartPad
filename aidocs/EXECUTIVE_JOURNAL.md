@@ -6652,7 +6652,8 @@
     *   `npm run spec:trust` passed.
     *   `npm run build` passed; generated `dist/index.html` hash-only artifact was restored and not committed.
 *   Pending:
-    *   Run default docs/spec/verify gates after this commit so the default `HEAD~1...HEAD` range points at this block.
+    *   Follow-up docs mapping was needed after commit because `Editor.css` is shared by plot styles and result-chip/editor styles, and Settings CSS changes require a mapped docs touch.
+    *   `docs/spec-map.json` now maps plotting docs as valid coverage for shared editor CSS, and `docs/ABOUT.md` records the flatter Settings surfaces.
 
 ## Entry J-2026-06-13-01
 

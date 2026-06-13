@@ -157,6 +157,8 @@
       "docPrefixes": [
         "docs/Specs/ResultChipsAndValueGraph.spec.md",
         "docs/Specs/implemented/result-chips-and-references.md",
+        "docs/Specs/Plotting.spec.md",
+        "docs/Specs/implemented/plotting-and-dependency-views.md",
         "docs/Specs/proposed/autocomplete.md",
         "public/docs/"
       ],
