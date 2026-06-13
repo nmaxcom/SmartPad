@@ -23,6 +23,28 @@
 
 ---
 
+## Entry J-2026-06-14-01
+
+*   Timestamp: 2026-06-14 00:00 CEST
+*   Summary:
+    *   User asked to record feature ideas 3, 5, 7, 9, 10, and 13 for future evaluation rather than immediate implementation.
+    *   User clarified that result-chip source explanation could show a tooltip with the source line when that source line is not visible.
+    *   User clarified that structured import should include spreadsheet data and HTML tables, not only screenshots/text.
+    *   Assistant converted the selected ideas into concrete feature backlog items with explicit next steps and verification expectations.
+*   Decisions:
+    *   These ideas remain `feature/todo` items for later prioritization.
+    *   Structured import should be scoped progressively, starting with clipboard HTML tables, CSV/TSV, and spreadsheet ranges before screenshot extraction.
+*   Artifacts changed:
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run docs:map` passed.
+    *   `npm run docs:drift` passed.
+    *   `npm run spec:test` passed.
+    *   `npm run spec:trust` passed.
+*   Risks/blockers:
+    *   No implementation decision has been made for these features yet.
+
 ## Entry J-2026-06-13-03
 
 *   Timestamp: 2026-06-13 21:26 CEST
