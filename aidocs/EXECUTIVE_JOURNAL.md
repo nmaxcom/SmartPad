@@ -23,6 +23,27 @@
 
 ---
 
+## Entry J-2026-06-14-03
+
+*   Timestamp: 2026-06-14 00:00 CEST
+*   Summary:
+    *   User asked to add more feature ideas for later evaluation: lightweight Monte Carlo simulation, improved Goal Seek with multiple constraints, sensitivity/tornado charts, scenarios/what-if blocks, value ranges/distributions/precision on variables and results, editable/savable templates, and sheet export to PDF.
+    *   Assistant added new backlog items for Monte Carlo, constrained Goal Seek, sensitivity/tornado charts, uncertainty/range propagation, and PDF export.
+    *   Assistant updated the existing scenarios and templates backlog items instead of creating duplicates.
+*   Decisions:
+    *   Keep these as feature backlog items for future product prioritization, not current implementation.
+    *   Treat uncertainty/distribution work as a separate capability from scenarios: scenarios compare named cases, while distributions model ranges/probabilities.
+*   Artifacts changed:
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run docs:map` passed.
+    *   `npm run docs:drift` passed.
+    *   `npm run spec:test` passed.
+    *   `npm run spec:trust` passed.
+*   Risks/blockers:
+    *   Monte Carlo, constraints, and distribution propagation will need careful syntax design so SmartPad does not become a heavy programming environment.
+
 ## Entry J-2026-06-14-02
 
 *   Timestamp: 2026-06-14 00:00 CEST
