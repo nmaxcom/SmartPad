@@ -23,6 +23,28 @@
 
 ---
 
+## Entry J-2026-06-15-02
+
+*   Timestamp: 2026-06-15 22:20 CEST
+*   Summary:
+    *   User clarified the Result Chips 2.0 interaction model: references are always live, not optionally snapshot references.
+    *   User also clarified that drag/drop must support precise same-line insertion and movement, including dropping a chip between operators such as `3 * | + 20` and moving it again within the same line.
+    *   Assistant updated the result-chip parity and drop-preview backlog items to capture those decisions.
+*   Decisions:
+    *   A "reference" means a live link to the source result.
+    *   Frozen reuse is a snapshot/literal inserted value and must not be called a reference.
+    *   Drop preview must support same-line character-level insertion, same-line movement, and cross-line movement.
+*   Artifacts changed:
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run docs:map` passed.
+    *   `npm run docs:drift` passed.
+    *   `npm run spec:test` passed.
+    *   `npm run spec:trust` passed.
+*   Risks/blockers:
+    *   Future implementation must make live references visually distinct enough that users understand they update when the source changes.
+
 ## Entry J-2026-06-15-01
 
 *   Timestamp: 2026-06-15 22:12 CEST / 2026-06-15 20:12 UTC
