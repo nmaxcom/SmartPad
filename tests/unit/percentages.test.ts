@@ -94,6 +94,19 @@ describe("Natural Percentages", () => {
     expect(result.displayText).toContain("%");
   });
 
+  test("as % follows configured decimal places", () => {
+    const node = parseLine("272.0507 / 300 as % =>", 1);
+    const result: any = defaultRegistry.evaluate(node as any, {
+      variableStore: { clearVariables() {}, setVariableWithMetadata() {} } as any,
+      variableContext: new Map(),
+      lineNumber: 1,
+      decimalPlaces: 2,
+    });
+
+    expect(result?.type).toBe("mathResult");
+    expect(result.result).toBe("90.68%");
+  });
+
   test("currency with percentage expression", () => {
     const node = parseLine("$30 + 10% =>", 1);
     const result: any = defaultRegistry.evaluate(node as any, {

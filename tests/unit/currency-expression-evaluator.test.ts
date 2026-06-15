@@ -557,4 +557,39 @@ describe("Currency Expression Evaluation", () => {
     expect(eurVariable).toBeDefined();
     expect(String(eurVariable?.value)).toBe("8.33 EUR");
   });
+
+  test("crypto currency codes parse and convert in variable assignments", () => {
+    setupDefaultEvaluators();
+    setFxRatesSnapshot({
+      base: "USD",
+      rates: { EUR: 0.9, ETH: 0.0005 },
+      provider: "fawazahmed0",
+      fetchedAt: Date.now(),
+    });
+
+    const reactiveStore = new ReactiveVariableStore();
+    const lines = ["eth stack = 2.3 ETH=>", "eth stack eur = eth stack in EUR"];
+
+    lines.forEach((line, index) => {
+      const node = parseLine(line, index + 1);
+      const variableContext = new Map<string, Variable>();
+      reactiveStore.getAllVariables().forEach((variable) => {
+        variableContext.set(variable.name, variable);
+      });
+      defaultRegistry.evaluate(node, {
+        variableStore: reactiveStore,
+        variableContext,
+        lineNumber: index + 1,
+        decimalPlaces: 2,
+      });
+    });
+
+    const ethVariable = reactiveStore.getVariable("eth stack");
+    expect(ethVariable).toBeDefined();
+    expect(String(ethVariable?.value)).toBe("2.3 ETH");
+
+    const eurVariable = reactiveStore.getVariable("eth stack eur");
+    expect(eurVariable).toBeDefined();
+    expect(String(eurVariable?.value)).toBe("4140 EUR");
+  });
 });

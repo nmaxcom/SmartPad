@@ -47,6 +47,14 @@ describe("CurrencyValue", () => {
     const compactUsdPrefix = CurrencyValue.fromString("USD15.5");
     expect(compactUsdPrefix.getNumericValue()).toBe(15.5);
     expect(compactUsdPrefix.toString()).toBe("15.5 USD");
+
+    const ethSuffix = CurrencyValue.fromString("2.3 ETH");
+    expect(ethSuffix.getNumericValue()).toBe(2.3);
+    expect(ethSuffix.toString()).toBe("2.3 ETH");
+
+    const compactEthPrefix = CurrencyValue.fromString("ETH2.3");
+    expect(compactEthPrefix.getNumericValue()).toBe(2.3);
+    expect(compactEthPrefix.toString()).toBe("2.3 ETH");
   });
 
   test("parses negative currency amounts", () => {
@@ -88,6 +96,11 @@ describe("CurrencyValue", () => {
     const parsedCompactCode = SemanticParsers.parse("35430EUR");
     expect(parsedCompactCode).not.toBeNull();
     expect(parsedCompactCode?.getType()).toBe("currency");
+
+    const parsedEth = SemanticParsers.parse("2.3 ETH");
+    expect(parsedEth).not.toBeNull();
+    expect(parsedEth?.getType()).toBe("currency");
+    expect(parsedEth?.toString()).toBe("2.3 ETH");
   });
 
   test("SemanticParsers detects currency rates with units", () => {

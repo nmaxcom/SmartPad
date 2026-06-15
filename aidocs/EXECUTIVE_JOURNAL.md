@@ -23,6 +23,38 @@
 
 ---
 
+## Entry J-2026-06-15-01
+
+*   Timestamp: 2026-06-15 22:12 CEST / 2026-06-15 20:12 UTC
+*   Summary:
+    *   User reported two calculator bugs: `as %` results ignored the Decimal Places setting and `2.3 ETH` displayed as pluralized `ETHs`, causing `ETH in EUR` conversion to fail as a non-unit conversion.
+    *   Assistant removed the hardcoded four-decimal percentage override and expanded currency parsing so all supported crypto codes parse as currency values instead of count-like unit aliases.
+    *   Specs and trust metadata were updated for percentage precision and crypto-code currency coverage.
+*   Decisions:
+    *   Percentage result chips now use the shared display options from Settings, including Decimal Places and thousands grouping.
+    *   Supported crypto codes such as `ETH` are first-class currency code literals in amount-code and code-amount forms.
+*   Artifacts changed:
+    *   `src/eval/percentageEvaluatorV2.ts`
+    *   `src/types/CurrencyValue.ts`
+    *   `src/types/index.ts`
+    *   `tests/unit/percentages.test.ts`
+    *   `tests/unit/currencyValue.test.ts`
+    *   `tests/unit/currency-expression-evaluator.test.ts`
+    *   `docs/Specs/Currency.spec.md`
+    *   `docs/Specs/ExplicitTrigger.spec.md`
+    *   `docs/Specs/implemented/currency-and-fx.md`
+    *   `docs/spec-trust.json`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/percentages.test.ts tests/unit/currencyValue.test.ts tests/unit/currency-expression-evaluator.test.ts --runInBand` passed.
+    *   Evaluator reproduction returned `90.68%`, `2.3 ETH`, and `4,140 EUR` with a seeded ETH/EUR rate.
+    *   `npm run verify:changed` passed for the default range.
+    *   `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, and `npm run spec:trust` passed against the current workspace.
+    *   `npm run build` passed; generated `dist/index.html` hash-only output was restored and not committed.
+*   Pending:
+    *   User review/confirmation of the bug-fix behavior.
+*   Risks/blockers:
+    *   Live crypto conversion still depends on an available cached/live/manual FX rate; without one, SmartPad will show an FX-rate availability error rather than the previous non-unit conversion error.
+
 ## Entry J-2026-06-14-03
 
 *   Timestamp: 2026-06-14 00:00 CEST

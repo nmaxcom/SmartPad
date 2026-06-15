@@ -6,5 +6,6 @@
 - Verification tests:
   - `tests/unit/currency-expression-evaluator.test.ts`
   - `tests/unit/currencyFx.test.ts`
+  - `tests/unit/currencyValue.test.ts`
 
 This card is the trust declaration for shipped currency and FX behavior.

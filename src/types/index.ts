@@ -164,6 +164,10 @@ const hasMatchingOuterParentheses = (input: string): boolean => {
 };
 
 const groupedNumberPattern = "(?:\\d{1,3}(?:,\\d{3})*|\\d+)(?:\\.\\d+)?";
+const currencyCodePattern = CurrencyValue.getSupportedSymbols()
+  .filter((symbol) => /^[A-Z]+$/.test(symbol))
+  .sort((a, b) => b.length - a.length)
+  .join("|");
 
 const parseSingleValue = (input: string): SemanticValue | null => {
   if (!input) return null;
@@ -254,13 +258,13 @@ const parseSingleValue = (input: string): SemanticValue | null => {
     trimmed.match(new RegExp(`^[+-]?\\s*${groupedNumberPattern}\\s*[\$€£¥₹₿]$`)) ||
     trimmed.match(
       new RegExp(
-        `^[+-]?\\s*${groupedNumberPattern}\\s*(USD|EUR|GBP|JPY|INR|BTC|CHF|CAD|AUD)$`,
+        `^[+-]?\\s*${groupedNumberPattern}\\s*(${currencyCodePattern})$`,
         "i"
       )
     ) ||
     trimmed.match(
       new RegExp(
-        `^[+-]?\\s*(USD|EUR|GBP|JPY|INR|BTC|CHF|CAD|AUD)\\s*${groupedNumberPattern}$`,
+        `^[+-]?\\s*(${currencyCodePattern})\\s*${groupedNumberPattern}$`,
         "i"
       )
     )

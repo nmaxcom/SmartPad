@@ -850,18 +850,7 @@ export class PercentageExpressionEvaluatorV2 implements NodeEvaluator {
     result: SemanticValue,
     context: EvaluationContext
   ): DisplayOptions {
-    const base = this.getDisplayOptions(context);
-    if (result.getType() === "percentage") {
-      return { ...base, precision: 4 };
-    }
-    if (SemanticValueTypes.isList(result)) {
-      const list = result as ListValue;
-      const items = list.getItems();
-      if (items.length > 0 && items.every((item) => item.getType() === "percentage")) {
-        return { ...base, precision: 4 };
-      }
-    }
-    return base;
+    return this.getDisplayOptions(context);
   }
 
   private getDisplayOptions(context: EvaluationContext): DisplayOptions {

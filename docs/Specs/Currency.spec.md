@@ -19,16 +19,17 @@ This spec defines currency as a first-class unit, how FX conversion works, and h
 SmartPad supports currency in interchangeable symbol and ISO-code forms:
 
 - Symbol form (existing): dollar sign, euro sign, pound sign, yen sign, rupee sign, bitcoin sign, plus suffix symbols `CHF`, `CAD`, `AUD`.
-- ISO code form (new for FX): `USD`, `EUR`, `GBP`, `JPY`, `INR`, `BTC`, `CHF`, `CAD`, `AUD`.
+- ISO code form (new for FX): `USD`, `EUR`, `GBP`, `JPY`, `INR`, `BTC`, `ETH`, `USDT`, `USDC`, `BNB`, `XRP`, `SOL`, `ADA`, `DOGE`, `LTC`, `DOT`, `AVAX`, `MATIC`, `TRX`, `LINK`, `CHF`, `CAD`, `AUD`.
 
 Mapping rules (display + parsing):
 
 - `$` is `USD`. Euro sign is `EUR`, pound sign is `GBP`, yen sign is `JPY`, rupee sign is `INR`, bitcoin sign is `BTC`.
 - Other ISO codes may render with their familiar symbols in the UI, but the code form is always valid.
 - `CHF`, `CAD`, `AUD` display as suffix (e.g., `100 CHF`).
+- Supported crypto codes display as suffix currency values (e.g., `2.3 ETH`) and must not be pluralized as count units.
 - Symbols remain the default display unless the user explicitly targets a code.
 - ISO code literals may include or omit whitespace between amount and code: `35430 EUR`,
-  `35430EUR`, `EUR 35430`, and `EUR35430` are equivalent currency values.
+  `35430EUR`, `EUR 35430`, and `EUR35430` are equivalent currency values. The same applies to supported crypto codes such as `2.3 ETH`, `2.3ETH`, `ETH 2.3`, and `ETH2.3`.
 
 Examples:
 
@@ -41,6 +42,9 @@ rate in USD => $88.35
 
 btc = BTC 0.015
 btc in USD => $937.42
+
+eth stack = 2.3 ETH
+eth stack in EUR => 4140 EUR  # example with a matching cached/manual FX rate
 ```
 
 ---

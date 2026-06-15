@@ -84,6 +84,11 @@ const CURRENCY_INFO: Record<CurrencySymbol, CurrencyInfo> = {
   'LINK': { symbol: 'LINK', name: 'LINK', decimalPlaces: 8, symbolPosition: 'after' },
 };
 
+const CURRENCY_CODE_PATTERN = Object.keys(CURRENCY_INFO)
+  .filter((symbol) => /^[A-Z]+$/.test(symbol))
+  .sort((a, b) => b.length - a.length)
+  .join("|");
+
 /**
  * Represents a currency amount with its symbol
  * Solves the ambiguity of "$100" by clearly separating symbol and amount
@@ -339,16 +344,26 @@ export class CurrencyValue extends SemanticValue {
       return new CurrencyValue(symbol, amount);
     }
     
-    // Try code-last format: "100 CHF", "50.25 CAD", "20 EUR", "20EUR"
-    match = str.match(/^(-?\d{1,3}(?:,\d{3})*(?:\.\d+)?|-?\d+(?:\.\d+)?)\s*(USD|EUR|GBP|JPY|INR|BTC|CHF|CAD|AUD)$/i);
+    // Try code-last format: "100 CHF", "50.25 CAD", "20 ETH", "20ETH"
+    match = str.match(
+      new RegExp(
+        `^(-?\\d{1,3}(?:,\\d{3})*(?:\\.\\d+)?|-?\\d+(?:\\.\\d+)?)\\s*(${CURRENCY_CODE_PATTERN})$`,
+        "i"
+      )
+    );
     if (match) {
       const amount = parseFloat(match[1].replace(/,/g, ""));
       const symbol = match[2].toUpperCase() as CurrencySymbol;
       return new CurrencyValue(symbol, amount);
     }
 
-    // Try code-first format: "USD 100", "EUR 50.25", "EUR50.25"
-    match = str.match(/^(USD|EUR|GBP|JPY|INR|BTC|CHF|CAD|AUD)\s*(-?\d{1,3}(?:,\d{3})*(?:\.\d+)?|-?\d+(?:\.\d+)?)$/i);
+    // Try code-first format: "USD 100", "ETH 2.3", "EUR50.25"
+    match = str.match(
+      new RegExp(
+        `^(${CURRENCY_CODE_PATTERN})\\s*(-?\\d{1,3}(?:,\\d{3})*(?:\\.\\d+)?|-?\\d+(?:\\.\\d+)?)$`,
+        "i"
+      )
+    );
     if (match) {
       const symbol = match[1].toUpperCase() as CurrencySymbol;
       const amount = parseFloat(match[2].replace(/,/g, ""));
