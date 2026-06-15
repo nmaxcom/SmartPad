@@ -149,8 +149,8 @@ Flow:
 1. User places caret in expression.
 2. User opens the source result chip action menu.
 3. User chooses `Insert reference` or `Insert value`.
-4. `Insert reference` inserts a structured reference chip at the caret.
-5. `Insert value` inserts the current plain value snapshot at the caret.
+4. `Insert reference` inserts a structured live reference chip at the caret.
+5. `Insert value` inserts the current plain value snapshot at the caret. A snapshot is not a reference and does not stay linked to the source.
 6. If the caret is on the same source line as the source result, SmartPad creates a new line before inserting (prevents self-reference loops).
 
 User sees:
@@ -171,13 +171,15 @@ Flow:
 
 1. Drag source result chip.
 2. Drop into target line.
-3. Reference token inserted at drop position.
+3. A live reference token is inserted at the exact drop position.
 4. Reference value payload must resolve from the rendered chip text first (then `aria-label`/`title`), and only use `data-result` as last-resort fallback.
 5. In-flight drag payload must survive transient `dragleave` events so drop insertion remains reliable during normal pointer movement.
 6. Drop cursor should be visually prominent (thicker/high-contrast) so line insertion is easy to target.
 7. Last-line drop should expose a generous bottom drop band that creates a new line when dropped near the editor bottom.
 8. Boundary targeting must use one canonical resolver where the shown boundary indicator and the final insertion boundary are the same target.
 9. Boundary insertion must tolerate missing paragraph `data-line-id` in the DOM by falling back to textblock line index, not defaulting silently to document end.
+10. Inline targeting must win when the pointer is inside a paragraph text rect, even if that point is also near a neighboring line boundary band.
+11. Inserted reference chips are draggable and can be moved again inside the same line, including between existing characters/operators such as `3 * | + 20`.
 
 Guardrails:
 
@@ -185,6 +187,7 @@ Guardrails:
 2. Inserted reference chip label must match the exact visible source result, not the source expression text.
 3. Bottom drop affordance must remain visible near the end of the document, including last-line drop for newline insertion.
 4. Every inter-line boundary should expose a reliable mouse hit-zone; dropping in a shown boundary must not insert at document end.
+5. Drag/drop from result chips always creates live references. Frozen reuse is only the explicit `Insert value` snapshot action.
 
 ### 5.4 Copy/paste chip as reference
 
@@ -370,7 +373,7 @@ Reference insertion/removal must be atomic editor transactions.
 Add:
 
 1. `resultLaneEnabled` (default: true desktop, auto-collapse on narrow widths).
-2. `chipInsertMode` (controls drag/drop insertion mode; default: reference chip).
+2. Drag/drop insertion mode is always live reference. Snapshot insertion is exposed only through the explicit result-chip `Insert value` action.
 3. `referenceTextExportMode` with values:
    - `preserve` (default): keep SmartPad stable-ID reference tokens in text copy/export.
    - `readable`: flatten references to current visible values.

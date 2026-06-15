@@ -20,6 +20,7 @@ const RESULT_SELECTOR =
 const REFERENCE_SELECTOR = ".semantic-reference-chip";
 const SOURCE_LINE_HIGHLIGHT_CLASS = "semantic-source-line-highlight";
 const DND_MIME = "application/x-smartpad-result-reference";
+const REFERENCE_MOVE_MIME = "application/x-smartpad-reference-move";
 const CLIPBOARD_MIME = "application/x-smartpad-reference";
 const REF_DEBUG_FLAG = "__SP_REF_DEBUG";
 const REF_DEBUG_LOG_STORE = "__SP_REF_DEBUG_LOGS";
@@ -40,6 +41,12 @@ interface ReferencePayload {
   sourceLine: number;
   sourceLabel: string;
   sourceValue: string;
+  placeholderKey?: string;
+}
+
+interface ReferenceMovePayload {
+  from: number;
+  to: number;
   placeholderKey?: string;
 }
 
@@ -335,7 +342,8 @@ const insertReferenceAt = (
   view: any,
   payload: ReferencePayload,
   pos: number,
-  mode: "reference" | "value" = "reference"
+  mode: "reference" | "value" = "reference",
+  options?: { moveRange?: ReferenceMovePayload | null }
 ): number | null => {
   const { state } = view;
   const resolvedPayload = resolvePayloadLineIdentity(state, payload);
@@ -344,9 +352,28 @@ const insertReferenceAt = (
   const referenceNode = mode === "reference" ? createReferenceNode(state, resolvedPayload) : null;
   if (mode === "reference" && !referenceNode) return null;
   try {
-    const insertionPos = Math.max(0, Math.min(pos, state.doc.content.size));
-    const before = insertionPos > 0 ? getTextAt(state.doc, insertionPos - 1, insertionPos) : "";
-    const after = getTextAt(state.doc, insertionPos, insertionPos + 1);
+    const moveRange =
+      mode === "reference" &&
+      options?.moveRange &&
+      Number.isFinite(options.moveRange.from) &&
+      Number.isFinite(options.moveRange.to) &&
+      options.moveRange.to > options.moveRange.from
+        ? options.moveRange
+        : null;
+    if (moveRange && pos >= moveRange.from && pos <= moveRange.to) {
+      return moveRange.to;
+    }
+
+    const tr = state.tr;
+    const moveSize = moveRange ? moveRange.to - moveRange.from : 0;
+    if (moveRange) {
+      tr.delete(moveRange.from, moveRange.to);
+    }
+
+    const adjustedPos = moveRange && pos > moveRange.to ? pos - moveSize : pos;
+    const insertionPos = Math.max(0, Math.min(adjustedPos, tr.doc.content.size));
+    const before = insertionPos > 0 ? getTextAt(tr.doc, insertionPos - 1, insertionPos) : "";
+    const after = getTextAt(tr.doc, insertionPos, insertionPos + 1);
     const prefix = before && !isWordBoundary(before) ? " " : "";
     // Keep a trailing text slot after inserted atom references so caret can
     // remain visible and stable when the reference lands at end-of-line.
@@ -356,7 +383,6 @@ const insertReferenceAt = (
         : ""
       : " ";
 
-    const tr = state.tr;
     let cursor = insertionPos;
     if (prefix) {
       tr.insertText(prefix, cursor, cursor);
@@ -389,6 +415,7 @@ const insertReferenceAt = (
     });
     appendRefTrace("insertReferenceAt", {
       mode,
+      moved: Boolean(moveRange),
       insertionPos,
       cursor,
       selectionPos,
@@ -611,6 +638,23 @@ const resolveInlineDropPos = (view: any, event: DragEvent): number | null => {
     return null;
   }
   return Math.max(1, Math.min(coords.pos, view.state.doc.content.size));
+};
+
+const shouldPreferInlineDrop = (
+  view: any,
+  event: DragEvent,
+  inlinePos: number | null
+): boolean => {
+  if (typeof inlinePos !== "number") {
+    return false;
+  }
+  const target = getEventElement(event.target);
+  const paragraph = target?.closest("p") as HTMLElement | null;
+  if (!paragraph || !view.dom.contains(paragraph)) {
+    return false;
+  }
+  const rect = paragraph.getBoundingClientRect();
+  return event.clientY >= rect.top + 4 && event.clientY <= rect.bottom - 4;
 };
 
 const normalizeChipText = (value: string): string => String(value || "").replace(/\s+/g, " ").trim();
@@ -1063,6 +1107,52 @@ const payloadFromElement = (target: HTMLElement): ReferencePayload | null => {
   };
 };
 
+const payloadFromReferenceElement = (target: HTMLElement): ReferencePayload | null => {
+  if (!target.matches(REFERENCE_SELECTOR)) {
+    return null;
+  }
+  const sourceLineId = String(target.getAttribute("data-source-line-id") || "").trim();
+  const sourceLine = Number(target.getAttribute("data-source-line") || 0);
+  if (!sourceLineId && sourceLine <= 0) return null;
+  const sourceValue = normalizeChipText(
+    String(target.getAttribute("data-source-value") || target.getAttribute("data-result") || "")
+  );
+  const label =
+    normalizeChipText(String(target.getAttribute("data-source-label") || "")) ||
+    normalizeChipText(target.textContent || "") ||
+    sourceValue ||
+    "value";
+  const placeholderKey = String(target.getAttribute("data-placeholder-key") || "").trim();
+  return {
+    sourceLineId,
+    sourceLine,
+    sourceLabel: label,
+    sourceValue,
+    placeholderKey,
+  };
+};
+
+const getReferenceRangeFromElement = (
+  view: any,
+  referenceEl: HTMLElement
+): ReferenceMovePayload | null => {
+  const referenceType = view.state.schema.nodes.referenceToken;
+  if (!referenceType) return null;
+  try {
+    const pos = view.posAtDOM(referenceEl, 0);
+    if (typeof pos !== "number") return null;
+    const node = view.state.doc.nodeAt(pos);
+    if (node?.type === referenceType) {
+      return {
+        from: pos,
+        to: pos + node.nodeSize,
+        placeholderKey: String(node.attrs?.placeholderKey || ""),
+      };
+    }
+  } catch {}
+  return null;
+};
+
 const findSelectedReferencePayload = (state: any): ReferencePayload | null => {
   const referenceType = state.schema.nodes.referenceToken;
   if (!referenceType) return null;
@@ -1228,8 +1318,6 @@ export const ResultReferenceInteractionExtension = Extension.create({
     const getSettings = this.options.getSettings as
       | (() => Pick<SettingsState, "chipInsertMode" | "referenceTextExportMode">)
       | undefined;
-    const getChipInsertMode = (): "reference" | "value" =>
-      getSettings?.().chipInsertMode === "value" ? "value" : "reference";
     const getReferenceTextExportMode = (): "preserve" | "readable" =>
       getSettings?.().referenceTextExportMode === "readable" ? "readable" : "preserve";
     const getFunctionStore = this.options.getFunctionStore as
@@ -1252,6 +1340,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
     let highlightLockUntil = 0;
     let clearHighlightTimer: ReturnType<typeof setTimeout> | null = null;
     let activeDragPayload: ReferencePayload | null = null;
+    let activeDragMoveRange: ReferenceMovePayload | null = null;
     let activeBoundaryDropTarget: LineBoundaryDropTarget | null = null;
     let activeInlineDropPos: number | null = null;
     let activeMenu: HTMLElement | null = null;
@@ -1290,6 +1379,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
     };
     const clearDragSession = () => {
       activeDragPayload = null;
+      activeDragMoveRange = null;
       if (typeof window !== "undefined") {
         (window as any)[RESULT_DRAG_ACTIVE_WINDOW_FLAG] = false;
       }
@@ -1826,12 +1916,10 @@ export const ResultReferenceInteractionExtension = Extension.create({
               }
               const referenceEl = target.closest(REFERENCE_SELECTOR) as HTMLElement | null;
               if (referenceEl) {
-                const payload = payloadFromElement(referenceEl);
+                const payload = payloadFromReferenceElement(referenceEl);
                 if (payload) {
                   lastReferencePayload = payload;
                 }
-                event.preventDefault();
-                event.stopPropagation();
                 view.focus();
                 selectReferenceNode(view, referenceEl);
                 const highlightSourceLineId = String(
@@ -1845,7 +1933,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
                     lockMs: 1200,
                   });
                 }
-                return true;
+                return false;
               }
               const resultEl = target.closest(RESULT_SELECTOR);
               if (!resultEl) return false;
@@ -1897,7 +1985,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
 
               const referenceEl = target.closest(REFERENCE_SELECTOR) as HTMLElement | null;
               if (referenceEl) {
-                const payload = payloadFromElement(referenceEl);
+                const payload = payloadFromReferenceElement(referenceEl);
                 if (payload) {
                   lastReferencePayload = payload;
                 }
@@ -1984,6 +2072,26 @@ export const ResultReferenceInteractionExtension = Extension.create({
             dragstart: (_view, event) => {
               const target = getEventElement(event.target);
               if (!target) return false;
+              const referenceEl = target.closest(REFERENCE_SELECTOR) as HTMLElement | null;
+              if (referenceEl) {
+                const payload = payloadFromReferenceElement(referenceEl);
+                const moveRange = payload ? getReferenceRangeFromElement(_view, referenceEl) : null;
+                if (!payload || !moveRange || !event.dataTransfer) return false;
+                activeDragPayload = payload;
+                activeDragMoveRange = moveRange;
+                event.dataTransfer.effectAllowed = "move";
+                event.dataTransfer.setData(DND_MIME, JSON.stringify(payload));
+                event.dataTransfer.setData(REFERENCE_MOVE_MIME, JSON.stringify(moveRange));
+                event.dataTransfer.setData(
+                  "text/plain",
+                  payload.sourceValue || payload.sourceLabel || "value"
+                );
+                event.stopPropagation();
+                if (typeof window !== "undefined") {
+                  (window as any)[RESULT_DRAG_ACTIVE_WINDOW_FLAG] = true;
+                }
+                return true;
+              }
               const resultEl = resolveResultElementFromTarget(target);
               if (!resultEl) return false;
               const payload = payloadFromElement(resultEl);
@@ -2005,12 +2113,17 @@ export const ResultReferenceInteractionExtension = Extension.create({
               if (!dragEvent.dataTransfer && !activeDragPayload) return false;
               const dragTypes = Array.from(dragEvent.dataTransfer?.types || []);
               const hasMimePayload = Boolean(dragEvent.dataTransfer?.getData(DND_MIME));
+              const hasMovePayload = Boolean(
+                dragEvent.dataTransfer?.getData(REFERENCE_MOVE_MIME)
+              );
               const windowDragActive =
                 typeof window !== "undefined" &&
                 Boolean((window as any)[RESULT_DRAG_ACTIVE_WINDOW_FLAG]);
               const isResultDrag =
                 dragTypes.includes(DND_MIME) ||
+                dragTypes.includes(REFERENCE_MOVE_MIME) ||
                 hasMimePayload ||
+                hasMovePayload ||
                 !!activeDragPayload ||
                 windowDragActive;
               if (!isResultDrag) {
@@ -2019,15 +2132,17 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 return false;
               }
               dragEvent.preventDefault();
-              dragEvent.dataTransfer.dropEffect = "copy";
+              dragEvent.dataTransfer.dropEffect =
+                activeDragMoveRange || hasMovePayload ? "move" : "copy";
               const boundaryTarget = resolveBoundaryDropTarget(view, dragEvent);
               const inlinePos = resolveInlineDropPos(view, dragEvent);
-              if (boundaryTarget && activeInlineDropPos === null) {
-                clearInlineDropIndicator(view);
-                applyDropTargetIndicator(view, boundaryTarget);
-              } else if (typeof inlinePos === "number") {
+              const preferInline = shouldPreferInlineDrop(view, dragEvent, inlinePos);
+              if (typeof inlinePos === "number" && (preferInline || !boundaryTarget)) {
                 clearDropTargetIndicator(view);
                 setInlineDropIndicator(view, inlinePos);
+              } else if (boundaryTarget) {
+                clearInlineDropIndicator(view);
+                applyDropTargetIndicator(view, boundaryTarget);
               } else if (!boundaryTarget) {
                 clearDropTargetIndicator(view);
                 clearInlineDropIndicator(view);
@@ -2058,12 +2173,24 @@ export const ResultReferenceInteractionExtension = Extension.create({
             },
             drop: (view, event) => {
               if (!event.dataTransfer && !activeDragPayload) return false;
-              const inlineDropPos = activeInlineDropPos;
+              event.preventDefault();
+              event.stopPropagation();
+              const dragEvent = event as DragEvent;
+              const fallbackInlinePos = resolveInlineDropPos(view, dragEvent);
+              const inlineDropPos =
+                typeof activeInlineDropPos === "number"
+                  ? activeInlineDropPos
+                  : shouldPreferInlineDrop(view, dragEvent, fallbackInlinePos)
+                    ? fallbackInlinePos
+                    : null;
               const boundaryTarget =
-                activeBoundaryDropTarget || resolveBoundaryDropTarget(view, event as DragEvent);
+                typeof inlineDropPos === "number"
+                  ? null
+                  : activeBoundaryDropTarget || resolveBoundaryDropTarget(view, dragEvent);
               clearDropTargetIndicator(view);
               clearInlineDropIndicator(view);
               const raw = event.dataTransfer?.getData(DND_MIME) || "";
+              const rawMove = event.dataTransfer?.getData(REFERENCE_MOVE_MIME) || "";
               try {
                 const payload = raw
                   ? (JSON.parse(raw) as ReferencePayload)
@@ -2072,16 +2199,34 @@ export const ResultReferenceInteractionExtension = Extension.create({
                   clearDragSession();
                   return false;
                 }
-                const insertMode = getChipInsertMode();
+                const moveRange = rawMove
+                  ? (JSON.parse(rawMove) as ReferenceMovePayload)
+                  : activeDragMoveRange;
+                const insertMode: "reference" = "reference";
                 const insertedCursor =
                   typeof inlineDropPos === "number"
-                    ? insertReferenceAt(view, payload, inlineDropPos, insertMode)
+                    ? insertReferenceAt(view, payload, inlineDropPos, insertMode, {
+                        moveRange,
+                      })
                     : boundaryTarget
-                      ? insertReferenceAfterBoundary(view, payload, boundaryTarget, insertMode)
+                      ? moveRange
+                        ? insertReferenceAt(
+                            view,
+                            payload,
+                            getTextblockSplitPosByLineNumber(
+                              view.state.doc,
+                              boundaryTarget.sourceLine
+                            ) ?? view.state.selection.from,
+                            insertMode,
+                            { moveRange }
+                          )
+                        : insertReferenceAfterBoundary(view, payload, boundaryTarget, insertMode)
                       : (() => {
                           const inlinePos = resolveInlineDropPos(view, event as DragEvent);
                           const insertionPos = inlinePos ?? view.state.selection.from;
-                          return insertReferenceAt(view, payload, insertionPos, insertMode);
+                          return insertReferenceAt(view, payload, insertionPos, insertMode, {
+                            moveRange,
+                          });
                         })();
                 if (typeof insertedCursor === "number") {
                   postInsertCursor = insertedCursor;

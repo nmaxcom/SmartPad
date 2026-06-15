@@ -12,6 +12,7 @@ const dispatchResultDrop = async (
     dropAfterLineIndex?: number;
     stripTargetLineId?: boolean;
     stripSourceLineId?: boolean;
+    dropAfterText?: string;
     phase?: "dragover" | "drop" | "both";
   } = {}
 ) => {
@@ -25,8 +26,57 @@ const dispatchResultDrop = async (
       dropAfterLineIndex,
       stripTargetLineId,
       stripSourceLineId,
+      dropAfterText,
       phase,
     }) => {
+    const coordsAfterVisibleText = (line: HTMLElement, text: string): { x: number; y: number } | null => {
+      const targetText = String(text || "");
+      if (!targetText) return null;
+      let seen = "";
+      const walker = document.createTreeWalker(line, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+          const parent = (node.parentElement || null) as HTMLElement | null;
+          if (parent?.closest(".semantic-result-container, .semantic-result-actions")) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          return NodeFilter.FILTER_ACCEPT;
+        },
+      });
+      let current = walker.nextNode() as Text | null;
+      while (current) {
+        const value = current.nodeValue || "";
+        const nextSeen = seen + value;
+        if (targetText.length <= nextSeen.length && nextSeen.includes(targetText)) {
+          const endInCombined = nextSeen.indexOf(targetText) + targetText.length;
+          const offsetInNode = Math.max(0, Math.min(value.length, endInCombined - seen.length));
+          const range = document.createRange();
+          if (offsetInNode > 0) {
+            range.setStart(current, offsetInNode - 1);
+            range.setEnd(current, offsetInNode);
+          } else {
+            range.setStart(current, offsetInNode);
+            range.setEnd(current, offsetInNode);
+          }
+          const rect = range.getBoundingClientRect();
+          range.detach();
+          if (rect.width || rect.height) {
+            return {
+              x: rect.right + 1,
+              y: rect.top + Math.max(2, rect.height * 0.5),
+            };
+          }
+          const lineRect = line.getBoundingClientRect();
+          return {
+            x: lineRect.left + 8,
+            y: lineRect.top + Math.max(8, lineRect.height * 0.5),
+          };
+        }
+        seen = nextSeen;
+        current = walker.nextNode() as Text | null;
+      }
+      return null;
+    };
+
     const paragraphs = Array.from(document.querySelectorAll(".ProseMirror p")) as HTMLElement[];
     const sourceLine = paragraphs[sourceLineIndex || 0] || paragraphs[0];
     if (stripSourceLineId && sourceLine) {
@@ -85,12 +135,20 @@ const dispatchResultDrop = async (
       clientX = Math.max(rect.left + 24, rect.right - 10);
       clientY = Math.min(editorRect.bottom - 6, rect.bottom + 34);
     } else {
-      const targetLine = paragraphs[targetLineIndex || 1] || paragraphs[paragraphs.length - 1];
+      const targetLine =
+        (dropAfterText
+          ? paragraphs.find((paragraph) =>
+              String(paragraph.textContent || "").includes(dropAfterText)
+            )
+          : null) ||
+        paragraphs[targetLineIndex || 1] ||
+        paragraphs[paragraphs.length - 1];
       if (!targetLine) return;
       const rect = targetLine.getBoundingClientRect();
       dropTarget = targetLine;
-      clientX = Math.max(rect.left + 24, rect.right - 10);
-      clientY = rect.top + Math.max(8, rect.height * 0.5);
+      const inlineCoords = dropAfterText ? coordsAfterVisibleText(targetLine, dropAfterText) : null;
+      clientX = inlineCoords ? inlineCoords.x : Math.max(rect.left + 24, rect.right - 10);
+      clientY = inlineCoords ? inlineCoords.y : rect.top + Math.max(8, rect.height * 0.5);
     }
 
     const resolvedPhase = phase || "both";
@@ -124,17 +182,129 @@ const dispatchResultDrop = async (
         })
       );
     }
-    chip.dispatchEvent(
+    if (resolvedPhase !== "dragover") {
+      chip.dispatchEvent(
+        new DragEvent("dragend", {
+          bubbles: true,
+          cancelable: true,
+          dataTransfer: dt,
+        })
+      );
+      (window as any).__SP_RESULT_CHIP_DRAG_ACTIVE = false;
+    }
+    },
+    options
+  );
+};
+
+const dispatchReferenceMove = async (
+  page: any,
+  options: {
+    referenceLineIndex: number;
+    targetLineIndex: number;
+    dropAfterText: string;
+  }
+) => {
+  await page.evaluate(({ referenceLineIndex, targetLineIndex, dropAfterText }) => {
+    const coordsAfterVisibleText = (line: HTMLElement, text: string): { x: number; y: number } | null => {
+      const targetText = String(text || "");
+      if (!targetText) return null;
+      let seen = "";
+      const walker = document.createTreeWalker(line, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+          const parent = (node.parentElement || null) as HTMLElement | null;
+          if (parent?.closest(".semantic-result-container, .semantic-result-actions")) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          return NodeFilter.FILTER_ACCEPT;
+        },
+      });
+      let current = walker.nextNode() as Text | null;
+      while (current) {
+        const value = current.nodeValue || "";
+        const nextSeen = seen + value;
+        if (targetText.length <= nextSeen.length && nextSeen.includes(targetText)) {
+          const endInCombined = nextSeen.indexOf(targetText) + targetText.length;
+          const offsetInNode = Math.max(0, Math.min(value.length, endInCombined - seen.length));
+          const range = document.createRange();
+          if (offsetInNode > 0) {
+            range.setStart(current, offsetInNode - 1);
+            range.setEnd(current, offsetInNode);
+          } else {
+            range.setStart(current, offsetInNode);
+            range.setEnd(current, offsetInNode);
+          }
+          const rect = range.getBoundingClientRect();
+          range.detach();
+          if (rect.width || rect.height) {
+            return {
+              x: rect.right + 1,
+              y: rect.top + Math.max(2, rect.height * 0.5),
+            };
+          }
+        }
+        seen = nextSeen;
+        current = walker.nextNode() as Text | null;
+      }
+      return null;
+    };
+
+    const paragraphs = Array.from(document.querySelectorAll(".ProseMirror p")) as HTMLElement[];
+    const referenceLine = paragraphs[referenceLineIndex];
+    const targetLine =
+      paragraphs.find((paragraph) =>
+        String(paragraph.textContent || "").includes(dropAfterText)
+      ) || paragraphs[targetLineIndex];
+    const reference = referenceLine?.querySelector(".semantic-reference-chip") as HTMLElement | null;
+    const editor = document.querySelector('[data-testid="smart-pad-editor"] .ProseMirror') as HTMLElement | null;
+    if (!reference || !targetLine || !editor) return;
+
+    const targetRect = targetLine.getBoundingClientRect();
+    const coords = coordsAfterVisibleText(targetLine, dropAfterText) || {
+      x: targetRect.left + Math.max(24, targetRect.width * 0.5),
+      y: targetRect.top + Math.max(8, targetRect.height * 0.5),
+    };
+    const refRect = reference.getBoundingClientRect();
+    const dt = new DataTransfer();
+    (window as any).__SP_RESULT_CHIP_DRAG_ACTIVE = true;
+    reference.dispatchEvent(
+      new DragEvent("dragstart", {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: dt,
+        clientX: refRect.left + refRect.width * 0.5,
+        clientY: refRect.top + refRect.height * 0.5,
+      })
+    );
+    targetLine.dispatchEvent(
+      new DragEvent("dragover", {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: dt,
+        clientX: coords.x,
+        clientY: coords.y,
+      })
+    );
+    targetLine.dispatchEvent(
+      new DragEvent("drop", {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: dt,
+        clientX: coords.x,
+        clientY: coords.y,
+      })
+    );
+    reference.dispatchEvent(
       new DragEvent("dragend", {
         bubbles: true,
         cancelable: true,
         dataTransfer: dt,
+        clientX: coords.x,
+        clientY: coords.y,
       })
     );
     (window as any).__SP_RESULT_CHIP_DRAG_ACTIVE = false;
-    },
-    options
-  );
+  }, options);
 };
 
 const dispatchNativeResultDragDrop = async (
@@ -639,6 +809,99 @@ test.describe("Result references (drag-only)", () => {
       "data-result",
       "60"
     );
+  });
+
+  test("dragging a result chip inserts at the exact inline caret position", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("100 + 20 =>");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("calc = 3 * + 20");
+    await waitForUIRenderComplete(page);
+
+    await dispatchResultDrop(page, {
+      targetLineIndex: 1,
+      dropAfterText: "calc = 3 * ",
+      phase: "dragover",
+    });
+
+    await expect(page.locator(".sp-chip-drop-inline-caret")).toHaveCount(1);
+
+    await dispatchResultDrop(page, {
+      targetLineIndex: 1,
+      dropAfterText: "calc = 3 * ",
+      phase: "drop",
+    });
+    await waitForUIRenderComplete(page);
+
+    const targetLine = page.locator(".ProseMirror p").nth(1);
+    await expect(targetLine.locator(".semantic-reference-chip")).toHaveCount(1);
+    const structure = await targetLine.evaluate((line: HTMLElement) =>
+      Array.from(line.childNodes)
+        .map((node) => {
+          if (node.nodeType === Node.TEXT_NODE) return node.textContent || "";
+          if (node instanceof HTMLElement && node.matches(".semantic-reference-chip")) {
+            return `[ref:${node.textContent || ""}]`;
+          }
+          if (
+            node instanceof HTMLElement &&
+            node.matches(".semantic-wrapper, .semantic-result-container")
+          ) {
+            return "";
+          }
+          return node.textContent || "";
+        })
+        .join("")
+    );
+    expect(structure.replace(/\s+/g, "")).toContain("calc=3*[ref:120]+20");
+  });
+
+  test("inserted reference chips can be moved again inside the same line", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("100 + 20 =>");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("calc = 3 * + 20");
+    await waitForUIRenderComplete(page);
+
+    await dispatchResultDrop(page, {
+      targetLineIndex: 1,
+      dropAfterText: "calc = 3 * ",
+    });
+    await waitForUIRenderComplete(page);
+
+    await dispatchReferenceMove(page, {
+      referenceLineIndex: 1,
+      targetLineIndex: 1,
+      dropAfterText: "calc = ",
+    });
+    await waitForUIRenderComplete(page);
+
+    const targetLine = page.locator(".ProseMirror p").nth(1);
+    await expect(targetLine.locator(".semantic-reference-chip")).toHaveCount(1);
+    const structure = await targetLine.evaluate((line: HTMLElement) =>
+      Array.from(line.childNodes)
+        .map((node) => {
+          if (node.nodeType === Node.TEXT_NODE) return node.textContent || "";
+          if (node instanceof HTMLElement && node.matches(".semantic-reference-chip")) {
+            return `[ref:${node.textContent || ""}]`;
+          }
+          if (
+            node instanceof HTMLElement &&
+            node.matches(".semantic-wrapper, .semantic-result-container")
+          ) {
+            return "";
+          }
+          return node.textContent || "";
+        })
+        .join("")
+    );
+    expect(structure.replace(/\s+/g, "")).toContain("calc=[ref:120]3*+20");
+    expect(structure).not.toContain("__sp_ref_");
   });
 
   test("result-chip drag does not trigger sheet import drop overlay", async ({ page }) => {

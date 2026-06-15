@@ -23,6 +23,30 @@
 
 ---
 
+## Entry J-2026-06-15-03
+
+*   Timestamp: 2026-06-15 22:44 CEST
+*   Summary:
+    *   User asked to implement V1 of the Result Chips 2.0 interaction model.
+    *   Assistant implemented live-only result-chip drag/drop references, preserving explicit `Insert value` as the snapshot/literal path.
+    *   Assistant added precise inline drop priority so dropping inside a text line wins over neighboring boundary bands, including `3 * | + 20`.
+    *   Assistant added reference-chip movement support so an inserted live reference chip can be dragged again inside the same line without duplicating native placeholder text.
+*   Decisions:
+    *   Drag/drop from result chips creates live references regardless of legacy chip insertion mode.
+    *   Moving an existing reference chip is a move operation, not a copy/snapshot operation.
+    *   Boundary drops remain available, but inline paragraph drops take priority when the pointer is visibly inside a line.
+*   Artifacts changed:
+    *   `src/components/ResultReferenceInteractionExtension.ts`
+    *   `tests/e2e/result-reference-drag-only.spec.ts`
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   Targeted Playwright subset passed for exact inline caret, same-line movement, existing drag insertion, and boundary preservation.
+    *   Full V1 gates still pending at entry time.
+*   Risks/blockers:
+    *   Needs real-device/manual UX review for mobile/tablet drag ergonomics before marking the V1 tasks done.
+
 ## Entry J-2026-06-15-02
 
 *   Timestamp: 2026-06-15 22:20 CEST
