@@ -14,8 +14,6 @@ https://dribbble.com/shots/24984990-Deposit-Calculator-UI-Kit-Widgets
 
 # nuevas ideas
 Instead of just solve, allow a user to right-click a result and say "Make this result 1000 by changing [variable]." The app then writes the solve syntax for them at the bottom of the document.
-mostrar ventanita/prediccion al empezar a escribir variable name
-left panel con "my sheets"
 
 percentages:
 Value by percent part	5% of what is 6 EUR
@@ -23,13 +21,8 @@ Value by percent addition	5% on what is 6 EUR
 Value by percent subtraction	5% off what is 6 EUR
 
 # Big ticket items
-lists
-ranges
 true/false statements
-time, calendar math
-sheets/tabs, remember docs
-plots
-FX
+
 # bugs/ideas
 - Solve, simplify, find derivative
 - figure out / unify all the as, in, to, etc keywords
