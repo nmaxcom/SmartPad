@@ -855,6 +855,9 @@ test.describe("Result references (drag-only)", () => {
 
     const sourceChip = page.locator(".ProseMirror p").first().locator(".semantic-result-display");
     const targetLine = page.locator(".ProseMirror p").nth(1);
+    await expect(sourceChip).toHaveAttribute("draggable", "true");
+    await expect(sourceChip.locator(".semantic-result-drag")).toHaveCount(0);
+
     await sourceChip.dragTo(targetLine, {
       sourcePosition: { x: 8, y: 8 },
       targetPosition: { x: 90, y: 8 },

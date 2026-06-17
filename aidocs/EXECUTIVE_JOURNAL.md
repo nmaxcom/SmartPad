@@ -30,9 +30,11 @@
     *   Assistant added the implemented result-chip interaction contract to the shipped result-chip trust card after `docs:drift` required an `Editor And Result Chips` documentation update for the committed drag affordance changes.
 *   Artifacts changed:
     *   `docs/Specs/implemented/result-chips-and-references.md`
+    *   `tests/e2e/result-reference-drag-only.spec.ts`
     *   `aidocs/EXECUTIVE_JOURNAL.md`
 *   Validation:
-    *   Pending rerun of docs/spec gates after this docs-only follow-up commit.
+    *   Added a same-area e2e assertion that trigger result chips are draggable without a separate drag handle, matching the implemented card.
+    *   Pending final rerun of docs/spec gates after this test-sync follow-up.
 
 ## Entry J-2026-06-17-03
 
