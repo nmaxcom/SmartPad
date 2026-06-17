@@ -11,3 +11,10 @@
   - `tests/unit/semanticHighlightTokenization.test.ts`
 
 This card is the trust declaration for shipped result chip and reference behavior.
+
+Implemented interaction contract:
+
+- Live and explicit trigger result chips expose the same interaction model.
+- The whole result chip is draggable; there is no separate drag handle.
+- Hover actions are limited to copy/value actions and the action menu.
+- Drag/drop reuse creates live result references, preserving source dependency updates.
