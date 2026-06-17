@@ -314,10 +314,17 @@ const dispatchNativeResultDragDrop = async (
     targetLineIndex?: number;
     includeInterimDragLeave?: boolean;
     poisonDataResultWithLabel?: boolean;
+    dragFromValue?: boolean;
   } = {}
 ) => {
   await page.evaluate(
-    ({ sourceLineIndex, targetLineIndex, includeInterimDragLeave, poisonDataResultWithLabel }) => {
+    ({
+      sourceLineIndex,
+      targetLineIndex,
+      includeInterimDragLeave,
+      poisonDataResultWithLabel,
+      dragFromValue,
+    }) => {
       const editor = document.querySelector(
         '[data-testid="smart-pad-editor"] .ProseMirror'
       ) as HTMLElement | null;
@@ -343,11 +350,16 @@ const dispatchNativeResultDragDrop = async (
       const targetLine = paragraphs[targetLineIndex || 1] || paragraphs[paragraphs.length - 1];
       if (!targetLine) return;
 
-      const sourceRect = sourceChip.getBoundingClientRect();
+      const dragSource =
+        dragFromValue
+          ? ((sourceChip.querySelector(".semantic-result-value, .semantic-live-result-value") as HTMLElement | null) ||
+              sourceChip)
+          : sourceChip;
+      const sourceRect = dragSource.getBoundingClientRect();
       const targetRect = targetLine.getBoundingClientRect();
       const dt = new DataTransfer();
 
-      sourceChip.dispatchEvent(
+      dragSource.dispatchEvent(
         new DragEvent("dragstart", {
           bubbles: true,
           cancelable: true,
@@ -464,14 +476,12 @@ test.describe("Result references (drag-only)", () => {
     await expect(sourceChip.locator(".semantic-result-menu")).toBeVisible();
   });
 
-  test("result chip menu inserts reference and plain value explicitly", async ({ page }) => {
+  test("result chip menu does not expose insert actions", async ({ page }) => {
     const editor = page.locator('[data-testid="smart-pad-editor"]');
     await editor.click();
     await page.keyboard.type("100 + 20 =>");
     await page.keyboard.press("Enter");
     await page.keyboard.type("tax = ");
-    await page.keyboard.press("Enter");
-    await page.keyboard.type("snapshot = ");
     await waitForUIRenderComplete(page);
 
     const sourceChip = page.locator(".ProseMirror p").first().locator(".semantic-result-display");
@@ -482,24 +492,12 @@ test.describe("Result references (drag-only)", () => {
 
     const menu = page.locator(".semantic-result-action-menu");
     await expect(menu).toBeVisible();
+    await expect(menu.getByRole("menuitem", { name: "Copy value" })).toBeEnabled();
     await expect(menu.getByRole("menuitem", { name: "Explore dependencies" })).toBeDisabled();
     await expect(menu.getByRole("menuitem", { name: "Plot from result" })).toBeDisabled();
-    await menu.getByRole("menuitem", { name: "Insert reference" }).click();
-    await waitForUIRenderComplete(page);
-
-    await expect(targetLine.locator(".semantic-reference-chip")).toHaveCount(1);
-    await expect(targetLine.locator(".semantic-reference-chip").first()).toHaveText("120");
-
-    const valueLine = page.locator(".ProseMirror p").nth(2);
-    await valueLine.click({ position: { x: 120, y: 8 } });
-    await page.keyboard.press("End");
-    await sourceChip.hover();
-    await sourceChip.locator(".semantic-result-menu").click();
-    await page.locator(".semantic-result-action-menu").getByRole("menuitem", { name: "Insert value" }).click();
-    await waitForUIRenderComplete(page);
-
-    await expect(valueLine.locator(".semantic-reference-chip")).toHaveCount(0);
-    await expect(valueLine).toContainText("snapshot = 120");
+    await expect(menu.getByRole("menuitem", { name: "Insert reference" })).toHaveCount(0);
+    await expect(menu.getByRole("menuitem", { name: "Insert value" })).toHaveCount(0);
+    await expect(targetLine.locator(".semantic-reference-chip")).toHaveCount(0);
   });
 
   test("result chip menu creates a plot view for plottable expressions", async ({ page }) => {
@@ -811,6 +809,71 @@ test.describe("Result references (drag-only)", () => {
     );
   });
 
+  test("visible result values are draggable for trigger and live chips", async ({ page }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("100 + 20 =>");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("trigger target = ");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("base = 40");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("base * 3");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("live target = ");
+    await waitForUIRenderComplete(page);
+
+    await dispatchNativeResultDragDrop(page, {
+      sourceLineIndex: 0,
+      targetLineIndex: 1,
+      dragFromValue: true,
+    });
+    await dispatchNativeResultDragDrop(page, {
+      sourceLineIndex: 3,
+      targetLineIndex: 4,
+      dragFromValue: true,
+    });
+    await waitForUIRenderComplete(page);
+
+    await expect(page.locator(".ProseMirror p").nth(1).locator(".semantic-reference-chip")).toHaveText(
+      "120"
+    );
+    await expect(page.locator(".ProseMirror p").nth(4).locator(".semantic-reference-chip")).toHaveText(
+      "120"
+    );
+  });
+
+  test("dragging a result hides hover actions while the drag is active", async ({ page }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("100 + 20 =>");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("target = ");
+    await waitForUIRenderComplete(page);
+
+    const sourceChip = page.locator(".ProseMirror p").first().locator(".semantic-result-display");
+    await sourceChip.hover();
+    await expect(sourceChip.locator(".semantic-result-actions")).toBeVisible();
+
+    await dispatchResultDrop(page, {
+      targetLineIndex: 1,
+      phase: "dragover",
+    });
+
+    await expect(page.locator(".ProseMirror")).toHaveClass(/sp-result-chip-dragging/);
+    const actionsOpacity = await sourceChip
+      .locator(".semantic-result-actions")
+      .evaluate((element) => getComputedStyle(element).opacity);
+    expect(actionsOpacity).toBe("0");
+
+    await dispatchResultDrop(page, {
+      targetLineIndex: 1,
+      phase: "drop",
+    });
+    await waitForUIRenderComplete(page);
+    await expect(page.locator(".ProseMirror")).not.toHaveClass(/sp-result-chip-dragging/);
+  });
+
   test("dragging a result chip inserts at the exact inline caret position", async ({
     page,
   }) => {
@@ -902,6 +965,62 @@ test.describe("Result references (drag-only)", () => {
     );
     expect(structure.replace(/\s+/g, "")).toContain("calc=[ref:120]3*+20");
     expect(structure).not.toContain("__sp_ref_");
+  });
+
+  test("typing at the caret before a dropped reference chip inserts before the chip", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("100 + 20 =>");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("total = ");
+    await waitForUIRenderComplete(page);
+
+    await dispatchResultDrop(page, { targetLineIndex: 1 });
+    await waitForUIRenderComplete(page);
+
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      const state = editor?.state;
+      if (!state) return;
+      let referencePos: number | null = null;
+      state.doc.descendants((node: any, pos: number) => {
+        if (node.type?.name === "referenceToken") {
+          referencePos = pos;
+          return false;
+        }
+        return true;
+      });
+      if (typeof referencePos === "number") {
+        editor.commands.setTextSelection(referencePos);
+      }
+    });
+    await page.keyboard.type("+");
+    await waitForUIRenderComplete(page);
+
+    const targetLine = page.locator(".ProseMirror p").nth(1);
+    await expect(targetLine.locator(".semantic-reference-chip")).toHaveCount(1);
+    const structure = await targetLine.evaluate((line: HTMLElement) =>
+      Array.from(line.childNodes)
+        .map((node) => {
+          if (node.nodeType === Node.TEXT_NODE) return node.textContent || "";
+          if (node instanceof HTMLElement && node.matches(".semantic-reference-chip")) {
+            return `[ref:${node.textContent || ""}]`;
+          }
+          if (
+            node instanceof HTMLElement &&
+            node.matches(".semantic-wrapper, .semantic-result-container")
+          ) {
+            return "";
+          }
+          return node.textContent || "";
+        })
+        .join("")
+    );
+    expect(structure.replace(/\s+/g, "")).toContain("total=+[ref:120]");
+    await expect(targetLine.locator(".semantic-reference-broken")).toHaveCount(0);
+    await expect(targetLine.locator(".semantic-reference-line-warning")).toHaveCount(0);
   });
 
   test("result-chip drag does not trigger sheet import drop overlay", async ({ page }) => {

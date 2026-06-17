@@ -142,16 +142,14 @@ Rationale:
 
 Direct click previously conflicted with value selection, copy, drag start, and future plot/menu entry points. Current behavior is intentionally drag/menu-only for insertion so accidental edits are avoided.
 
-### 5.2 Menu action to insert reference or value
+### 5.2 Menu actions
 
 Flow:
 
-1. User places caret in expression.
-2. User opens the source result chip action menu.
-3. User chooses `Insert reference` or `Insert value`.
-4. `Insert reference` inserts a structured live reference chip at the caret.
-5. `Insert value` inserts the current plain value snapshot at the caret. A snapshot is not a reference and does not stay linked to the source.
-6. If the caret is on the same source line as the source result, SmartPad creates a new line before inserting (prevents self-reference loops).
+1. User opens the source result chip action menu.
+2. Menu actions may copy the value or create source-adjacent helper lines such as plots or goal-seek commands.
+3. The menu must not expose `Insert reference` or `Insert value`.
+4. Creating references in the document is done through drag-to-reuse only.
 
 User sees:
 
@@ -180,6 +178,8 @@ Flow:
 9. Boundary insertion must tolerate missing paragraph `data-line-id` in the DOM by falling back to textblock line index, not defaulting silently to document end.
 10. Inline targeting must win when the pointer is inside a paragraph text rect, even if that point is also near a neighboring line boundary band.
 11. Inserted reference chips are draggable and can be moved again inside the same line, including between existing characters/operators such as `3 * | + 20`.
+12. The rendered numeric value inside every result chip is itself draggable; users do not need to grab a separate handle.
+13. Hover action chrome must hide while a chip drag is active.
 
 Guardrails:
 
@@ -187,7 +187,8 @@ Guardrails:
 2. Inserted reference chip label must match the exact visible source result, not the source expression text.
 3. Bottom drop affordance must remain visible near the end of the document, including last-line drop for newline insertion.
 4. Every inter-line boundary should expose a reliable mouse hit-zone; dropping in a shown boundary must not insert at document end.
-5. Drag/drop from result chips always creates live references. Frozen reuse is only the explicit `Insert value` snapshot action.
+5. Drag/drop from result chips always creates live references.
+6. Typing with the caret before a reference chip must insert before that chip; typing with the caret after it must insert after it.
 
 ### 5.4 Copy/paste chip as reference
 
@@ -218,7 +219,7 @@ Flow:
    - an action menu icon.
 3. Copy icon click copies the rendered value and briefly sets copied feedback state on the chip.
 4. Dragging the chip itself or the drag handle starts result-reference drag/drop.
-5. The action menu exposes current supported commands (`Copy value`, `Insert reference`, `Insert value`) and enables plot creation when the source result depends on a plottable variable.
+5. The action menu exposes current supported commands such as `Copy value` and enables plot creation when the source result depends on a plottable variable.
    - Results with one or more solve candidates expose `Set target...` / `Set target by <variable>` actions that insert editable `make ... by ... =>` goal-seek lines below the source.
    - Goal-seek actions insert parser-safe numeric targets even when the visible chip uses grouped thousands; for example a rendered `2,520,000 EUR` target is inserted as `2520000 EUR`.
    - Single-input unnamed results insert a source-adjacent directive such as `@view plot x=x size=md`, relying on the existing nearest-expression binding instead of copying the formula into `y=...`.
@@ -373,8 +374,7 @@ Reference insertion/removal must be atomic editor transactions.
 Add:
 
 1. `resultLaneEnabled` (default: true desktop, auto-collapse on narrow widths).
-2. Drag/drop insertion mode is always live reference. Snapshot insertion is exposed only through the explicit result-chip `Insert value` action.
-3. `referenceTextExportMode` with values:
+2. `referenceTextExportMode` with values:
    - `preserve` (default): keep SmartPad stable-ID reference tokens in text copy/export.
    - `readable`: flatten references to current visible values.
 

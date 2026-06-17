@@ -315,31 +315,6 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
 
           <div className="settings-item settings-item-stack">
             <div className="settings-item-info">
-              <label htmlFor={`${idPrefix}-chip-insert-mode`} className="settings-label">
-                Result chip drag/drop insert mode
-              </label>
-              <p className="settings-description">
-                Choose what gets inserted when you drag a result chip: a live reference chip (keeps
-                tracking updates) or the current plain value snapshot.
-              </p>
-            </div>
-            <div className="settings-control">
-              <select
-                id={`${idPrefix}-chip-insert-mode`}
-                value={settings.chipInsertMode}
-                onChange={(e) =>
-                  updateSetting("chipInsertMode", e.target.value === "value" ? "value" : "reference")
-                }
-                className="settings-select"
-              >
-                <option value="reference">Insert reference chip</option>
-                <option value="value">Insert plain value</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="settings-item settings-item-stack">
-            <div className="settings-item-info">
               <label htmlFor={`${idPrefix}-reference-text-export-mode`} className="settings-label">
                 Reference text copy/export
               </label>

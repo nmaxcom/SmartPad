@@ -351,13 +351,13 @@ body.number-scrubbing * {
   align-items: center;
   line-height: 1;
   vertical-align: middle;
-  cursor: pointer;
+  cursor: grab;
   position: relative;
 }
 
 .semantic-live-result-display {
   margin-left: 1ch;
-  cursor: pointer;
+  cursor: grab;
   position: relative;
   overflow: visible;
   gap: 0;
@@ -370,6 +370,14 @@ body.number-scrubbing * {
 .semantic-live-result-value {
   display: inline-block;
   min-width: 0;
+  cursor: grab;
+}
+
+.semantic-result-display:active,
+.semantic-live-result-display:active,
+.semantic-result-value:active,
+.semantic-live-result-value:active {
+  cursor: grabbing;
 }
 
 .semantic-result-actions,
@@ -407,6 +415,13 @@ body.number-scrubbing * {
   opacity: 1;
   transform: translate(8px, -50%) scale(1);
   pointer-events: auto;
+}
+
+.ProseMirror.sp-result-chip-dragging .semantic-result-actions,
+.ProseMirror.sp-result-chip-dragging .semantic-live-result-actions {
+  opacity: 0;
+  transform: translate(6px, -50%) scale(0.96);
+  pointer-events: none;
 }
 
 .editor-container.result-lane-enabled

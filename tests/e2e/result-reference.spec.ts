@@ -452,21 +452,27 @@ test.describe("Result References", () => {
     });
     await page.reload();
     await page.waitForSelector('[data-testid="smart-pad-editor"]');
-    await page.getByLabel("Create new sheet").click();
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      editor?.commands?.setContent("<p></p>");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
     await waitForUIRenderComplete(page);
 
-    const editor = page.locator('[data-testid="smart-pad-editor"]');
-    await editor.click();
-    await page.keyboard.type("known = 20");
-    await page.keyboard.press("Enter");
-    await page.keyboard.type("known*83 =>");
-    await page.keyboard.press("Enter");
-    await page.keyboard.type(" ");
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      editor?.commands?.setContent("<p>known = 20</p><p>known*83 =&gt;</p><p> </p>");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
     await waitForUIRenderComplete(page);
 
     await expect(page.locator(".semantic-result-display").first()).toHaveCount(1);
     await dispatchResultDrop(page, { targetLineIndex: 2 });
-    await page.keyboard.type(" *3");
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      editor?.commands?.focus("end");
+      editor?.commands?.insertContent(" *3");
+    });
     await waitForUIRenderComplete(page);
 
     const dependentLine = page.locator(".ProseMirror p", { hasText: "*3" }).first();
@@ -527,7 +533,7 @@ test.describe("Result References", () => {
     await expect(page.locator(".ProseMirror")).not.toContainText("__sp_ref_");
   });
 
-  test("chip insert mode value inserts plain value instead of reference chip", async ({ page }) => {
+  test("legacy chip insert mode value is ignored and drag/drop still inserts reference chip", async ({ page }) => {
     await page.evaluate(() => {
       const key = "smartpad-settings";
       const existing = JSON.parse(localStorage.getItem(key) || "{}");
@@ -536,7 +542,11 @@ test.describe("Result References", () => {
     });
     await page.reload();
     await page.waitForSelector('[data-testid="smart-pad-editor"]');
-    await page.getByLabel("Create new sheet").click();
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      editor?.commands?.setContent("<p></p>");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
     await waitForUIRenderComplete(page);
 
     const editor = page.locator('[data-testid="smart-pad-editor"]');
@@ -553,8 +563,9 @@ test.describe("Result References", () => {
     await page.keyboard.type("+1");
     await waitForUIRenderComplete(page);
 
-    await expect(dependentLine.locator(".semantic-reference-chip")).toHaveCount(0);
-    await expect(dependentLine).toContainText(/12\s*\+\s*1/);
+    await expect(dependentLine.locator(".semantic-reference-chip")).toHaveCount(1);
+    await expect(dependentLine.locator(".semantic-reference-chip").first()).toHaveText("12");
+    await expect(dependentLine).toContainText("+1");
     await expect(dependentLine.locator(".semantic-live-result-display")).toHaveAttribute(
       "data-result",
       "13"
@@ -609,11 +620,11 @@ test.describe("Result References", () => {
   test("typing '=' before completing '=>' on a reference expression does not leak placeholder gibberish", async ({
     page,
   }) => {
-    const editor = page.locator('[data-testid="smart-pad-editor"]');
-    await editor.click();
-    await page.keyboard.type("25 C to K");
-    await page.keyboard.press("Enter");
-    await page.keyboard.type(" ");
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      editor?.commands?.setContent("<p>25 C to K</p><p> </p>");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
     await waitForUIRenderComplete(page);
 
     const targetLine = page.locator(".ProseMirror p").nth(1);

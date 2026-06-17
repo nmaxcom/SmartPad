@@ -144,7 +144,7 @@ test.describe("User Repro: PI*10 click live result then *2=>", () => {
     expect(failureSnapshot, JSON.stringify(failureSnapshot, null, 2)).toBeNull();
   });
 
-  test("value insert mode does not duplicate literal after click insert + *2=>", async ({ page }) => {
+  test("legacy value insert setting does not duplicate literal after result click + *2=>", async ({ page }) => {
     await page.goto("/");
     await page.waitForSelector('[data-testid="smart-pad-editor"]');
     await page.evaluate(() => {

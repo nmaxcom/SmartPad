@@ -32,6 +32,7 @@ const REF_TRACE_MAX_ENTRIES = 600;
 const RESULT_DRAG_ACTIVE_WINDOW_FLAG = "__SP_RESULT_CHIP_DRAG_ACTIVE";
 const DROP_TARGET_AFTER_CLASS = "sp-chip-drop-target-after";
 const DROP_INLINE_CARET_CLASS = "sp-chip-drop-inline-caret";
+const RESULT_DRAGGING_CLASS = "sp-result-chip-dragging";
 const DROP_BOUNDARY_BAND_PX = 28;
 const LAST_LINE_DROP_EXTRA_PX = 56;
 const COPY_FEEDBACK_MS = 800;
@@ -180,19 +181,6 @@ const getTextAt = (doc: any, from: number, to: number): string =>
   doc.textBetween(Math.max(0, from), Math.max(0, to), "", "");
 
 const isWordBoundary = (value: string): boolean => !/[a-zA-Z0-9_]/.test(value || "");
-
-const getSelectedTextblockLineId = (state: any): string => {
-  const selection = state?.selection;
-  const $from = selection?.$from;
-  if (!$from) return "";
-  for (let depth = $from.depth; depth >= 0; depth -= 1) {
-    const node = $from.node(depth);
-    if (node?.isTextblock) {
-      return String((node as any).attrs?.lineId || "").trim();
-    }
-  }
-  return "";
-};
 
 const getEventElement = (eventTarget: EventTarget | null): HTMLElement | null => {
   if (!eventTarget) return null;
@@ -437,29 +425,6 @@ const insertReferenceAt = (
     });
     return null;
   }
-};
-
-const insertReferenceOnNewLine = (
-  view: any,
-  payload: ReferencePayload,
-  mode: "reference" | "value" = "reference"
-): number | null => {
-  const { state } = view;
-  const { $from } = state.selection;
-  let textblockDepth = $from.depth;
-  while (textblockDepth > 0 && !$from.node(textblockDepth).isTextblock) {
-    textblockDepth -= 1;
-  }
-  if (textblockDepth <= 0 || !$from.node(textblockDepth).isTextblock) {
-    return null;
-  }
-
-  const lineEnd = $from.end(textblockDepth);
-  const splitSelectionPos = Math.max(1, Math.min(lineEnd + 1, state.doc.content.size));
-  const splitTr = state.tr.split(lineEnd);
-  splitTr.setSelection(TextSelection.create(splitTr.doc, splitSelectionPos));
-  view.dispatch(splitTr);
-  return insertReferenceAt(view, payload, view.state.selection.from, mode);
 };
 
 const getLastTextblockSplitPos = (doc: any): number | null => {
@@ -1230,6 +1195,24 @@ const getReferenceRangeInSelection = (state: any): { from: number; to: number } 
   return found;
 };
 
+const getReferenceTextInsertionPos = (
+  state: any,
+  range: { from: number; to: number }
+): number => {
+  const referenceType = state.schema.nodes.referenceToken;
+  const { selection } = state;
+  if (selection.empty && referenceType) {
+    const $from = selection.$from;
+    if ($from.nodeAfter?.type === referenceType) {
+      return range.from;
+    }
+    if ($from.nodeBefore?.type === referenceType) {
+      return range.to;
+    }
+  }
+  return range.to;
+};
+
 const selectReferenceNode = (view: any, referenceEl: HTMLElement): boolean => {
   try {
     const pos = view.posAtDOM(referenceEl, 0);
@@ -1283,8 +1266,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
 
   addOptions() {
     return {
-      getSettings: (): Pick<SettingsState, "chipInsertMode" | "referenceTextExportMode"> => ({
-        chipInsertMode: "reference",
+      getSettings: (): Pick<SettingsState, "referenceTextExportMode"> => ({
         referenceTextExportMode: "preserve",
       }),
       getFunctionStore: (): Map<string, FunctionDefinitionNode> | undefined => undefined,
@@ -1316,7 +1298,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
 
   addProseMirrorPlugins() {
     const getSettings = this.options.getSettings as
-      | (() => Pick<SettingsState, "chipInsertMode" | "referenceTextExportMode">)
+      | (() => Pick<SettingsState, "referenceTextExportMode">)
       | undefined;
     const getReferenceTextExportMode = (): "preserve" | "readable" =>
       getSettings?.().referenceTextExportMode === "readable" ? "readable" : "preserve";
@@ -1394,23 +1376,6 @@ export const ResultReferenceInteractionExtension = Extension.create({
       activeMenu = null;
       activeMenuButton = null;
     };
-    const insertMenuPayloadAtSelection = (
-      view: any,
-      resultEl: HTMLElement,
-      mode: "reference" | "value"
-    ): number | null => {
-      const payload = payloadFromElement(resultEl);
-      if (!payload) return null;
-      const selectedLineId = getSelectedTextblockLineId(view.state);
-      const resolvedPayload = resolvePayloadLineIdentity(view.state, payload);
-      const isSameLine =
-        !!selectedLineId &&
-        !!resolvedPayload.sourceLineId &&
-        selectedLineId === resolvedPayload.sourceLineId;
-      return isSameLine
-        ? insertReferenceOnNewLine(view, resolvedPayload, mode)
-        : insertReferenceAt(view, resolvedPayload, view.state.selection.from, mode);
-    };
     const buildMenuButton = (
       label: string,
       action: () => void,
@@ -1474,28 +1439,6 @@ export const ResultReferenceInteractionExtension = Extension.create({
               showCopyFeedback(resultEl);
             }
           });
-          closeResultActionMenu();
-        })
-      );
-      menu.appendChild(
-        buildMenuButton("Insert reference", () => {
-          const insertedCursor = insertMenuPayloadAtSelection(view, resultEl, "reference");
-          if (typeof insertedCursor === "number") {
-            postInsertCursor = insertedCursor;
-            consumeResultClick = true;
-            view.focus();
-          }
-          closeResultActionMenu();
-        })
-      );
-      menu.appendChild(
-        buildMenuButton("Insert value", () => {
-          const insertedCursor = insertMenuPayloadAtSelection(view, resultEl, "value");
-          if (typeof insertedCursor === "number") {
-            postInsertCursor = insertedCursor;
-            consumeResultClick = true;
-            view.focus();
-          }
           closeResultActionMenu();
         })
       );
@@ -1771,6 +1714,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
               clearDragSession();
               clearDropTargetIndicator(view);
               clearInlineDropIndicator(view);
+              view.dom.classList.remove(RESULT_DRAGGING_CLASS);
               clearHighlightedSource(view);
             },
           };
@@ -1824,10 +1768,12 @@ export const ResultReferenceInteractionExtension = Extension.create({
             }
             const selectedPayload = findSelectedReferencePayload(view.state);
             const insertText = stripEchoedReferencePrefix(text, selectedPayload);
+            const insertPos = getReferenceTextInsertionPos(view.state, range);
             appendRefTrace("handleTextInputOverReference", {
               originalText: text,
               insertedText: insertText,
               strippedEchoPrefix: text !== insertText,
+              insertPos,
               selectionFrom: view.state.selection.from,
               selectionTo: view.state.selection.to,
               sourceLineId: selectedPayload?.sourceLineId || "",
@@ -1838,7 +1784,6 @@ export const ResultReferenceInteractionExtension = Extension.create({
             if (!insertText) {
               return true;
             }
-            const insertPos = range.to;
             const tr = view.state.tr.insertText(insertText, insertPos, insertPos);
             tr.setSelection(TextSelection.create(tr.doc, insertPos + insertText.length));
             view.dispatch(tr);
@@ -2079,6 +2024,8 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 if (!payload || !moveRange || !event.dataTransfer) return false;
                 activeDragPayload = payload;
                 activeDragMoveRange = moveRange;
+                closeResultActionMenu();
+                _view.dom.classList.add(RESULT_DRAGGING_CLASS);
                 event.dataTransfer.effectAllowed = "move";
                 event.dataTransfer.setData(DND_MIME, JSON.stringify(payload));
                 event.dataTransfer.setData(REFERENCE_MOVE_MIME, JSON.stringify(moveRange));
@@ -2097,6 +2044,8 @@ export const ResultReferenceInteractionExtension = Extension.create({
               const payload = payloadFromElement(resultEl);
               if (!payload || !event.dataTransfer) return false;
               activeDragPayload = payload;
+              closeResultActionMenu();
+              _view.dom.classList.add(RESULT_DRAGGING_CLASS);
               event.dataTransfer.effectAllowed = "copy";
               event.dataTransfer.setData(DND_MIME, JSON.stringify(payload));
               event.dataTransfer.setData(
@@ -2168,6 +2117,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
             dragend: (view) => {
               clearDropTargetIndicator(view);
               clearInlineDropIndicator(view);
+              view.dom.classList.remove(RESULT_DRAGGING_CLASS);
               clearDragSession();
               return false;
             },
@@ -2175,6 +2125,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
               if (!event.dataTransfer && !activeDragPayload) return false;
               event.preventDefault();
               event.stopPropagation();
+              view.dom.classList.remove(RESULT_DRAGGING_CLASS);
               const dragEvent = event as DragEvent;
               const fallbackInlinePos = resolveInlineDropPos(view, dragEvent);
               const inlineDropPos =

@@ -10,7 +10,6 @@ export const DEFAULT_SETTINGS: SettingsState = {
   groupThousands: true,
   liveResultEnabled: true,
   resultLaneEnabled: false,
-  chipInsertMode: "reference",
   referenceTextExportMode: "preserve",
   listMaxLength: 100,
   uiTheme: "spatial-dark",
@@ -70,6 +69,7 @@ export function createSettingsState(): SettingsState {
       merged.syntaxTheme = normalizeSyntaxThemeId(merged.syntaxTheme, DEFAULT_SETTINGS.syntaxTheme);
       delete merged.scientificUpperThreshold;
       delete merged.scientificLowerThreshold;
+      delete merged.chipInsertMode;
       return merged;
     }
   } catch (error) {

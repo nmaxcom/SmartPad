@@ -88,7 +88,6 @@ export interface SettingsState {
   groupThousands: boolean;
   liveResultEnabled: boolean;
   resultLaneEnabled: boolean;
-  chipInsertMode: "reference" | "value";
   referenceTextExportMode: "preserve" | "readable";
   listMaxLength: number;
   uiTheme: UIThemeId;

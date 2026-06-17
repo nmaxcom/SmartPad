@@ -82,7 +82,7 @@ export const ResultInlineNode = Node.create({
             "aria-label": value,
             draggable: "true",
           },
-          ["span", { class: "semantic-result-value" }, 0],
+          ["span", { class: "semantic-result-value", draggable: "true" }, 0],
           [
             "span",
             { class: "semantic-result-actions" },

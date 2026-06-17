@@ -23,6 +23,41 @@
 
 ---
 
+## Entry J-2026-06-17-01
+
+*   Timestamp: 2026-06-17 13:11 CEST
+*   Summary:
+    *   User requested a V1 correction pass for result-chip reuse: remove menu-based `Insert reference` / `Insert value`, make drag-to-reuse the only document insertion path, hide hover chrome during drag, make numeric result values draggable across chip types, and fix typing before dropped reference chips.
+    *   Assistant removed the visible chip insert mode setting and retired legacy `chipInsertMode` from saved settings.
+    *   Assistant updated result/reference interaction logic so typing before a reference chip inserts before it instead of always after it.
+*   Decisions:
+    *   Result-chip document reuse is drag-only and always creates a live reference.
+    *   Result-chip menus stay for non-insertion actions such as copy, plot, and goal-seek.
+    *   Snapshot/plain value insertion from result chips is not part of V1.
+*   Artifacts changed:
+    *   `src/components/ResultReferenceInteractionExtension.ts`
+    *   `src/components/ResultInlineNode.ts`
+    *   `src/components/ResultsDecoratorExtension.ts`
+    *   `src/components/Editor.css`
+    *   `src/components/ui/SettingsSections.tsx`
+    *   `src/state/settingsStore.ts`
+    *   `src/state/types.ts`
+    *   `tests/e2e/result-reference-drag-only.spec.ts`
+    *   `tests/e2e/result-reference.spec.ts`
+    *   `tests/unit/settingsStore.test.ts`
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/SETTINGS_ONBOARDING_LAUNCH_BRIEF.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/settingsStore.test.ts --runInBand` passed.
+    *   `npx playwright test tests/e2e/result-reference-drag-only.spec.ts tests/e2e/result-reference.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed, 52/52.
+    *   `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, and `npm run spec:trust` passed.
+    *   `npm run verify:changed` passed.
+    *   `npm run build` passed.
+*   Risks/blockers:
+    *   Needs user review on real sheets to confirm drag-only reuse is discoverable enough without menu insert actions.
+
 ## Entry J-2026-06-15-03
 
 *   Timestamp: 2026-06-15 22:44 CEST

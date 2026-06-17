@@ -208,6 +208,7 @@ export const ResultsDecoratorExtension = Extension.create({
                         span.setAttribute("draggable", "true");
                         const value = document.createElement("span");
                         value.className = "semantic-result-value semantic-live-result-value";
+                        value.setAttribute("draggable", "true");
                         value.textContent = liveText;
 
                         const actions = document.createElement("span");

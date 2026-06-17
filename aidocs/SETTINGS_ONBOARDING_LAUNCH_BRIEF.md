@@ -91,7 +91,6 @@ Purpose: explain result chips, references, and copy/export behavior.
 
 Controls:
 
-- Result chip drag/drop insert mode.
 - Reference text copy/export mode.
 
 Launch copy:
