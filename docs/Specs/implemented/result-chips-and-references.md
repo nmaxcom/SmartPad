@@ -7,6 +7,7 @@
   - `tests/e2e/result-reference-drag-only.spec.ts`
   - `tests/e2e/result-reference.spec.ts`
   - `tests/e2e/results-decorator-regression.spec.ts`
+  - `tests/e2e/user-issues-fixed.spec.ts`
   - `tests/unit/semanticHighlightTokenization.test.ts`
 
 This card is the trust declaration for shipped result chip and reference behavior.

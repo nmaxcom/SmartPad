@@ -63,6 +63,11 @@ export function isLikelySharedLiveExpressionSource(line: string): boolean {
     return false;
   }
 
+  const candidate = parseLine(`${trimmed} =>`, 1);
+  if (candidate.type === "variableAssignment" || candidate.type === "combinedAssignment") {
+    return false;
+  }
+
   const hasDigit = /\d/.test(trimmed);
   const hasOperator = /[=+\-*/^]|\.{2}/.test(trimmed);
   const hasFunctionCall = /\b[a-zA-Z_][a-zA-Z0-9_ ]*\(/.test(trimmed);
@@ -72,7 +77,6 @@ export function isLikelySharedLiveExpressionSource(line: string): boolean {
     return false;
   }
 
-  const candidate = parseLine(`${trimmed} =>`, 1);
   return candidate.type !== "error" && candidate.type !== "comment" && candidate.type !== "plainText";
 }
 

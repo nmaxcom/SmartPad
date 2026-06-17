@@ -214,11 +214,10 @@ Flow:
 
 1. Hover a live or trigger result chip.
 2. Chip extends to the right and reveals:
-   - a drag handle for reuse by drag/drop,
    - a copy-value icon,
    - an action menu icon.
 3. Copy icon click copies the rendered value and briefly sets copied feedback state on the chip.
-4. Dragging the chip itself or the drag handle starts result-reference drag/drop.
+4. Dragging the chip itself starts result-reference drag/drop. There is no separate drag handle.
 5. The action menu exposes current supported commands such as `Copy value` and enables plot creation when the source result depends on a plottable variable.
    - Results with one or more solve candidates expose `Set target...` / `Set target by <variable>` actions that insert editable `make ... by ... =>` goal-seek lines below the source.
    - Goal-seek actions insert parser-safe numeric targets even when the visible chip uses grouped thousands; for example a rendered `2,520,000 EUR` target is inserted as `2520000 EUR`.

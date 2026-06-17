@@ -23,6 +23,32 @@
 
 ---
 
+## Entry J-2026-06-17-03
+
+*   Timestamp: 2026-06-17 17:28 CEST / 2026-06-17 15:28 UTC
+*   Summary:
+    *   User reported that selecting and copying `ticket after promo = promo off ticket list` copied `ticket after promo = promo off ticket list  (promo off ticket list)`.
+    *   Assistant fixed live-result clipboard suffix detection so live assignment lines copy as their original source text without appending the assigned expression as a parenthesized result.
+    *   Assistant added e2e regression coverage for the reported line and kept existing expression-copy behavior such as `known*3 (15)`.
+*   Decisions:
+    *   Shared plain-text result suffixes remain valid for standalone live expressions.
+    *   Assignment lines, including live assignment previews, are treated as source text and do not get `expression (result)` clipboard suffixes.
+*   Artifacts changed:
+    *   `src/components/pasteTransforms.ts`
+    *   `tests/e2e/user-issues-fixed.spec.ts`
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
+    *   `docs/Specs/implemented/result-chips-and-references.md`
+    *   `docs/spec-trust.json`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npx tsx -e ... isLikelySharedLiveExpressionSource(...)` confirmed the reported assignment returns `false` while `known*3` remains `true`.
+    *   `npx playwright test tests/e2e/user-issues-fixed.spec.ts --project=chromium --config=playwright.config.ts --grep "copying a live assignment|select-copy-paste" --workers=1` passed.
+    *   `npx playwright test tests/e2e/result-reference.spec.ts tests/e2e/live-result.spec.ts --project=chromium --config=playwright.config.ts --grep "reference text export mode|select-all copy|triggered result chips share hover copy affordance|live result chips reveal copy" --workers=1` passed.
+*   Pending:
+    *   User review/confirmation of the clipboard behavior.
+*   Risks/blockers:
+    *   Full docs gates currently see unrelated pre-existing working-tree changes in Settings/result-chip drag work; this commit scopes only the clipboard regression.
+
 ## Entry J-2026-06-17-01
 
 *   Timestamp: 2026-06-17 13:11 CEST

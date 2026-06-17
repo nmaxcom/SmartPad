@@ -491,6 +491,48 @@ test.describe("User Issues Fixed", () => {
     expect(textSnapshot).toContain("2+2=>");
   });
 
+  test("copying a live assignment line does not append the source expression as a suffix", async ({
+    page,
+  }) => {
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      if (!editor) return;
+      editor.commands.setContent(
+        "<p>ticket list = $32</p><p>promo = 12%</p><p>ticket after promo = promo off ticket list</p>"
+      );
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    const clipboardInfo = await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      if (!editor) return { text: "", hasSerializer: false };
+      const doc = editor.state.doc;
+      let from = 0;
+      let to = 0;
+      let line = 0;
+      doc.forEach((node: any, offset: number) => {
+        if (!node.isTextblock) return;
+        line += 1;
+        if (line === 3) {
+          from = offset + 1;
+          to = from + node.content.size;
+        }
+      });
+      editor.commands.setTextSelection({ from, to });
+      const slice = editor.state.selection.content();
+      const serializer = editor.view?.someProp?.("clipboardTextSerializer");
+      return {
+        text: typeof serializer === "function" ? serializer(slice) : "",
+        hasSerializer: typeof serializer === "function",
+      };
+    });
+
+    expect(clipboardInfo.hasSerializer).toBe(true);
+    expect(clipboardInfo.text.trim()).toBe("ticket after promo = promo off ticket list");
+    expect(clipboardInfo.text).not.toContain("(promo off ticket list)");
+  });
+
   test("unit conversions show the correct result for the line", async ({ page }) => {
     const pm = page.locator(".ProseMirror");
     await pm.click();

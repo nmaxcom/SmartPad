@@ -60,6 +60,7 @@
         "tests/e2e/result-reference-drag-only.spec.ts",
         "tests/e2e/result-reference.spec.ts",
         "tests/e2e/results-decorator-regression.spec.ts",
+        "tests/e2e/user-issues-fixed.spec.ts",
         "tests/unit/semanticHighlightTokenization.test.ts",
         "tests/e2e/semantic-highlighting.spec.ts",
         "tests/e2e/live-result.spec.ts"
