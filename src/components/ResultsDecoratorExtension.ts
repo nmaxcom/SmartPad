@@ -208,19 +208,13 @@ export const ResultsDecoratorExtension = Extension.create({
                         span.setAttribute("draggable", "true");
                         const value = document.createElement("span");
                         value.className = "semantic-result-value semantic-live-result-value";
+                        value.setAttribute("contenteditable", "false");
                         value.setAttribute("draggable", "true");
                         value.textContent = liveText;
 
                         const actions = document.createElement("span");
                         actions.className = "semantic-result-actions semantic-live-result-actions";
-
-                        const dragButton = document.createElement("button");
-                        dragButton.className =
-                          "semantic-result-action semantic-result-drag semantic-live-result-action semantic-live-result-drag";
-                        dragButton.type = "button";
-                        dragButton.setAttribute("draggable", "true");
-                        dragButton.setAttribute("aria-label", "Drag result to reuse");
-                        dragButton.setAttribute("title", "Drag to reuse");
+                        actions.setAttribute("contenteditable", "false");
 
                         const copyButton = document.createElement("button");
                         copyButton.className =
@@ -241,7 +235,6 @@ export const ResultsDecoratorExtension = Extension.create({
                         menuButton.setAttribute("aria-haspopup", "menu");
                         menuButton.setAttribute("aria-expanded", "false");
 
-                        actions.appendChild(dragButton);
                         actions.appendChild(copyButton);
                         actions.appendChild(menuButton);
                         span.appendChild(value);

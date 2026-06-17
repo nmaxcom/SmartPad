@@ -15,6 +15,7 @@ Recent template updates:
 - When multiple right-side panels are open, the `Quick Templates` panel is pinned at the top for faster access.
 - The `Quick Tour` template was condensed into practical mini-scenarios and now starts with a short scrubbing primer.
 - Launch settings are grouped by user intent: results/formatting, reuse/export, lists/limits, scientific notation, dates/locale, currency/external data, result styling, advanced plotting, and panels.
+- Result chips are reused by dragging the chip itself into another line. There is no separate drag handle or saved insert mode; drops create live references.
 - The `Quick Tour` template now opens with a `Start Here` first action that tells users to scrub `attendees base` or `ticket list` and watch dependent results, currency math, date ranges, and the chart update together.
 - The `New stuff` template demonstrates live-bound result plots, direct one-argument function plots (`@view plot y=f`), direct curve plots without dummy `x = 0` assignments, histogram/scatter suggestions, and one-variable goal-seek from result chips using conventional currency examples such as `3000 EUR`.
 - The `Goal Seek` template focuses on progressively richer one-variable target solving, from checkout totals to runway, pricing, campaign planning, range design, recipes, and direct source-expression goals.

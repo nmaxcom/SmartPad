@@ -461,7 +461,7 @@ test.describe("Result references (drag-only)", () => {
     await expect(targetLine.locator(".semantic-reference-chip")).toHaveCount(0);
   });
 
-  test("result chips expose drag handle and explicit action menu", async ({ page }) => {
+  test("result chips expose copy/menu actions without a separate drag handle", async ({ page }) => {
     const editor = page.locator('[data-testid="smart-pad-editor"]');
     await editor.click();
     await page.keyboard.type("100 + 20 =>");
@@ -471,7 +471,9 @@ test.describe("Result references (drag-only)", () => {
     await sourceChip.hover();
     await page.waitForTimeout(220);
 
-    await expect(sourceChip.locator(".semantic-result-drag")).toBeVisible();
+    await expect(sourceChip).toHaveAttribute("draggable", "true");
+    await expect(sourceChip.locator(".semantic-result-value")).toHaveAttribute("draggable", "true");
+    await expect(sourceChip.locator(".semantic-result-drag")).toHaveCount(0);
     await expect(sourceChip.locator(".semantic-result-copy")).toBeVisible();
     await expect(sourceChip.locator(".semantic-result-menu")).toBeVisible();
   });
@@ -841,6 +843,26 @@ test.describe("Result references (drag-only)", () => {
     await expect(page.locator(".ProseMirror p").nth(4).locator(".semantic-reference-chip")).toHaveText(
       "120"
     );
+  });
+
+  test("whole trigger result chip supports native pointer drag", async ({ page }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("100 + 20 =>");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("target = ");
+    await waitForUIRenderComplete(page);
+
+    const sourceChip = page.locator(".ProseMirror p").first().locator(".semantic-result-display");
+    const targetLine = page.locator(".ProseMirror p").nth(1);
+    await sourceChip.dragTo(targetLine, {
+      sourcePosition: { x: 8, y: 8 },
+      targetPosition: { x: 90, y: 8 },
+    });
+    await waitForUIRenderComplete(page);
+
+    await expect(targetLine.locator(".semantic-reference-chip")).toHaveCount(1);
+    await expect(targetLine.locator(".semantic-reference-chip").first()).toHaveText("120");
   });
 
   test("dragging a result hides hover actions while the drag is active", async ({ page }) => {

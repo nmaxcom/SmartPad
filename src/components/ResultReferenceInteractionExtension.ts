@@ -1072,6 +1072,26 @@ const payloadFromElement = (target: HTMLElement): ReferencePayload | null => {
   };
 };
 
+const installResultDragImage = (event: DragEvent, resultEl: HTMLElement) => {
+  const dataTransfer = event.dataTransfer;
+  if (!dataTransfer || typeof dataTransfer.setDragImage !== "function") return;
+  try {
+    const clone = resultEl.cloneNode(true) as HTMLElement;
+    clone.classList.add("semantic-result-drag-image");
+    clone
+      .querySelectorAll(".semantic-result-actions, .semantic-live-result-actions")
+      .forEach((element) => element.parentElement?.removeChild(element));
+    document.body.appendChild(clone);
+    const rect = resultEl.getBoundingClientRect();
+    dataTransfer.setDragImage(clone, Math.max(0, rect.width / 2), Math.max(0, rect.height / 2));
+    window.setTimeout(() => {
+      if (clone.parentElement) {
+        clone.parentElement.removeChild(clone);
+      }
+    }, 0);
+  } catch {}
+};
+
 const payloadFromReferenceElement = (target: HTMLElement): ReferencePayload | null => {
   if (!target.matches(REFERENCE_SELECTOR)) {
     return null;
@@ -2046,6 +2066,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
               activeDragPayload = payload;
               closeResultActionMenu();
               _view.dom.classList.add(RESULT_DRAGGING_CLASS);
+              installResultDragImage(event as DragEvent, resultEl);
               event.dataTransfer.effectAllowed = "copy";
               event.dataTransfer.setData(DND_MIME, JSON.stringify(payload));
               event.dataTransfer.setData(

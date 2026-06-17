@@ -498,11 +498,6 @@ body.number-scrubbing * {
   line-height: 1;
 }
 
-.semantic-result-drag::before,
-.semantic-live-result-drag::before {
-  content: "↕";
-}
-
 .semantic-result-copy::before,
 .semantic-live-result-copy::before {
   content: "⧉";
@@ -512,18 +507,6 @@ body.number-scrubbing * {
 .semantic-live-result-menu::before {
   content: "⋯";
   font-size: 17px;
-}
-
-.semantic-result-drag,
-.semantic-live-result-drag {
-  cursor: grab;
-  padding: 0;
-  pointer-events: auto;
-}
-
-.semantic-result-drag:active,
-.semantic-live-result-drag:active {
-  cursor: grabbing;
 }
 
 .semantic-result-copy,
@@ -542,12 +525,30 @@ body.number-scrubbing * {
 
 .semantic-result-copy:hover,
 .semantic-live-result-copy:hover,
-.semantic-result-drag:hover,
-.semantic-live-result-drag:hover,
 .semantic-result-menu:hover,
 .semantic-live-result-menu:hover {
   color: var(--color-text-primary);
   background: transparent;
+}
+
+.semantic-result-drag-image {
+  position: fixed;
+  left: -9999px;
+  top: -9999px;
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 5px;
+  border-radius: 6px;
+  border: 1px solid var(--syntax-result-border);
+  background-color: var(--syntax-result-bg);
+  color: var(--syntax-result);
+  font-weight: 600;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.semantic-result-drag-image .semantic-result-actions {
+  display: none;
 }
 
 .semantic-result-display[data-copy-state="copied"] .semantic-result-copy,

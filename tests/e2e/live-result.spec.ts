@@ -250,7 +250,9 @@ test.describe("Live Result", () => {
     await page.waitForTimeout(220);
 
     const copyButton = triggerChip.locator(".semantic-result-copy");
-    await expect(triggerChip.locator(".semantic-result-drag")).toBeVisible();
+    await expect(triggerChip).toHaveAttribute("draggable", "true");
+    await expect(triggerChip.locator(".semantic-result-value")).toHaveAttribute("draggable", "true");
+    await expect(triggerChip.locator(".semantic-result-drag")).toHaveCount(0);
     await expect(copyButton).toBeVisible();
     await expect(triggerChip.locator(".semantic-result-menu")).toBeVisible();
     await copyButton.click();

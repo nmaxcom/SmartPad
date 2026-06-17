@@ -58,6 +58,7 @@ export const ResultInlineNode = Node.create({
           "span",
           {
             class: resultClasses.join(" "),
+            contenteditable: "false",
             "data-result": value,
             "data-source-line-id": sourceLineId,
             "data-source-line": sourceLine > 0 ? String(sourceLine) : "",
@@ -72,6 +73,7 @@ export const ResultInlineNode = Node.create({
           "span",
           {
             class: resultClasses.join(" "),
+            contenteditable: "false",
             "data-result": value,
             "data-result-value": value,
             "data-chip-kind": "trigger",
@@ -82,21 +84,10 @@ export const ResultInlineNode = Node.create({
             "aria-label": value,
             draggable: "true",
           },
-          ["span", { class: "semantic-result-value", draggable: "true" }, 0],
+          ["span", { class: "semantic-result-value", contenteditable: "false", draggable: "true" }, 0],
           [
             "span",
-            { class: "semantic-result-actions" },
-            [
-              "button",
-              {
-                class: "semantic-result-action semantic-result-drag",
-                type: "button",
-                draggable: "true",
-                "aria-label": "Drag result to reuse",
-                title: "Drag to reuse",
-              },
-              "",
-            ],
+            { class: "semantic-result-actions", contenteditable: "false" },
             [
               "button",
               {
@@ -129,11 +120,12 @@ export const ResultInlineNode = Node.create({
       {
         class: "semantic-wrapper",
         "data-result-node": "true",
+        contenteditable: "false",
         draggable: "true",
       },
       [
         "span",
-        { class: "semantic-result-container", draggable: "true" },
+        { class: "semantic-result-container", contenteditable: "false", draggable: "true" },
         contentNode,
       ],
     ];

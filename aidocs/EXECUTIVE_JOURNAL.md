@@ -35,6 +35,7 @@
     *   Assignment lines, including live assignment previews, are treated as source text and do not get `expression (result)` clipboard suffixes.
 *   Artifacts changed:
     *   `src/components/pasteTransforms.ts`
+    *   `tests/unit/pasteTransforms.test.ts`
     *   `tests/e2e/user-issues-fixed.spec.ts`
     *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
     *   `docs/Specs/implemented/result-chips-and-references.md`
@@ -42,12 +43,40 @@
     *   `aidocs/EXECUTIVE_JOURNAL.md`
 *   Validation:
     *   `npx tsx -e ... isLikelySharedLiveExpressionSource(...)` confirmed the reported assignment returns `false` while `known*3` remains `true`.
+    *   `CI=1 npx jest --findRelatedTests src/components/pasteTransforms.ts --passWithNoTests --watchman=false --runInBand` passed after updating the assignment-line expectations.
     *   `npx playwright test tests/e2e/user-issues-fixed.spec.ts --project=chromium --config=playwright.config.ts --grep "copying a live assignment|select-copy-paste" --workers=1` passed.
     *   `npx playwright test tests/e2e/result-reference.spec.ts tests/e2e/live-result.spec.ts --project=chromium --config=playwright.config.ts --grep "reference text export mode|select-all copy|triggered result chips share hover copy affordance|live result chips reveal copy" --workers=1` passed.
 *   Pending:
     *   User review/confirmation of the clipboard behavior.
 *   Risks/blockers:
     *   Full docs gates currently see unrelated pre-existing working-tree changes in Settings/result-chip drag work; this commit scopes only the clipboard regression.
+
+## Entry J-2026-06-17-02
+
+*   Timestamp: 2026-06-17 17:24 CEST
+*   Summary:
+    *   User reported trigger result chips still did not drag like live chips and asked to remove the now-redundant drag-to-reuse icon.
+    *   Assistant removed the separate drag handle from trigger and live result chips, made the rendered chip/value `contenteditable=false` and draggable in both paths, and added a cloned chip drag image so the dragged preview preserves padding and rounded borders.
+*   Decisions:
+    *   Live and trigger result chips expose copy/menu hover actions only; the whole chip is the drag target.
+    *   The drag preview should look like the static chip, not like raw text.
+*   Artifacts changed:
+    *   `src/components/ResultInlineNode.ts`
+    *   `src/components/ResultsDecoratorExtension.ts`
+    *   `src/components/ResultReferenceInteractionExtension.ts`
+    *   `src/components/Editor.css`
+    *   `tests/e2e/result-reference-drag-only.spec.ts`
+    *   `tests/e2e/live-result.spec.ts`
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
+    *   `docs/ABOUT.md`
+    *   `docs/spec-map.json`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   Targeted Playwright checks passed for trigger-chip native pointer drag, chip/value draggable attributes, and absence of the separate drag icon.
+    *   `npm run docs:map`, `npm run spec:test`, `npm run spec:trust`, `npm run build`, and `git diff --check` passed.
+    *   `npm run docs:drift` and `npm run verify:changed` still report the previous committed settings drift until this scoped follow-up commit lands; `verify:changed` also sees unrelated dirty parser/list/clipboard changes in the worktree.
+*   Risks/blockers:
+    *   Needs user review of the actual drag ghost aesthetics in the browser because native drag images differ slightly by platform.
 
 ## Entry J-2026-06-17-01
 

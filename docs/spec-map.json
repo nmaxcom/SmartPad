@@ -178,6 +178,7 @@
         "src/components/VariablePanel/TemplatePanel.tsx",
         "src/components/VariablePanel/templateTriggerNormalization.ts",
         "src/state/settingsStore.ts",
+        "src/state/types.ts",
         "src/state/SettingsContext.tsx",
         "src/templates/quickTourTemplate.ts",
         "src/templates/capabilitySprintTemplate.ts",
