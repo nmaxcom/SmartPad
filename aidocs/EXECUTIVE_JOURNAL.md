@@ -6996,6 +6996,30 @@
 *   Risks/blockers:
     *   First-run/onboarding remains out of scope for this block and should be proposed separately after Settings is approved.
 
+## Entry J-2026-06-17-01
+
+*   Timestamp: 2026-06-17 22:22 CEST
+*   Summary:
+    *   User selected option 5 from the onboarding alternatives: do not add visual onboarding now.
+    *   Assistant updated launch planning artifacts so first-run visual onboarding no longer blocks the next launch step.
+    *   Next launch block is the release-candidate stability audit.
+*   Decisions:
+    *   Keep the existing Quick Tour/template path as the current first-run baseline.
+    *   Revisit onboarding only if stability review or user testing exposes first-run friction.
+    *   Do not capture final marketing screenshots until the launch candidate is stable.
+*   Artifacts changed:
+    *   `aidocs/LAUNCH_EXECUTION_ROADMAP.md`
+    *   `aidocs/LAUNCH_SCOPE_MATRIX.md`
+    *   `aidocs/SETTINGS_ONBOARDING_LAUNCH_BRIEF.md`
+    *   `aidocs/LAUNCH_STABILITY_AUDIT.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Pending:
+    *   Next executable block should run the P0 release-candidate stability checks.
+*   Risks/blockers:
+    *   Launch scope still needs explicit channel confirmation.
+    *   Result-chip clipboard spec/test sync was committed with this git cleanup so the worktree can return to a clean state.
+
 ## Entry J-2026-06-06-14
 
 *   Timestamp: 2026-06-06 14:45 CEST / 2026-06-06 12:45 UTC

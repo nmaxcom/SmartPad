@@ -55,7 +55,7 @@ Exit criteria:
 
 ## Phase 1: Product First-Run Polish
 
-Status: Settings professional layout is approved and committed; first-run framing remains.
+Status: accepted for launch-candidate work. Settings is approved; no additional visual onboarding will be added now.
 
 Primary task:
 
@@ -63,7 +63,7 @@ Primary task:
 
 Why first:
 
-- It blocks screenshots, homepage assets, desktop wrapper QA, and first-user credibility.
+- It blocked screenshots, homepage assets, desktop wrapper QA, and first-user credibility. The user chose to avoid new onboarding UI and move to stability instead.
 
 Inputs:
 
@@ -74,15 +74,15 @@ Actions:
 
 1. Completed: Settings was reorganized into a professional app preferences surface with section navigation, responsive layout, and existing behavior preserved in commit `ed5511db`.
 2. Completed: Settings desktop/mobile screenshots were reviewed and approved by the user.
-3. Add lightweight first-run guidance without blocking typing.
-4. Verify quick-tour entry, empty/default state, result-chip reuse hints, and Getting Started docs link.
-5. Capture first-run screenshots after implementation.
+3. Decision: do not add a new visual onboarding layer now; keep Quick Tour/template behavior as the first-run baseline.
+4. Carry Quick Tour/template checks into the release-candidate stability pass.
+5. Capture final launch screenshots after the release-candidate pass, not before.
 
 Exit criteria:
 
-- Targeted quick-tour and onboarding-adjacent tests pass.
-- Build and relevant docs/spec gates pass.
-- Desktop/mobile first-run screenshots are reviewed.
+- Settings approval is recorded.
+- No new onboarding UI is pending.
+- Quick Tour/template behavior is covered in the stability pass.
 
 ## Phase 2: Launch Stability Candidate
 
@@ -246,19 +246,17 @@ Rules:
 ## Current Critical Path
 
 1. Confirm scope with user.
-2. Add lightweight first-run onboarding/framing.
-3. Run launch stability checks.
-4. Dry-run release checklist.
-5. Implement desktop beta shell.
-6. Build standalone promotional website and capture final assets.
-7. Link approved docs/support/privacy pages from the promotional site and verify the full journey.
+2. Run launch stability checks.
+3. Dry-run release checklist.
+4. Implement desktop beta shell.
+5. Build standalone promotional website and capture final assets.
+6. Link approved docs/support/privacy pages from the promotional site and verify the full journey.
 
 ## Current Blockers
 
 P0:
 
 - Launch scope lacks explicit user confirmation.
-- First-run onboarding still needs a lightweight product-level frame around the quick tour.
 - Launch stability checks have not been executed.
 - Desktop packaging is not implemented.
 - Standalone promotional website/signup/assets are not implemented and intentionally come last.
@@ -272,7 +270,7 @@ P1:
 
 ## What Not To Do Yet
 
-- Do not capture final marketing screenshots before first-run framing and the launch candidate are stable.
+- Do not capture final marketing screenshots before the launch candidate is stable.
 - Do not promise desktop downloads before an artifact exists.
 - Do not add hidden app telemetry.
 - Do not market proposed features as shipped.

@@ -28,8 +28,8 @@ Existing coverage:
 Launch gap:
 
 - Settings now has an approved professional layout in commit `ed5511db`, with section navigation, responsive behavior, and existing controls preserved.
-- First-run quick tour is feature-dense and useful, but it still needs product-level framing so a new user knows what to do first.
-- Final launch screenshots should wait until first-run framing and release-candidate stability checks are complete.
+- First-run visual onboarding was explicitly deferred by the user on 2026-06-17; the current Quick Tour/template entry remains the launch-candidate baseline.
+- Final launch screenshots should wait until release-candidate stability checks are complete.
 
 ## Settings Status
 
@@ -175,9 +175,9 @@ Launch copy:
 - Explain that defaults are safe for most users.
 - Do not lead homepage screenshots with this section.
 
-## Onboarding Recommendation
+## Onboarding Status
 
-First-run should teach the core loop without blocking typing.
+No new visual onboarding will be added before the next stability pass.
 
 Required first-run signals:
 
@@ -196,13 +196,10 @@ Current quick tour:
 
 Launch approach:
 
-1. Keep the quick tour as a template.
-2. Add lightweight first-run framing around it:
-   - title/callout in the app or template panel,
-   - short `Start here` language,
-   - one clear first action: edit/scrub a value and watch results update.
-3. Avoid modal onboarding that blocks typing.
-4. Add link to Getting Started docs.
+1. Keep the quick tour as the existing first-run/template path.
+2. Avoid modal onboarding and avoid adding a new visible onboarding layer for now.
+3. Revisit only if stability review or user testing shows first-run confusion.
+4. Keep Getting Started docs available through the existing Docs path.
 
 ## Empty And Recovery States
 

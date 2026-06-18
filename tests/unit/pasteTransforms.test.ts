@@ -57,6 +57,9 @@ describe("stripSharedLiveResultSuffixes", () => {
 
   test("keeps assignment-line suffixes unchanged", () => {
     expect(stripSharedLiveResultSuffixes("total = 20*2 (40)")).toBe("total = 20*2 (40)");
+    expect(stripSharedLiveResultSuffixes("ticket after promo = promo off ticket list (promo off ticket list)")).toBe(
+      "ticket after promo = promo off ticket list (promo off ticket list)"
+    );
   });
 
   test("keeps plain text annotations unchanged", () => {

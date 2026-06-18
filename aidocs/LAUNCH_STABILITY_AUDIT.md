@@ -64,19 +64,18 @@ Evidence to capture:
 
 | Risk | Severity | Current handling |
 | --- | --- | --- |
-| Settings surface feels too internal for public users. | p0 | Covered by `T-2026-06-06-03`; blocks polished launch screenshots. |
+| Settings surface feels too internal for public users. | resolved for current launch-candidate path | Settings layout was approved and committed in `ed5511db`; keep it in RC verification. |
 | Autocomplete is implemented but still proposed and pending user confirmation. | p1 | Keep out of headline copy until user confirms and spec status is reconciled. |
 | FX rates depend on external service/cache behavior. | p1 | Document in privacy/portability docs and website copy. |
 | Desktop packaging is not implemented. | p0 for desktop launch, p1 for web-first launch | Treat desktop as beta/spike until package pipeline exists. |
-| Marketing screenshots cannot be stable until settings/onboarding/chips are polished. | p0 | Capture assets only after product polish and stability audit. |
+| Marketing screenshots cannot be stable until product/chip behavior passes the RC audit. | p0 | Capture assets only after stability audit and visible issue review. |
 | Proposed docs may be mistaken for shipped behavior. | p1 | Audit public docs IA and avoid proposed pages in launch funnel unless clearly labeled. |
 
 ## Recommended Execution Order
 
-1. Finish user review for `T-2026-06-04-01` because autocomplete/chip polish affects first impressions.
-2. Run settings/onboarding redesign and tests under `T-2026-06-06-03`.
-3. Run the P0 release-candidate checks above and create bug tasks for failures.
-4. Patch public docs/privacy/known limitations from audit results.
-5. Capture screenshots/video only after the UI pass is clean.
-6. Build marketing homepage and signup once assets and copy are stable.
-7. Start desktop packaging spike and release checklist in parallel after web launch path is clear.
+1. Run the P0 release-candidate checks above and create bug tasks for failures.
+2. Review result chips/autocomplete findings if the RC checks surface user-visible risk.
+3. Patch public docs/privacy/known limitations from audit results.
+4. Capture screenshots/video only after the visible behavior pass is clean.
+5. Build marketing homepage and signup once assets and copy are stable.
+6. Start desktop packaging spike and release checklist in parallel after web launch path is clear.

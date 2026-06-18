@@ -206,7 +206,8 @@ Guardrails:
 2. Normal line/multi-line copy must keep native editor behavior (no single-chip clipboard hijack).
 3. Pasting rich SmartPad content with chips should preserve chips and linked behavior.
 4. Live-result plain-text copy should serialize as `expression (result)` to keep context when shared outside SmartPad.
-5. SmartPad paste should strip that trailing parenthesized suffix only when the left side looks like a real SmartPad expression and the marker looks like a rendered value.
+5. Live assignment lines must copy as the original assignment text only. For example, copying `ticket after promo = promo off ticket list` must not append `(promo off ticket list)`.
+6. SmartPad paste should strip that trailing parenthesized suffix only when the left side looks like a real SmartPad expression and the marker looks like a rendered value.
 
 ### 5.5 Result-chip hover actions (live + trigger)
 
