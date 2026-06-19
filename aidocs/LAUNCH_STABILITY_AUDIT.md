@@ -38,6 +38,38 @@ For docs-only planning changes, `git diff --check` is enough. For code, docs, te
 | Docs embeds and public docs IA | Docs examples render, embedded previews do not mutate user sheets, docs routes work. | `tests/e2e/docs-ia.spec.ts`, `website/docs/`, `public/docs/` | `npm run docs:docusaurus:publish-local`; `npx playwright test tests/e2e/docs-ia.spec.ts --project=chromium --config=playwright.config.ts --workers=1` | Docs examples fail, docs routing breaks, or preview embeds create persistent sheets. |
 | Public app deployment path | Production build, GitHub Pages path, app/docs links, generated docs assets. | `.github/workflows/deploy-pages.yml`, `package.json`, `src/components/Layout/docsUrl.ts`, `tests/unit/docsUrl.test.ts` | `npm run docs:docusaurus:publish-prod`; `npm run build`; `npm run test:unit -- tests/unit/docsUrl.test.ts --runInBand` | Production paths or docs links break under `/SmartPad/`. |
 
+## RC Stability Run 1 - 2026-06-19
+
+This run checked the current launch candidate after the user approved moving past visual onboarding work and into release-candidate stability.
+
+### Green Checks
+
+- Quick Tour unit check: `npx jest tests/unit/quickTourTemplate.test.ts --runInBand --no-watchman` passed.
+- Core expression/result unit checks: `npx jest tests/unit/liveResultPreview.test.ts tests/unit/expressionParser.test.ts tests/unit/functions.test.ts tests/unit/solve.test.ts tests/unit/percentages.test.ts tests/unit/bugHuntRegression.test.ts --runInBand --no-watchman` passed.
+- Units/date/currency unit checks: `npx jest tests/unit/unitsnetIntegration.test.ts tests/unit/unitAliasExamples.test.ts tests/unit/dateMathEvaluator.test.ts tests/unit/localeDate.test.ts tests/unit/currencyFx.test.ts tests/unit/currency-expression-evaluator.test.ts tests/unit/unitsEvaluator.test.ts tests/unit/unitExponentSuffix.test.ts --runInBand --no-watchman` passed.
+- Quick Tour browser smoke: `npx playwright test tests/e2e/quick-tour-template.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed.
+- Production build: `npm run build` passed.
+
+### Red Checks
+
+- `npm run test:temporary-edge` failed before running edge cases because `src/parsing/astParser.ts` writes to `window` in a Node context. This is a test/runtime compatibility bug and should be fixed before calling the RC gate green.
+- Basic editing e2e batch failed: `npx playwright test tests/e2e/simple-typing-test.spec.ts tests/e2e/cursor-positioning.spec.ts tests/e2e/keyboard-interactions.spec.ts tests/e2e/paste-multi-edit-regressions.spec.ts --project=chromium --config=playwright.config.ts --workers=1` finished with 16 failed and 5 passed. The dominant cause appears to be tests assuming an empty editor while the app now loads the Quick Tour/starter sheet, plus some tests still asserting explicit-trigger-era behavior.
+- Live-result e2e failed 4 of 15 checks. The functional live-result basics passed, but visual/chip parity and settings-off assertions need review against the current chip structure and first-load state.
+- Units e2e batch failed 16 of 28 checks. Many failures come from tests using repeated `editor.fill(...)` calls as if they appended lines; Playwright replaces the editor content, so variables are lost and later expressions stay symbolic. Several expected precision patterns are also stricter than the current display rounding (`0.61 m` and `15.71 m^2`). These tests need cleanup before they can be trusted as launch gates.
+
+### Launch-Relevant Findings
+
+- Browser logs show direct FX fetches blocked by CORS from `https://api.frankfurter.app/latest` and `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml`. Currency may need a clearer offline/static fallback, a proxy, or a launch decision that live FX is not promised in the web app.
+- The current e2e suite is not yet a reliable RC gate because several specs do not reset or control first-load content. This can hide real issues and create false failures.
+- The production build passes, but Vite reports a large bundle warning. This is not a launch blocker for a first public beta, but it belongs in post-RC performance work unless load time is poor in manual checks.
+
+### Recommended Next Correction Block
+
+1. Fix the `window` access in `astParser.ts` so Node edge tests run.
+2. Add or reuse an e2e helper that gives tests an explicit empty editor or explicit Quick Tour sheet, then update the launch-gate tests to choose the intended state.
+3. Re-run the basic editing, live-result, and units e2e batches after the harness cleanup.
+4. Decide the FX strategy before public web launch: static bundled rates, manual user rates, browser-safe provider/proxy, or documented beta limitation.
+
 ## Manual Visual And Accessibility Pass
 
 Run after product polish and before capturing launch assets.

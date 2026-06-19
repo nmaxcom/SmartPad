@@ -7020,6 +7020,26 @@
     *   Launch scope still needs explicit channel confirmation.
     *   Result-chip clipboard spec/test sync was committed with this git cleanup so the worktree can return to a clean state.
 
+## Entry J-2026-06-19-01
+
+*   Timestamp: 2026-06-19 11:00 CEST
+*   Summary:
+    *   User confirmed moving into the release-candidate stability pass instead of adding more visual onboarding.
+    *   Assistant ran RC Stability Run 1 across Quick Tour, core expression/result units, units/date/currency units, Quick Tour browser smoke, basic editing e2e, live-result e2e, units e2e, temporary edge checks, and production build.
+    *   Findings were recorded in `aidocs/LAUNCH_STABILITY_AUDIT.md`.
+*   Validation:
+    *   Passed: Quick Tour unit, core expression/result unit batch, units/date/currency unit batch, Quick Tour browser smoke, and `npm run build`.
+    *   Failed: `npm run test:temporary-edge` due to `window` access from `astParser.ts` in Node.
+    *   Failed/noisy: basic editing e2e, live-result e2e, and units e2e, largely because several tests assume an empty editor or outdated chip/trigger behavior.
+*   Decisions:
+    *   Do not treat the current e2e launch gate as authoritative until first-load state is controlled in tests.
+    *   Treat browser FX CORS failures as a launch-relevant risk needing a product/technical decision before public web launch.
+*   Pending:
+    *   Next correction block should fix the Node `window` guard, clean the e2e harness around empty editor vs Quick Tour state, re-run failed launch-gate batches, and propose the FX strategy.
+*   Risks/blockers:
+    *   RC gate is not green.
+    *   Browser currency fetches currently show CORS failures for external FX providers.
+
 ## Entry J-2026-06-06-14
 
 *   Timestamp: 2026-06-06 14:45 CEST / 2026-06-06 12:45 UTC
