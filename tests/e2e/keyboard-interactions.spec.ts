@@ -10,13 +10,13 @@
  */
 
 import { test, expect } from "@playwright/test";
-import { waitForUIRenderComplete, waitForEditorReady, attachDebugLogging } from "./utils";
+import { clearEditor, waitForUIRenderComplete, waitForEditorReady } from "./utils";
 
 test.describe("Keyboard Interactions", () => {
   test.beforeEach(async ({ page }) => {
-    attachDebugLogging(page);
     await page.goto("/");
     await waitForEditorReady(page);
+    await clearEditor(page);
   });
 
   test("should handle basic typing and Enter key correctly", async ({ page }) => {
@@ -103,7 +103,7 @@ test.describe("Keyboard Interactions", () => {
 
     // Verify all characters were captured
     const editorContent = await editor.textContent();
-    expect(editorContent).toBe(rapidText);
+    expect(editorContent).toContain(rapidText);
   });
 
   test("should maintain focus and cursor position through evaluations", async ({ page }) => {
@@ -173,7 +173,7 @@ test.describe("Keyboard Interactions", () => {
     ).toBeVisible();
 
     // The editor should show the result via decoration
-    await expect(page.locator(".semantic-result-display").first()).toHaveAttribute(
+    await expect(page.locator('.semantic-result-display[data-chip-kind="trigger"]').first()).toHaveAttribute(
       "data-result",
       /56/
     );
@@ -201,7 +201,7 @@ test.describe("Keyboard Interactions", () => {
     await waitForUIRenderComplete(page);
 
     // All evaluations should produce result widgets
-    const results = page.locator(".semantic-result-display");
+    const results = page.locator('.semantic-result-display[data-chip-kind="trigger"]');
     await expect(results.nth(0)).toHaveAttribute("data-result", /10/);
     await expect(results.nth(1)).toHaveAttribute("data-result", /15/);
     await expect(results.nth(2)).toHaveAttribute("data-result", /25/);

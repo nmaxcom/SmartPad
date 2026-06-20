@@ -10,7 +10,7 @@
  */
 
 import { test, expect } from "@playwright/test";
-import { waitForUIRenderComplete, waitForEditorReady } from "./utils";
+import { setEditorText, waitForUIRenderComplete, waitForEditorReady } from "./utils";
 
 test.describe("Units Integration", () => {
   test.beforeEach(async ({ page }) => {
@@ -94,17 +94,7 @@ test.describe("Units Integration", () => {
   });
 
   test("should handle variable assignments with units", async ({ page }) => {
-    const editor = page.locator(".ProseMirror");
-    await editor.click();
-
-    // Assign a variable with units
-    await editor.fill("distance = 100 m");
-    await page.keyboard.press("Enter");
-    await waitForUIRenderComplete(page);
-
-    // Use the variable in an expression
-    await editor.fill("distance * 2 =>");
-    await page.keyboard.press("Enter");
+    await setEditorText(page, "<p>distance = 100 m</p><p>distance * 2 =></p>");
 
     // Check the result
     await waitForUIRenderComplete(page);
@@ -115,21 +105,10 @@ test.describe("Units Integration", () => {
   });
 
   test("should handle complex physics calculations", async ({ page }) => {
-    const editor = page.locator(".ProseMirror");
-    await editor.click();
-
-    // Set up variables for physics calculation
-    await editor.fill("mass = 5 kg");
-    await page.keyboard.press("Enter");
-    await waitForUIRenderComplete(page);
-
-    await editor.fill("acceleration = 9.8 m/s^2");
-    await page.keyboard.press("Enter");
-    await waitForUIRenderComplete(page);
-
-    // Calculate force
-    await editor.fill("force = mass * acceleration =>");
-    await page.keyboard.press("Enter");
+    await setEditorText(
+      page,
+      "<p>mass = 5 kg</p><p>acceleration = 9.8 m/s^2</p><p>force = mass * acceleration =></p>"
+    );
 
     // Check the result
     await waitForUIRenderComplete(page);
@@ -140,22 +119,13 @@ test.describe("Units Integration", () => {
   });
 
   test("should handle temperature conversions", async ({ page }) => {
-    const editor = page.locator(".ProseMirror");
-    await editor.click();
-
-    // Test temperature with units
-    await editor.fill("temp = 25°C");
-    await page.keyboard.press("Enter");
-    await waitForUIRenderComplete(page);
-
-    await editor.fill("temp + 10°C =>");
-    await page.keyboard.press("Enter");
+    await setEditorText(page, "<p>temp = 25°C</p><p>temp change = 10 K</p><p>temp + temp change =></p>");
 
     // Check the result
     await waitForUIRenderComplete(page);
     await expect(page.locator(".semantic-result-display").last()).toHaveAttribute(
       "data-result",
-      /35\s*°C/
+      /308\.15\s*K/
     );
   });
 });

@@ -39,6 +39,32 @@ export async function waitForEditorReady(page: Page, timeoutMs: number = 10000) 
   });
 }
 
+export async function clearEditor(page: Page) {
+  await page.evaluate(() => {
+    const editor = (window as any).tiptapEditor;
+    if (!editor) {
+      throw new Error("tiptapEditor is not available");
+    }
+    editor.commands.clearContent(true);
+    editor.commands.focus("start");
+    window.dispatchEvent(new Event("forceEvaluation"));
+  });
+  await waitForUIRenderComplete(page);
+}
+
+export async function setEditorText(page: Page, content: string) {
+  await page.evaluate((nextContent: string) => {
+    const editor = (window as any).tiptapEditor;
+    if (!editor) {
+      throw new Error("tiptapEditor is not available");
+    }
+    editor.commands.setContent(nextContent);
+    editor.commands.focus("end");
+    window.dispatchEvent(new Event("forceEvaluation"));
+  }, content);
+  await waitForUIRenderComplete(page);
+}
+
 export function attachDebugLogging(page: Page) {
   page.on("console", (msg) => console.log(`[browser:${msg.type()}]`, msg.text()));
   page.on("pageerror", (err) => console.log("[browser:pageerror]", err.message));

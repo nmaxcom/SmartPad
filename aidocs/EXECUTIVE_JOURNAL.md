@@ -7040,6 +7040,41 @@
     *   RC gate is not green.
     *   Browser currency fetches currently show CORS failures for external FX providers.
 
+## Entry J-2026-06-20-01
+
+*   Timestamp: 2026-06-20 00:00 CEST
+*   Summary:
+    *   Assistant continued the RC Stability Correction 1 block after user said "dale" and later "continua".
+    *   Fixed the Node-only failure in `astParser.ts` by guarding the development `window.parseToAst` export.
+    *   Cleaned the launch-gate e2e tests so they explicitly control editor state instead of accidentally testing the first-load Quick Tour sheet.
+    *   Updated e2e expectations for current result-chip structure and current unit display behavior.
+*   Artifacts changed:
+    *   `src/parsing/astParser.ts`
+    *   `tests/e2e/utils.ts`
+    *   `tests/e2e/simple-typing-test.spec.ts`
+    *   `tests/e2e/cursor-positioning.spec.ts`
+    *   `tests/e2e/keyboard-interactions.spec.ts`
+    *   `tests/e2e/paste-multi-edit-regressions.spec.ts`
+    *   `tests/e2e/live-result.spec.ts`
+    *   `tests/e2e/units-basic.spec.ts`
+    *   `tests/e2e/units-weirdness-regression.spec.ts`
+    *   `tests/e2e/unitsnet-integration.spec.ts`
+    *   `aidocs/LAUNCH_STABILITY_AUDIT.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run test:temporary-edge` passed with 50 passed and 0 failed.
+    *   Basic editing e2e gate passed with 21 tests.
+    *   Live-result e2e gate passed with 15 tests.
+    *   Units/date e2e gate passed with 28 tests.
+    *   `npm run build` passed.
+*   Pending:
+    *   User review/confirmation before commit.
+    *   Browser FX/CORS strategy remains open before public launch copy can promise live FX.
+    *   Continue remaining RC checks after this correction block is committed.
+*   Risks/blockers:
+    *   Production build still warns about a large main bundle.
+
 ## Entry J-2026-06-06-14
 
 *   Timestamp: 2026-06-06 14:45 CEST / 2026-06-06 12:45 UTC

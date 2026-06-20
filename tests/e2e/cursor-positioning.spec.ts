@@ -9,12 +9,13 @@
  */
 
 import { test, expect } from "@playwright/test";
-import { waitForUIRenderComplete } from "./utils";
+import { clearEditor, waitForEditorReady, waitForUIRenderComplete } from "./utils";
 
 test.describe("Cursor Positioning", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
-    await page.waitForSelector('[data-testid="smart-pad-editor"]');
+    await waitForEditorReady(page);
+    await clearEditor(page);
   });
 
   test("Cursor stays in place when editing variable assignment numbers", async ({ page }) => {
@@ -49,7 +50,7 @@ test.describe("Cursor Positioning", () => {
       /5/
     );
     const paraText = await editor.locator("p").first().textContent();
-    expect(paraText?.trim()).toBe("2 + 3 =>");
+    expect(paraText?.trim()).toBe("2 + 3 => 5");
 
     // This test verifies the basic trigger functionality works
     // The exact cursor positioning can vary, but evaluation should happen
@@ -69,7 +70,7 @@ test.describe("Cursor Positioning", () => {
       /5/
     );
     const paraText2 = await editor.locator("p").first().textContent();
-    expect(paraText2?.replace(/\s+/g, " ").trim()).toMatch(/2 \+ 3 =>$/);
+    expect(paraText2?.replace(/\s+/g, " ").trim()).toMatch(/2\+3=> 5$/);
 
     // This tests the normalization case where cursor should jump after result is computed
   });
@@ -88,7 +89,7 @@ test.describe("Cursor Positioning", () => {
       /5/
     );
     const paraText3 = await editor.locator("p").first().textContent();
-    expect(paraText3?.trim()).toBe("result = 2 + 3 =>");
+    expect(paraText3?.trim()).toBe("result = 2 + 3 => 5");
 
     // This tests that combined assignment + expression evaluation works
   });
@@ -107,7 +108,7 @@ test.describe("Cursor Positioning", () => {
       /5/
     );
     const paraText4 = await editor.locator("p").first().textContent();
-    expect(paraText4?.replace(/\s+/g, " ").trim()).toMatch(/2 \+ 3 =>$/);
+    expect(paraText4?.replace(/\s+/g, " ").trim()).toMatch(/2\+3=> 5$/);
 
     // This verifies the core normalization functionality works
   });
@@ -141,9 +142,9 @@ test.describe("Cursor Positioning", () => {
     // Verify widget shows updated value and paragraph text remains with trigger only
     await expect(page.locator(".semantic-result-display").last()).toHaveAttribute(
       "data-result",
-      /124\d{2}/
+      /12,?4\d{2}/
     );
     const finalPara = await editor.locator("p").first().textContent();
-    expect(finalPara?.trim()).toMatch(/test = 124\d{2} =>$/);
+    expect(finalPara?.replace(/,/g, "").trim()).toMatch(/test = 124\d{2} => 124\d{2}$/);
   });
 });

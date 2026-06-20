@@ -728,6 +728,6 @@ export function debugParseToAst(line: string): ASTNode {
 }
 
 // Expose debug function in development
-if (process.env.NODE_ENV === "development") {
+if (process.env.NODE_ENV === "development" && typeof window !== "undefined") {
   (window as any).parseToAst = debugParseToAst;
 }

@@ -1,23 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
-import { waitForUIRenderComplete } from "./utils";
-
-const setEditorContent = async (page: Page, content: string) => {
-  await page.evaluate((nextContent: string) => {
-    const editor = (window as any).tiptapEditor;
-    editor.commands.setContent(nextContent);
-    editor.commands.focus("end");
-    window.dispatchEvent(new Event("forceEvaluation"));
-  }, content);
-  await waitForUIRenderComplete(page);
-};
+import { clearEditor, setEditorText, waitForEditorReady, waitForUIRenderComplete } from "./utils";
 
 const clearAndType = async (page: Page, content: string) => {
-  await page.evaluate(() => {
-    const editor = (window as any).tiptapEditor;
-    editor.commands.clearContent(true);
-    editor.commands.focus("start");
-    window.dispatchEvent(new Event("forceEvaluation"));
-  });
+  await clearEditor(page);
   await page.keyboard.type(content);
   await waitForUIRenderComplete(page);
 };
@@ -25,7 +10,8 @@ const clearAndType = async (page: Page, content: string) => {
 test.describe("Live Result", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
-    await page.waitForSelector('[data-testid="smart-pad-editor"]');
+    await waitForEditorReady(page);
+    await clearEditor(page);
   });
 
   test("is enabled by default and shows live math results without =>", async ({ page }) => {
@@ -42,28 +28,19 @@ test.describe("Live Result", () => {
   });
 
   test("shows live results for implicit expression lines parsed without =>", async ({ page }) => {
-    const editor = page.locator('[data-testid="smart-pad-editor"]');
-    await editor.click();
-    await page.keyboard.press("Control+a");
-    await page.keyboard.press("Delete");
-
-    await page.keyboard.type("4lb to kg");
-    await page.keyboard.press("Enter");
-    await page.keyboard.type("2(3+4)");
-    await page.keyboard.press("Enter");
-    await page.keyboard.type("(2+3)(4+5)");
-    await page.keyboard.press("Enter");
-    await page.keyboard.type("9L/min*18min");
-    await page.keyboard.press("Enter");
-    await page.keyboard.type("sqrt(16)+2");
-    await page.keyboard.press("Enter");
-    await page.keyboard.type("PI*2");
-    await page.keyboard.press("Enter");
-    await page.keyboard.type("known = 5");
-    await page.keyboard.press("Enter");
-    await page.keyboard.type("known*3");
-
-    await waitForUIRenderComplete(page);
+    await setEditorText(
+      page,
+      [
+        "<p>4lb to kg</p>",
+        "<p>2(3+4)</p>",
+        "<p>(2+3)(4+5)</p>",
+        "<p>9L/min*18min</p>",
+        "<p>sqrt(16)+2</p>",
+        "<p>PI*2</p>",
+        "<p>known = 5</p>",
+        "<p>known*3</p>",
+      ].join("")
+    );
     const values = await page.$$eval(".semantic-live-result-display", (nodes) =>
       nodes.map((node) => (node as HTMLElement).getAttribute("data-result") || "")
     );
@@ -76,7 +53,7 @@ test.describe("Live Result", () => {
   });
 
   test("converts live results through user-defined unit aliases without =>", async ({ page }) => {
-    await setEditorContent(
+    await setEditorText(
       page,
       [
         "<p>pallet = 50 boxes</p>",
@@ -202,10 +179,11 @@ test.describe("Live Result", () => {
 
     await liveChip.hover();
     await page.waitForTimeout(220);
-    const dragButton = liveChip.locator(".semantic-live-result-drag");
+    const draggableValue = liveChip.locator(".semantic-live-result-value");
     const copyButton = liveChip.locator(".semantic-live-result-copy");
     const menuButton = liveChip.locator(".semantic-live-result-menu");
-    await expect(dragButton).toBeVisible();
+    await expect(draggableValue).toBeVisible();
+    await expect(draggableValue).toHaveAttribute("draggable", "true");
     await expect(copyButton).toBeVisible();
     await expect(menuButton).toBeVisible();
 
@@ -300,11 +278,11 @@ test.describe("Live Result", () => {
   });
 
   test("suppresses live errors for incomplete and unresolved expressions", async ({ page }) => {
-    await setEditorContent(page, "a+");
+    await setEditorText(page, "a+");
     await expect(page.locator(".semantic-live-result-display")).toHaveCount(0);
     await expect(page.locator(".semantic-error-result")).toHaveCount(0);
 
-    await setEditorContent(page, "a+1");
+    await setEditorText(page, "a+1");
     await expect(page.locator(".semantic-live-result-display")).toHaveCount(0);
     await expect(page.locator(".semantic-error-result")).toHaveCount(0);
   });
@@ -333,7 +311,7 @@ test.describe("Live Result", () => {
   });
 
   test("shows a specific warning for dangling live unit conversions", async ({ page }) => {
-    await setEditorContent(page, "30kg to");
+    await setEditorText(page, "30kg to");
     const blockedChip = page.locator(".semantic-error-result").first();
     await expect(blockedChip).toHaveCount(1);
     await expect(blockedChip).toContainText("Expected unit after 'to'");
@@ -341,7 +319,7 @@ test.describe("Live Result", () => {
   });
 
   test("keeps result chip width stable when hover actions appear", async ({ page }) => {
-    await setEditorContent(page, "total = 123456789 + 42 =>");
+    await setEditorText(page, "total = 123456789 + 42 =>");
     const chip = page.locator(".semantic-result-display").first();
     await expect(chip).toBeVisible();
 
@@ -361,7 +339,7 @@ test.describe("Live Result", () => {
     await page.reload();
     await page.waitForSelector('[data-testid="smart-pad-editor"]');
 
-    await setEditorContent(page, "total = 123456789 + 42 =>");
+    await setEditorText(page, "total = 123456789 + 42 =>");
     const chip = page.locator(".semantic-result-display").first();
     await expect(chip).toBeVisible();
     await chip.hover();

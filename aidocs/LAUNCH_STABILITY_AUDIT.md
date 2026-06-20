@@ -70,6 +70,32 @@ This run checked the current launch candidate after the user approved moving pas
 3. Re-run the basic editing, live-result, and units e2e batches after the harness cleanup.
 4. Decide the FX strategy before public web launch: static bundled rates, manual user rates, browser-safe provider/proxy, or documented beta limitation.
 
+## RC Stability Correction 1 - 2026-06-20
+
+This correction block addressed the false negatives and one real Node/runtime issue found in RC Stability Run 1.
+
+### Fixed
+
+- Guarded the development-only `window.parseToAst` debug export so `astParser.ts` can load in Node.
+- Added shared e2e helpers for explicit empty-editor setup and controlled editor content.
+- Updated basic editing, cursor, paste, live-result, and units e2e coverage so tests no longer assume the first-load Quick Tour state unless they are intentionally testing it.
+- Updated chip assertions to match the current result-chip model: live/trigger chips share value dragging, and many tests must target trigger chips rather than the first live chip.
+- Updated units e2e examples to use complete multi-line sheet content when previous variables are required.
+- Updated unit expectations to match current display behavior: grouped thousands, two-decimal rounding, Kelvin output for absolute temperature arithmetic, Joules for derived energy, and Pa output for stress.
+
+### Validation
+
+- `npm run test:temporary-edge` passed: 50 passed, 0 failed.
+- `npx playwright test tests/e2e/simple-typing-test.spec.ts tests/e2e/cursor-positioning.spec.ts tests/e2e/keyboard-interactions.spec.ts tests/e2e/paste-multi-edit-regressions.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed: 21 passed.
+- `npx playwright test tests/e2e/live-result.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed: 15 passed.
+- `npx playwright test tests/e2e/units-basic.spec.ts tests/e2e/grouped-input-and-date-settings.spec.ts tests/e2e/unitsnet-integration.spec.ts tests/e2e/units-weirdness-regression.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed: 28 passed.
+- `npm run build` passed.
+
+### Still Open
+
+- Browser FX/CORS remains a launch decision. The web app still needs a clear strategy before public copy promises live FX: static bundled rates, manual/user-supplied rates, browser-safe provider/proxy, or documented beta limitation.
+- The production build still warns that the main bundle is larger than 500 kB after minification. This is not blocking the current RC correction, but should be watched before marketing/video capture if load time feels slow.
+
 ## Manual Visual And Accessibility Pass
 
 Run after product polish and before capturing launch assets.

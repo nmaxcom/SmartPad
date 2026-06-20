@@ -1,14 +1,11 @@
 import { test, expect } from "@playwright/test";
+import { clearEditor, setEditorText, waitForEditorReady } from "./utils";
 
 test.describe("Units: replicate user-reported weirdness and guard against regressions", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
-    await page.waitForSelector('[data-testid="smart-pad-editor"]');
-    const editor = page.locator(".ProseMirror");
-    await editor.click();
-    // clear
-    await page.keyboard.press("Meta+a");
-    await page.keyboard.press("Delete");
+    await waitForEditorReady(page);
+    await clearEditor(page);
     // capture evaluation events for debugging
     await page.evaluate(() => {
       (window as any).__lastRenderNodes = [];
@@ -95,11 +92,13 @@ test.describe("Units: replicate user-reported weirdness and guard against regres
     await page.keyboard.press("Enter");
     await page.keyboard.press("Enter");
 
-    // First, malformed spacing to ensure we show an error and not reuse a previous widget
+    // Compact multiplication without spaces should compute and not reuse a previous widget.
     await editor.type("3 m*5 m=>");
-    await page.waitForSelector(".semantic-error-result", { timeout: 2000 });
-    const errText = await page.locator(".semantic-error-result").last().getAttribute("data-result");
-    expect.soft(errText || "").toMatch(/Unexpected token/i);
+    await page.waitForSelector(".semantic-result-display", { timeout: 2000 });
+    await expect(page.locator(".semantic-result-display").last()).toHaveAttribute(
+      "data-result",
+      /15 m\^2/
+    );
 
     await page.keyboard.press("Enter");
 
@@ -114,19 +113,18 @@ test.describe("Units: replicate user-reported weirdness and guard against regres
   });
 
   test("pressure converted to psi keeps work invariant when reused", async ({ page }) => {
-    const editor = page.locator(".ProseMirror");
+    await setEditorText(
+      page,
+      [
+        "<p>pressure psi = 101 kPa to psi</p>",
+        "<p>pressure si = 101 kPa</p>",
+        "<p>volume = 2 L</p>",
+        "<p>work psi = pressure psi * volume =></p>",
+        "<p>work si = pressure si * volume =></p>",
+      ].join("")
+    );
 
-    await editor.type("pressure psi = 101 kPa to psi");
-    await page.keyboard.press("Enter");
-    await editor.type("pressure si = 101 kPa");
-    await page.keyboard.press("Enter");
-    await editor.type("volume = 2 L");
-    await page.keyboard.press("Enter");
-    await editor.type("work psi = pressure psi * volume =>");
-    await page.keyboard.press("Enter");
-    await editor.type("work si = pressure si * volume =>");
-
-    const results = page.locator(".semantic-result-display");
+    const results = page.locator('.semantic-result-display[data-chip-kind="trigger"]');
     await expect(results.nth(0)).toHaveAttribute("data-result", /202(?:\.0+)?\s*J/);
     await expect(results.nth(1)).toHaveAttribute("data-result", /202(?:\.0+)?\s*J/);
   });

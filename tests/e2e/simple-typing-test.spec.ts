@@ -9,21 +9,18 @@
  */
 
 import { test, expect } from "@playwright/test";
+import { clearEditor, waitForEditorReady } from "./utils";
 
 test.describe("Simple Typing Test", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
-    await page.waitForSelector('[data-testid="smart-pad-editor"]');
+    await waitForEditorReady(page);
+    await clearEditor(page);
   });
 
   test("Debug: Basic typing should work", async ({ page }) => {
     const editor = page.locator(".ProseMirror");
     await editor.click();
-
-    // Clear content
-    await page.keyboard.press("Control+a");
-    await page.keyboard.press("Delete");
-    await page.waitForTimeout(100);
 
     // Type simple content
     await editor.type("hello", { delay: 50 });
@@ -45,11 +42,6 @@ test.describe("Simple Typing Test", () => {
     const editor = page.locator(".ProseMirror");
     await editor.click();
 
-    // Clear content
-    await page.keyboard.press("Control+a");
-    await page.keyboard.press("Delete");
-    await page.waitForTimeout(100);
-
     // Type variable assignment
     await editor.type("x=5", { delay: 50 });
     await page.waitForTimeout(200);
@@ -69,18 +61,13 @@ test.describe("Simple Typing Test", () => {
     await page.waitForTimeout(300);
 
     // Should show result via decoration
-    const widget = page.locator(".semantic-result-display").first();
+    const widget = page.locator('.semantic-result-display[data-chip-kind="trigger"]').first();
     await expect(widget).toHaveAttribute("data-result", /10/);
   });
 
   test("Debug: Editing existing variable name", async ({ page }) => {
     const editor = page.locator(".ProseMirror");
     await editor.click();
-
-    // Clear content
-    await page.keyboard.press("Control+a");
-    await page.keyboard.press("Delete");
-    await page.waitForTimeout(100);
 
     // Type variable
     await editor.type("first=1", { delay: 50 });
@@ -105,11 +92,6 @@ test.describe("Simple Typing Test", () => {
   test("Debug: Complex scenario step by step", async ({ page }) => {
     const editor = page.locator(".ProseMirror");
     await editor.click();
-
-    // Clear content
-    await page.keyboard.press("Control+a");
-    await page.keyboard.press("Delete");
-    await page.waitForTimeout(100);
 
     console.log("=== Step 1: Create first variable ===");
     await editor.type("first=1", { delay: 50 });
