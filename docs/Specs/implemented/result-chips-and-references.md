@@ -18,3 +18,4 @@ Implemented interaction contract:
 - The whole result chip is draggable; there is no separate drag handle.
 - Hover actions are limited to copy/value actions and the action menu.
 - Drag/drop reuse creates live result references, preserving source dependency updates.
+- Inline reference chips render as lightweight text-value references without visible fill, border, padding, or hover ring; hovering a reference highlights the source line with background only.

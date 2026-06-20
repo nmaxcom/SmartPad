@@ -23,6 +23,22 @@
 
 ---
 
+## Entry J-2026-06-20-01
+
+*   Timestamp: 2026-06-20 17:41 CEST
+*   Summary:
+    *   User requested a visual simplification for inline reference chips and source-line highlights.
+    *   Assistant removed the visible reference-chip fill/border/padding/hover ring and reduced source-line highlight to background-only.
+*   Artifacts changed:
+    *   `src/components/Editor.css`
+    *   `tests/e2e/result-reference-highlight-visual.spec.ts`
+    *   `docs/Specs/implemented/result-chips-and-references.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npx playwright test tests/e2e/result-reference-highlight-visual.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed.
+    *   `npm run docs:map`, `npm run spec:test`, `npm run spec:trust`, `npm run build`, and `git diff --check` passed.
+    *   Pre-commit `npm run docs:drift` still reported the previous `HEAD` expression-engine drift from `src/parsing/astParser.ts`; rerun after this scoped commit.
+
 ## Entry J-2026-06-17-04
 
 *   Timestamp: 2026-06-17 17:43 CEST

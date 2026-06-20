@@ -100,8 +100,6 @@
 
 .editor-content p.semantic-source-line-highlight {
   background: color-mix(in srgb, var(--syntax-result-bg) 72%, transparent);
-  border-radius: 6px;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--syntax-result-border) 70%, transparent);
 }
 
 .editor-container.result-lane-enabled .editor-content p {
@@ -630,10 +628,8 @@ body.number-scrubbing * {
 
 .semantic-reference-chip {
   color: var(--syntax-result);
-  background-color: var(--syntax-result-bg);
-  border: 1px solid var(--syntax-result-border);
+  background-color: rgb(124 93 250 / 0%);
   border-radius: 6px;
-  padding: 1px 6px;
   margin: 0 0.18ch;
   display: inline-flex;
   align-items: center;
@@ -642,10 +638,6 @@ body.number-scrubbing * {
   font-weight: 600;
   cursor: pointer;
   user-select: all;
-}
-
-.semantic-reference-chip:hover {
-  box-shadow: 0 0 0 1px rgba(124, 93, 250, 0.28);
 }
 
 .semantic-reference-chip.semantic-reference-flash {
