@@ -124,9 +124,8 @@ export class PercentageValue extends SemanticValue {
 
   multiply(other: SemanticValue): SemanticValue {
     if (other.getType() === 'number') {
-      // 20% * 3 = 60%
-      const newDisplayPercent = this.displayPercentage * other.getNumericValue();
-      return new PercentageValue(newDisplayPercent);
+      // 20% * 3 = 0.6, matching 3 * 20%.
+      return new NumberValue(this.decimalValue * other.getNumericValue());
     }
     
     if (other.getType() === 'percentage') {

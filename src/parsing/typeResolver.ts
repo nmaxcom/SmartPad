@@ -67,7 +67,7 @@ const TYPE_RULES: TypeRule[] = [
   // Percentage operations
   { leftType: 'percentage', rightType: 'percentage', operator: '+', resultType: 'percentage' },
   { leftType: 'percentage', rightType: 'percentage', operator: '-', resultType: 'percentage' },
-  { leftType: 'percentage', rightType: 'number', operator: '*', resultType: 'percentage' },
+  { leftType: 'percentage', rightType: 'number', operator: '*', resultType: 'number' },
   { leftType: 'percentage', rightType: 'number', operator: '/', resultType: 'percentage' },
   { leftType: 'number', rightType: 'percentage', operator: '*', resultType: 'number' },
   { leftType: 'number', rightType: 'percentage', operator: '+', resultType: 'number' },

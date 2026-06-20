@@ -10,3 +10,7 @@
   - `tests/unit/solve.test.ts`
 
 This card is the trust declaration for explicit-trigger behavior.
+
+Implemented percentage arithmetic contract: `percentage * number` and `number * percentage`
+produce the same plain numeric amount; use `as %` to intentionally format the result as a
+percentage.

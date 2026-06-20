@@ -83,7 +83,11 @@ Explicit evaluation keeps natural percentage phrase behavior, but plain percenta
    - `4% - fundfee - platformfee =>` subtracts percentages as rates, not as chained discounts
    - `7% - 0.35% - 0.15% =>` -> `6.5%`
 3. Financial formulas may use decimal rates (`0.07`) or percentage literals (`7%`) interchangeably when the formula treats the value as a numeric ratio.
-4. Percentage result formatting honors the current Decimal Places setting. For example, with Decimal Places set to 2, `272.0507 / 300 as % =>` displays `90.68%`, not a hardcoded four-decimal percentage.
+4. Multiplication between a percentage and a plain number is commutative and returns a plain numeric amount by default:
+   - `12% * 158 =>` -> `18.96`
+   - `158 * 12% =>` -> `18.96`
+5. Use `as %` when the intended presentation is still a percent, for example `12% * 158 as % =>` -> `1896%`.
+6. Percentage result formatting honors the current Decimal Places setting. For example, with Decimal Places set to 2, `272.0507 / 300 as % =>` displays `90.68%`, not a hardcoded four-decimal percentage.
 
 ---
 

@@ -174,6 +174,36 @@ describe("Natural Percentages", () => {
     expect(result.displayText).toMatch(/=>\s*96(\.0+)?/);
   });
 
+  test("percentage multiplication with numbers is commutative and numeric", () => {
+    const context = {
+      variableStore: { clearVariables() {}, setVariableWithMetadata() {} } as any,
+      variableContext: new Map(),
+      lineNumber: 1,
+      decimalPlaces: 2,
+    };
+
+    const percentFirst: any = defaultRegistry.evaluate(parseLine("12% * 158 =>", 1) as any, context);
+    const numberFirst: any = defaultRegistry.evaluate(parseLine("158 * 12% =>", 1) as any, context);
+
+    expect(percentFirst?.type).toBe("mathResult");
+    expect(numberFirst?.type).toBe("mathResult");
+    expect(percentFirst.result).toBe("18.96");
+    expect(numberFirst.result).toBe("18.96");
+  });
+
+  test("as percent keeps intentional percent presentation after percentage multiplication", () => {
+    const node = parseLine("12% * 158 as % =>", 1);
+    const result: any = defaultRegistry.evaluate(node as any, {
+      variableStore: { clearVariables() {}, setVariableWithMetadata() {} } as any,
+      variableContext: new Map(),
+      lineNumber: 1,
+      decimalPlaces: 2,
+    });
+
+    expect(result?.type).toBe("mathResult");
+    expect(result.result).toBe("1896%");
+  });
+
   test("subtractive trailing percent chain", () => {
     const node = parseLine("500 - 10% - 5% =>", 1);
     const result: any = defaultRegistry.evaluate(node as any, {

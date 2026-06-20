@@ -23,6 +23,29 @@
 
 ---
 
+## Entry J-2026-06-20-02
+
+*   Timestamp: 2026-06-20 21:32 CEST
+*   Summary:
+    *   User confirmed the percentage multiplication inconsistency should be changed.
+    *   Assistant changed `percentage * number` so it returns the same plain numeric amount as `number * percentage`.
+*   Decisions:
+    *   `12% * 158 =>` and `158 * 12% =>` both evaluate to `18.96`.
+    *   Rate arithmetic remains percentage-preserving for percentage +/- percentage cases such as `7% - 0.35% - 0.15%`.
+    *   Users can still request percent presentation explicitly with `as %`.
+*   Artifacts changed:
+    *   `src/types/PercentageValue.ts`
+    *   `src/parsing/typeResolver.ts`
+    *   `src/eval/percentageEvaluatorV2.ts`
+    *   `tests/unit/percentages.test.ts`
+    *   `docs/Specs/ExplicitTrigger.spec.md`
+    *   `docs/Specs/implemented/explicit-trigger.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/percentages.test.ts tests/unit/syntax-reference/percentages.test.ts --runInBand` passed.
+    *   `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, `npm run spec:trust`, `npm run build`, and `git diff --check` passed.
+    *   Final `verify:changed` pending after commit.
+
 ## Entry J-2026-06-20-01
 
 *   Timestamp: 2026-06-20 17:41 CEST
