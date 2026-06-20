@@ -40,11 +40,12 @@
     *   `tests/unit/percentages.test.ts`
     *   `docs/Specs/ExplicitTrigger.spec.md`
     *   `docs/Specs/implemented/explicit-trigger.md`
+    *   `docs/spec-map.json`
     *   `aidocs/EXECUTIVE_JOURNAL.md`
 *   Validation:
     *   `npm run test:unit -- tests/unit/percentages.test.ts tests/unit/syntax-reference/percentages.test.ts --runInBand` passed.
     *   `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, `npm run spec:trust`, `npm run build`, and `git diff --check` passed.
-    *   Final `verify:changed` pending after commit.
+    *   Follow-up mapping added for `src/types/PercentageValue.ts`; final `verify:changed` pending after follow-up commit.
 
 ## Entry J-2026-06-20-01
 

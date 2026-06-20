@@ -9,6 +9,7 @@
         "src/math/",
         "src/types/index.ts",
         "src/types/NumberValue.ts",
+        "src/types/PercentageValue.ts",
         "docs/Specs/LiveResult.spec.md",
         "docs/Specs/implemented/live-results.md",
         "docs/Specs/ExplicitTrigger.spec.md",
