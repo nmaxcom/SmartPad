@@ -191,6 +191,7 @@
         "src/App.css",
         "src/styles/",
         "src/App.tsx",
+        "src/utils/keyboardShortcut.ts",
         "src/utils/runtimeMode.ts"
       ],
       "docPrefixes": [
