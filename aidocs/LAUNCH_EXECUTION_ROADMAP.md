@@ -28,7 +28,7 @@ The desktop beta is important, but it should not block the web-first launch unle
 
 ## Phase 0: Confirm Scope
 
-Status: ready for user confirmation, not complete.
+Status: confirmed for web-first public beta. Desktop is a beta path after the web candidate, and the standalone promotional website remains last.
 
 Primary task:
 
@@ -41,12 +41,9 @@ Inputs:
 
 Actions:
 
-1. Review `ready`, `audit`, `gap`, and `defer` rows with the user.
-2. Confirm whether launch means:
-   - web public beta first,
-   - web plus desktop beta,
-   - or desktop-ready public release.
-3. Confirm that proposed features are not marketed as shipped behavior.
+1. Completed: launch path is web public beta first.
+2. Completed: desktop work continues as beta, starting with macOS unsigned smoke.
+3. Completed: proposed features stay out of headline launch copy unless explicitly confirmed.
 
 Exit criteria:
 
@@ -186,7 +183,7 @@ Dry run evidence:
 
 ## Phase 5: Desktop Beta
 
-Status: decision made, implementation missing.
+Status: minimal Electron shell smoke passed for macOS unsigned beta path; packaging/signing/cross-platform artifacts and deeper desktop runtime smoke remain future work.
 
 Primary task:
 
@@ -199,11 +196,12 @@ Inputs:
 
 Actions:
 
-1. Implement minimal Electron shell.
-2. Load production Vite build from disk.
-3. Verify storage, import/export, docs links, FX behavior, and settings persistence.
-4. Produce unsigned macOS beta artifact first.
-5. Document Windows/Linux artifact generation path.
+1. Completed: added minimal Electron shell that loads the production Vite build from disk.
+2. Completed: added desktop build/start/smoke scripts using relative Vite assets for `file://`.
+3. Completed: basic Electron smoke loaded the app title from disk on macOS.
+4. Pending: verify storage, import/export, docs links, FX behavior, and settings persistence in the desktop runtime.
+5. Pending: produce unsigned macOS beta artifact.
+6. Pending: document Windows/Linux artifact generation path.
 
 Exit criteria:
 
@@ -262,21 +260,19 @@ Rules:
 
 ## Current Critical Path
 
-1. Confirm scope with user.
-2. Confirm launch scope with the user or explicitly mark unconfirmed decisions as beta limitations.
-3. Update changelog/release notes for the actual web release candidate.
-4. Implement desktop beta shell.
-5. Build standalone promotional website and capture final assets.
-6. Link approved docs/support/privacy pages from the promotional site and verify the full journey.
+1. Verify the deeper Electron beta path: storage persistence, import/export, docs links, FX behavior, and settings persistence.
+2. Produce or document the unsigned macOS beta artifact path.
+3. Decide signup/update capture provider for the future promotional website.
+4. Build standalone promotional website and capture final assets.
+5. Link approved docs/support/privacy pages from the promotional site and verify the full journey.
 
 ## Current Blockers
 
 P0:
 
-- Launch scope lacks explicit user confirmation.
 - Historical migration coverage is deferred unless a concrete old-data case appears.
 - SmartPad-owned FX endpoint is not required for launch, but should be planned as future hardening if external provider reliability becomes a problem.
-- Desktop packaging is not implemented.
+- Desktop shell basic smoke passed, but packaged unsigned macOS artifact and deeper desktop runtime smoke are not complete.
 - Standalone promotional website/signup/assets are not implemented and intentionally come last.
 
 P1:

@@ -4,26 +4,43 @@ All notable user-facing changes to SmartPad will be documented in this file.
 
 SmartPad uses semantic versioning. Pre-release builds use `-beta.N` or `-rc.N` suffixes.
 
-## Unreleased
+## 1.0.0-rc.1 - 2026-06-22
+
+First web public beta release candidate.
 
 ### Added
 
-- Launch planning artifacts covering scope, stability, desktop packaging, and release operations.
+- Public Docusaurus documentation with Start Here, First Sheet, Core Interactions, Everyday Examples, Syntax Reference, Files & Privacy, Troubleshooting, and Support.
+- Launch stability gates for editor basics, live results, units/dates/currency, result chips/references, lists/ranges, plotting, settings, autocomplete, docs IA, sheets persistence, import/export, FX failure visibility, and production app/docs routing.
+- Browser-safe live FX launch path through the Fawaz provider, with Frankfurter and ECB treated as opportunistic providers because they fail browser CORS.
+- Discreet dismissible FX warning when no live provider and no fresh cache are available.
+- Minimal Electron desktop beta shell that loads the production build from disk.
 
 ### Changed
 
-- Nothing yet.
+- Launch scope is web public beta first. Desktop is a beta path and the standalone promotional product website remains the final launch step.
+- Current persistence/import/export coverage is accepted for first public launch; historical migration formats are deferred unless a concrete old-data case appears.
 
 ### Fixed
 
-- Nothing yet.
+- Docusaurus production base path has been verified under `/SmartPad/docs/`.
+- The app production base path has been verified under `/SmartPad/`.
 
 ### Known Limitations
 
-- Public launch scope is still pending user confirmation.
-- Desktop packaging is planned but not implemented.
-- Marketing homepage, signup, launch screenshots/video, and public support copy are not complete.
+- Desktop packaging is a beta shell. Signed/notarized installers and Windows/Linux artifacts are not ready yet.
+- Marketing homepage, signup/update capture, launch screenshots/video, and final website journey are not complete.
+- Frankfurter and ECB direct browser fetches currently fail CORS; Fawaz is the launch-critical browser-safe FX path.
+- The production bundle still reports Vite's large chunk warning.
 
 ### Verification
 
-- Planning-only changes are validated with `git diff --check`.
+- `npm run docs:map`
+- `npm run docs:drift`
+- `npm run spec:test`
+- `npm run spec:trust`
+- `npm run verify:changed`
+- `npm run docs:docusaurus:publish-prod`
+- `npm run build`
+- `VITE_BASE_PATH=/SmartPad/ npm run build`
+- Static smoke under `/SmartPad/` for app and docs routes.

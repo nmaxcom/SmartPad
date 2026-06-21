@@ -23,6 +23,190 @@
 
 ---
 
+## Entry J-2026-06-22-02
+
+*   Timestamp: 2026-06-22 01:45 CEST
+*   Summary:
+    *   User approved the next launch steps: confirm web-first scope, update changelog/release notes, and start desktop beta.
+    *   Assistant set package version to `1.0.0-rc.1` and updated `CHANGELOG.md` for the first web public beta release candidate.
+    *   Assistant added a minimal Electron shell that loads the production Vite build from disk with isolated renderer settings.
+    *   Assistant added desktop build/start/smoke scripts and a docs URL regression for relative `./` Vite base builds.
+*   Decisions:
+    *   Launch scope is web public beta first.
+    *   Desktop continues as beta, starting with macOS unsigned smoke.
+    *   The standalone promotional website remains the final launch step.
+*   Artifacts changed:
+    *   `package.json`
+    *   `package-lock.json`
+    *   `yarn.lock`
+    *   `desktop/electron/main.cjs`
+    *   `desktop/electron/preload.cjs`
+    *   `tests/unit/docsUrl.test.ts`
+    *   `CHANGELOG.md`
+    *   `aidocs/DESKTOP_PACKAGING_DECISION.md`
+    *   `aidocs/LAUNCH_EXECUTION_ROADMAP.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/docsUrl.test.ts --runInBand` passed.
+    *   `npm run desktop:build` passed after rerunning outside the sandbox so the docs generator could use `trash`.
+    *   `npm run desktop:smoke` passed: Electron loaded the built app from disk and printed `SmartPad Electron smoke loaded: SmartPad`.
+*   Pending:
+    *   User review/confirmation before committing this block.
+    *   Deeper desktop runtime smoke: storage persistence, import/export, settings, docs links, and FX behavior.
+    *   Unsigned macOS artifact generation and Windows/Linux artifact plan.
+*   Risks/blockers:
+    *   `npm install --save-dev electron` reports existing dependency audit vulnerabilities; not addressed in this block.
+    *   Build still reports the known large bundle warning.
+
+## Entry J-2026-06-22-01
+
+*   Timestamp: 2026-06-22 00:40 CEST
+*   Summary:
+    *   Assistant ran the technical web release-candidate dry run after the launch-stability gate was committed.
+    *   Required docs/spec/release commands passed, including the production Docusaurus publish and both normal and GitHub Pages base-path builds.
+    *   Static preview mounted under `/SmartPad/` loaded the app and Docusaurus docs with status 200 and no Docusaurus baseUrl banner.
+*   Artifacts changed:
+    *   `aidocs/LAUNCH_EXECUTION_ROADMAP.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run docs:map` passed.
+    *   `npm run docs:drift` passed.
+    *   `npm run spec:test` passed.
+    *   `npm run spec:trust` passed.
+    *   `npm run verify:changed` passed.
+    *   `npm run docs:docusaurus:publish-prod` passed.
+    *   `npm run build` passed with the known large bundle warning.
+    *   `VITE_BASE_PATH=/SmartPad/ npm run build` passed with the known large bundle warning.
+    *   Static preview under `/SmartPad/` loaded `/SmartPad/` and `/SmartPad/docs/index.html` with status 200.
+*   Pending:
+    *   User review/confirmation before committing this dry-run documentation block.
+    *   Update `CHANGELOG.md` for the actual release candidate.
+    *   Confirm public links after a real deploy.
+*   Risks/blockers:
+    *   Public release is still held by launch scope confirmation, homepage/assets/signup, and desktop beta status.
+    *   Browser console still shows expected Frankfurter/ECB CORS failures; Fawaz remains the current browser-safe FX path.
+
+## Entry J-2026-06-21-04
+
+*   Timestamp: 2026-06-21 18:45 CEST
+*   Summary:
+    *   User approved reducing autocomplete aggressiveness and requested a configurable manual command.
+    *   Assistant started implementing automatic suggestions only after a typed token character, with manual contextual suggestions available from a Settings-controlled shortcut.
+    *   Follow-up: user requested app-style shortcut recording instead of a preset select; assistant replaced presets with a record-shortcut control and migrated old preset values.
+    *   Follow-up: user reported the configured shortcut did not open autocomplete; assistant moved shortcut handling to a document-level capture listener while editor focus is active, changed the default to `Ctrl+Shift+K`, and rejected OS-reserved `Ctrl+Space` / `Cmd+Space` recordings.
+*   Artifacts changed:
+    *   `src/components/autocomplete/suggestions.ts`
+    *   `src/components/autocomplete/AutocompleteExtension.ts`
+    *   `src/components/Editor.tsx`
+    *   `src/components/ui/SettingsSections.tsx`
+    *   `src/state/settingsStore.ts`
+    *   `src/state/types.ts`
+    *   `src/utils/keyboardShortcut.ts`
+    *   `tests/unit/autocompleteSuggestions.test.ts`
+    *   `tests/unit/settingsStore.test.ts`
+    *   `tests/unit/keyboardShortcut.test.ts`
+    *   `tests/e2e/autocomplete.spec.ts`
+    *   `docs/Specs/proposed/autocomplete.md`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/autocompleteSuggestions.test.ts tests/unit/settingsStore.test.ts --runInBand` passed.
+    *   `npx playwright test tests/e2e/autocomplete.spec.ts --project=chromium --workers=1` passed.
+    *   Follow-up shortcut-recorder validation passed: `npm run test:unit -- tests/unit/keyboardShortcut.test.ts tests/unit/settingsStore.test.ts tests/unit/autocompleteSuggestions.test.ts --runInBand`.
+    *   Follow-up shortcut-recorder e2e passed: `npx playwright test tests/e2e/autocomplete.spec.ts --project=chromium --workers=1`.
+    *   Follow-up shortcut-capture validation passed: `npm run test:unit -- tests/unit/keyboardShortcut.test.ts tests/unit/settingsStore.test.ts tests/unit/autocompleteSuggestions.test.ts --runInBand` and `npx playwright test tests/e2e/autocomplete.spec.ts --project=chromium --workers=1`.
+    *   `npm run docs:map -- HEAD`, `npm run docs:drift -- HEAD`, and `npm run spec:test -- HEAD` passed.
+    *   `npm run spec:trust` passed.
+    *   `node scripts/verify-changed.js HEAD` passed, including related unit tests and build.
+    *   `npm run build` passed.
+    *   `git diff --check` passed.
+*   Risks/blockers:
+    *   Default `npm run docs:drift` and `npm run verify:changed` still inspect `HEAD~1...HEAD` until this task is committed; before commit they report the prior commit's `Editor.css` docs-drift issue rather than this worktree. Re-run after commit.
+    *   `npm run build` still reports the known large bundle warning.
+
+## Entry J-2026-06-21-03
+
+*   Timestamp: 2026-06-21 18:15 CEST
+*   Summary:
+    *   User reported that the date fix still was not trustworthy enough and that the chart legend still covered the axis.
+    *   Assistant strengthened date regression tests to assert deterministic `today`/`now` outputs with a fixed clock.
+    *   Assistant moved the chart legend further right, outside the y-axis gutter, and added an e2e regression for that position.
+    *   Assistant updated an obsolete integration test that claimed invalid unit inputs must parse as `combinedAssignment`; incomplete unit syntax now legitimately parses as an `error` without crashing.
+*   Artifacts changed:
+    *   `src/components/Editor.css`
+    *   `tests/unit/dateMathEvaluator.test.ts`
+    *   `tests/e2e/plot-view-interactions.spec.ts`
+    *   `tests/unit/integration-fixes.test.ts`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/dateMathEvaluator.test.ts --runInBand` passed.
+    *   `npx playwright test tests/e2e/plot-view-interactions.spec.ts --project=chromium --workers=1` passed.
+    *   `npm run test:unit -- tests/unit/dateMathEvaluator.test.ts tests/unit/integration-fixes.test.ts --runInBand` passed.
+    *   `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, `npm run spec:trust`, `npm run verify:changed`, `npm run build`, and `git diff --check` passed.
+*   Risks/blockers:
+    *   `npm run build` still reports the known large bundle warning.
+
+## Entry J-2026-06-21-02
+
+*   Timestamp: 2026-06-21 10:20 CEST
+*   Summary:
+    *   User provided a mixed batch of bugs, docs gaps, and product questions.
+    *   Assistant implemented the obvious fixes: date shortcuts with duration math, date-only plus time-duration promotion, mixed-currency `+`/`-` using the last typed currency, function-hover precision, direct multi-expression plots, chart legend offset, duplicate assignment-source copy cleanup, and template/docs examples for functions/mod/rate conversion.
+*   Product decisions deferred:
+    *   Autocomplete trigger aggressiveness should be decided explicitly; recommendation is automatic suggestions only after at least one typed token character, plus a manual command for contextual/all suggestions.
+*   Artifacts changed:
+    *   `src/date/dateMath.ts`
+    *   `src/eval/dateMathEvaluator.ts`
+    *   `src/eval/expressionEvaluatorV2.ts`
+    *   `src/eval/plotViewEvaluator.ts`
+    *   `src/components/VariableHoverExtension.ts`
+    *   `src/components/pasteTransforms.ts`
+    *   `src/components/Editor.css`
+    *   `src/components/VariablePanel/TemplatePanel.tsx`
+    *   `tests/unit/dateMathEvaluator.test.ts`
+    *   `tests/unit/currencyMixedArithmetic.test.ts`
+    *   `tests/unit/plotViewEvaluator.test.ts`
+    *   `tests/unit/pasteTransforms.test.ts`
+    *   `tests/e2e/semantic-highlighting.spec.ts`
+    *   `docs/ABOUT.md`
+    *   `docs/Specs/Currency.spec.md`
+    *   `docs/Specs/duration.spec.md`
+    *   `docs/Specs/Plotting.spec.md`
+    *   `docs/Specs/ResultChipsAndValueGraph.spec.md`
+    *   `docs/spec-map.json`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/dateMathEvaluator.test.ts tests/unit/currencyMixedArithmetic.test.ts tests/unit/plotViewEvaluator.test.ts tests/unit/pasteTransforms.test.ts --runInBand` passed.
+    *   `npm run test:unit -- tests/unit/templatePanelSheetCreation.test.tsx --runInBand` passed.
+    *   `npx playwright test tests/e2e/semantic-highlighting.spec.ts --project=chromium --grep "hovering a function|hovering a short variable" --workers=1` passed.
+    *   `npx playwright test tests/e2e/plot-view-interactions.spec.ts --project=chromium --workers=1` passed.
+    *   `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, `npm run spec:trust`, `npm run verify:changed`, `npm run build`, and `git diff --check` passed.
+*   Risks/blockers:
+    *   Full `semantic-highlighting.spec.ts` still has unrelated legacy setup failures where tests assume an empty editor but see existing template content.
+
+## Entry J-2026-06-21-01
+
+*   Timestamp: 2026-06-21 00:00 CEST
+*   Summary:
+    *   User asked to verify the current launch-stability block.
+    *   Assistant verified the production app/docs path using the GitHub Pages base shape: app under `/SmartPad/` and docs under `/SmartPad/docs/`.
+    *   Assistant confirmed the top-level FX warning is not visible while the browser-safe Fawaz provider is usable.
+    *   User confirmed the current persistence/import/export coverage is sufficient for the first public launch, so historical migration formats are deferred unless a concrete old-data case appears.
+*   Artifacts changed:
+    *   `aidocs/LAUNCH_STABILITY_AUDIT.md`
+    *   `aidocs/LAUNCH_EXECUTION_ROADMAP.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npm run test:unit -- tests/unit/docsUrl.test.ts --runInBand` passed.
+    *   `npm run docs:docusaurus:publish-prod` passed.
+    *   `VITE_BASE_PATH=/SmartPad/ npm run build` passed.
+    *   Static preview mounted under `/SmartPad/` loaded `/SmartPad/` and `/SmartPad/docs/index.html` with status 200 and no Docusaurus baseUrl banner.
+    *   Follow-up focused revalidation passed after concurrent worktree changes: `npx playwright test tests/e2e/fx-status-banner.spec.ts --project=chromium --config=playwright.config.ts --workers=1`, `npx playwright test tests/e2e/sheets-persistence-import-export.spec.ts --project=chromium --config=playwright.config.ts --workers=1`, and `npm run test:unit -- tests/unit/listSpecExamples.test.ts --runInBand`.
+*   Pending:
+    *   User review/confirmation before committing the current block.
+*   Risks/blockers:
+    *   Browser console still shows expected CORS failures for Frankfurter and ECB; Fawaz remains the current launch path.
+    *   Production build still reports the known large bundle warning.
+
 ## Entry J-2026-06-20-02
 
 *   Timestamp: 2026-06-20 21:32 CEST
@@ -6734,6 +6918,164 @@
     *   `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, `npm run spec:trust`, and `npm run verify:changed` passed.
 *   Risks/blockers:
     *   Human gate is mandatory before committing this correction block.
+
+## Entry J-2026-06-20-02
+
+*   Timestamp: 2026-06-20 18:41 CEST / 2026-06-20 16:41 UTC
+*   Summary:
+    *   Assistant continued the launch-candidate stability audit without making unapproved product-strategy decisions.
+    *   Result chips/references, lists/ranges, plotting, settings, autocomplete, local docs build, and docs IA checks were run.
+    *   Assistant found that sheets/persistence coverage is not launch-ready because `save-load-buttons.spec.ts` targets removed `.save-button` / `.load-button` UI and `migration-verification.spec.ts` still carries historical assumptions.
+*   Decisions:
+    *   Do not treat the current sheets/persistence e2e gate as authoritative until it is rewritten around the current sheet sidebar, auto-persistence, download/import/trash, and migration contracts.
+    *   Keep browser FX/CORS as a separate product decision requiring user confirmation before public launch copy promises live FX.
+*   Artifacts changed:
+    *   `tests/e2e/results-decorator-regression.spec.ts`
+    *   `tests/e2e/utils.ts`
+    *   `tests/unit/listSpecExamples.test.ts`
+    *   `aidocs/LAUNCH_STABILITY_AUDIT.md`
+    *   `aidocs/LAUNCH_EXECUTION_ROADMAP.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npx playwright test tests/e2e/results-decorator-regression.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed: 8 passed.
+    *   `npx playwright test tests/e2e/result-reference.spec.ts tests/e2e/result-reference-drag-only.spec.ts tests/e2e/results-decorator-regression.spec.ts tests/e2e/live-result.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed: 76 passed.
+    *   `npm run test:unit -- tests/unit/listSpecExamples.test.ts tests/unit/list.test.ts tests/unit/range.test.ts tests/unit/thousandGroupingFormatting.test.ts --runInBand` passed: 66 passed.
+    *   `npm run test:unit -- tests/unit/plotViewEvaluator.test.ts tests/unit/visualInsightsTemplate.test.ts --runInBand` passed: 23 passed.
+    *   `npx playwright test tests/e2e/plot-view-interactions.spec.ts tests/e2e/visual-insights-template.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed: 10 passed.
+    *   `npm run test:unit -- tests/unit/settingsStore.test.ts --runInBand` passed: 3 passed.
+    *   `npx playwright test tests/e2e/settings-integration.spec.ts tests/e2e/grouped-input-and-date-settings.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed: 16 passed.
+    *   `npm run test:unit -- tests/unit/autocompleteSuggestions.test.ts --runInBand` passed: 15 passed.
+    *   `npx playwright test tests/e2e/autocomplete.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed: 6 passed.
+    *   `npm run docs:docusaurus:publish-local` passed.
+    *   `npx playwright test tests/e2e/docs-ia.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed: 3 passed.
+    *   `npx playwright test tests/e2e/save-load-buttons.spec.ts tests/e2e/migration-verification.spec.ts --project=chromium --config=playwright.config.ts --workers=1` failed: 18 failed, 3 passed. Main causes are obsolete save/load selectors and outdated migration expectations.
+    *   `git diff --check` passed.
+    *   `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, and `npm run spec:trust` passed.
+    *   `npm run verify:changed` passed, including `npm run build`; Vite still reports the existing large bundle warning.
+*   Pending:
+    *   User review/confirmation before commit.
+    *   Next correction block should define and implement the current sheets/persistence/import-export gate.
+    *   Browser FX/CORS strategy still needs a user decision.
+    *   Public production deploy-path gate remains after sheets/persistence is corrected.
+*   Risks/blockers:
+    *   Launch stability is still not complete because persistence/import-export coverage is red.
+
+## Entry J-2026-06-20-03
+
+*   Timestamp: 2026-06-20 18:41 CEST / 2026-06-20 16:41 UTC
+*   Summary:
+    *   User clarified that live FX is desired for launch if at least one provider is stable.
+    *   Assistant inspected `src/services/fxRates.ts` and tested the configured providers from Node and a real browser context.
+    *   Launch docs were updated so browser FX/CORS is no longer treated as a blocker while the browser-safe fallback works.
+*   Decisions:
+    *   Keep live FX for launch.
+    *   Treat `fawazahmed0` as the launch-critical browser-safe FX path for now.
+    *   Treat Frankfurter and ECB as opportunistic fiat providers because they currently fail browser CORS.
+    *   Add a SmartPad-owned FX endpoint only as future hardening if external provider reliability becomes a real problem.
+*   Evidence:
+    *   Node fetch returned `200` from Frankfurter, ECB, jsDelivr `fawazahmed0`, and `latest.currency-api.pages.dev`.
+    *   Browser fetch failed for `https://api.frankfurter.app/latest`.
+    *   Browser fetch failed for `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml`.
+    *   Browser fetch succeeded for `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json`.
+    *   Browser fetch succeeded for `https://latest.currency-api.pages.dev/v1/currencies/usd.json`.
+*   Artifacts changed:
+    *   `aidocs/LAUNCH_STABILITY_AUDIT.md`
+    *   `aidocs/LAUNCH_EXECUTION_ROADMAP.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Pending:
+    *   Continue launch stability with sheets/persistence/import-export coverage.
+    *   Keep public FX copy honest: live FX depends on external providers and cached/fallback behavior.
+*   Risks/blockers:
+    *   External FX provider reliability remains a normal launch risk, but not a current p0 blocker while `fawazahmed0` works from the browser.
+
+## Entry J-2026-06-20-04
+
+*   Timestamp: 2026-06-20 21:25 CEST / 2026-06-20 19:25 UTC
+*   Summary:
+    *   User requested a discreet visible error when all FX providers fail so reliability problems are not silent.
+    *   Assistant added top-of-app FX status messaging for total live-provider failure and cache fallback.
+    *   Settings copy now distinguishes live provider sync from cached FX fallback.
+*   Decisions:
+    *   Show a discreet app-level status banner when live FX is unavailable with no cache.
+    *   Keep the existing cache fallback banner, but make it work when only the `fawazahmed0` cached snapshot is available.
+    *   Do not block launch on a custom FX endpoint while browser-safe external FX works and failures are visible.
+*   Artifacts changed:
+    *   `src/App.tsx`
+    *   `src/App.css`
+    *   `src/components/ui/SettingsSections.tsx`
+    *   `tests/e2e/fx-status-banner.spec.ts`
+    *   `aidocs/LAUNCH_STABILITY_AUDIT.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npx playwright test tests/e2e/fx-status-banner.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed: 2 passed.
+    *   `npx playwright test tests/e2e/settings-integration.spec.ts tests/e2e/fx-status-banner.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed: 14 passed.
+    *   `git diff --check` passed.
+    *   `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, and `npm run spec:trust` passed.
+    *   `npm run verify:changed` passed, including `npm run build`; Vite still reports the existing large bundle warning.
+*   Pending:
+    *   User review/confirmation before commit.
+    *   Continue launch stability with sheets/persistence/import-export coverage.
+*   Risks/blockers:
+    *   Launch stability remains incomplete because sheets/persistence/import-export coverage is still red.
+
+## Entry J-2026-06-20-06
+
+*   Timestamp: 2026-06-20 23:34 CEST / 2026-06-20 21:34 UTC
+*   Summary:
+    *   User asked the assistant to verify the current sheets/persistence/import-export behavior directly.
+    *   Assistant added a launch gate for the current sheet UI instead of patching the obsolete save/load-button suite.
+    *   The new gate covers auto-persistence, desktop sheet management, markdown export, zip export, markdown import, zip import, and non-destructive import behavior.
+*   Decisions:
+    *   Treat `save-load-buttons.spec.ts` as obsolete coverage for a removed manual save/load UI.
+    *   Use `sheets-persistence-import-export.spec.ts` plus `mobile-sheet-navigation.spec.ts` as the current launch gate for sheets/persistence/import-export.
+    *   Scope historical migrations separately around known old data formats if they are launch-critical.
+*   Artifacts changed:
+    *   `tests/e2e/sheets-persistence-import-export.spec.ts`
+    *   `aidocs/LAUNCH_STABILITY_AUDIT.md`
+    *   `aidocs/LAUNCH_EXECUTION_ROADMAP.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npx playwright test tests/e2e/sheets-persistence-import-export.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed: 5 passed.
+    *   `npx playwright test tests/e2e/mobile-sheet-navigation.spec.ts tests/e2e/sheets-persistence-import-export.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed: 7 passed.
+    *   `git diff --check` passed.
+    *   `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, and `npm run spec:trust` passed.
+    *   `npm run verify:changed` passed for the default range; targeted e2e above is the authoritative evidence for the new uncommitted sheets gate.
+*   Pending:
+    *   Run final repo gates after this journal update.
+    *   User review/confirmation before commit.
+    *   Next launch stability block should verify the production deploy path and decide whether historical migration fixtures are p0.
+*   Risks/blockers:
+    *   Historical migration coverage is still noisy and not yet converted into a trusted launch gate.
+
+## Entry J-2026-06-20-05
+
+*   Timestamp: 2026-06-20 21:28 CEST / 2026-06-20 19:28 UTC
+*   Summary:
+    *   User showed that Settings reported `FX offline - using cached rates` even while `Fawazahmed0` had just updated successfully.
+    *   Assistant corrected FX alert logic so stale primary-provider cache does not trigger an app-level warning when any provider is live or any cached snapshot is newer than 24 hours.
+    *   The FX warning is now dismissible.
+*   Decisions:
+    *   Show an app-level FX warning only when there is no live provider and no cached snapshot newer than 24 hours.
+    *   Do not show a warning just because one provider is using stale cache if another provider is live.
+    *   Keep Settings status based on provider-level health: live provider, fresh cache, or unavailable.
+*   Artifacts changed:
+    *   `src/App.tsx`
+    *   `src/App.css`
+    *   `src/components/ui/SettingsSections.tsx`
+    *   `tests/e2e/fx-status-banner.spec.ts`
+    *   `aidocs/LAUNCH_STABILITY_AUDIT.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   `npx playwright test tests/e2e/fx-status-banner.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed: 4 passed.
+    *   `npx playwright test tests/e2e/settings-integration.spec.ts tests/e2e/fx-status-banner.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed: 16 passed.
+*   Pending:
+    *   Run final repo gates after this journal update.
+    *   User review/confirmation before commit.
+*   Risks/blockers:
+    *   Launch stability remains incomplete because sheets/persistence/import-export coverage is still red.
 
 ## Entry J-2026-06-07-01
 

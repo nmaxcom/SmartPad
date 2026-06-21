@@ -1,6 +1,6 @@
 {
   "name": "smartpad",
-  "version": "1.0.0",
+  "version": "1.0.0-rc.1",
   "description": "> A text-based web application that combines the simplicity of a plain text editor with the power of real-time mathematical interpretation and calculation.",
   "main": "src/index.ts",
   "scripts": {
@@ -8,6 +8,9 @@
     "dev": "node scripts/npm_run_dev_server_check.js",
     "prepreview": "npm run docs:docusaurus:publish-local",
     "build": "vite build",
+    "desktop:build": "npm run docs:docusaurus:publish-local && VITE_BASE_PATH=./ npm run build",
+    "desktop:start": "npm run desktop:build && electron desktop/electron/main.cjs",
+    "desktop:smoke": "npm run desktop:build && SMARTPAD_ELECTRON_SMOKE=1 electron desktop/electron/main.cjs",
     "preview": "vite preview",
     "test": "npm run test:unit",
     "test:unit": "jest",
@@ -82,6 +85,7 @@
     "@typescript-eslint/parser": "^8.33.1",
     "@vitejs/plugin-react": "^4.2.1",
     "chai": "^5.2.0",
+    "electron": "^42.4.1",
     "eslint": "^9.28.0",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^29.7.0",

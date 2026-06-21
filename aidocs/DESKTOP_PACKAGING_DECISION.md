@@ -32,6 +32,28 @@ Tauri may be attractive later for smaller bundles and native feel, but the first
 | Auto-update | Mature options | Mature options | Defer from first beta unless cheap after packaging. |
 | Agent maintainability | JavaScript/Node path matches repo | Adds Rust/native concepts | Electron is simpler for current automation. |
 
+## Current Status
+
+Phase 1 minimal Electron shell is underway for `1.0.0-rc.1`:
+
+- `electron` is a dev dependency.
+- `desktop/electron/main.cjs` loads `dist/index.html` from disk.
+- The renderer keeps `nodeIntegration: false`, `contextIsolation: true`, and `sandbox: true`.
+- External links are opened in the system browser.
+- `desktop:build`, `desktop:start`, and `desktop:smoke` scripts exist.
+- `npm run desktop:smoke` passed on macOS: the Electron shell loaded the built app from disk and reported `SmartPad Electron smoke loaded: SmartPad`.
+
+The current scope is a macOS unsigned desktop beta smoke first. Installer packaging, signing/notarization, Windows/Linux artifacts, auto-update, and final download copy remain future steps.
+
+Still not proven:
+
+- Sheet storage persistence across Electron restarts.
+- Import/export inside the Electron runtime.
+- Settings persistence/reset inside the Electron runtime.
+- Docs link behavior from an interactive desktop window.
+- Offline/live FX behavior inside the Electron runtime.
+- Installable unsigned macOS artifact.
+
 ## First Desktop Beta Scope
 
 Must work:

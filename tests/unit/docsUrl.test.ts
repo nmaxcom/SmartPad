@@ -13,6 +13,10 @@ describe("buildDocsUrl", () => {
     expect(buildDocsUrl("/SmartPad")).toBe("/SmartPad/docs/index.html");
   });
 
+  test("handles relative base for desktop file builds", () => {
+    expect(buildDocsUrl("./")).toBe("./docs/index.html");
+  });
+
   test("falls back to root for empty base", () => {
     expect(buildDocsUrl("")).toBe("/docs/index.html");
   });
