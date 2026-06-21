@@ -24,7 +24,7 @@ Recent template updates:
 - On tablet and phone layouts, sheet navigation collapses into a compact current-sheet bar with an overlay drawer or bottom sheet so the editor keeps the main viewport.
 - Sheet rename, download, trash, and restore controls remain actionable inside the tablet/phone sheet drawer without closing it accidentally.
 - Settings sections and navigation are visually flatter, without card/nav borders, while keeping the same settings organization.
-- Autocomplete is less aggressive: automatic suggestions wait for a typed token character, while a configurable Settings shortcut opens contextual suggestions on demand.
+- Autocomplete is less aggressive: automatic suggestions wait for a typed token character, while a recorded Settings shortcut opens contextual suggestions on demand.
 
 These are some examples of its syntax:
 # Start Here: SmartPad Quick Tour

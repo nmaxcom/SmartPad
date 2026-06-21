@@ -78,11 +78,7 @@ export type SyntaxThemeId =
   | "ink-syntax"
   | "sunset-syntax"
   | "mint-syntax";
-export type AutocompleteManualShortcut =
-  | "ctrl-space"
-  | "cmd-space"
-  | "alt-slash"
-  | "ctrl-slash";
+export type AutocompleteManualShortcut = string;
 
 // Settings Types
 export interface SettingsState {

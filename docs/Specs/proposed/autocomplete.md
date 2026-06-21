@@ -34,7 +34,8 @@ The first version focuses on reusing names and syntax that already exist in the 
    the highlighted option so the active item remains visible.
 8. The manual autocomplete command opens contextual suggestions even when the current token is
    empty, for cases such as `roi ` phrase continuations, `x=`, or `30kg to `.
-9. The manual autocomplete shortcut is configurable in Settings. The default is `Ctrl + Space`.
+9. The manual autocomplete shortcut is configurable in Settings by recording a key combination.
+   The default is `Ctrl + Space`.
 
 ## Source types
 
@@ -166,5 +167,5 @@ ranking above `msr`, and `msr` ranking above generic substring matches.
 13. Completing `platformfee` exactly hides the exact `platformfee` suggestion.
 14. `win = roi ` does not auto-open suggestions, but the manual autocomplete command can show
     compatible phrase continuations such as `roi tax`.
-15. Changing the manual autocomplete shortcut in Settings changes the editor command without
+15. Recording a new manual autocomplete shortcut in Settings changes the editor command without
     requiring a page refresh.

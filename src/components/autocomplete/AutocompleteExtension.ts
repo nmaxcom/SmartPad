@@ -4,6 +4,7 @@ import type { EditorState, Transaction } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
 import type { FunctionDefinitionNode } from "../../parsing/ast";
 import type { AutocompleteManualShortcut, Variable } from "../../state/types";
+import { keyboardShortcutMatchesEvent } from "../../utils/keyboardShortcut";
 import {
   AutocompleteItem,
   getAutocompleteSuggestions,
@@ -101,22 +102,6 @@ function applyItem(view: EditorView, item: AutocompleteItem) {
   view.focus();
 }
 
-function isManualShortcut(event: KeyboardEvent, shortcut: AutocompleteManualShortcut): boolean {
-  const isSpace = event.code === "Space" || event.key === " " || event.key === "Spacebar";
-  const isSlash = event.key === "/" || event.code === "Slash";
-  switch (shortcut) {
-    case "cmd-space":
-      return isSpace && event.metaKey && !event.ctrlKey && !event.altKey;
-    case "alt-slash":
-      return isSlash && event.altKey && !event.ctrlKey && !event.metaKey;
-    case "ctrl-slash":
-      return isSlash && event.ctrlKey && !event.metaKey && !event.altKey;
-    case "ctrl-space":
-    default:
-      return isSpace && event.ctrlKey && !event.metaKey && !event.altKey;
-  }
-}
-
 export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
   name: "smartpadAutocomplete",
 
@@ -154,8 +139,8 @@ export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
         props: {
           handleKeyDown(view, event) {
             const state = pluginKey.getState(view.state) || emptyState;
-            const manualShortcut = options.getManualShortcut?.() || "ctrl-space";
-            if (isManualShortcut(event, manualShortcut)) {
+            const manualShortcut = options.getManualShortcut?.() || "Ctrl+Space";
+            if (keyboardShortcutMatchesEvent(manualShortcut, event)) {
               event.preventDefault();
               const nextState = buildState(view.state, options, 0, "manual");
               view.dispatch(setMeta(view.state.tr, nextState.active ? nextState : "close"));

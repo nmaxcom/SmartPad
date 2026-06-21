@@ -10,7 +10,7 @@ describe("settings store reference export mode", () => {
   test("defaults include reference export mode", () => {
     expect("chipInsertMode" in DEFAULT_SETTINGS).toBe(false);
     expect(DEFAULT_SETTINGS.referenceTextExportMode).toBe("preserve");
-    expect(DEFAULT_SETTINGS.autocompleteManualShortcut).toBe("ctrl-space");
+    expect(DEFAULT_SETTINGS.autocompleteManualShortcut).toBe("Ctrl+Space");
   });
 
   test("createSettingsState backfills new settings, normalizes autocomplete shortcut, and removes retired chip insert mode", () => {
@@ -29,7 +29,19 @@ describe("settings store reference export mode", () => {
     expect(settings.liveResultEnabled).toBe(false);
     expect("chipInsertMode" in settings).toBe(false);
     expect(settings.referenceTextExportMode).toBe("preserve");
-    expect(settings.autocompleteManualShortcut).toBe("ctrl-space");
+    expect(settings.autocompleteManualShortcut).toBe("Ctrl+Space");
+  });
+
+  test("createSettingsState migrates old autocomplete shortcut presets", () => {
+    localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        autocompleteManualShortcut: "cmd-space",
+      })
+    );
+
+    const settings = createSettingsState();
+    expect(settings.autocompleteManualShortcut).toBe("Meta+Space");
   });
 
   test("settingsReducer updates reference export mode", () => {
@@ -43,8 +55,8 @@ describe("settings store reference export mode", () => {
   test("settingsReducer updates autocomplete shortcut", () => {
     const withShortcut = settingsReducer(DEFAULT_SETTINGS, {
       type: "UPDATE_SETTING",
-      payload: { key: "autocompleteManualShortcut", value: "alt-slash" },
+      payload: { key: "autocompleteManualShortcut", value: "Ctrl+Shift+K" },
     });
-    expect(withShortcut.autocompleteManualShortcut).toBe("alt-slash");
+    expect(withShortcut.autocompleteManualShortcut).toBe("Ctrl+Shift+K");
   });
 });

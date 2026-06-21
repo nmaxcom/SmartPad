@@ -122,7 +122,10 @@ test.describe("Autocomplete", () => {
 
   test("manual autocomplete shortcut can be changed in settings", async ({ page }) => {
     await page.getByLabel("Open Settings", { exact: true }).click();
-    await page.locator("#settings-modal-autocomplete-manual-shortcut").selectOption("cmd-space");
+    const shortcutRecorder = page.locator("#settings-modal-autocomplete-manual-shortcut");
+    await shortcutRecorder.click();
+    await page.keyboard.press("Meta+Space");
+    await expect(shortcutRecorder).toContainText("Meta+Space");
     await page.getByLabel("Close settings").click();
 
     await page.evaluate(() => {

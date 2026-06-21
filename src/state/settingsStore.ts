@@ -1,17 +1,9 @@
 import { AutocompleteManualShortcut, SettingsState, SettingsAction } from "./types";
 import { normalizeSyntaxThemeId, normalizeUIThemeId } from "../styles/themeCatalog";
-
-const VALID_AUTOCOMPLETE_SHORTCUTS = new Set<AutocompleteManualShortcut>([
-  "ctrl-space",
-  "cmd-space",
-  "alt-slash",
-  "ctrl-slash",
-]);
+import { normalizeKeyboardShortcut } from "../utils/keyboardShortcut";
 
 function normalizeAutocompleteManualShortcut(value: unknown): AutocompleteManualShortcut {
-  return VALID_AUTOCOMPLETE_SHORTCUTS.has(value as AutocompleteManualShortcut)
-    ? (value as AutocompleteManualShortcut)
-    : DEFAULT_SETTINGS.autocompleteManualShortcut;
+  return normalizeKeyboardShortcut(value, DEFAULT_SETTINGS.autocompleteManualShortcut);
 }
 
 // Default settings configuration
@@ -23,7 +15,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
   groupThousands: true,
   liveResultEnabled: true,
   resultLaneEnabled: false,
-  autocompleteManualShortcut: "ctrl-space",
+  autocompleteManualShortcut: "Ctrl+Space",
   referenceTextExportMode: "preserve",
   listMaxLength: 100,
   uiTheme: "spatial-dark",
@@ -113,9 +105,13 @@ export function saveSettingsToStorage(settings: SettingsState): void {
 export function settingsReducer(state: SettingsState, action: SettingsAction): SettingsState {
   switch (action.type) {
     case "UPDATE_SETTING": {
+      const value =
+        action.payload.key === "autocompleteManualShortcut"
+          ? normalizeAutocompleteManualShortcut(action.payload.value)
+          : action.payload.value;
       const newState = {
         ...state,
-        [action.payload.key]: action.payload.value,
+        [action.payload.key]: value,
       };
 
       // Auto-save to localStorage

@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { useSettingsContext } from "../../state/SettingsContext";
 import { DEFAULT_SETTINGS } from "../../state/settingsStore";
-import type { AutocompleteManualShortcut } from "../../state/types";
+import { shortcutFromKeyboardEvent } from "../../utils/keyboardShortcut";
 import {
   normalizeSyntaxThemeId,
   normalizeUIThemeId,
@@ -94,6 +94,7 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
   );
 
   const [plotInputOverrides, setPlotInputOverrides] = useState<Record<string, string>>({});
+  const [isRecordingAutocompleteShortcut, setIsRecordingAutocompleteShortcut] = useState(false);
 
   const setPlotInput = useCallback((key: string, value: string) => {
     setPlotInputOverrides((prev) => ({ ...prev, [key]: value }));
@@ -205,6 +206,30 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
       updateSetting("plotPanYDomainPadding", clampedValue);
     },
     [updateSetting]
+  );
+
+  const handleAutocompleteShortcutKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLButtonElement>) => {
+      if (!isRecordingAutocompleteShortcut) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (event.key === "Escape") {
+        setIsRecordingAutocompleteShortcut(false);
+        return;
+      }
+
+      const shortcut = shortcutFromKeyboardEvent(event.nativeEvent);
+      if (!shortcut) {
+        return;
+      }
+
+      updateSetting("autocompleteManualShortcut", shortcut);
+      setIsRecordingAutocompleteShortcut(false);
+    },
+    [isRecordingAutocompleteShortcut, updateSetting]
   );
 
   return (
@@ -688,22 +713,26 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
             </p>
           </div>
           <div className="settings-control">
-            <select
+            <button
               id={`${idPrefix}-autocomplete-manual-shortcut`}
-              value={settings.autocompleteManualShortcut}
-              onChange={(e) =>
-                updateSetting(
-                  "autocompleteManualShortcut",
-                  e.target.value as AutocompleteManualShortcut
-                )
-              }
-              className="settings-select"
+              type="button"
+              className={`settings-shortcut-recorder ${
+                isRecordingAutocompleteShortcut ? "is-recording" : ""
+              }`}
+              aria-pressed={isRecordingAutocompleteShortcut}
+              onClick={() => setIsRecordingAutocompleteShortcut(true)}
+              onKeyDown={handleAutocompleteShortcutKeyDown}
+              onBlur={() => setIsRecordingAutocompleteShortcut(false)}
             >
-              <option value="ctrl-space">Ctrl + Space</option>
-              <option value="cmd-space">Cmd + Space</option>
-              <option value="alt-slash">Alt + /</option>
-              <option value="ctrl-slash">Ctrl + /</option>
-            </select>
+              <span className="settings-shortcut-value">
+                {isRecordingAutocompleteShortcut
+                  ? "Press shortcut..."
+                  : settings.autocompleteManualShortcut}
+              </span>
+              <span className="settings-shortcut-hint">
+                {isRecordingAutocompleteShortcut ? "Esc cancels" : "Record"}
+              </span>
+            </button>
           </div>
         </div>
 
