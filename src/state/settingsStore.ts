@@ -15,7 +15,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
   groupThousands: true,
   liveResultEnabled: true,
   resultLaneEnabled: false,
-  autocompleteManualShortcut: "Ctrl+Space",
+  autocompleteManualShortcut: "Ctrl+Shift+K",
   referenceTextExportMode: "preserve",
   listMaxLength: 100,
   uiTheme: "spatial-dark",

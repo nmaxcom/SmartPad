@@ -102,6 +102,17 @@ function applyItem(view: EditorView, item: AutocompleteItem) {
   view.focus();
 }
 
+function openManualAutocomplete(view: EditorView, options: AutocompleteOptions): boolean {
+  const nextState = buildState(view.state, options, 0, "manual");
+  view.dispatch(setMeta(view.state.tr, nextState.active ? nextState : "close"));
+  return nextState.active;
+}
+
+function isEditorFocusWithin(view: EditorView): boolean {
+  const activeElement = document.activeElement;
+  return Boolean(activeElement && view.dom.contains(activeElement));
+}
+
 export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
   name: "smartpadAutocomplete",
 
@@ -139,11 +150,10 @@ export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
         props: {
           handleKeyDown(view, event) {
             const state = pluginKey.getState(view.state) || emptyState;
-            const manualShortcut = options.getManualShortcut?.() || "Ctrl+Space";
+            const manualShortcut = options.getManualShortcut?.() || "Ctrl+Shift+K";
             if (keyboardShortcutMatchesEvent(manualShortcut, event)) {
               event.preventDefault();
-              const nextState = buildState(view.state, options, 0, "manual");
-              view.dispatch(setMeta(view.state.tr, nextState.active ? nextState : "close"));
+              openManualAutocomplete(view, options);
               return true;
             }
 
@@ -241,11 +251,27 @@ export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
 
           render();
 
+          const handleDocumentKeyDown = (event: KeyboardEvent) => {
+            if (event.defaultPrevented || !isEditorFocusWithin(view)) {
+              return;
+            }
+            const manualShortcut = options.getManualShortcut?.() || "Ctrl+Shift+K";
+            if (!keyboardShortcutMatchesEvent(manualShortcut, event)) {
+              return;
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            openManualAutocomplete(view, options);
+          };
+
+          document.addEventListener("keydown", handleDocumentKeyDown, true);
+
           return {
             update() {
               render();
             },
             destroy() {
+              document.removeEventListener("keydown", handleDocumentKeyDown, true);
               menu.remove();
             },
           };

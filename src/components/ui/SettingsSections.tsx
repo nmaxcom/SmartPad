@@ -1,7 +1,10 @@
 import React, { useCallback, useState } from "react";
 import { useSettingsContext } from "../../state/SettingsContext";
 import { DEFAULT_SETTINGS } from "../../state/settingsStore";
-import { shortcutFromKeyboardEvent } from "../../utils/keyboardShortcut";
+import {
+  isReservedKeyboardShortcut,
+  shortcutFromKeyboardEvent,
+} from "../../utils/keyboardShortcut";
 import {
   normalizeSyntaxThemeId,
   normalizeUIThemeId,
@@ -223,6 +226,9 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
 
       const shortcut = shortcutFromKeyboardEvent(event.nativeEvent);
       if (!shortcut) {
+        return;
+      }
+      if (isReservedKeyboardShortcut(shortcut)) {
         return;
       }
 

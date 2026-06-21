@@ -9,15 +9,20 @@ const keyboardEvent = (init: KeyboardEventInit): KeyboardEvent =>
 
 describe("keyboard shortcut helpers", () => {
   test("normalizes recorded shortcuts and legacy preset values", () => {
-    expect(normalizeKeyboardShortcut("ctrl-space")).toBe("Ctrl+Space");
-    expect(normalizeKeyboardShortcut("cmd-space")).toBe("Meta+Space");
+    expect(normalizeKeyboardShortcut("ctrl-space")).toBe("Ctrl+Shift+K");
+    expect(normalizeKeyboardShortcut("cmd-space")).toBe("Ctrl+Shift+K");
     expect(normalizeKeyboardShortcut("Alt+/")).toBe("Alt+/");
     expect(normalizeKeyboardShortcut("shift+ctrl+k")).toBe("Ctrl+Shift+K");
   });
 
   test("rejects shortcuts without a modifier", () => {
-    expect(normalizeKeyboardShortcut("K")).toBe("Ctrl+Space");
+    expect(normalizeKeyboardShortcut("K")).toBe("Ctrl+Shift+K");
     expect(shortcutFromKeyboardEvent(keyboardEvent({ key: "k", code: "KeyK" }))).toBeNull();
+  });
+
+  test("rejects system-reserved space shortcuts", () => {
+    expect(normalizeKeyboardShortcut("Ctrl+Space")).toBe("Ctrl+Shift+K");
+    expect(normalizeKeyboardShortcut("Meta+Space")).toBe("Ctrl+Shift+K");
   });
 
   test("records a keyboard event into a stable shortcut string", () => {

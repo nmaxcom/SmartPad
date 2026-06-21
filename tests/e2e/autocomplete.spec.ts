@@ -115,7 +115,7 @@ test.describe("Autocomplete", () => {
     await page.keyboard.type("win = roi ");
     await expect(page.locator(".smartpad-autocomplete-menu")).toBeHidden();
 
-    await page.keyboard.press("Control+Space");
+    await page.keyboard.press("Control+Shift+K");
     await expect(page.locator(".smartpad-autocomplete-menu")).toBeVisible();
     await expect(page.getByRole("option", { name: /roi tax/i })).toBeVisible();
   });
@@ -124,8 +124,8 @@ test.describe("Autocomplete", () => {
     await page.getByLabel("Open Settings", { exact: true }).click();
     const shortcutRecorder = page.locator("#settings-modal-autocomplete-manual-shortcut");
     await shortcutRecorder.click();
-    await page.keyboard.press("Meta+Space");
-    await expect(shortcutRecorder).toContainText("Meta+Space");
+    await page.keyboard.press("Control+Alt+K");
+    await expect(shortcutRecorder).toContainText("Ctrl+Alt+K");
     await page.getByLabel("Close settings").click();
 
     await page.evaluate(() => {
@@ -139,10 +139,10 @@ test.describe("Autocomplete", () => {
     await page.keyboard.press("Enter");
     await page.keyboard.type("win = roi ");
 
-    await page.keyboard.press("Control+Space");
+    await page.keyboard.press("Control+Shift+K");
     await expect(page.locator(".smartpad-autocomplete-menu")).toBeHidden();
 
-    await page.keyboard.press("Meta+Space");
+    await page.keyboard.press("Control+Alt+K");
     await expect(page.locator(".smartpad-autocomplete-menu")).toBeVisible();
     await expect(page.getByRole("option", { name: /roi tax/i })).toBeVisible();
   });

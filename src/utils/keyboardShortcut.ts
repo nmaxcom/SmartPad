@@ -7,6 +7,8 @@ const LEGACY_SHORTCUTS: Record<string, string> = {
   "ctrl-slash": "Ctrl+/",
 };
 
+const RESERVED_SHORTCUTS = new Set(["Ctrl+Space", "Meta+Space"]);
+
 function normalizePart(part: string): string {
   const trimmed = part.trim();
   const lower = trimmed.toLowerCase();
@@ -36,13 +38,17 @@ function normalizeEventKey(event: Pick<KeyboardEvent, "key" | "code">): string {
   return normalizePart(event.key);
 }
 
-export function normalizeKeyboardShortcut(value: unknown, fallback = "Ctrl+Space"): string {
+export function isReservedKeyboardShortcut(shortcut: string): boolean {
+  return RESERVED_SHORTCUTS.has(shortcut);
+}
+
+export function normalizeKeyboardShortcut(value: unknown, fallback = "Ctrl+Shift+K"): string {
   if (typeof value !== "string") {
     return fallback;
   }
   const legacy = LEGACY_SHORTCUTS[value];
   if (legacy) {
-    return legacy;
+    return isReservedKeyboardShortcut(legacy) ? fallback : legacy;
   }
   const parts = value
     .split("+")
@@ -53,7 +59,8 @@ export function normalizeKeyboardShortcut(value: unknown, fallback = "Ctrl+Space
   if (!key || modifiers.length === 0) {
     return fallback;
   }
-  return [...modifiers, key].join("+");
+  const shortcut = [...modifiers, key].join("+");
+  return isReservedKeyboardShortcut(shortcut) ? fallback : shortcut;
 }
 
 export function shortcutFromKeyboardEvent(event: KeyboardEvent): string | null {

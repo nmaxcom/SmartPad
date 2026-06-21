@@ -35,7 +35,9 @@ The first version focuses on reusing names and syntax that already exist in the 
 8. The manual autocomplete command opens contextual suggestions even when the current token is
    empty, for cases such as `roi ` phrase continuations, `x=`, or `30kg to `.
 9. The manual autocomplete shortcut is configurable in Settings by recording a key combination.
-   The default is `Ctrl + Space`.
+   The default is `Ctrl + Shift + K`, avoiding common OS-reserved space shortcuts.
+10. Settings must not record shortcuts that are likely to be intercepted by the OS before the
+    browser receives them, such as `Ctrl + Space` or `Cmd + Space`.
 
 ## Source types
 
@@ -169,3 +171,4 @@ ranking above `msr`, and `msr` ranking above generic substring matches.
     compatible phrase continuations such as `roi tax`.
 15. Recording a new manual autocomplete shortcut in Settings changes the editor command without
     requiring a page refresh.
+16. Reserved shortcuts such as `Ctrl + Space` and `Cmd + Space` are ignored by the recorder.

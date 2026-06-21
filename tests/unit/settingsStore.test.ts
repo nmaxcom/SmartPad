@@ -10,7 +10,7 @@ describe("settings store reference export mode", () => {
   test("defaults include reference export mode", () => {
     expect("chipInsertMode" in DEFAULT_SETTINGS).toBe(false);
     expect(DEFAULT_SETTINGS.referenceTextExportMode).toBe("preserve");
-    expect(DEFAULT_SETTINGS.autocompleteManualShortcut).toBe("Ctrl+Space");
+    expect(DEFAULT_SETTINGS.autocompleteManualShortcut).toBe("Ctrl+Shift+K");
   });
 
   test("createSettingsState backfills new settings, normalizes autocomplete shortcut, and removes retired chip insert mode", () => {
@@ -29,7 +29,7 @@ describe("settings store reference export mode", () => {
     expect(settings.liveResultEnabled).toBe(false);
     expect("chipInsertMode" in settings).toBe(false);
     expect(settings.referenceTextExportMode).toBe("preserve");
-    expect(settings.autocompleteManualShortcut).toBe("Ctrl+Space");
+    expect(settings.autocompleteManualShortcut).toBe("Ctrl+Shift+K");
   });
 
   test("createSettingsState migrates old autocomplete shortcut presets", () => {
@@ -41,7 +41,7 @@ describe("settings store reference export mode", () => {
     );
 
     const settings = createSettingsState();
-    expect(settings.autocompleteManualShortcut).toBe("Meta+Space");
+    expect(settings.autocompleteManualShortcut).toBe("Ctrl+Shift+K");
   });
 
   test("settingsReducer updates reference export mode", () => {
