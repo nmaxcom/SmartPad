@@ -55,10 +55,13 @@ describe("stripSharedLiveResultSuffixes", () => {
     expect(stripSharedLiveResultSuffixes(pasted)).toBe("known = 5\nknown*3\n2+2=> 4");
   });
 
-  test("keeps assignment-line suffixes unchanged", () => {
+  test("keeps numeric assignment-line suffixes unchanged", () => {
     expect(stripSharedLiveResultSuffixes("total = 20*2 (40)")).toBe("total = 20*2 (40)");
+  });
+
+  test("strips duplicated assignment source suffixes from live copy text", () => {
     expect(stripSharedLiveResultSuffixes("ticket after promo = promo off ticket list (promo off ticket list)")).toBe(
-      "ticket after promo = promo off ticket list (promo off ticket list)"
+      "ticket after promo = promo off ticket list"
     );
   });
 

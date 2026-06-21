@@ -302,7 +302,30 @@ test.describe("Semantic Highlighting", () => {
     await page.locator(".semantic-function").filter({ hasText: /^wealth$/ }).first().hover();
 
     await expect(page.locator(".variable-highlight-declaration")).toHaveCount(1);
-    await expect(page.locator(".variable-highlight-reference")).toHaveCount(3);
+    await expect(page.locator(".variable-highlight-reference")).toHaveCount(2);
+  });
+
+  test("hovering a function does not highlight matching unit text", async ({ page }) => {
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      editor.commands.setContent(
+        [
+          "<p>vendor quotes = $8620, $3310, $2850, $2050</p>",
+          "<p>best quote = min(vendor quotes) =&gt;</p>",
+          "<p>setup slots = 16:00..19:00 step 30 min =&gt;</p>",
+        ].join("")
+      );
+      editor.commands.focus("start");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    await page.locator(".semantic-function").filter({ hasText: /^min$/ }).first().hover();
+
+    const highlightedTexts = await page
+      .locator(".variable-highlight-reference")
+      .evaluateAll((nodes) => nodes.map((node) => node.textContent));
+    expect(highlightedTexts).toEqual(["min"]);
   });
 
   test("hovering a short variable does not highlight inside longer variable names", async ({ page }) => {

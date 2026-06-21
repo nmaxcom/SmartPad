@@ -34,6 +34,8 @@ These are some examples of its syntax:
 sqrt(16) + 2.5 => 6.5
 abs(-4.2) => 4.2
 max(3, 7) * 2 => 14
+10 mod 3 => 1
+(44 mod 4) + 5 => 5
 PI * 2 => 6.283
 
 price=3

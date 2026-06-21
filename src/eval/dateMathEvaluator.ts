@@ -49,6 +49,17 @@ const hasDynamicTimeAlias = (text: string): boolean => {
   return matches.some((token) => defaultUnitRegistry.get(token)?.category === "alias");
 };
 
+const startsLikeDateExpression = (text: string): boolean => {
+  const trimmed = text.trim();
+  return (
+    /^(today|tomorrow|yesterday|now|next\s+\w+|last\s+\w+)\b/i.test(trimmed) ||
+    /^\d{4}-\d{2}-\d{2}\b/.test(trimmed) ||
+    /^\d{1,2}[\/.-]\d{1,2}[\/.-]\d{4}\b/.test(trimmed) ||
+    /^\d{1,2}\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\s+\d{4}\b/i.test(trimmed) ||
+    /^(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\s+\d{1,2},?\s+\d{4}\b/i.test(trimmed)
+  );
+};
+
 export class DateMathEvaluator implements NodeEvaluator {
   canHandle(node: ASTNode): boolean {
     if (isVariableAssignmentNode(node)) {
@@ -56,7 +67,7 @@ export class DateMathEvaluator implements NodeEvaluator {
       if (raw.includes(',') && !/[a-zA-Z]/.test(raw) && splitTopLevelCommas(raw).length > 1) {
         return false;
       }
-      if (hasDynamicTimeAlias(raw)) {
+      if (hasDynamicTimeAlias(raw) && !startsLikeDateExpression(raw)) {
         return false;
       }
       if (parseDateLiteral(raw)) {
@@ -76,7 +87,7 @@ export class DateMathEvaluator implements NodeEvaluator {
 
     if (isCombinedAssignmentNode(node) || isExpressionNode(node)) {
       const expr = isExpressionNode(node) ? node.expression : node.expression;
-      if (hasDynamicTimeAlias(expr)) {
+      if (hasDynamicTimeAlias(expr) && !startsLikeDateExpression(expr)) {
         return false;
       }
       if (looksLikeDateExpression(expr)) {

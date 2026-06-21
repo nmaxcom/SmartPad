@@ -576,9 +576,23 @@ Rules:
 
 ---
 
-### 11.2 Multi-series (future-safe)
+### 11.2 Multi-series
 
-Multiple expressions may be supported later via block syntax, but **not required for v1**.
+Named series and direct expression series may be comma-separated in `y=`.
+Direct expressions that contain spaces or operators should be quoted.
+
+```smartpad
+@view plot y=usd_total,eur_total domain=0..12 size=md
+@view plot y="x^3 + 4","x + 4" domain=-10..10 size=md
+```
+
+Rules:
+
+* Each series is sampled against the same X domain/view.
+* A one-argument function name such as `f` resolves to `f(x)` using that
+  function's parameter.
+* If a direct expression cannot be parsed or sampled, the view disconnects with
+  a specific expression/series error instead of a generic empty-chart state.
 
 ---
 

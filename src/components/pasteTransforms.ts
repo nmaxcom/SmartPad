@@ -93,6 +93,10 @@ function stripSharedLiveResultSuffixFromLine(line: string): string {
   if (!trimmedExpression || !marker) {
     return line;
   }
+  const assignmentMatch = trimmedExpression.match(/^(.+?)\s=\s(.+)$/);
+  if (assignmentMatch && assignmentMatch[2]?.trim() === marker) {
+    return trimmedExpression;
+  }
   if (!isLikelySharedLiveExpressionSource(trimmedExpression)) {
     return line;
   }

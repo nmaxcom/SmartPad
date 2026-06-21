@@ -51,6 +51,33 @@ describe("Date Math Evaluator", () => {
     }
   });
 
+  test("should evaluate today keyword with duration aliases", () => {
+    const node = parseLine("today + 10 days =>", 1);
+    const result = defaultRegistry.evaluate(node, createContext());
+    expect(result?.type).toBe("mathResult");
+    if (result?.type === "mathResult") {
+      expect(result.displayText).not.toContain("unresolved identifier");
+    }
+  });
+
+  test("should evaluate now keyword with minute durations", () => {
+    const node = parseLine("now + 20 minutes =>", 1);
+    const result = defaultRegistry.evaluate(node, createContext());
+    expect(result?.type).toBe("mathResult");
+    if (result?.type === "mathResult") {
+      expect(result.displayText).not.toContain("unresolved identifier");
+    }
+  });
+
+  test("should evaluate written date plus compact hour duration", () => {
+    const node = parseLine("1 April 2019 +29 h =>", 1);
+    const result = defaultRegistry.evaluate(node, createContext());
+    expect(result?.type).toBe("mathResult");
+    if (result?.type === "mathResult") {
+      expect(result.displayText).toContain("2019-04-02 05:00");
+    }
+  });
+
   test("should handle business days", () => {
     const node = parseLine("2024-11-25 + 5 business days =>", 1);
     const result = defaultRegistry.evaluate(node, createContext());
@@ -210,12 +237,12 @@ describe("Date Math Evaluator", () => {
     }
   });
 
-  test("should reject time additions on date-only values", () => {
+  test("should promote date-only values to datetimes when adding time durations", () => {
     const node = parseLine("2024-06-05 + 2 hours =>", 1);
     const result = defaultRegistry.evaluate(node, createContext());
-    expect(result?.type).toBe("error");
-    if (result?.type === "error") {
-      expect(result.displayText).toContain("Cannot add time to a date-only value");
+    expect(result?.type).toBe("mathResult");
+    if (result?.type === "mathResult") {
+      expect(result.displayText).toContain("2024-06-05 02:00");
     }
   });
 

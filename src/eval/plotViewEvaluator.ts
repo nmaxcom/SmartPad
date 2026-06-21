@@ -15,6 +15,7 @@ import { defaultRegistry } from "./registry";
 import { ListValue, NumberValue, SemanticParsers, SemanticValue } from "../types";
 import { ReactiveVariableStore } from "../state/variableStore";
 import { Variable } from "../state/types";
+import { splitTopLevelCommas } from "../utils/listExpression";
 
 const SUPPORTED_KINDS: PlotKind[] = ["plot", "scatter", "hist", "box", "auto"];
 const SUPPORTED_SIZES: PlotSize[] = ["sm", "md", "lg", "xl"];
@@ -82,10 +83,29 @@ const findFirstVariable = (components: ExpressionNode["components"]): string | n
 
 const parseSeriesList = (raw?: string): string[] => {
   if (!raw) return [];
-  return raw
-    .split(",")
+  return splitTopLevelCommasRespectingQuotes(raw)
     .map((entry) => entry.trim())
+    .map(stripSeriesQuotes)
     .filter(Boolean);
+};
+
+const splitTopLevelCommasRespectingQuotes = (raw: string): string[] => {
+  const stitchedQuotedValues = raw.replace(/"\s*,\s*"/g, ",");
+  const parts: string[] = [];
+  for (const part of splitTopLevelCommas(stitchedQuotedValues)) {
+    const segments = part.split(",");
+    if (segments.length > 1 && /"/.test(part)) {
+      parts.push(...segments);
+    } else {
+      parts.push(part);
+    }
+  }
+  return parts;
+};
+
+const stripSeriesQuotes = (value: string): string => {
+  const trimmed = value.trim();
+  return trimmed.replace(/^"+/, "").replace(/"+$/, "").trim();
 };
 
 const findPriorAssignmentExpression = (

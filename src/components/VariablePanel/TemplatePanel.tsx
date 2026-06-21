@@ -408,6 +408,33 @@ cylinder volume = volume(circle area, 2 m) =>
 with_tip($80) =>
 with_tip(bill: $120, rate: 20%) =>
 
+# Built-in math functions
+
+sqrt(144) =>
+abs(-18) =>
+round(12.345, 2) =>
+floor(12.9) =>
+ceil(12.1) =>
+min(6, 5.5, 7, 6) =>
+max(6, 5.5, 7, 6) =>
+log(100) =>
+ln(E) =>
+sin(PI / 2) =>
+10 mod 3 =>
+(44 mod 4) + 5 =>
+
+# Built-in list functions
+
+costs = $12, $15, $9
+sum(costs) =>
+total(costs) =>
+avg(costs) =>
+mean(costs) =>
+median(costs) =>
+count(costs) =>
+stddev(costs) =>
+range(costs) =>
+
 # Named args make intent obvious
 
 tax(amount, rate=8.5%) = amount * rate
@@ -499,6 +526,9 @@ stablecoins in USD =>
 # Currency with units (rates)
 hourly = $85/hour
 hourly in EUR/hour =>
+
+daily = $44/day
+daily to /year =>
 
 subscription = CAD 15/month
 subscription in USD/month =>

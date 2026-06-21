@@ -460,7 +460,8 @@ function addTime(
   value: { hours?: number; minutes?: number; seconds?: number }
 ): DateValue | ErrorValue {
   if (!current.hasTimeComponent()) {
-    return ErrorValue.semanticError('Cannot add time to a date-only value');
+    const dt = current.getDateTime().plus(value);
+    return DateValue.fromDateTime(dt, current.getZone(), true);
   }
   const dt = current.getDateTime().plus(value);
   return DateValue.fromDateTime(dt, current.getZone(), true);
@@ -520,12 +521,8 @@ function applyDurationToDate(
     (parts.second ?? 0) !== 0 ||
     (parts.millisecond ?? 0) !== 0;
 
-  if (hasTimeUnits && !current.hasTimeComponent()) {
-    return ErrorValue.semanticError("Cannot add time to a date-only value");
-  }
-
   const zone = current.getZone();
-  const hasTime = current.hasTimeComponent();
+  const hasTime = current.hasTimeComponent() || hasTimeUnits;
   let dt = current.getDateTime();
 
   const years = parts.year ?? 0;

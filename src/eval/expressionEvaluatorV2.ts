@@ -336,9 +336,9 @@ export class SimpleExpressionParser {
 
       switch (op) {
         case "+":
-          return SemanticArithmetic.add(left, right);
+          return this.applyCurrencyAwareAdd(left, right, context);
         case "-":
-          return SemanticArithmetic.subtract(left, right);
+          return this.applyCurrencyAwareSubtract(left, right, context);
         case "*":
           return SemanticArithmetic.multiply(left, right);
         case "/":
@@ -436,6 +436,36 @@ export class SimpleExpressionParser {
     }
 
     return values[0];
+  }
+
+  private static applyCurrencyAwareAdd(
+    left: SemanticValue,
+    right: SemanticValue,
+    context: EvaluationContext
+  ): SemanticValue {
+    if (left instanceof CurrencyValue && right instanceof CurrencyValue) {
+      const convertedLeft = convertCurrencyValue(left, right.getSymbol() as CurrencySymbol, context);
+      if (SemanticValueTypes.isError(convertedLeft)) {
+        return convertedLeft;
+      }
+      return SemanticArithmetic.add(convertedLeft, right);
+    }
+    return SemanticArithmetic.add(left, right);
+  }
+
+  private static applyCurrencyAwareSubtract(
+    left: SemanticValue,
+    right: SemanticValue,
+    context: EvaluationContext
+  ): SemanticValue {
+    if (left instanceof CurrencyValue && right instanceof CurrencyValue) {
+      const convertedLeft = convertCurrencyValue(left, right.getSymbol() as CurrencySymbol, context);
+      if (SemanticValueTypes.isError(convertedLeft)) {
+        return convertedLeft;
+      }
+      return SemanticArithmetic.subtract(convertedLeft, right);
+    }
+    return SemanticArithmetic.subtract(left, right);
   }
 
   private static negateSemanticValue(value: SemanticValue): SemanticValue {

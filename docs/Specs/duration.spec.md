@@ -202,10 +202,15 @@ Rules:
 
 * DateTime arithmetic must accept any `Duration` form (spaced or unspaced).
 * Duration components may be in any order.
+* Date-only values plus or minus time-duration units (`hour`, `minute`,
+  `second`, `millisecond`, and aliases such as `h`) promote to DateTime from
+  local midnight. Date-only values plus calendar units (`day`, `week`, `month`,
+  `year`, business days) remain Date values.
 
 Example (your failing case):
 
 * `01/04/2025 19:30 - 2hours 1min => 2025-04-01 17:29`
+* `1 April 2019 +29 h => 2019-04-02 05:00`
 
 More:
 

@@ -315,6 +315,10 @@ type ResultReferenceNode = {
 4. External plain-text export: user-selectable mode:
    - `preserve` (emit SmartPad-readable reference tokens)
    - `readable` (emit flattened visible values)
+5. Plain-text copy/paste must not append a duplicated live-result source suffix
+   to assignment lines. For example, copying `ticket after promo = promo off
+   ticket list` must not paste as `ticket after promo = promo off ticket list
+   (promo off ticket list)`.
 
 Note:
 Raw symbolic refs are for export/debug tooling, not normal SmartPad editing UI.

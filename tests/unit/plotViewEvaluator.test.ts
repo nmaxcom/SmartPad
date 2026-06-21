@@ -252,6 +252,28 @@ describe("PlotViewEvaluator", () => {
     }
   });
 
+  test("plots multiple direct quoted expressions separated by commas", () => {
+    const astNodes = [parseLine('@view plot y="x^3 + 4","x +4" domain=-2..2', 1)];
+    const evaluator = new PlotViewEvaluator();
+
+    const result = evaluator.evaluate(astNodes[0], createContext(astNodes, new Map()));
+
+    expect(result?.type).toBe("plotView");
+    if (result?.type === "plotView") {
+      expect(result.status).toBe("connected");
+      expect(result.x).toBe("x");
+      expect(result.series).toHaveLength(2);
+      expect(result.series?.[0]?.label).toBe("x^3 + 4");
+      expect(result.series?.[1]?.label).toBe("x +4");
+      expect(result.series?.[0]?.data?.some((point) => point.x === 2 && point.y === 12)).toBe(
+        true
+      );
+      expect(result.series?.[1]?.data?.some((point) => point.x === 2 && point.y === 6)).toBe(
+        true
+      );
+    }
+  });
+
   test("plots function-backed assignments with a virtual x variable", () => {
     const functionNode = parseLine("f(x) = x^3 + 4", 1);
     if (functionNode.type !== "functionDefinition") {

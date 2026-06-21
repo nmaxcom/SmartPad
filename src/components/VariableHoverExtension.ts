@@ -164,30 +164,32 @@ export const VariableHoverExtension = Extension.create({
                       }
                     });
 
-                    const variableRegex = new RegExp(escapeRegExp(symbolName), "g");
-                    let match: RegExpExecArray | null;
-                    while ((match = variableRegex.exec(text))) {
-                      const start = match.index;
-                      const end = start + symbolName.length;
-                      if (
-                        !isVariableBoundary(text[start - 1]) ||
-                        !isVariableBoundary(text[end])
-                      ) {
-                        continue;
+                    if (symbolType === "variable") {
+                      const variableRegex = new RegExp(escapeRegExp(symbolName), "g");
+                      let match: RegExpExecArray | null;
+                      while ((match = variableRegex.exec(text))) {
+                        const start = match.index;
+                        const end = start + symbolName.length;
+                        if (
+                          !isVariableBoundary(text[start - 1]) ||
+                          !isVariableBoundary(text[end])
+                        ) {
+                          continue;
+                        }
+                        const from = offset + start + 1;
+                        const to = offset + end + 1;
+                        if (protectedRanges.some((range) => rangesOverlap(from, to, range.from, range.to))) {
+                          continue;
+                        }
+                        if (hasDecoration(decorations, from, to)) {
+                          continue;
+                        }
+                        decorations.push(
+                          Decoration.inline(from, to, {
+                            class: "variable-highlight-reference",
+                          })
+                        );
                       }
-                      const from = offset + start + 1;
-                      const to = offset + end + 1;
-                      if (protectedRanges.some((range) => rangesOverlap(from, to, range.from, range.to))) {
-                        continue;
-                      }
-                      if (hasDecoration(decorations, from, to)) {
-                        continue;
-                      }
-                      decorations.push(
-                        Decoration.inline(from, to, {
-                          class: "variable-highlight-reference",
-                        })
-                      );
                     }
                   }
                 });

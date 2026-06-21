@@ -64,6 +64,7 @@
       "specPrefixes": [
         "src/services/fxRates.ts",
         "src/utils/currencyFx.ts",
+        "src/eval/expressionEvaluatorV2.ts",
         "src/types/CurrencyValue.ts",
         "docs/Specs/Currency.spec.md"
       ],
@@ -92,6 +93,7 @@
       "name": "Date Time And Duration",
       "specPrefixes": [
         "src/date/",
+        "src/eval/dateMathEvaluator.ts",
         "src/types/DurationValue.ts",
         "src/utils/localeDateNormalization.ts",
         "docs/Specs/duration.spec.md",

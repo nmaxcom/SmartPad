@@ -73,6 +73,15 @@ Rules:
 
 - Same-currency math works as today.
 - Cross-currency conversion requires an FX rate.
+- Binary `+` and `-` between two currencies convert the left operand into the
+  right operand's currency before applying the operation. This makes the result
+  currency match the last typed currency in natural expressions:
+
+```text
+EUR = 1.10 USD
+€30 + $20 => $53
+€30 - $20 => $13
+```
 
 ### 3.2 Live FX sources (priority order)
 
