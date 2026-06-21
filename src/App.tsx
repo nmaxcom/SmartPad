@@ -13,7 +13,7 @@ import { SettingsPanel } from "./components/ui/SettingsPanel";
 import SheetSync from "./components/SheetSync";
 import { tracer, setLogLevel, LogLevel } from "./eval/tracing";
 import { DEFAULT_SHEET_TITLE, deriveTitleFromContent } from "./utils/sheetTitle";
-import { initFxRates } from "./services/fxRates";
+import { initFxRates, type FxStatus } from "./services/fxRates";
 import { useFxStatus } from "./hooks/useFxStatus";
 import { getSmartPadText } from "./components/editorText";
 import { sanitizeReferencePlaceholdersForDisplay } from "./references/referenceIds";
@@ -23,6 +23,12 @@ import { DEFAULT_SETTINGS } from "./state/settingsStore";
 const SHEET_DRAG_TYPE = "application/x-smartpad-sheet";
 const RESULT_REFERENCE_DRAG_TYPE = "application/x-smartpad-result-reference";
 const RESULT_DRAG_ACTIVE_WINDOW_FLAG = "__SP_RESULT_CHIP_DRAG_ACTIVE";
+
+const hasUsableFxRates = (fxStatus: FxStatus): boolean => {
+  return Object.values(fxStatus.providers ?? {}).some(
+    (provider) => provider.source === "live" || (provider.source === "cache" && !provider.stale)
+  );
+};
 
 // Expose tracing system to browser console for debugging
 // Usage examples:
@@ -68,8 +74,10 @@ window.smartpadTracer = {
 
 function AppContent() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isFxAlertDismissed, setIsFxAlertDismissed] = useState(false);
   const { settings } = useSettingsContext();
   const fxStatus = useFxStatus();
+  const shouldShowFxAlert = !hasUsableFxRates(fxStatus);
   const runtimeParams = useMemo(() => {
     if (typeof window === "undefined") {
       return { embed: false, forceSpatialNeon: false, shouldImportExample: true };
@@ -83,6 +91,10 @@ function AppContent() {
   useEffect(() => {
     initFxRates();
   }, []);
+
+  useEffect(() => {
+    setIsFxAlertDismissed(false);
+  }, [shouldShowFxAlert, fxStatus.updatedAt, fxStatus.lastError]);
 
   useEffect(() => {
     if (runtimeParams.forceSpatialNeon) {
@@ -151,12 +163,20 @@ function AppContent() {
             <SheetSync />
             <DocsExampleImporter runtimeParams={runtimeParams} />
             {!runtimeParams.embed && <AppHeader onSettingsClick={handleOpenSettings} />}
-            {!runtimeParams.embed && fxStatus.provider === "offline" && fxStatus.source === "cache" && (
-              <div className="fx-status-banner" role="status">
-                FX offline - using cached rates from{" "}
-                {fxStatus.updatedAt
-                  ? new Date(fxStatus.updatedAt).toLocaleString()
-                  : "unknown date"}
+            {!runtimeParams.embed && shouldShowFxAlert && !isFxAlertDismissed && (
+              <div
+                className="fx-status-banner fx-status-banner--unavailable"
+                role="status"
+              >
+                <span>Live FX unavailable - currency conversions may need attention.</span>
+                <button
+                  type="button"
+                  className="fx-status-banner-close"
+                  aria-label="Dismiss FX status warning"
+                  onClick={() => setIsFxAlertDismissed(true)}
+                >
+                  ×
+                </button>
               </div>
             )}
             <main className={layoutClassName}>

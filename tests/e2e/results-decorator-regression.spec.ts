@@ -9,7 +9,7 @@
  */
 
 import { test, expect } from "@playwright/test";
-import { waitForUIRenderComplete } from "./utils";
+import { clearEditor, setEditorText, waitForEditorReady } from "./utils";
 
 /**
  * RESULTS DECORATOR REGRESSION TESTS
@@ -29,22 +29,12 @@ import { waitForUIRenderComplete } from "./utils";
 test.describe("Results Decorator Regression Tests", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
-    await page.waitForSelector('[data-testid="smart-pad-editor"]');
-
-    // Clear any existing content
-    const editor = page.locator(".ProseMirror");
-    await editor.click();
-    await page.keyboard.press("Control+a");
-    await page.keyboard.press("Delete");
+    await waitForEditorReady(page);
+    await clearEditor(page);
   });
 
   test("CORE: Result widgets appear with AST evaluation", async ({ page }) => {
-    const editor = page.locator(".ProseMirror");
-
-    // Type expression
-    await editor.fill("5 + 3 =>");
-    await page.keyboard.press("Enter");
-    await waitForUIRenderComplete(page);
+    await setEditorText(page, "5 + 3 =>");
 
     // Widgets should appear
     const widgetCount = await page.locator(".semantic-result-display").count();
@@ -62,19 +52,15 @@ test.describe("Results Decorator Regression Tests", () => {
   });
 
   test("CORE: No duplicate widgets on rapid typing", async ({ page }) => {
-    const editor = page.locator(".ProseMirror");
-
     // Start with a simple expression
-    await editor.fill("2 + 2 =>");
-    await waitForUIRenderComplete(page);
+    await setEditorText(page, "2 + 2 =>");
 
     // Verify initial widget
     let widgetCount = await page.locator(".semantic-result-display").count();
     expect(widgetCount).toBe(1);
 
     // Rapidly modify to simulate user behavior
-    await editor.fill("2 + 4 =>");
-    await waitForUIRenderComplete(page);
+    await setEditorText(page, "2 + 4 =>");
 
     // Should still have exactly one result widget (no duplicates)
     widgetCount = await page.locator(".semantic-result-display").count();
@@ -89,11 +75,8 @@ test.describe("Results Decorator Regression Tests", () => {
   });
 
   test("CORE: Previous widgets are cleaned up before new ones appear", async ({ page }) => {
-    const editor = page.locator(".ProseMirror");
-
     // Type first expression
-    await editor.fill("1 + 1 =>");
-    await waitForUIRenderComplete(page);
+    await setEditorText(page, "1 + 1 =>");
 
     // Verify first result
     let widgetCount = await page.locator(".semantic-result-display").count();
@@ -105,8 +88,7 @@ test.describe("Results Decorator Regression Tests", () => {
     expect(resultText).toBe("2");
 
     // Replace with second expression
-    await editor.fill("5 * 5 =>");
-    await waitForUIRenderComplete(page);
+    await setEditorText(page, "5 * 5 =>");
 
     // Should still have exactly one widget (old one cleaned up)
     widgetCount = await page.locator(".semantic-result-display").count();
@@ -118,25 +100,13 @@ test.describe("Results Decorator Regression Tests", () => {
   });
 
   test("MULTI-LINE: Each line gets its own widget without interference", async ({ page }) => {
-    const editor = page.locator(".ProseMirror");
-
-    // Type multiple expressions
-    await editor.type("2 + 2 =>");
-    await editor.press("Enter");
-    await editor.type("3 * 3 =>");
-    await editor.press("Enter");
-    await editor.type("4 / 2 =>");
-
-    // Wait for all evaluations
-    await waitForUIRenderComplete(page);
+    await setEditorText(page, ["2 + 2 =>", "3 * 3 =>", "4 / 2 =>"].join("\n"));
 
     // Should have exactly 3 widgets
     const widgetCount = await page.locator(".semantic-result-display").count();
     expect(widgetCount).toBe(3);
 
     // Verify each result appears on correct line
-    const paragraphs = page.locator(".ProseMirror p");
-
     // Verify decorations exist for each line
     expect(await page.locator(".semantic-result-display").nth(0).getAttribute("data-result"))
       .resolves;
@@ -147,36 +117,24 @@ test.describe("Results Decorator Regression Tests", () => {
   });
 
   test("ERROR WIDGETS: Error widgets appear correctly", async ({ page }) => {
-    const editor = page.locator(".ProseMirror");
-
-    // Type invalid expression
-    await editor.type("invalid_variable =>");
-
-    // Wait for AST evaluation
-    await page.waitForTimeout(300);
+    await setEditorText(page, "invalid_variable =>");
 
     // Symbolic result widget should appear
     const errorCount = await page.locator(".semantic-error-result").count();
     console.log(`Error widgets after evaluation: ${errorCount}`);
 
-    // Should have no error widgets
-    expect(errorCount).toBe(0);
+    // Should show exactly one explicit error widget for the unresolved expression.
+    expect(errorCount).toBe(1);
 
     const resultText = await page
-      .locator(".semantic-result-display")
+      .locator(".semantic-error-result")
       .first()
-      .getAttribute("data-result");
+      .textContent();
     expect(resultText || "").toMatch(/invalid_variable/);
   });
 
   test("UNITS: Units expressions work correctly", async ({ page }) => {
-    const editor = page.locator(".ProseMirror");
-
-    // Type units expression
-    await editor.type("5 m + 3 m =>");
-
-    // Wait for evaluation
-    await page.waitForTimeout(300);
+    await setEditorText(page, "5 m + 3 m =>");
 
     // Check final state
     const widgetCount = await page.locator(".semantic-result-display").count();
@@ -194,7 +152,7 @@ test.describe("Results Decorator Regression Tests", () => {
     const editor = page.locator(".ProseMirror");
 
     // Type combined assignment (this was the bug case)
-    await editor.type("force = 3 * 9.8 m =>");
+    await setEditorText(page, "force = 3 * 9.8 m =>");
 
     // Check immediate state (should not show undefined variable error)
     await page.waitForTimeout(100);
@@ -222,12 +180,10 @@ test.describe("Results Decorator Regression Tests", () => {
   });
 
   test("PERFORMANCE: Widget updates complete within reasonable time", async ({ page }) => {
-    const editor = page.locator(".ProseMirror");
-
     const startTime = Date.now();
 
     // Type expression
-    await editor.type("10 + 15 =>");
+    await setEditorText(page, "10 + 15 =>");
 
     // Wait for widget to appear
     await page.waitForSelector(".semantic-result-display", { timeout: 1000 });

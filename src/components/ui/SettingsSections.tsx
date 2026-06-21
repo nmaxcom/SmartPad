@@ -27,6 +27,12 @@ const SETTINGS_NAV = [
 export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProps) {
   const { settings, updateSetting } = useSettingsContext();
   const fxStatus = useFxStatus();
+  const hasLiveFxProvider = Object.values(fxStatus.providers ?? {}).some(
+    (provider) => provider.source === "live"
+  );
+  const hasFreshCachedFxProvider = Object.values(fxStatus.providers ?? {}).some(
+    (provider) => provider.source === "cache" && !provider.stale
+  );
   const detectedLocale = getDateLocaleDetected();
   const effectiveLocale = getDateLocaleEffective();
   const isCustomLocale = settings.dateLocaleMode === "custom";
@@ -620,12 +626,14 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
           <div className="settings-item-info">
             <label className="settings-label">Live FX Status</label>
             <p className="settings-description">
-              {fxStatus.provider === "offline" &&
-                (fxStatus.source === "cache"
-                  ? "Offline. Using cached FX rates."
-                  : "Offline. FX rates unavailable.")}
-              {fxStatus.provider !== "offline" &&
+              {hasLiveFxProvider &&
                 "Live FX providers are synced. Green means active, dim means standby."}
+              {!hasLiveFxProvider &&
+                hasFreshCachedFxProvider &&
+                "Using recent cached FX rates."}
+              {!hasLiveFxProvider &&
+                !hasFreshCachedFxProvider &&
+                "Offline. FX rates unavailable."}
             </p>
           </div>
           <div className="settings-control">

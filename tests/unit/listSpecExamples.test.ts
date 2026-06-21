@@ -330,13 +330,13 @@ describe("List spec examples", () => {
       "internet = $75",
       "expenses = rent, utilities, internet",
       "total = sum(expenses) => $1510",
-      "distribution = expenses / total as % => 82.7815%, 12.2517%, 4.9669%",
+      "distribution = expenses / total as % => 82.781457%, 12.251656%, 4.966887%",
     ]);
     expect((results[1] as any).result).toBe("$24, $30, $18");
     expect((results[3] as any).result).toBe("1, 4, 9");
     expect((results[5] as any).result).toBe("3 m, 25 m, 48000 m");
     expect((results[10] as any).result).toBe("$1510");
-    expect((results[11] as any).result).toBe("82.7815%, 12.2517%, 4.9669%");
+    expect((results[11] as any).result).toBe("82.781457%, 12.251656%, 4.966887%");
   });
 
   test("blocks 42-46: tax, discounts, and pairwise operations", () => {
@@ -399,13 +399,13 @@ describe("List spec examples", () => {
       "sort(expenses, desc) => $1250, $185, $75, $49.99",
       "max(expenses) => $1250",
       "total = sum(expenses) => $1559.99",
-      "expenses / total as % => 80.1287%, 11.8591%, 4.8077%, 3.2045%",
+      "expenses / total as % => 80.128719%, 11.85905%, 4.807723%, 3.204508%",
     ]);
     expect((results[1] as any).result).toBe("1, 2, 3");
     expect((results[7] as any).result).toBe("$1250, $185, $75, $49.99");
     expect((results[8] as any).result).toBe("$1250");
     expect((results[9] as any).result).toBe("$1559.99");
-    expect((results[10] as any).result).toBe("80.1287%, 11.8591%, 4.8077%, 3.2045%");
+    expect((results[10] as any).result).toBe("80.128719%, 11.85905%, 4.807723%, 3.204508%");
   });
 
   test("blocks 52-53: measurement stats and volume", () => {

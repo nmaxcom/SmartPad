@@ -53,15 +53,26 @@ export async function clearEditor(page: Page) {
 }
 
 export async function setEditorText(page: Page, content: string) {
-  await page.evaluate((nextContent: string) => {
+  const nextContent =
+    content.includes("\n") && !/<[a-z][\s\S]*>/i.test(content)
+      ? {
+          type: "doc",
+          content: content.split("\n").map((line) => ({
+            type: "paragraph",
+            content: line ? [{ type: "text", text: line }] : [],
+          })),
+        }
+      : content;
+
+  await page.evaluate((contentToSet: unknown) => {
     const editor = (window as any).tiptapEditor;
     if (!editor) {
       throw new Error("tiptapEditor is not available");
     }
-    editor.commands.setContent(nextContent);
+    editor.commands.setContent(contentToSet);
     editor.commands.focus("end");
     window.dispatchEvent(new Event("forceEvaluation"));
-  }, content);
+  }, nextContent);
   await waitForUIRenderComplete(page);
 }
 

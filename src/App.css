@@ -17,12 +17,38 @@
 }
 
 .fx-status-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   background: var(--ui-warning-banner-bg);
   color: var(--ui-warning-banner-text);
   border-bottom: 1px solid var(--ui-warning-banner-border);
   padding: 8px 20px;
   font-size: 0.85rem;
   letter-spacing: 0.01em;
+}
+
+.fx-status-banner--unavailable {
+  background: color-mix(in srgb, var(--ui-warning-banner-bg) 70%, var(--color-background));
+  color: var(--ui-warning-banner-text);
+  border-bottom-color: var(--ui-warning-banner-border);
+}
+
+.fx-status-banner-close {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 2px 4px;
+  opacity: 0.72;
+}
+
+.fx-status-banner-close:hover,
+.fx-status-banner-close:focus-visible {
+  opacity: 1;
 }
 
 .app-layout {

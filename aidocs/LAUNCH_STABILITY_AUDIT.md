@@ -59,7 +59,7 @@ This run checked the current launch candidate after the user approved moving pas
 
 ### Launch-Relevant Findings
 
-- Browser logs show direct FX fetches blocked by CORS from `https://api.frankfurter.app/latest` and `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml`. Currency may need a clearer offline/static fallback, a proxy, or a launch decision that live FX is not promised in the web app.
+- Browser logs show direct FX fetches blocked by CORS from `https://api.frankfurter.app/latest` and `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml`. The browser-safe `fawazahmed0` fallback is the launch path for live FX for now; add a SmartPad-owned endpoint later if provider reliability becomes a user-visible problem.
 - The current e2e suite is not yet a reliable RC gate because several specs do not reset or control first-load content. This can hide real issues and create false failures.
 - The production build passes, but Vite reports a large bundle warning. This is not a launch blocker for a first public beta, but it belongs in post-RC performance work unless load time is poor in manual checks.
 
@@ -68,7 +68,7 @@ This run checked the current launch candidate after the user approved moving pas
 1. Fix the `window` access in `astParser.ts` so Node edge tests run.
 2. Add or reuse an e2e helper that gives tests an explicit empty editor or explicit Quick Tour sheet, then update the launch-gate tests to choose the intended state.
 3. Re-run the basic editing, live-result, and units e2e batches after the harness cleanup.
-4. Decide the FX strategy before public web launch: static bundled rates, manual user rates, browser-safe provider/proxy, or documented beta limitation.
+4. Keep live FX enabled for launch through the browser-safe `fawazahmed0` fallback, and track a future SmartPad-owned endpoint as reliability hardening.
 
 ## RC Stability Correction 1 - 2026-06-20
 
@@ -93,8 +93,96 @@ This correction block addressed the false negatives and one real Node/runtime is
 
 ### Still Open
 
-- Browser FX/CORS remains a launch decision. The web app still needs a clear strategy before public copy promises live FX: static bundled rates, manual/user-supplied rates, browser-safe provider/proxy, or documented beta limitation.
+- Browser FX/CORS decision: keep live FX for launch through the browser-safe `fawazahmed0` fallback. Frankfurter and ECB currently fail in browser fetches because of CORS, so they should be treated as opportunistic primary/fallback providers rather than the launch-critical path. Track a SmartPad-owned endpoint as future hardening if external provider reliability becomes a problem.
 - The production build still warns that the main bundle is larger than 500 kB after minification. This is not blocking the current RC correction, but should be watched before marketing/video capture if load time feels slow.
+
+## RC Stability Correction 2 - 2026-06-20
+
+This correction block continued the launch-candidate checks that do not depend on the open FX/CORS product decision.
+
+### Fixed
+
+- Updated `results-decorator-regression.spec.ts` so it starts from an explicit empty editor instead of the first-load Quick Tour sheet.
+- Updated the shared e2e `setEditorText` helper so plain text containing newlines becomes separate editor paragraphs, while existing HTML snippets still work.
+- Updated result-decorator error expectations to match current behavior: unresolved explicit expressions render one visible error chip with explanatory text.
+- Updated list spec example expectations for current percentage precision.
+
+### Validation
+
+- Result chips and references e2e passed: 76 passed.
+- Lists and ranges unit gate passed: 66 passed.
+- Plotting unit gate passed: 23 passed.
+- Plotting browser gate passed: 10 passed.
+- Settings unit gate passed: 3 passed.
+- Settings/grouped/date browser gate passed: 16 passed.
+- Autocomplete unit gate passed: 15 passed.
+- Autocomplete browser gate passed: 6 passed.
+- `npm run docs:docusaurus:publish-local` passed.
+- Docs IA browser gate passed: 3 passed.
+
+### Still Open
+
+- Legacy `save-load-buttons.spec.ts` and broad `migration-verification.spec.ts` still describe old/internal flows and should not be treated as launch gates without a rewrite.
+- Browser FX/CORS is no longer blocking launch copy if copy stays honest: live FX is available through the browser-safe `fawazahmed0` fallback, while a SmartPad-owned endpoint remains future hardening.
+- Public production deploy path still needs a dedicated final check after the sheets/persistence gate is corrected.
+
+## Sheets Persistence / Import / Export Gate - 2026-06-20
+
+This gate replaces the obsolete manual save/load-button coverage with checks for the current UI:
+
+- Auto-persistence after editing and reloading the app.
+- Desktop sidebar create, rename, trash, and restore.
+- Single-sheet markdown download with current editor content.
+- Download All zip export for active non-trashed sheets.
+- Markdown import by dropping a `.md` file.
+- ZIP import by dropping a `.zip` file with multiple markdown sheets.
+- Existing sheets remain after import.
+- Mobile drawer sheet actions remain covered by `mobile-sheet-navigation.spec.ts`.
+
+Validation:
+
+- `npx playwright test tests/e2e/sheets-persistence-import-export.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed: 5 passed.
+- `npx playwright test tests/e2e/mobile-sheet-navigation.spec.ts tests/e2e/sheets-persistence-import-export.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed: 7 passed.
+
+Launch implication:
+
+- Current sheet persistence/import/export coverage is green for the actual UI.
+- This is sufficient for the first public launch. Historical migration formats are deferred unless a concrete old-data case appears.
+
+## FX Failure Visibility - 2026-06-20
+
+SmartPad now shows a discreet, dismissible top-of-app FX status banner only when there is no usable FX data:
+
+- No provider is live and no cached snapshot is newer than 24 hours: `Live FX unavailable - currency conversions may need attention.`
+- If any provider is live, or any cached snapshot is newer than 24 hours, no app-level warning is shown.
+
+Validation:
+
+- `npx playwright test tests/e2e/fx-status-banner.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed: 4 passed.
+- `npx playwright test tests/e2e/settings-integration.spec.ts tests/e2e/fx-status-banner.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed: 16 passed.
+
+Launch implication:
+
+- Live FX can remain in launch scope without silently failing. If this banner appears repeatedly in normal use, prioritize the future SmartPad-owned FX endpoint task.
+
+## Public App And Docs Deploy Path - 2026-06-21
+
+The production-path check uses the GitHub Pages base URL shape: app under `/SmartPad/` and docs under `/SmartPad/docs/`.
+
+Validation:
+
+- `npm run test:unit -- tests/unit/docsUrl.test.ts --runInBand` passed: 6 passed.
+- `npm run docs:docusaurus:publish-prod` passed and generated docs with `/SmartPad/docs/` asset paths.
+- `VITE_BASE_PATH=/SmartPad/ npm run build` passed.
+- A static preview that mounted `dist` under `/SmartPad/` loaded:
+  - `/SmartPad/` with status 200, title `SmartPad`, no Docusaurus baseUrl banner.
+  - `/SmartPad/docs/index.html` with status 200, title `Start Here | SmartPad Docs`, no Docusaurus baseUrl banner.
+- The same preview confirmed the top-level FX warning is not visible while the browser-safe Fawaz provider is usable.
+
+Notes:
+
+- Browser console output still shows expected CORS errors for Frankfurter and ECB; this is covered by the launch decision to rely on the browser-safe Fawaz path for now.
+- Vite still reports the known large bundle warning during production build.
 
 ## Manual Visual And Accessibility Pass
 
@@ -124,7 +212,7 @@ Evidence to capture:
 | --- | --- | --- |
 | Settings surface feels too internal for public users. | resolved for current launch-candidate path | Settings layout was approved and committed in `ed5511db`; keep it in RC verification. |
 | Autocomplete is implemented but still proposed and pending user confirmation. | p1 | Keep out of headline copy until user confirms and spec status is reconciled. |
-| FX rates depend on external service/cache behavior. | p1 | Document in privacy/portability docs and website copy. |
+| FX rates depend on external service/cache behavior. | p1 | Live FX can ship through the browser-safe `fawazahmed0` fallback; document external dependency and add a future task for a SmartPad-owned endpoint if provider reliability degrades. |
 | Desktop packaging is not implemented. | p0 for desktop launch, p1 for web-first launch | Treat desktop as beta/spike until package pipeline exists. |
 | Marketing screenshots cannot be stable until product/chip behavior passes the RC audit. | p0 | Capture assets only after stability audit and visible issue review. |
 | Proposed docs may be mistaken for shipped behavior. | p1 | Audit public docs IA and avoid proposed pages in launch funnel unless clearly labeled. |

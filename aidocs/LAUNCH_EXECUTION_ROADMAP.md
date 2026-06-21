@@ -86,7 +86,7 @@ Exit criteria:
 
 ## Phase 2: Launch Stability Candidate
 
-Status: checklist drafted, not executed.
+Status: partially executed. Core editor, live results, units/dates, result chips/references, lists/ranges, plotting, settings, autocomplete, docs IA, current sheets/persistence/import-export, FX failure visibility, and the production app/docs path now have green launch-candidate checks. Browser FX can ship through the browser-safe `fawazahmed0` fallback. Historical migration formats are not a launch-critical gate for this first public launch unless a concrete user data case appears.
 
 Primary task:
 
@@ -98,10 +98,13 @@ Inputs:
 
 Actions:
 
-1. Run P0 release-candidate checks from the audit.
-2. Convert failures into scoped bug tasks.
-3. Resolve or explicitly document p0 limitations.
-4. Keep user-visible completion gate open until visible behavior is reviewed.
+1. Completed: Quick Tour, core expression/result units, temporary edge cases, basic editing, live-result, units/date, result-chip/reference, lists/ranges, plotting, settings, autocomplete, docs local build, and docs IA checks have been run and recorded in `aidocs/LAUNCH_STABILITY_AUDIT.md`.
+2. Completed: replaced obsolete sheets/persistence coverage that targeted removed `.save-button` / `.load-button` UI with current sidebar, auto-persistence, download all, markdown import, zip import, trash, restore, and mobile drawer checks.
+3. Keep live FX copy honest: SmartPad can offer live FX through the browser-safe `fawazahmed0` fallback, while Frankfurter and ECB are opportunistic because they currently fail browser CORS.
+4. Treat the current export/import/persistence gate as sufficient for the first public launch; defer historical migration formats unless a concrete user data case appears.
+5. Convert any remaining failures into scoped bug tasks.
+6. Resolve or explicitly document p0 limitations.
+7. Keep user-visible completion gate open until visible behavior is reviewed.
 
 Exit criteria:
 
@@ -141,7 +144,7 @@ Exit criteria:
 
 ## Phase 4: Release Candidate Dry Run
 
-Status: checklist exists, no dry run yet.
+Status: checklist exists; production app/docs path has been smoke-tested locally against the GitHub Pages base path, but no full release dry run has been done yet.
 
 Primary task:
 
@@ -157,7 +160,7 @@ Actions:
 
 1. Update changelog for release candidate.
 2. Run checklist commands.
-3. Confirm Pages build/deploy path.
+3. Confirm Pages build/deploy path against the real published URL after the next deploy.
 4. Confirm public app/docs/support links.
 5. Record known limitations.
 
@@ -246,7 +249,7 @@ Rules:
 ## Current Critical Path
 
 1. Confirm scope with user.
-2. Run launch stability checks.
+2. Finish launch stability checks with the current persistence/import/export gate accepted for launch; historical migration formats are deferred unless a concrete old-data case appears.
 3. Dry-run release checklist.
 4. Implement desktop beta shell.
 5. Build standalone promotional website and capture final assets.
@@ -257,7 +260,8 @@ Rules:
 P0:
 
 - Launch scope lacks explicit user confirmation.
-- Launch stability checks have not been executed.
+- Historical migration coverage is deferred unless a concrete old-data case appears.
+- SmartPad-owned FX endpoint is not required for launch, but should be planned as future hardening if external provider reliability becomes a problem.
 - Desktop packaging is not implemented.
 - Standalone promotional website/signup/assets are not implemented and intentionally come last.
 
