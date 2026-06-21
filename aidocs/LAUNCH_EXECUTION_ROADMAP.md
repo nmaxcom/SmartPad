@@ -144,7 +144,7 @@ Exit criteria:
 
 ## Phase 4: Release Candidate Dry Run
 
-Status: checklist exists; production app/docs path has been smoke-tested locally against the GitHub Pages base path, but no full release dry run has been done yet.
+Status: technical web dry run passed on 2026-06-22; public release is still held by scope confirmation, homepage/assets/signup, and desktop beta decisions.
 
 Primary task:
 
@@ -158,17 +158,31 @@ Inputs:
 
 Actions:
 
-1. Update changelog for release candidate.
-2. Run checklist commands.
-3. Confirm Pages build/deploy path against the real published URL after the next deploy.
-4. Confirm public app/docs/support links.
-5. Record known limitations.
+1. Completed: ran the required web release-candidate commands from `RELEASE_CHECKLIST.md`.
+2. Completed: confirmed the GitHub Pages workflow uses `VITE_BASE_PATH=/${repo}/`.
+3. Completed: ran `VITE_BASE_PATH=/SmartPad/ npm run build` and smoke-tested the built app/docs under `/SmartPad/`.
+4. Pending: update changelog for the actual release candidate.
+5. Pending: confirm public app/docs/support links against the real published URL after the next deploy.
+6. Pending: record final known limitations once launch scope and desktop beta status are confirmed.
 
 Exit criteria:
 
 - Release checklist can be followed without relying on memory.
 - Changelog and release notes are current.
 - Candidate can be tagged or explicitly held with reasons.
+
+Dry run evidence:
+
+- `npm run docs:map` passed.
+- `npm run docs:drift` passed.
+- `npm run spec:test` passed.
+- `npm run spec:trust` passed.
+- `npm run verify:changed` passed.
+- `npm run docs:docusaurus:publish-prod` passed.
+- `npm run build` passed with the known large bundle warning.
+- `VITE_BASE_PATH=/SmartPad/ npm run build` passed with the same known large bundle warning.
+- Static preview mounted under `/SmartPad/` loaded `/SmartPad/` and `/SmartPad/docs/index.html` with status 200 and no Docusaurus baseUrl banner.
+- Browser console still shows expected Frankfurter/ECB CORS errors; Fawaz remains the current browser-safe FX launch path.
 
 ## Phase 5: Desktop Beta
 
@@ -249,8 +263,8 @@ Rules:
 ## Current Critical Path
 
 1. Confirm scope with user.
-2. Finish launch stability checks with the current persistence/import/export gate accepted for launch; historical migration formats are deferred unless a concrete old-data case appears.
-3. Dry-run release checklist.
+2. Confirm launch scope with the user or explicitly mark unconfirmed decisions as beta limitations.
+3. Update changelog/release notes for the actual web release candidate.
 4. Implement desktop beta shell.
 5. Build standalone promotional website and capture final assets.
 6. Link approved docs/support/privacy pages from the promotional site and verify the full journey.
@@ -267,7 +281,7 @@ P0:
 
 P1:
 
-- Release checklist has not been dry-run.
+- Release checklist technical dry run passed; changelog/release notes are not yet current for an actual candidate.
 - Docs/support/privacy pages are approved but still need eventual promotional-site links and homepage journey verification.
 - Signup/analytics policy is documented as not wired yet; final provider decision is still pending.
 - Autocomplete remains pending user confirmation/spec-status reconciliation before headline use.
