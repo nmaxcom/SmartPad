@@ -52,20 +52,32 @@ describe("Date Math Evaluator", () => {
   });
 
   test("should evaluate today keyword with duration aliases", () => {
-    const node = parseLine("today + 10 days =>", 1);
-    const result = defaultRegistry.evaluate(node, createContext());
-    expect(result?.type).toBe("mathResult");
-    if (result?.type === "mathResult") {
-      expect(result.displayText).not.toContain("unresolved identifier");
+    jest.useFakeTimers().setSystemTime(new Date(2026, 5, 21, 8, 0, 0));
+    try {
+      const node = parseLine("today + 10 days =>", 1);
+      const result = defaultRegistry.evaluate(node, createContext());
+      expect(result?.type).toBe("mathResult");
+      if (result?.type === "mathResult") {
+        expect(result.result).toBe("2026-07-01");
+        expect(result.displayText).toBe("today + 10 days => 2026-07-01");
+      }
+    } finally {
+      jest.useRealTimers();
     }
   });
 
   test("should evaluate now keyword with minute durations", () => {
-    const node = parseLine("now + 20 minutes =>", 1);
-    const result = defaultRegistry.evaluate(node, createContext());
-    expect(result?.type).toBe("mathResult");
-    if (result?.type === "mathResult") {
-      expect(result.displayText).not.toContain("unresolved identifier");
+    jest.useFakeTimers().setSystemTime(new Date(2026, 5, 21, 8, 0, 0));
+    try {
+      const node = parseLine("now + 20 minutes =>", 1);
+      const result = defaultRegistry.evaluate(node, createContext());
+      expect(result?.type).toBe("mathResult");
+      if (result?.type === "mathResult") {
+        expect(result.result).toContain("2026-06-21 08:20");
+        expect(result.displayText).toContain("now + 20 minutes => 2026-06-21 08:20");
+      }
+    } finally {
+      jest.useRealTimers();
     }
   });
 

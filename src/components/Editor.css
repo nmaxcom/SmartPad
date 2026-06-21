@@ -1256,7 +1256,7 @@ body.number-scrubbing * {
 .plot-view-legend {
   position: absolute;
   top: 10px;
-  left: 54px;
+  left: 92px;
   display: flex;
   gap: 8px;
   flex-wrap: wrap;

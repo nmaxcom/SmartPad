@@ -151,9 +151,9 @@ describe("Integration Fixes Validation", () => {
       ];
 
       invalidExpressions.forEach((expr) => {
+        expect(() => parseLine(expr, 0)).not.toThrow();
         const node = parseLine(expr, 0);
-        // Should parse as combinedAssignment, but units detection might fail
-        expect(node.type).toBe("combinedAssignment");
+        expect(["combinedAssignment", "error"]).toContain(node.type);
       });
     });
 

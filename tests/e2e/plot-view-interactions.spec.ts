@@ -105,6 +105,21 @@ test.describe("Plot view interactions", () => {
     await expect(page.locator(".plot-view-line").first()).toBeVisible();
   });
 
+  test("keeps the legend clear of the y axis gutter", async ({ page }) => {
+    await setEditorContent(
+      page,
+      "<p>f(x) = x^2</p><p>g(x) = x + 4</p><p>@view plot y=f,g domain=-10..10 size=md</p>"
+    );
+
+    await expect(page.locator(".plot-view").first()).toBeVisible();
+    const legendLeft = await page
+      .locator(".plot-view-legend")
+      .first()
+      .evaluate((node) => Number.parseFloat(getComputedStyle(node).left));
+
+    expect(legendLeft).toBeGreaterThanOrEqual(88);
+  });
+
   test("keeps polynomial plots scaled to the visible domain and clipped inside axes", async ({
     page,
   }) => {
