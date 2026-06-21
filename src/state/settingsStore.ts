@@ -1,5 +1,18 @@
-import { SettingsState, SettingsAction } from "./types";
+import { AutocompleteManualShortcut, SettingsState, SettingsAction } from "./types";
 import { normalizeSyntaxThemeId, normalizeUIThemeId } from "../styles/themeCatalog";
+
+const VALID_AUTOCOMPLETE_SHORTCUTS = new Set<AutocompleteManualShortcut>([
+  "ctrl-space",
+  "cmd-space",
+  "alt-slash",
+  "ctrl-slash",
+]);
+
+function normalizeAutocompleteManualShortcut(value: unknown): AutocompleteManualShortcut {
+  return VALID_AUTOCOMPLETE_SHORTCUTS.has(value as AutocompleteManualShortcut)
+    ? (value as AutocompleteManualShortcut)
+    : DEFAULT_SETTINGS.autocompleteManualShortcut;
+}
 
 // Default settings configuration
 export const DEFAULT_SETTINGS: SettingsState = {
@@ -10,6 +23,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
   groupThousands: true,
   liveResultEnabled: true,
   resultLaneEnabled: false,
+  autocompleteManualShortcut: "ctrl-space",
   referenceTextExportMode: "preserve",
   listMaxLength: 100,
   uiTheme: "spatial-dark",
@@ -67,6 +81,9 @@ export function createSettingsState(): SettingsState {
       }
       merged.uiTheme = normalizeUIThemeId(merged.uiTheme, DEFAULT_SETTINGS.uiTheme);
       merged.syntaxTheme = normalizeSyntaxThemeId(merged.syntaxTheme, DEFAULT_SETTINGS.syntaxTheme);
+      merged.autocompleteManualShortcut = normalizeAutocompleteManualShortcut(
+        merged.autocompleteManualShortcut
+      );
       delete merged.scientificUpperThreshold;
       delete merged.scientificLowerThreshold;
       delete merged.chipInsertMode;

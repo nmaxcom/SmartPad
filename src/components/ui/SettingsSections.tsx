@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { useSettingsContext } from "../../state/SettingsContext";
 import { DEFAULT_SETTINGS } from "../../state/settingsStore";
+import type { AutocompleteManualShortcut } from "../../state/types";
 import {
   normalizeSyntaxThemeId,
   normalizeUIThemeId,
@@ -665,6 +666,38 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
           Keep everyday settings simple, and adjust performance or workspace details only when you
           need them.
         </p>
+
+        <h4 className="settings-subsection-title">Editor assistance</h4>
+
+        <div className="settings-item settings-item-stack">
+          <div className="settings-item-info">
+            <label htmlFor={`${idPrefix}-autocomplete-manual-shortcut`} className="settings-label">
+              Manual autocomplete shortcut
+            </label>
+            <p className="settings-description">
+              Auto-suggest appears only after you type at least one character in the current token.
+              Use this shortcut to request full contextual suggestions.
+            </p>
+          </div>
+          <div className="settings-control">
+            <select
+              id={`${idPrefix}-autocomplete-manual-shortcut`}
+              value={settings.autocompleteManualShortcut}
+              onChange={(e) =>
+                updateSetting(
+                  "autocompleteManualShortcut",
+                  e.target.value as AutocompleteManualShortcut
+                )
+              }
+              className="settings-select"
+            >
+              <option value="ctrl-space">Ctrl + Space</option>
+              <option value="cmd-space">Cmd + Space</option>
+              <option value="alt-slash">Alt + /</option>
+              <option value="ctrl-slash">Ctrl + /</option>
+            </select>
+          </div>
+        </div>
 
         <h4 className="settings-subsection-title">Lists and limits</h4>
 

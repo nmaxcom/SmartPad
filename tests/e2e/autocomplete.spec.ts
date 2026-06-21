@@ -31,7 +31,7 @@ test.describe("Autocomplete", () => {
     await page.evaluate(() => {
       const editor = (window as any).tiptapEditor;
       editor.commands.setContent(
-        "compound(principal, rate, years) = principal * (1 + rate)^years\n"
+        "<p>compound(principal, rate, years) = principal * (1 + rate)^years</p>"
       );
       editor.commands.focus("end");
       window.dispatchEvent(new Event("forceEvaluation"));
@@ -82,6 +82,66 @@ test.describe("Autocomplete", () => {
 
     await page.keyboard.type(" ");
     await expect(page.locator(".smartpad-autocomplete-menu")).toBeHidden();
+  });
+
+  test("auto-suggest waits for a token character after whitespace", async ({ page }) => {
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      editor.commands.setContent("<p>roi = 44%</p><p>roi tax = 21%</p>");
+      editor.commands.focus("end");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("win = roi ");
+    await expect(page.locator(".smartpad-autocomplete-menu")).toBeHidden();
+
+    await page.keyboard.type("t");
+    await expect(page.locator(".smartpad-autocomplete-menu")).toBeVisible();
+    await expect(page.getByRole("option", { name: /roi tax/i })).toBeVisible();
+  });
+
+  test("manual shortcut opens contextual suggestions without a token prefix", async ({ page }) => {
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      editor.commands.setContent("<p>roi = 44%</p><p>roi tax = 21%</p>");
+      editor.commands.focus("end");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("win = roi ");
+    await expect(page.locator(".smartpad-autocomplete-menu")).toBeHidden();
+
+    await page.keyboard.press("Control+Space");
+    await expect(page.locator(".smartpad-autocomplete-menu")).toBeVisible();
+    await expect(page.getByRole("option", { name: /roi tax/i })).toBeVisible();
+  });
+
+  test("manual autocomplete shortcut can be changed in settings", async ({ page }) => {
+    await page.getByLabel("Open Settings", { exact: true }).click();
+    await page.locator("#settings-modal-autocomplete-manual-shortcut").selectOption("cmd-space");
+    await page.getByLabel("Close settings").click();
+
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      editor.commands.setContent("<p>roi = 44%</p><p>roi tax = 21%</p>");
+      editor.commands.focus("end");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("win = roi ");
+
+    await page.keyboard.press("Control+Space");
+    await expect(page.locator(".smartpad-autocomplete-menu")).toBeHidden();
+
+    await page.keyboard.press("Meta+Space");
+    await expect(page.locator(".smartpad-autocomplete-menu")).toBeVisible();
+    await expect(page.getByRole("option", { name: /roi tax/i })).toBeVisible();
   });
 
   test("closes when a variable name is completed exactly", async ({ page }) => {

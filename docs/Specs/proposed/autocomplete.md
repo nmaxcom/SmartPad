@@ -23,7 +23,8 @@ The first version focuses on reusing names and syntax that already exist in the 
 
 ## Interaction contract
 
-1. Suggestions may appear while typing inside expression-like contexts.
+1. Suggestions may appear while typing inside expression-like contexts only after the user has
+   typed at least one non-whitespace character in the current token.
 2. `ArrowUp` and `ArrowDown` move the active suggestion.
 3. `Enter` or `Tab` applies the active suggestion.
 4. `Escape` closes suggestions without changing text.
@@ -31,6 +32,9 @@ The first version focuses on reusing names and syntax that already exist in the 
 6. Applying a suggestion replaces only the current query range, not the whole line.
 7. When keyboard navigation moves through a long suggestion list, the menu scroll position follows
    the highlighted option so the active item remains visible.
+8. The manual autocomplete command opens contextual suggestions even when the current token is
+   empty, for cases such as `roi ` phrase continuations, `x=`, or `30kg to `.
+9. The manual autocomplete shortcut is configurable in Settings. The default is `Ctrl + Space`.
 
 ## Source types
 
@@ -139,9 +143,11 @@ ranking above `msr`, and `msr` ranking above generic substring matches.
 5. Do not block normal typing when no useful suggestion exists.
 6. Do not open the menu only because the user clicks a variable or moves the caret.
 7. If the query ends with whitespace, do not keep suggesting the exact completed variable; only
-   suggest longer phrase continuations such as `roi tax` for `roi `.
+   suggest longer phrase continuations such as `roi tax` for `roi ` when the user invokes the
+   manual autocomplete command.
 8. If the query exactly matches a completed variable or function name, do not keep showing that
    exact item while the user continues editing the same token.
+9. Automatic autocomplete must not open only because the user types a space after a variable.
 
 ## Acceptance tests
 
@@ -158,3 +164,7 @@ ranking above `msr`, and `msr` ranking above generic substring matches.
 11. Editing `tax r = 21%` with the cursor before `=` returns no suggestions.
 12. `30kg to ` suggests only mass-compatible targets such as `g`, `kg`, and `lb`.
 13. Completing `platformfee` exactly hides the exact `platformfee` suggestion.
+14. `win = roi ` does not auto-open suggestions, but the manual autocomplete command can show
+    compatible phrase continuations such as `roi tax`.
+15. Changing the manual autocomplete shortcut in Settings changes the editor command without
+    requiring a page refresh.

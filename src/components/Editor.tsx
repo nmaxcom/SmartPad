@@ -1116,6 +1116,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
           return new Map(variables.map((variable) => [variable.name, variable]));
         },
         getFunctionStore: () => functionStoreRef.current,
+        getManualShortcut: () => settingsRef.current.autocompleteManualShortcut,
       }),
       // The VariableHoverExtension provides hover-to-highlight functionality for variables.
       VariableHoverExtension.configure({

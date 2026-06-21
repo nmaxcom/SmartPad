@@ -3,7 +3,7 @@ import { Plugin, PluginKey, TextSelection } from "prosemirror-state";
 import type { EditorState, Transaction } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
 import type { FunctionDefinitionNode } from "../../parsing/ast";
-import type { Variable } from "../../state/types";
+import type { AutocompleteManualShortcut, Variable } from "../../state/types";
 import {
   AutocompleteItem,
   getAutocompleteSuggestions,
@@ -19,6 +19,7 @@ interface AutocompleteState {
 interface AutocompleteOptions {
   getVariableContext?: () => Map<string, Variable>;
   getFunctionStore?: () => Map<string, FunctionDefinitionNode>;
+  getManualShortcut?: () => AutocompleteManualShortcut;
 }
 
 const pluginKey = new PluginKey<AutocompleteState>("smartpad-autocomplete");
@@ -56,7 +57,8 @@ function getTextCursorContext(state: EditorState): {
 function buildState(
   state: EditorState,
   options: AutocompleteOptions,
-  selectedIndex = 0
+  selectedIndex = 0,
+  trigger: "auto" | "manual" = "auto"
 ): AutocompleteState {
   const cursorContext = getTextCursorContext(state);
   if (!cursorContext) {
@@ -68,6 +70,7 @@ function buildState(
     cursorOffset: cursorContext.cursorOffset,
     variables: options.getVariableContext?.() || new Map(),
     functions: options.getFunctionStore?.() || new Map(),
+    trigger,
   }).map((item) => ({
     ...item,
     replaceFrom: cursorContext.lineStart + item.replaceFrom,
@@ -96,6 +99,22 @@ function applyItem(view: EditorView, item: AutocompleteItem) {
   tr.setSelection(TextSelection.create(tr.doc, cursorPos));
   view.dispatch(setMeta(tr, "close"));
   view.focus();
+}
+
+function isManualShortcut(event: KeyboardEvent, shortcut: AutocompleteManualShortcut): boolean {
+  const isSpace = event.code === "Space" || event.key === " " || event.key === "Spacebar";
+  const isSlash = event.key === "/" || event.code === "Slash";
+  switch (shortcut) {
+    case "cmd-space":
+      return isSpace && event.metaKey && !event.ctrlKey && !event.altKey;
+    case "alt-slash":
+      return isSlash && event.altKey && !event.ctrlKey && !event.metaKey;
+    case "ctrl-slash":
+      return isSlash && event.ctrlKey && !event.metaKey && !event.altKey;
+    case "ctrl-space":
+    default:
+      return isSpace && event.ctrlKey && !event.metaKey && !event.altKey;
+  }
 }
 
 export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
@@ -135,6 +154,14 @@ export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
         props: {
           handleKeyDown(view, event) {
             const state = pluginKey.getState(view.state) || emptyState;
+            const manualShortcut = options.getManualShortcut?.() || "ctrl-space";
+            if (isManualShortcut(event, manualShortcut)) {
+              event.preventDefault();
+              const nextState = buildState(view.state, options, 0, "manual");
+              view.dispatch(setMeta(view.state.tr, nextState.active ? nextState : "close"));
+              return true;
+            }
+
             if (!state.active || state.items.length === 0) {
               return false;
             }

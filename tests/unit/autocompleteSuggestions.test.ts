@@ -167,9 +167,21 @@ describe("autocomplete suggestions", () => {
       cursorOffset: "win = roi ".length,
       variables,
       functions,
+      trigger: "manual",
     });
 
     expect(suggestions.map((suggestion) => suggestion.label)).toContain("roi tax");
+  });
+
+  test("does not auto-suggest from an empty token after whitespace", () => {
+    const suggestions = getAutocompleteSuggestions({
+      lineText: "win = roi ",
+      cursorOffset: "win = roi ".length,
+      variables,
+      functions,
+    });
+
+    expect(suggestions).toEqual([]);
   });
 
   test("suggests currency targets for currency conversions", () => {
@@ -197,6 +209,7 @@ describe("autocomplete suggestions", () => {
       cursorOffset: "30kg to ".length,
       variables,
       functions,
+      trigger: "manual",
       maxItems: 20,
     });
     const labels = suggestions.map((suggestion) => suggestion.label);
@@ -204,6 +217,18 @@ describe("autocomplete suggestions", () => {
     expect(labels).toEqual(expect.arrayContaining(["kg", "g", "lb"]));
     expect(labels).not.toContain("C");
     expect(labels).not.toContain("km");
+  });
+
+  test("does not auto-suggest conversion targets until the target token starts", () => {
+    const suggestions = getAutocompleteSuggestions({
+      lineText: "30kg to ",
+      cursorOffset: "30kg to ".length,
+      variables,
+      functions,
+      maxItems: 20,
+    });
+
+    expect(suggestions).toEqual([]);
   });
 
   test("suggests view directives after at-sign", () => {

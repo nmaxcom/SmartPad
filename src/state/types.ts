@@ -78,6 +78,11 @@ export type SyntaxThemeId =
   | "ink-syntax"
   | "sunset-syntax"
   | "mint-syntax";
+export type AutocompleteManualShortcut =
+  | "ctrl-space"
+  | "cmd-space"
+  | "alt-slash"
+  | "ctrl-slash";
 
 // Settings Types
 export interface SettingsState {
@@ -88,6 +93,7 @@ export interface SettingsState {
   groupThousands: boolean;
   liveResultEnabled: boolean;
   resultLaneEnabled: boolean;
+  autocompleteManualShortcut: AutocompleteManualShortcut;
   referenceTextExportMode: "preserve" | "readable";
   listMaxLength: number;
   uiTheme: UIThemeId;

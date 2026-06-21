@@ -35,6 +35,7 @@ export interface AutocompleteInput {
   cursorOffset: number;
   variables: Map<string, Variable>;
   functions: Map<string, FunctionDefinitionNode>;
+  trigger?: "auto" | "manual";
   maxItems?: number;
 }
 
@@ -251,6 +252,16 @@ function buildSegmentContext(
   } as AutocompleteContext;
 }
 
+function hasTypedTokenCharacter(context: AutocompleteContext): boolean {
+  if (context.type === "none") {
+    return false;
+  }
+  if (context.type === "directive") {
+    return context.query.length > 0;
+  }
+  return /\S$/.test(context.query);
+}
+
 export function getAutocompleteContext(
   lineText: string,
   cursorOffset: number
@@ -422,6 +433,9 @@ function directiveItems(context: AutocompleteContext): AutocompleteItem[] {
 export function getAutocompleteSuggestions(input: AutocompleteInput): AutocompleteItem[] {
   let context = getAutocompleteContext(input.lineText, input.cursorOffset);
   if (context.type === "none") {
+    return [];
+  }
+  if ((input.trigger || "auto") === "auto" && !hasTypedTokenCharacter(context)) {
     return [];
   }
   if (context.type === "conversionTarget" && context.sourceKind === "unknown") {
