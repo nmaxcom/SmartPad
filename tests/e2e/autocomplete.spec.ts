@@ -173,7 +173,9 @@ test.describe("Autocomplete", () => {
 
     await page.keyboard.press("Control+Alt+K");
     await expect(page.locator(".smartpad-autocomplete-menu")).toBeVisible();
+    await expect(page.getByRole("option", { name: /roi 44%/i })).toBeVisible();
     await expect(page.getByRole("option", { name: /roi tax/i })).toBeVisible();
+    await expect(page.getByRole("option", { name: /sqrt\(value\)/i })).toBeVisible();
   });
 
   test("closes when a variable name is completed exactly", async ({ page }) => {

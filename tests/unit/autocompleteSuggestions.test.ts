@@ -194,8 +194,37 @@ describe("autocomplete suggestions", () => {
     });
 
     expect(suggestions.map((suggestion) => suggestion.label)).toEqual(
-      expect.arrayContaining(["monthly subscription revenue", "compound(principal, rate, years)"])
+      expect.arrayContaining([
+        "monthly subscription revenue",
+        "compound(principal, rate, years)",
+        "sqrt(value)",
+      ])
     );
+    expect(suggestions[0]).toMatchObject({
+      kind: "variable",
+      label: "monthly subscription revenue",
+    });
+    const monthlyIndex = suggestions.findIndex(
+      (suggestion) => suggestion.label === "monthly subscription revenue"
+    );
+    const compoundIndex = suggestions.findIndex(
+      (suggestion) => suggestion.label === "compound(principal, rate, years)"
+    );
+    expect(compoundIndex).toBeGreaterThan(monthlyIndex);
+    expect(suggestions.findIndex((suggestion) => suggestion.label === "sqrt(value)")).toBeGreaterThan(
+      compoundIndex
+    );
+  });
+
+  test("automatic suggestions keep the compact default limit", () => {
+    const suggestions = getAutocompleteSuggestions({
+      lineText: "value = r",
+      cursorOffset: "value = r".length,
+      variables,
+      functions,
+    });
+
+    expect(suggestions.length).toBeLessThanOrEqual(8);
   });
 
   test("suggests currency targets for currency conversions", () => {

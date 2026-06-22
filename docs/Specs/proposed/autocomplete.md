@@ -39,6 +39,9 @@ The first version focuses on reusing names and syntax that already exist in the 
    The default is `Ctrl + Shift + K`, avoiding common OS-reserved space shortcuts.
 10. Settings must not record shortcuts that are likely to be intercepted by the OS before the
     browser receives them, such as `Ctrl + Space` or `Cmd + Space`.
+11. For blank-line manual suggestions, existing variables appear first, user-defined functions
+    appear after variables, and SmartPad built-in functions such as `sqrt`, `ceil`, and `avg`
+    appear last.
 
 ## Source types
 
@@ -175,3 +178,5 @@ ranking above `msr`, and `msr` ranking above generic substring matches.
 16. Reserved shortcuts such as `Ctrl + Space` and `Cmd + Space` are ignored by the recorder.
 17. On a blank line, the manual autocomplete command opens complete contextual suggestions for
     available variables and functions instead of silently doing nothing.
+18. Blank-line manual autocomplete includes built-in SmartPad functions, but ranks them after
+    existing variables and user-defined functions.

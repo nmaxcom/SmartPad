@@ -45,6 +45,30 @@ const DIRECTIVES = [
   { label: "@view hist", detail: "Histogram view", insertText: "@view hist " },
   { label: "@view scatter", detail: "Scatter view", insertText: "@view scatter " },
 ];
+const BUILT_IN_FUNCTIONS = [
+  { name: "sqrt", signature: "sqrt(value)", detail: "square root" },
+  { name: "abs", signature: "abs(value)", detail: "absolute value" },
+  { name: "round", signature: "round(value)", detail: "round number" },
+  { name: "floor", signature: "floor(value)", detail: "round down" },
+  { name: "ceil", signature: "ceil(value)", detail: "round up" },
+  { name: "sin", signature: "sin(value)", detail: "sine" },
+  { name: "cos", signature: "cos(value)", detail: "cosine" },
+  { name: "tan", signature: "tan(value)", detail: "tangent" },
+  { name: "log", signature: "log(value)", detail: "base-10 logarithm" },
+  { name: "log10", signature: "log10(value)", detail: "base-10 logarithm" },
+  { name: "ln", signature: "ln(value)", detail: "natural logarithm" },
+  { name: "exp", signature: "exp(value)", detail: "exponential" },
+  { name: "sum", signature: "sum(list)", detail: "sum list values" },
+  { name: "total", signature: "total(list)", detail: "sum list values" },
+  { name: "avg", signature: "avg(list)", detail: "average list values" },
+  { name: "mean", signature: "mean(list)", detail: "average list values" },
+  { name: "median", signature: "median(list)", detail: "median list value" },
+  { name: "count", signature: "count(list)", detail: "count list values" },
+  { name: "stddev", signature: "stddev(list)", detail: "standard deviation" },
+  { name: "min", signature: "min(list)", detail: "minimum value" },
+  { name: "max", signature: "max(list)", detail: "maximum value" },
+  { name: "range", signature: "range(list)", detail: "max minus min" },
+];
 const CURRENCY_SUGGESTIONS = [
   { label: "USD", detail: "US dollar" },
   { label: "EUR", detail: "Euro" },
@@ -374,6 +398,35 @@ function functionItems(
     .filter((item) => item.score > 25);
 }
 
+function builtInFunctionItems(
+  functions: Map<string, FunctionDefinitionNode>,
+  context: AutocompleteContext
+): AutocompleteItem[] {
+  if (context.type !== "expression" && context.type !== "viewParam") {
+    return [];
+  }
+  if (context.type === "viewParam" && context.key !== "y") {
+    return [];
+  }
+
+  const normalizedQuery = normalizeText(context.query);
+  const userFunctionNames = new Set(
+    Array.from(functions.values()).map((fn) => normalizeText(fn.functionName))
+  );
+  return BUILT_IN_FUNCTIONS.filter((fn) => !userFunctionNames.has(normalizeText(fn.name)))
+    .map((fn) => ({
+      kind: "function" as const,
+      label: fn.signature,
+      insertText: `${fn.name}(`,
+      detail: `built-in · ${fn.detail}`,
+      score: fuzzyScore(fn.name, context.query) + 5,
+      replaceFrom: context.replaceFrom,
+      replaceTo: context.replaceTo,
+    }))
+    .filter((item) => normalizeText(item.insertText.replace(/\($/, "")) !== normalizedQuery)
+    .filter((item) => item.score > 5);
+}
+
 function unitItems(context: AutocompleteContext): AutocompleteItem[] {
   if (context.type !== "conversionTarget") {
     return [];
@@ -430,6 +483,13 @@ function directiveItems(context: AutocompleteContext): AutocompleteItem[] {
   })).filter((item) => item.score > 0);
 }
 
+function getManualEmptyPriority(item: AutocompleteItem): number {
+  if (item.kind === "variable") return 0;
+  if (item.kind === "function" && !item.detail.startsWith("built-in")) return 1;
+  if (item.kind === "function") return 2;
+  return 3;
+}
+
 export function getAutocompleteSuggestions(input: AutocompleteInput): AutocompleteItem[] {
   const trigger = input.trigger || "auto";
   let context = getAutocompleteContext(input.lineText, input.cursorOffset);
@@ -461,12 +521,24 @@ export function getAutocompleteSuggestions(input: AutocompleteInput): Autocomple
   const items = [
     ...variableItems(input.variables, context),
     ...functionItems(input.functions, context),
+    ...builtInFunctionItems(input.functions, context),
     ...currencyItems(context),
     ...unitItems(context),
     ...directiveItems(context),
   ];
 
+  const isManualEmptyExpression =
+    trigger === "manual" &&
+    (context.type === "expression" || context.type === "viewParam") &&
+    normalizeText(context.query) === "";
+  const maxItems = input.maxItems || (trigger === "manual" ? 32 : 8);
   return items
-    .sort((a, b) => b.score - a.score || a.label.localeCompare(b.label))
-    .slice(0, input.maxItems || 8);
+    .sort((a, b) => {
+      if (isManualEmptyExpression) {
+        const priorityDelta = getManualEmptyPriority(a) - getManualEmptyPriority(b);
+        if (priorityDelta !== 0) return priorityDelta;
+      }
+      return b.score - a.score || a.label.localeCompare(b.label);
+    })
+    .slice(0, maxItems);
 }
