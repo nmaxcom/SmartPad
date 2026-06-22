@@ -42,6 +42,8 @@ The first version focuses on reusing names and syntax that already exist in the 
 11. For blank-line manual suggestions, existing variables appear first, user-defined functions
     appear after variables, and SmartPad built-in functions such as `sqrt`, `ceil`, and `avg`
     appear last.
+12. Autocomplete should not truncate matching suggestions by default; the menu should scroll and
+    keyboard navigation should keep the active item visible.
 
 ## Source types
 
@@ -180,3 +182,5 @@ ranking above `msr`, and `msr` ranking above generic substring matches.
     available variables and functions instead of silently doing nothing.
 18. Blank-line manual autocomplete includes built-in SmartPad functions, but ranks them after
     existing variables and user-defined functions.
+19. Manual autocomplete returns the full ranked suggestion set by default, rather than hiding
+    lower-ranked items behind an arbitrary cap.

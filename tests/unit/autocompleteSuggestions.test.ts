@@ -216,15 +216,25 @@ describe("autocomplete suggestions", () => {
     );
   });
 
-  test("automatic suggestions keep the compact default limit", () => {
+  test("does not truncate suggestions unless an explicit maxItems override is provided", () => {
     const suggestions = getAutocompleteSuggestions({
-      lineText: "value = r",
-      cursorOffset: "value = r".length,
+      lineText: "",
+      cursorOffset: 0,
       variables,
       functions,
+      trigger: "manual",
+    });
+    const limitedSuggestions = getAutocompleteSuggestions({
+      lineText: "",
+      cursorOffset: 0,
+      variables,
+      functions,
+      trigger: "manual",
+      maxItems: 5,
     });
 
-    expect(suggestions.length).toBeLessThanOrEqual(8);
+    expect(suggestions.length).toBeGreaterThan(24);
+    expect(limitedSuggestions).toHaveLength(5);
   });
 
   test("suggests currency targets for currency conversions", () => {

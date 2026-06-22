@@ -439,7 +439,6 @@ function unitItems(context: AutocompleteContext): AutocompleteItem[] {
       if (!context.sourceUnitCategory) return true;
       return normalizeUnitCategory(unit.category) === context.sourceUnitCategory;
     })
-    .slice(0, 24)
     .map((unit) => ({
       kind: "unit" as const,
       label: unit.symbol,
@@ -531,14 +530,13 @@ export function getAutocompleteSuggestions(input: AutocompleteInput): Autocomple
     trigger === "manual" &&
     (context.type === "expression" || context.type === "viewParam") &&
     normalizeText(context.query) === "";
-  const maxItems = input.maxItems || (trigger === "manual" ? 32 : 8);
-  return items
-    .sort((a, b) => {
-      if (isManualEmptyExpression) {
-        const priorityDelta = getManualEmptyPriority(a) - getManualEmptyPriority(b);
-        if (priorityDelta !== 0) return priorityDelta;
-      }
-      return b.score - a.score || a.label.localeCompare(b.label);
-    })
-    .slice(0, maxItems);
+  const sortedItems = items.sort((a, b) => {
+    if (isManualEmptyExpression) {
+      const priorityDelta = getManualEmptyPriority(a) - getManualEmptyPriority(b);
+      if (priorityDelta !== 0) return priorityDelta;
+    }
+    return b.score - a.score || a.label.localeCompare(b.label);
+  });
+
+  return input.maxItems ? sortedItems.slice(0, input.maxItems) : sortedItems;
 }
