@@ -183,7 +183,7 @@ Dry run evidence:
 
 ## Phase 5: Desktop Beta
 
-Status: minimal Electron shell smoke passed for macOS unsigned beta path; packaging/signing/cross-platform artifacts and deeper desktop runtime smoke remain future work.
+Status: minimal Electron shell and runtime smoke passed for macOS unsigned beta path; packaging/signing/cross-platform artifacts remain future work.
 
 Primary task:
 
@@ -199,7 +199,7 @@ Actions:
 1. Completed: added minimal Electron shell that loads the production Vite build from disk.
 2. Completed: added desktop build/start/smoke scripts using relative Vite assets for `file://`.
 3. Completed: basic Electron smoke loaded the app title from disk on macOS.
-4. Pending: verify storage, import/export, docs links, FX behavior, and settings persistence in the desktop runtime.
+4. Completed: `desktop:smoke:runtime` verifies storage persistence, markdown export/import, docs href, FX warning behavior, and settings persistence in the desktop runtime.
 5. Pending: produce unsigned macOS beta artifact.
 6. Pending: document Windows/Linux artifact generation path.
 
@@ -260,8 +260,8 @@ Rules:
 
 ## Current Critical Path
 
-1. Verify the deeper Electron beta path: storage persistence, import/export, docs links, FX behavior, and settings persistence.
-2. Produce or document the unsigned macOS beta artifact path.
+1. Produce or document the unsigned macOS beta artifact path.
+2. Document Windows/Linux artifact generation path.
 3. Decide signup/update capture provider for the future promotional website.
 4. Build standalone promotional website and capture final assets.
 5. Link approved docs/support/privacy pages from the promotional site and verify the full journey.
@@ -272,7 +272,7 @@ P0:
 
 - Historical migration coverage is deferred unless a concrete old-data case appears.
 - SmartPad-owned FX endpoint is not required for launch, but should be planned as future hardening if external provider reliability becomes a problem.
-- Desktop shell basic smoke passed, but packaged unsigned macOS artifact and deeper desktop runtime smoke are not complete.
+- Desktop shell/runtime smoke passed, but packaged unsigned macOS artifact and Windows/Linux artifact path are not complete.
 - Standalone promotional website/signup/assets are not implemented and intentionally come last.
 
 P1:

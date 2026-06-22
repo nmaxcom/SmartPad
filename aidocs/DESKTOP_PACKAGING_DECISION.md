@@ -42,16 +42,15 @@ Phase 1 minimal Electron shell is underway for `1.0.0-rc.1`:
 - External links are opened in the system browser.
 - `desktop:build`, `desktop:start`, and `desktop:smoke` scripts exist.
 - `npm run desktop:smoke` passed on macOS: the Electron shell loaded the built app from disk and reported `SmartPad Electron smoke loaded: SmartPad`.
+- `npm run desktop:smoke:runtime` passed on macOS: storage persistence across relaunch, markdown export/import, settings persistence, desktop-safe docs href, and FX warning behavior.
 
 The current scope is a macOS unsigned desktop beta smoke first. Installer packaging, signing/notarization, Windows/Linux artifacts, auto-update, and final download copy remain future steps.
 
 Still not proven:
 
-- Sheet storage persistence across Electron restarts.
-- Import/export inside the Electron runtime.
-- Settings persistence/reset inside the Electron runtime.
-- Docs link behavior from an interactive desktop window.
-- Offline/live FX behavior inside the Electron runtime.
+- Docs external-open behavior from a visible interactive desktop window.
+- Settings reset inside the Electron runtime.
+- Offline FX/cache behavior inside the Electron runtime.
 - Installable unsigned macOS artifact.
 
 ## First Desktop Beta Scope

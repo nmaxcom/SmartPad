@@ -11,6 +11,7 @@
     "desktop:build": "npm run docs:docusaurus:publish-local && VITE_BASE_PATH=./ npm run build",
     "desktop:start": "npm run desktop:build && electron desktop/electron/main.cjs",
     "desktop:smoke": "npm run desktop:build && SMARTPAD_ELECTRON_SMOKE=1 electron desktop/electron/main.cjs",
+    "desktop:smoke:runtime": "npm run desktop:build && node scripts/electron-runtime-smoke.cjs",
     "preview": "vite preview",
     "test": "npm run test:unit",
     "test:unit": "jest",

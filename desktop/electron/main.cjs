@@ -2,6 +2,11 @@ const { app, BrowserWindow, shell } = require("electron");
 const path = require("path");
 
 const isSmoke = process.env.SMARTPAD_ELECTRON_SMOKE === "1";
+const smokeDownloadDir = process.env.SMARTPAD_ELECTRON_DOWNLOAD_DIR;
+
+if (process.env.SMARTPAD_ELECTRON_USER_DATA_DIR) {
+  app.setPath("userData", path.resolve(process.env.SMARTPAD_ELECTRON_USER_DATA_DIR));
+}
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -39,6 +44,12 @@ function createWindow() {
       app.quit();
     }
   });
+
+  if (smokeDownloadDir) {
+    mainWindow.webContents.session.on("will-download", (_event, item) => {
+      item.setSavePath(path.join(path.resolve(smokeDownloadDir), item.getFilename()));
+    });
+  }
 
   mainWindow.loadFile(path.join(__dirname, "../../dist/index.html"));
 }

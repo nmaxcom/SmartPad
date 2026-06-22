@@ -51,9 +51,9 @@
     *   `npm run test:unit -- tests/unit/docsUrl.test.ts --runInBand` passed.
     *   `npm run desktop:build` passed after rerunning outside the sandbox so the docs generator could use `trash`.
     *   `npm run desktop:smoke` passed: Electron loaded the built app from disk and printed `SmartPad Electron smoke loaded: SmartPad`.
+    *   `npm run desktop:smoke:runtime` passed: Electron verified storage persistence across relaunch, markdown export/import, settings persistence, desktop-safe docs href, and FX warning behavior.
 *   Pending:
     *   User review/confirmation before committing this block.
-    *   Deeper desktop runtime smoke: storage persistence, import/export, settings, docs links, and FX behavior.
     *   Unsigned macOS artifact generation and Windows/Linux artifact plan.
 *   Risks/blockers:
     *   `npm install --save-dev electron` reports existing dependency audit vulnerabilities; not addressed in this block.
