@@ -70,7 +70,7 @@ Plot views are interactive without changing the model text:
 - **Zoom X**: scroll over the chart.
 - **Pan with wheel**: hold Shift while scrolling.
 - **Adjust an axis**: drag the X or Y axis to resize that viewport. The cursor changes over the draggable axis area.
-- **Reset view**: click the small reset control or double-click the chart to return to the computed view.
+- **Reset view**: double-click the chart to return to the computed view. Editing values or functions keeps the current pan/zoom view.
 
 These interactions change the viewport only. Use `domain=`, `view=`, `ydomain=`, or `yview=` on the `@view` line when you want the chart range to be explicit in the sheet.
 

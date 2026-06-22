@@ -439,16 +439,8 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
               const sourceByLine = ref.sourceLine > 0 ? lineResultByLine.get(ref.sourceLine) : null;
               const source = sourceById || sourceByLine || null;
               if (!source || source.hasError || !source.value) {
-                if (ref.sourceLineId) {
-                  brokenSourceLineIds.push(ref.sourceLineId);
-                } else if (ref.sourceLine > 0) {
-                  const fallbackLineId = lineData[ref.sourceLine - 1]?.lineId;
-                  if (fallbackLineId) {
-                    brokenSourceLineIds.push(fallbackLineId);
-                  }
-                }
-
-                if (!source && ref.sourceValue) {
+                let resolvedFromDraggedValue = false;
+                if (ref.sourceValue) {
                   const parsedFallback = SemanticParsers.parse(ref.sourceValue);
                   if (parsedFallback) {
                     variableContext.set(ref.placeholderKey, {
@@ -458,6 +450,17 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
                       createdAt: new Date(),
                       updatedAt: new Date(),
                     });
+                    resolvedFromDraggedValue = true;
+                  }
+                }
+                if (!resolvedFromDraggedValue) {
+                  if (ref.sourceLineId) {
+                    brokenSourceLineIds.push(ref.sourceLineId);
+                  } else if (ref.sourceLine > 0) {
+                    const fallbackLineId = lineData[ref.sourceLine - 1]?.lineId;
+                    if (fallbackLineId) {
+                      brokenSourceLineIds.push(fallbackLineId);
+                    }
                   }
                 }
                 continue;

@@ -64,6 +64,10 @@ const PLOT_SERIES_COLORS = [
 ];
 let plotClipIdCounter = 0;
 const scrubAutoYViewCache = new Map<string, PlotRange>();
+const interactivePlotViewCache = new Map<
+  string,
+  { xView?: PlotRange; yView?: PlotRange; yViewAuto?: boolean; yDomainAuto?: boolean }
+>();
 
 interface PlotSeriesModel {
   label?: string;
@@ -1245,17 +1249,29 @@ const createPlotWidget = (
     yView?: PlotRange | null;
   }) => void,
   onClose?: () => void,
-  editorView?: EditorView | null
+  editorView?: EditorView | null,
+  stableViewKey?: string
 ): HTMLElement => {
+  const cachedView = stableViewKey ? interactivePlotViewCache.get(stableViewKey) : undefined;
   let currentXView: PlotRange | undefined =
-    model.view || model.autoView || model.domain;
+    cachedView?.xView || model.view || model.autoView || model.domain;
   let currentYView: PlotRange | undefined =
-    model.yViewAuto ? undefined : model.yView || model.autoYView || model.yDomain;
-  let yViewAuto = model.yViewAuto ?? true;
-  let yDomainAuto = model.yDomainAuto ?? true;
+    cachedView?.yView || (model.yViewAuto ? undefined : model.yView || model.autoYView || model.yDomain);
+  let yViewAuto =
+    cachedView?.yView ? false : cachedView?.yViewAuto ?? model.yViewAuto ?? true;
+  let yDomainAuto = cachedView?.yDomainAuto ?? model.yDomainAuto ?? true;
   const yPanDomainPadding = model.yPanDomainPadding ?? 6;
   let drawWithView: ((nextX: PlotRange | undefined, nextY: PlotRange | undefined) => void) | null =
     null;
+  const rememberInteractiveView = () => {
+    if (!stableViewKey) return;
+    interactivePlotViewCache.set(stableViewKey, {
+      xView: currentXView ? { ...currentXView } : undefined,
+      yView: currentYView ? { ...currentYView } : undefined,
+      yViewAuto,
+      yDomainAuto,
+    });
+  };
   const container = document.createElement("div");
   container.className = `plot-view plot-view-size-${model.size}`;
   container.setAttribute("data-plot-source", model.source);
@@ -2108,6 +2124,7 @@ const createPlotWidget = (
           currentYView = nextYView;
           yViewAuto = false;
         }
+        rememberInteractiveView();
         if (drawWithView) drawWithView(currentXView, currentYView);
         return;
       }
@@ -2119,6 +2136,7 @@ const createPlotWidget = (
         const span = (dragStartXView.max - dragStartXView.min) * scale;
         const nextXView = { min: center - span / 2, max: center + span / 2 };
         currentXView = nextXView;
+        rememberInteractiveView();
         if (drawWithView) drawWithView(currentXView, currentYView);
         return;
       }
@@ -2131,6 +2149,7 @@ const createPlotWidget = (
         const nextYView = { min: center - span / 2, max: center + span / 2 };
         currentYView = nextYView;
         yViewAuto = false;
+        rememberInteractiveView();
         if (drawWithView) drawWithView(currentXView, currentYView);
         return;
       }
@@ -2221,6 +2240,7 @@ const createPlotWidget = (
         yViewAuto = false;
       }
 
+      rememberInteractiveView();
       if (drawWithView) drawWithView(currentXView, currentYView);
       const patch: { view?: PlotRange; yView?: PlotRange; yDomain?: PlotRange } = {};
       if (zoomX && currentXView) {
@@ -2390,6 +2410,9 @@ const createPlotWidget = (
       yViewAuto = model.yViewAuto ?? true;
       currentYView = yViewAuto ? undefined : resetYView;
       yDomainAuto = model.yDomainAuto ?? true;
+      if (stableViewKey) {
+        interactivePlotViewCache.delete(stableViewKey);
+      }
       if (drawWithView) drawWithView(currentXView, currentYView);
       if (onUpdate) {
         onUpdate({ view: null, yView: null, yDomain: null });
@@ -2661,7 +2684,8 @@ export const PlotViewExtension = Extension.create({
                     undefined,
                     (patch) => handleOverrideUpdate(overrideKey, patch),
                     undefined,
-                    currentView
+                    currentView,
+                    overrideKey
                   ),
                 {
                   key: buildPlotKey(model, plotNode.line),
@@ -2676,19 +2700,13 @@ export const PlotViewExtension = Extension.create({
 
             if (pluginState.transient) {
               const settings = buildSettingsSnapshot(getSettings());
-              const pendingOverrideKey = [
-                "plot-transient",
-                pluginState.transient.targetLine,
-                pluginState.transient.xVariable,
-              ].join("-");
-              const pendingOverride = pluginState.overrides?.[pendingOverrideKey];
               const model = computeModelFromExpression(
                 pluginState.transient.targetLine,
                 pluginState.transient.xVariable,
-                pendingOverride?.domain || pluginState.transient.domain,
-                pendingOverride?.view,
-                pendingOverride?.yDomain,
-                pendingOverride?.yView,
+                pluginState.transient.domain,
+                undefined,
+                undefined,
+                undefined,
                 "transient",
                 "md",
                 undefined,
@@ -2713,7 +2731,8 @@ export const PlotViewExtension = Extension.create({
                         handleDetach,
                         (patch) => handleOverrideUpdate(overrideKey, patch),
                         () => handleCloseTransient(overrideKey),
-                        currentView
+                        currentView,
+                        overrideKey
                       ),
                     {
                       key: buildPlotKey(model, pluginState.transient.targetLine),

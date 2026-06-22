@@ -52,6 +52,19 @@ test.describe("Live Result", () => {
     expect(values.some((value) => /6\.28/.test(value))).toBe(true);
   });
 
+  test("shows live results for today and now date shortcuts without unresolved warnings", async ({
+    page,
+  }) => {
+    await setEditorText(
+      page,
+      ["<p>now + 20 minutes</p>", "<p>today + 10 days</p>"].join("")
+    );
+
+    await expect(page.locator(".semantic-live-result-display")).toHaveCount(2);
+    await expect(page.locator(".semantic-error-result")).toHaveCount(0);
+    await expect(page.locator(".ProseMirror")).not.toContainText("unresolved identifier");
+  });
+
   test("converts live results through user-defined unit aliases without =>", async ({ page }) => {
     await setEditorText(
       page,

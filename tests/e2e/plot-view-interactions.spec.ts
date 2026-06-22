@@ -105,19 +105,29 @@ test.describe("Plot view interactions", () => {
     await expect(page.locator(".plot-view-line").first()).toBeVisible();
   });
 
-  test("keeps the legend clear of the y axis gutter", async ({ page }) => {
+  test("places the legend on the right side of the chart", async ({ page }) => {
     await setEditorContent(
       page,
       "<p>f(x) = x^2</p><p>g(x) = x + 4</p><p>@view plot y=f,g domain=-10..10 size=md</p>"
     );
 
     await expect(page.locator(".plot-view").first()).toBeVisible();
-    const legendLeft = await page
-      .locator(".plot-view-legend")
-      .first()
-      .evaluate((node) => Number.parseFloat(getComputedStyle(node).left));
+    const positions = await page.locator(".plot-view").first().evaluate((plot) => {
+      const chart = plot.querySelector(".plot-view-chart");
+      const legend = plot.querySelector(".plot-view-legend");
+      const chartRect = chart?.getBoundingClientRect();
+      const legendRect = legend?.getBoundingClientRect();
+      return {
+        chartCenter: chartRect ? chartRect.left + chartRect.width / 2 : 0,
+        legendCenter: legendRect ? legendRect.left + legendRect.width / 2 : 0,
+        legendRight: legend
+          ? Number.parseFloat(getComputedStyle(legend).right)
+          : Number.NaN,
+      };
+    });
 
-    expect(legendLeft).toBeGreaterThanOrEqual(88);
+    expect(positions.legendCenter).toBeGreaterThan(positions.chartCenter);
+    expect(positions.legendRight).toBeLessThanOrEqual(16);
   });
 
   test("keeps polynomial plots scaled to the visible domain and clipped inside axes", async ({

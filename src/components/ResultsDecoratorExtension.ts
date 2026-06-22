@@ -4,6 +4,7 @@ import { Decoration, DecorationSet } from "prosemirror-view";
 import { Node as ProseMirrorNode } from "prosemirror-model";
 import type { RenderNode } from "../eval/renderNodes";
 import { parseVariableAssignment } from "../parsing/variableParser";
+import { sanitizeReferencePlaceholdersForDisplay } from "../references/referenceIds";
 
 const REF_TRACE_FLAG = "__SP_REF_TRACE_ENABLED";
 const REF_TRACE_LOG_STORE = "__SP_REF_TRACE_LOGS";
@@ -70,7 +71,9 @@ export const ResultsDecoratorExtension = Extension.create({
             (window as any)[REF_TRACE_LOG_STORE] = logs;
           };
           const formatWarningText = (message: string | undefined | null): string => {
-            const trimmed = String(message || "").trim();
+            const trimmed = sanitizeReferencePlaceholdersForDisplay(
+              String(message || "").trim()
+            );
             if (!trimmed) return "⚠️ Live result unavailable";
             return trimmed.startsWith("⚠️") ? trimmed : `⚠️ ${trimmed}`;
           };
@@ -159,12 +162,13 @@ export const ResultsDecoratorExtension = Extension.create({
                     (node.type === "mathResult" || node.type === "combined")
                 ) as any;
                 if (liveNode) {
-                  const liveText =
+                  const liveText = sanitizeReferencePlaceholdersForDisplay(
                     typeof liveNode.result === "number" || typeof liveNode.result === "string"
                       ? String(liveNode.result)
                       : String(liveNode.displayText || "")
                           .replace(/^.*=>\s*/, "")
-                          .trim();
+                          .trim()
+                  );
                   const sourceLabel = String(
                     liveNode.expression ||
                       liveNode.variableName ||
@@ -268,6 +272,7 @@ export const ResultsDecoratorExtension = Extension.create({
                           resultText = displayText.trim();
                         }
                       }
+                      resultText = sanitizeReferencePlaceholdersForDisplay(resultText);
                     }
 
                     const anchor = info.start + info.text.length;
@@ -441,14 +446,16 @@ export const ResultsDecoratorExtension = Extension.create({
             const resolveRenderDisplayValue = (rn: any): string => {
               if (!rn) return "";
               if (typeof rn.result === "number" || typeof rn.result === "string") {
-                return String(rn.result).trim();
+                return sanitizeReferencePlaceholdersForDisplay(String(rn.result).trim());
               }
               const displayText = String(rn.displayText || rn.display || "").trim();
               if (!displayText) return "";
               if (displayText.includes("=>")) {
-                return displayText.replace(/^.*=>\s*/, "").trim();
+                return sanitizeReferencePlaceholdersForDisplay(
+                  displayText.replace(/^.*=>\s*/, "").trim()
+                );
               }
-              return displayText;
+              return sanitizeReferencePlaceholdersForDisplay(displayText);
             };
             const resolvedLineDisplayById = new Map<string, string>();
             for (let i = 1; i < paragraphIndex.length; i++) {
@@ -733,6 +740,7 @@ export const ResultsDecoratorExtension = Extension.create({
               } else {
                 resultText = displayText;
               }
+              resultText = sanitizeReferencePlaceholdersForDisplay(resultText);
 
               const isError = matched.type === "error";
               const normalizedResult = resultText.trim();

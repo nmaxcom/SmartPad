@@ -45,6 +45,12 @@ const hasIdentifierBoundaryMatch = (input: string, identifier: string): boolean 
 // Word-level operators/modifiers that should keep live-preview evaluation enabled
 // and bypass unresolved-identifier pre-guards for DSL phrases.
 const LIVE_WORD_OPERATOR_REGEX = /\b(of|off|on|to|in|as|is|per|where|asc|desc)\b/i;
+const DATE_KEYWORD_IDENTIFIERS = new Set([
+  "today",
+  "tomorrow",
+  "yesterday",
+  "now",
+]);
 
 export const isLikelyLiveExpression = (
   line: string,
@@ -152,6 +158,7 @@ export const hasUnresolvedLiveIdentifiers = (
   for (const name of names) {
     if (!name) continue;
     if (variableContext.has(name)) continue;
+    if (DATE_KEYWORD_IDENTIFIERS.has(name.toLowerCase())) continue;
     if (name === "PI" || name === "E") continue;
     if (defaultUnitRegistry.isBuiltinSymbol(name)) continue;
     return true;

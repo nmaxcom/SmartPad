@@ -6924,6 +6924,54 @@
 *   Risks/blockers:
     *   Human gate is mandatory before committing this correction block.
 
+## Entry J-2026-06-22-01
+
+*   Timestamp: 2026-06-22 17:30 CEST / 2026-06-22 15:30 UTC
+*   Summary:
+    *   Fixed user-reported polish regressions for dragged result references, live date shortcuts, and plot interaction state.
+    *   Updated plotting/reference/date spec cards and regenerated public Docusaurus docs after correcting generated chip and chart interaction wording.
+*   Decisions:
+    *   Date shortcut words are treated as built-in live-preview identifiers.
+    *   Reference placeholder ids remain evaluation-only and are sanitized from visible result/warning text.
+    *   Plot pan/zoom state persists for a stable plot identity and is reset by explicit chart double-click.
+*   User directives:
+    *   Fix ugly dragged-reference failures.
+    *   Fix `now`/`today` live shortcut unresolved warnings.
+    *   Do not reset chart view when expression/function values change; reset only on page refresh or chart double-click.
+    *   Move plot legend to the right side of the chart.
+*   Assistant commitments:
+    *   Keep this task's commit scoped and exclude unrelated staged/dirty changes.
+*   Artifacts changed:
+    *   `src/components/Editor.tsx`
+    *   `src/components/ResultsDecoratorExtension.ts`
+    *   `src/components/PlotViewExtension.ts`
+    *   `src/components/Editor.css`
+    *   `src/eval/liveResultPreview.ts`
+    *   `tests/unit/liveResultPreview.test.ts`
+    *   `tests/e2e/live-result.spec.ts`
+    *   `tests/e2e/plot-view-interactions.spec.ts`
+    *   `tests/e2e/result-reference-drag-only.spec.ts`
+    *   `docs/Specs/Plotting.spec.md`
+    *   `docs/Specs/implemented/locale-date-time.md`
+    *   `docs/Specs/implemented/plotting-and-dependency-views.md`
+    *   `docs/Specs/implemented/result-chips-and-references.md`
+    *   `docs/spec-trust.json`
+    *   `scripts/generate-docusaurus-docs.js`
+    *   `website/docs/` and `public/docs/` generated docs.
+*   Validation:
+    *   `npm run test:unit -- tests/unit/liveResultPreview.test.ts tests/unit/dateMathEvaluator.test.ts tests/unit/referenceTokens.test.ts --runInBand` passed.
+    *   `CI=1 npx jest --findRelatedTests src/components/Editor.tsx src/components/PlotViewExtension.ts src/components/ResultsDecoratorExtension.ts src/eval/liveResultPreview.ts --passWithNoTests --watchman=false --runInBand` passed.
+    *   `npx playwright test tests/e2e/live-result.spec.ts tests/e2e/plot-view-interactions.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed.
+    *   `npx playwright test tests/e2e/result-reference-drag-only.spec.ts --project=chromium --config=playwright.config.ts --workers=1 -g "dragged references inside functions"` passed.
+    *   `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, and `npm run spec:trust` passed.
+    *   `npm run verify:changed` passed for its default `HEAD~1...HEAD` range; separate no-range gates and focused tests covered the working tree.
+    *   `npm run docs:docusaurus:publish-local` passed.
+    *   `npm run build` passed with the known large-bundle warning.
+*   Pending items:
+    *   Owner: User. Due: TBD. Status: pending confirmation. Next: review the visible behavior and confirm completion.
+*   Risks or blockers:
+    *   Full `tests/e2e/result-reference-drag-only.spec.ts` still has pre-existing keyboard-driven synthetic drag cases that fail because the test input merges lines before a source chip exists; the new placeholder regression passes in isolation.
+
 ## Entry J-2026-06-20-02
 
 *   Timestamp: 2026-06-20 18:41 CEST / 2026-06-20 16:41 UTC

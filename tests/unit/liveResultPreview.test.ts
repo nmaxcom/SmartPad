@@ -1,9 +1,11 @@
 import {
   hasKnownVariableReference,
+  hasUnresolvedLiveIdentifiers,
   isLikelyLiveExpression,
   shouldBypassUnresolvedLiveGuard,
   shouldShowLiveForAssignmentValue,
 } from "../../src/eval/liveResultPreview";
+import { parseLine } from "../../src/parsing/astParser";
 import type { Variable } from "../../src/state/types";
 
 const buildVariable = (name: string): Variable => ({
@@ -94,5 +96,17 @@ describe("shouldShowLiveForAssignmentValue", () => {
       true
     );
     expect(hasKnownVariableReference("unknown thing / unknown two", variableContext)).toBe(false);
+  });
+
+  test("does not treat date shortcuts as unresolved live identifiers", () => {
+    const variableContext = new Map<string, Variable>();
+    for (const line of ["now + 20 minutes =>", "today + 10 days =>"]) {
+      const node = parseLine(line, 1);
+      expect(node.type).toBe("expression");
+      if (node.type !== "expression") {
+        throw new Error("Expected expression node");
+      }
+      expect(hasUnresolvedLiveIdentifiers(node.components, variableContext)).toBe(false);
+    }
   });
 });

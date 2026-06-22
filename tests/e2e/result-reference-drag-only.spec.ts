@@ -1146,6 +1146,28 @@ test.describe("Result references (drag-only)", () => {
     await expect(insertedChip).not.toContainText("monthly total * 12");
   });
 
+  test("dragged references inside functions never expose placeholder ids", async ({
+    page,
+  }) => {
+    const editor = page.locator('[data-testid="smart-pad-editor"]');
+    await editor.click();
+    await page.keyboard.type("$20 * 10 =>");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("sqrt(");
+    await waitForUIRenderComplete(page);
+
+    const dependent = page.locator(".ProseMirror p").nth(1);
+    await dispatchResultDrop(page, { sourceLineIndex: 0, targetLineIndex: 1 });
+    await page.keyboard.type(")");
+    await waitForUIRenderComplete(page);
+
+    await expect(dependent.locator(".semantic-reference-chip")).toHaveCount(1);
+    await expect(dependent).not.toContainText("__sp_ref_");
+    await expect(dependent.locator(".semantic-error-result, .semantic-live-result-display").last()).not.toContainText(
+      "__sp_ref_"
+    );
+  });
+
   test("dropping a result chip at the editor bottom creates a new line with reference", async ({
     page,
   }) => {

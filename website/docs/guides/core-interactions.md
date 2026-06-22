@@ -14,13 +14,13 @@ This page explains the small interactions that make SmartPad feel different from
 
 A chip is the small result pill SmartPad shows next to a line it can calculate. The chip shows the answer, but it also gives you controls when you hover it.
 
-- **Drag handle**: the first icon. Drag it into another line to create a live reference.
+- **Drag reuse**: drag the chip itself into another line to create a live reference.
 - **Copy value**: copies the visible value as plain text.
-- **Actions menu**: opens actions such as `Copy value`, `Insert reference`, and `Insert value`.
+- **Actions menu**: opens actions such as `Copy value` and plot or goal-seek suggestions when available.
 
-Clicking the chip value itself does not insert anything. Use the handle or menu when you want to change the sheet.
+Clicking the chip value itself does not insert anything. Drag the chip when you want to reuse it in the sheet.
 
-> GIF/video marker: hover a result chip and point out the drag handle, copy icon, and menu.
+> GIF/video marker: drag a result chip into another line, then hover a chip and point out the copy icon and menu.
 
 ## References
 

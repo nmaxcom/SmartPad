@@ -30,9 +30,9 @@ Numbers highlighted in the editor can be dragged left or right. That is called s
 
 ## Reuse a result
 
-When you hover a result chip, SmartPad shows controls. The first icon is a drag handle. Drag it into another expression to create a reference that stays connected to the original result.
+Drag the result chip itself into another expression to create a reference that stays connected to the original result. Hover controls are for copying the value or opening the chip menu.
 
-> GIF/video marker: drag the first chip icon from `gross` into a new formula, then change `hours` and show the reference updating.
+> GIF/video marker: drag the `gross` chip into a new formula, then change `hours` and show the reference updating.
 
 ## Keep going
 

@@ -12,3 +12,9 @@
   - `tests/unit/capabilitySprintTemplate.test.ts`
 
 This card is the trust declaration for shipped plotting/dependency view behavior.
+
+Implemented interaction contract:
+
+- User pan/zoom view state persists across expression, function, and source-value edits for the same plot identity.
+- The plot view resets only on page refresh or an explicit chart double-click reset.
+- Multi-series legends are positioned on the right side of the chart area so they do not cover the left y-axis gutter.
