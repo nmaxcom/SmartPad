@@ -4,6 +4,16 @@ All notable user-facing changes to SmartPad will be documented in this file.
 
 SmartPad uses semantic versioning. Pre-release builds use `-beta.N` or `-rc.N` suffixes.
 
+## 1.0.0-rc.2 - 2026-06-23
+
+### Added
+
+- Settings modal header now discreetly shows the current SmartPad version.
+
+### Changed
+
+- Feature implementations and bug fixes now require a SmartPad version bump before commit.
+
 ## 1.0.0-rc.1 - 2026-06-22
 
 First web public beta release candidate.

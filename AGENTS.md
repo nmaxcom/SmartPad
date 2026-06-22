@@ -56,7 +56,8 @@ Before finalizing implementation changes:
 2. add or update regression tests when behavior changes or bugs are fixed
 3. run nearest regression tests for related modules
 4. run a build check for deploy-impacting changes
-5. report exactly what was and was not validated
+5. bump the SmartPad version for every feature implementation or bug fix
+6. report exactly what was and was not validated
 
 If tests fail, do not present work as complete. Provide failure summary and next fix step.
 
@@ -87,14 +88,16 @@ When implementation behavior changes in `src/`:
 1. check whether linked spec pages in `docs/Specs/` need updates
 2. update specs when behavior changed or rules were clarified
 3. update user docs when spec or behavior changed
-4. update `docs/spec-map.json` when new feature areas/files are introduced or mapping changes
-5. update `docs/spec-trust.json` and canonical cards in `docs/Specs/implemented/` or `docs/Specs/proposed/` when status/coverage changed
-6. run `npm run docs:map`
-7. run `npm run docs:drift`
-8. run `npm run spec:test`
-9. run `npm run spec:trust`
-10. run `npm run verify:changed`
-11. mention spec/docs/spec-map/spec-trust/test updates in the final report
+4. bump the version in `package.json` and lockfiles for every feature implementation or bug fix
+5. update `CHANGELOG.md` for the new version when the change is user-facing
+6. update `docs/spec-map.json` when new feature areas/files are introduced or mapping changes
+7. update `docs/spec-trust.json` and canonical cards in `docs/Specs/implemented/` or `docs/Specs/proposed/` when status/coverage changed
+8. run `npm run docs:map`
+9. run `npm run docs:drift`
+10. run `npm run spec:test`
+11. run `npm run spec:trust`
+12. run `npm run verify:changed`
+13. mention version/spec/docs/spec-map/spec-trust/test updates in the final report
 
 Do this automatically; user should not have to request it.
 

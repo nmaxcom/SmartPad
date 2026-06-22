@@ -23,6 +23,33 @@
 
 ---
 
+## Entry J-2026-06-23-02
+
+*   Timestamp: 2026-06-23 01:42 CEST / 2026-06-22 23:42 UTC
+*   Summary:
+    *   User directed that every feature implementation or bug fix must bump the SmartPad version number.
+    *   Assistant codified the rule in project agent guidance and the executive assistant manual.
+    *   Assistant bumped SmartPad from `1.0.0-rc.1` to `1.0.0-rc.2` for the Settings version-display feature and updated the changelog/test assertion.
+*   Decisions:
+    *   Version bumping is now part of the completion checklist for feature and bug-fix commits.
+    *   User-facing version bumps should be recorded in `CHANGELOG.md`.
+*   Artifacts changed:
+    *   `AGENTS.md`
+    *   `aidocs/AI_EXECUTIVE_ASSISTANT_MANUAL.md`
+    *   `CHANGELOG.md`
+    *   `package.json`
+    *   `package-lock.json`
+    *   `tests/e2e/settings-integration.spec.ts`
+*   Validation:
+    *   `CI=1 npx playwright test tests/e2e/settings-integration.spec.ts --project=chromium --config=playwright.config.ts --workers=1 -g "opens settings modal"` passed after stopping a stale dev server.
+    *   `CI=1 npx jest --findRelatedTests tests/e2e/settings-integration.spec.ts package.json package-lock.json --passWithNoTests --watchman=false --runInBand` found no related Jest suites and exited successfully.
+    *   `npm run docs:map -- HEAD`, `npm run docs:drift -- HEAD`, `npm run spec:test -- HEAD`, and `npm run spec:trust` passed.
+    *   `npm run build` passed with the known large-bundle warning.
+*   Pending items:
+    *   Owner: User. Due: TBD. Status: pending confirmation. Next: confirm that `rc.2` is the desired version bump for the Settings header feature.
+*   Risks or blockers:
+    *   Existing unrelated workspace edits remain outside this task.
+
 ## Entry J-2026-06-23-01
 
 *   Timestamp: 2026-06-23 01:27 CEST / 2026-06-22 23:27 UTC

@@ -40,9 +40,13 @@ test.describe("Settings Integration", () => {
     const settingsButton = page.getByLabel("Open Settings", { exact: true });
     await settingsButton.click();
 
-    await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
-    await expect(page.getByLabel("SmartPad version 1.0.0-rc.1")).toBeVisible();
-    await expect(page.getByLabel("Decimal Places")).toBeVisible();
+    const dialog = page.getByRole("dialog", { name: "Settings" });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("heading", { name: "Settings" })).toBeVisible();
+    await expect(
+      dialog.locator('[aria-label="SmartPad version 1.0.0-rc.2"]')
+    ).toHaveText("v1.0.0-rc.2");
+    await expect(dialog.getByLabel("Decimal Places")).toBeVisible();
   });
 
   test("closes settings modal with close button", async ({ page }) => {

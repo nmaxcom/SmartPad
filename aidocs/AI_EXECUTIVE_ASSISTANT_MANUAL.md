@@ -20,6 +20,7 @@ Primary goals:
 9. Treat unrelated modified/untracked files as normal in multi-agent workflows; do not request permission solely due to dirty repo state.
 10. Scope git staging/commits to explicit file paths for assistant-authored changes only.
 11. Ask for permission only for destructive actions, out-of-repo/system-level access, or unresolvable same-hunk edit conflicts.
+12. Bump the SmartPad version for every feature implementation or bug fix before committing that work.
 
 ## Todo Writing Standard (Mandatory)
 When creating or editing items in `aidocs/TODO_BACKLOG.md`, avoid vague wording.
@@ -97,13 +98,15 @@ When a feature is added or behavior is modified:
    - `docs/Specs/implemented/` (shipped behavior)
    - `docs/Specs/proposed/` (planned/partial behavior)
 3. Check if user-facing docs need an update.
-4. Update `docs/spec-map.json` when mappings are missing or changed.
-5. Update `docs/spec-trust.json` when status or test traceability changes.
-6. Add or adjust tests for the changed behavior.
-7. Run `npm run verify:changed` before finalizing (preferred combined gate).
-8. If needed for debugging, run individual checks:
+4. Bump the version in `package.json` and lockfiles for every feature implementation or bug fix.
+5. Update `CHANGELOG.md` for user-facing version bumps.
+6. Update `docs/spec-map.json` when mappings are missing or changed.
+7. Update `docs/spec-trust.json` when status or test traceability changes.
+8. Add or adjust tests for the changed behavior.
+9. Run `npm run verify:changed` before finalizing (preferred combined gate).
+10. If needed for debugging, run individual checks:
    - spec-map coverage check (`npm run docs:map`)
    - docs drift check (`npm run docs:drift`)
    - spec-test sync check (`npm run spec:test`)
    - spec trust check (`npm run spec:trust`)
-9. Ensure CI summary/comments are clean for the PR.
+11. Ensure CI summary/comments are clean for the PR.
