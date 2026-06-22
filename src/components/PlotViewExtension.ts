@@ -339,9 +339,7 @@ const buildStablePlotKey = (model: PlotViewModel, fallbackLine?: number): string
   const kindKey = model.kind || "plot";
   const sizeKey = model.size || "md";
   const xVarKey = model.x || "x";
-  const seriesKey = model.series
-    .map((series) => series.expression || "")
-    .join("|");
+  const seriesKey = `series:${model.series.length}`;
   const explicitDomainKey = model.domain?.raw ? formatPlotKeyRange(model.domain) : "auto";
   const explicitViewKey = model.view?.raw ? formatPlotKeyRange(model.view) : "auto";
   const explicitYDomainKey = model.yDomain?.raw ? formatPlotKeyRange(model.yDomain) : "auto";

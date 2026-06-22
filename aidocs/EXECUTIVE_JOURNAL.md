@@ -23,6 +23,29 @@
 
 ---
 
+## Entry J-2026-06-22-07
+
+*   Timestamp: 2026-06-22 17:57 CEST / 2026-06-22 15:57 UTC
+*   Summary:
+    *   User reported plot view still reset when editing inline quoted series expressions such as `@view plot y="x^3 + -2","x +4"`.
+    *   Assistant fixed persistent plot view identity so numeric/expression edits in the same chart line reuse the saved viewport.
+    *   Added an e2e regression for zooming and panning the reported chart before changing `-2` to `-3`.
+*   Decisions:
+    *   Stable plot viewport identity is structural: line, plot kind, size, x variable, series count, and explicit domain/view settings.
+    *   Series expression text remains part of the render key but not the viewport cache key.
+*   Artifacts changed:
+    *   `src/components/PlotViewExtension.ts`
+    *   `tests/e2e/plot-view-interactions.spec.ts`
+*   Validation:
+    *   `npx playwright test tests/e2e/plot-view-interactions.spec.ts --project=chromium --config=playwright.config.ts --workers=1` passed.
+    *   `CI=1 npx jest --findRelatedTests src/components/PlotViewExtension.ts tests/e2e/plot-view-interactions.spec.ts --passWithNoTests --watchman=false --runInBand` passed.
+    *   `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, and `npm run spec:trust` passed.
+    *   `npm run verify:changed` passed for its default `HEAD~1...HEAD` range; focused plot tests covered this follow-up.
+*   Pending items:
+    *   Owner: User. Due: TBD. Status: pending confirmation. Next: verify the edited inline plot keeps the user-adjusted viewport.
+*   Risks or blockers:
+    *   Existing unrelated workspace edits remain outside this follow-up commit.
+
 ## Entry J-2026-06-22-02
 
 *   Timestamp: 2026-06-22 01:45 CEST

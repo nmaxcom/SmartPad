@@ -41,6 +41,17 @@ const doubleClickPlotCenter = async (page: Page) => {
   await page.mouse.dblclick(box!.x + box!.width / 2, box!.y + box!.height / 2);
 };
 
+const dragPlotCenter = async (page: Page, deltaX: number, deltaY: number) => {
+  const box = await page.locator(".plot-view svg").first().boundingBox();
+  expect(box).not.toBeNull();
+  const startX = box!.x + box!.width / 2;
+  const startY = box!.y + box!.height / 2;
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.mouse.move(startX + deltaX, startY + deltaY, { steps: 6 });
+  await page.mouse.up();
+};
+
 test.describe("Plot view interactions", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
@@ -91,6 +102,29 @@ test.describe("Plot view interactions", () => {
     await page.waitForTimeout(300);
     await expect.poll(() => getXAxisLabels(page)).toEqual(initialXLabels);
     expect(await getAxisLabels(page)).not.toEqual(zoomedLabels);
+  });
+
+  test("keeps the visible plot window when inline series expressions change", async ({ page }) => {
+    await setEditorContent(
+      page,
+      '<p>@view plot y="x^3 + -2","x +4"</p>'
+    );
+
+    await expect(page.locator(".plot-view").first()).toBeVisible();
+    const initialLabels = await getAxisLabels(page);
+    await wheelPlotCenter(page, -500);
+    await dragPlotCenter(page, 34, -22);
+    await page.waitForTimeout(300);
+
+    const adjustedLabels = await getAxisLabels(page);
+    expect(adjustedLabels).not.toEqual(initialLabels);
+
+    await setEditorContent(
+      page,
+      '<p>@view plot y="x^3 + -3","x +4"</p>'
+    );
+
+    await expect.poll(() => getAxisLabels(page)).toEqual(adjustedLabels);
   });
 
   test("plots user-defined function calls through named series", async ({ page }) => {
