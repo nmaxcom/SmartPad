@@ -192,7 +192,8 @@
         "src/styles/",
         "src/App.tsx",
         "src/utils/keyboardShortcut.ts",
-        "src/utils/runtimeMode.ts"
+        "src/utils/runtimeMode.ts",
+        "src/vite-env.d.ts"
       ],
       "docPrefixes": [
         "docs/ABOUT.md",

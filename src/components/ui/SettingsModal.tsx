@@ -76,9 +76,14 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       >
         {/* Header */}
         <div className="settings-header">
-          <h2 id="settings-title" className="settings-title">
-            Settings
-          </h2>
+          <div className="settings-heading">
+            <h2 id="settings-title" className="settings-title">
+              Settings
+            </h2>
+            <span className="settings-version" aria-label={`SmartPad version ${__APP_VERSION__}`}>
+              v{__APP_VERSION__}
+            </span>
+          </div>
           <button className="settings-close-btn" onClick={onClose} aria-label="Close settings">
             ×
           </button>

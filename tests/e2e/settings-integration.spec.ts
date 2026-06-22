@@ -41,6 +41,7 @@ test.describe("Settings Integration", () => {
     await settingsButton.click();
 
     await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
+    await expect(page.getByLabel("SmartPad version 1.0.0-rc.1")).toBeVisible();
     await expect(page.getByLabel("Decimal Places")).toBeVisible();
   });
 

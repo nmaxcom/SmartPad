@@ -23,6 +23,34 @@
 
 ---
 
+## Entry J-2026-06-23-01
+
+*   Timestamp: 2026-06-23 01:27 CEST / 2026-06-22 23:27 UTC
+*   Summary:
+    *   User requested a discreet SmartPad version display in the Settings modal header.
+    *   Assistant added a muted version label beside the Settings title, sourced from `package.json` through a Vite compile-time constant.
+    *   Added a Settings e2e assertion and mapped the Vite declaration file to the UI Panels and Settings spec group.
+*   Decisions:
+    *   The version appears only in the modal header, not the sidebar Settings panel.
+    *   The label uses the package version as the release source of truth.
+*   Artifacts changed:
+    *   `src/components/ui/SettingsModal.tsx`
+    *   `src/components/ui/SettingsModal.css`
+    *   `src/vite-env.d.ts`
+    *   `vite.config.ts`
+    *   `tests/e2e/settings-integration.spec.ts`
+    *   `docs/ABOUT.md`
+    *   `docs/spec-map.json`
+*   Validation:
+    *   `npx playwright test tests/e2e/settings-integration.spec.ts --project=chromium --config=playwright.config.ts --workers=1 -g "opens settings modal"` passed.
+    *   `CI=1 npx jest --findRelatedTests src/components/ui/SettingsModal.tsx src/components/ui/SettingsModal.css vite.config.ts tests/e2e/settings-integration.spec.ts --passWithNoTests --watchman=false --runInBand` passed.
+    *   `npm run docs:map -- HEAD`, `npm run docs:drift -- HEAD`, `npm run spec:test -- HEAD`, and `npm run spec:trust` passed.
+    *   `npm run build` passed with the known large-bundle warning.
+*   Pending items:
+    *   Owner: User. Due: TBD. Status: pending confirmation. Next: open Settings and confirm the version label is discreet enough.
+*   Risks or blockers:
+    *   Existing unrelated workspace edits remain outside this task.
+
 ## Entry J-2026-06-22-07
 
 *   Timestamp: 2026-06-22 17:57 CEST / 2026-06-22 15:57 UTC
