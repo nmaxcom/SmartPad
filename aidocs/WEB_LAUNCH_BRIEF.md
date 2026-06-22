@@ -138,10 +138,19 @@ Signup copy:
 
 Needs implementation check:
 
-- Confirm the Brevo flow works from the chosen static hosting route without exposing secrets in client code.
-- Confirm whether double opt-in is required and what confirmation copy users see.
-- Confirm success, duplicate-email, invalid-email, and network-error states can stay inside the SmartPad website UI.
+- Use Brevo's own embedded form path first. Brevo documents full-page/embedded signup forms and provides iframe, HTML with Ajax, and simple HTML embed code.
+- Do not call Brevo's Contacts API directly from browser code. Brevo's contact endpoints require an `api-key` request header, so a direct client-side API call would expose credentials.
+- Prefer the HTML-with-Ajax embed if it can be restyled enough for the product website and keeps success/error messages in-page. Use iframe only if speed beats styling control. Use a serverless proxy only if the embedded form cannot meet the UX bar.
+- Confirm whether double opt-in is required and what confirmation copy users see. Brevo supports double confirmation, simple confirmation, and no confirmation; double opt-in is the safer default for GDPR-style consent and list quality.
+- Confirm success, invalid input, generic processing error, required-field, duplicate-email, and network-error states can stay inside the SmartPad website UI or the embedded form area.
 - Where private replies/support go.
+
+Spike result:
+
+- Brevo is viable for the first launch signup if we accept an embedded Brevo form rather than a fully custom client-side form.
+- Do not implement Brevo before the promotional page exists. Build and review the page structure and visual direction first, then fit the Brevo embed into the approved signup section.
+- A fully custom SmartPad form should use a small serverless endpoint that owns the Brevo API key; this is more work and should wait unless the embed is visually unacceptable.
+- The promotional website should include concise privacy copy near the form: the signup is optional, handled by Brevo, and separate from local SmartPad sheets.
 
 ## Privacy And Tracking
 

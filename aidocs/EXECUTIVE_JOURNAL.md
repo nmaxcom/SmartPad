@@ -7545,6 +7545,32 @@
     *   Validate Brevo integration constraints before implementing signup.
     *   Review promotional website visual direction before implementation.
 
+## Entry J-2026-06-22-07
+
+*   Timestamp: 2026-06-22 10:20 CEST
+*   Summary:
+    *   User approved the Brevo spike as the next launch block.
+    *   Assistant reviewed current Brevo documentation for embedded sign-up forms and Contacts API behavior.
+    *   Brevo supports embedded sign-up forms with iframe, HTML with Ajax, and simple HTML variants.
+    *   Brevo's Contacts API requires an API key header, so direct browser API calls are rejected for launch because they would expose credentials.
+*   Decisions:
+    *   Try Brevo's embedded form path first for the promotional website.
+    *   Prefer HTML with Ajax if it can be styled to the product-site quality bar and preserve in-page success/error messages.
+    *   Use iframe only if speed is more important than styling control.
+    *   Use a serverless proxy only if the embedded form cannot meet the desired UX.
+*   Artifacts changed:
+    *   `aidocs/WEB_LAUNCH_BRIEF.md`
+    *   `aidocs/LAUNCH_EXECUTION_ROADMAP.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   Source review: Brevo Help Center article `Create a sign-up form in Brevo`.
+    *   Source review: Brevo API docs `Create a contact` and `Create Contact via DOI (Double-Opt-In) Flow`.
+*   Pending:
+    *   Human review/confirmation before commit.
+    *   Design and review the promotional page before implementing the actual Brevo embed.
+    *   Test the generated Brevo embed once the Brevo account/list/form exists and the signup section has an approved place in the page.
+    *   Review website visual direction before implementing the promotional site.
+
 ## Entry J-2026-06-20-01
 
 *   Timestamp: 2026-06-20 00:00 CEST

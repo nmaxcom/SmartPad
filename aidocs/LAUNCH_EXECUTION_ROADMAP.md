@@ -226,7 +226,7 @@ Inputs:
 
 Actions:
 
-1. Implement the approved Brevo signup path only if it can stay embedded on the SmartPad website without redirecting users to a third-party page.
+1. Implement the approved Brevo signup path with an embedded Brevo form first; avoid direct browser calls to Brevo's API because the API requires a private key.
 2. Build a separate promotional product website from scratch; it must not be a Docusaurus page and must not share the docs IA.
 3. Make the site aesthetically modern and product-led, with real videos using the app and interactive examples.
 4. Add real screenshots/video from verified build.
@@ -260,9 +260,9 @@ Rules:
 
 ## Current Critical Path
 
-1. Validate Brevo's embedded signup flow for the future promotional website.
+1. Define and review the standalone promotional website structure and visual direction.
 2. Build standalone promotional website and capture final assets.
-3. Link approved docs/support/privacy pages from the promotional site and verify the full journey.
+3. Fit the Brevo embedded signup into the approved page and verify the full app/docs/support/privacy/signup journey.
 
 ## Current Blockers
 
@@ -277,7 +277,7 @@ P1:
 
 - Release checklist technical dry run passed; changelog/release notes are not yet current for an actual candidate.
 - Docs/support/privacy pages are approved but still need eventual promotional-site links and homepage journey verification.
-- Signup provider decision is Brevo, pending implementation validation for embedded no-redirect signup, privacy copy, and success/error states.
+- Signup provider decision is Brevo; docs research supports embedded forms, while direct browser API calls are rejected because they would expose the API key. Implementation is deferred until the promotional page structure and visual direction are approved.
 - Autocomplete remains pending user confirmation/spec-status reconciliation before headline use.
 
 ## What Not To Do Yet
