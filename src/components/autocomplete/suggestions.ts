@@ -431,11 +431,22 @@ function directiveItems(context: AutocompleteContext): AutocompleteItem[] {
 }
 
 export function getAutocompleteSuggestions(input: AutocompleteInput): AutocompleteItem[] {
+  const trigger = input.trigger || "auto";
   let context = getAutocompleteContext(input.lineText, input.cursorOffset);
   if (context.type === "none") {
-    return [];
+    const clampedOffset = Math.max(0, Math.min(input.cursorOffset, input.lineText.length));
+    const isBlankLine = input.lineText.trim().length === 0;
+    if (trigger !== "manual" || !isBlankLine) {
+      return [];
+    }
+    context = {
+      type: "expression",
+      query: "",
+      replaceFrom: clampedOffset,
+      replaceTo: clampedOffset,
+    };
   }
-  if ((input.trigger || "auto") === "auto" && !hasTypedTokenCharacter(context)) {
+  if (trigger === "auto" && !hasTypedTokenCharacter(context)) {
     return [];
   }
   if (context.type === "conversionTarget" && context.sourceKind === "unknown") {

@@ -1,8 +1,9 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useSettingsContext } from "../../state/SettingsContext";
 import { DEFAULT_SETTINGS } from "../../state/settingsStore";
 import {
   isReservedKeyboardShortcut,
+  normalizeKeyboardShortcut,
   shortcutFromKeyboardEvent,
 } from "../../utils/keyboardShortcut";
 import {
@@ -98,6 +99,16 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
 
   const [plotInputOverrides, setPlotInputOverrides] = useState<Record<string, string>>({});
   const [isRecordingAutocompleteShortcut, setIsRecordingAutocompleteShortcut] = useState(false);
+  const autocompleteManualShortcut = normalizeKeyboardShortcut(
+    settings.autocompleteManualShortcut,
+    DEFAULT_SETTINGS.autocompleteManualShortcut
+  );
+
+  useEffect(() => {
+    if (settings.autocompleteManualShortcut !== autocompleteManualShortcut) {
+      updateSetting("autocompleteManualShortcut", autocompleteManualShortcut);
+    }
+  }, [autocompleteManualShortcut, settings.autocompleteManualShortcut, updateSetting]);
 
   const setPlotInput = useCallback((key: string, value: string) => {
     setPlotInputOverrides((prev) => ({ ...prev, [key]: value }));
@@ -733,7 +744,7 @@ export function SettingsSections({ idPrefix = "settings" }: SettingsSectionsProp
               <span className="settings-shortcut-value">
                 {isRecordingAutocompleteShortcut
                   ? "Press shortcut..."
-                  : settings.autocompleteManualShortcut}
+                  : autocompleteManualShortcut}
               </span>
               <span className="settings-shortcut-hint">
                 {isRecordingAutocompleteShortcut ? "Esc cancels" : "Record"}

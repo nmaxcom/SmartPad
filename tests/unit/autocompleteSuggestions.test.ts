@@ -184,6 +184,20 @@ describe("autocomplete suggestions", () => {
     expect(suggestions).toEqual([]);
   });
 
+  test("manual shortcut opens complete contextual suggestions on a blank line", () => {
+    const suggestions = getAutocompleteSuggestions({
+      lineText: "",
+      cursorOffset: 0,
+      variables,
+      functions,
+      trigger: "manual",
+    });
+
+    expect(suggestions.map((suggestion) => suggestion.label)).toEqual(
+      expect.arrayContaining(["monthly subscription revenue", "compound(principal, rate, years)"])
+    );
+  });
+
   test("suggests currency targets for currency conversions", () => {
     const suggestions = getAutocompleteSuggestions({
       lineText: "seed in U",

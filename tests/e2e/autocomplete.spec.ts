@@ -147,6 +147,35 @@ test.describe("Autocomplete", () => {
     await expect(page.getByRole("option", { name: /roi tax/i })).toBeVisible();
   });
 
+  test("recorded manual shortcut opens after returning focus with a real editor click", async ({
+    page,
+  }) => {
+    await page.getByLabel("Open Settings", { exact: true }).click();
+    const shortcutRecorder = page.locator("#settings-modal-autocomplete-manual-shortcut");
+    await shortcutRecorder.click();
+    await page.keyboard.press("Control+Alt+K");
+    await expect(shortcutRecorder).toContainText("Ctrl+Alt+K");
+    await page.getByLabel("Close settings").click();
+
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      editor.commands.setContent("<p></p>");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    const editor = page.locator(".ProseMirror");
+    await editor.click();
+    await page.keyboard.type("roi = 44%");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("roi tax = 21%");
+    await page.keyboard.press("Enter");
+
+    await page.keyboard.press("Control+Alt+K");
+    await expect(page.locator(".smartpad-autocomplete-menu")).toBeVisible();
+    await expect(page.getByRole("option", { name: /roi tax/i })).toBeVisible();
+  });
+
   test("closes when a variable name is completed exactly", async ({ page }) => {
     await page.evaluate(() => {
       const editor = (window as any).tiptapEditor;

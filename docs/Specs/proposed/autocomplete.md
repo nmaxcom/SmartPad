@@ -33,7 +33,8 @@ The first version focuses on reusing names and syntax that already exist in the 
 7. When keyboard navigation moves through a long suggestion list, the menu scroll position follows
    the highlighted option so the active item remains visible.
 8. The manual autocomplete command opens contextual suggestions even when the current token is
-   empty, for cases such as `roi ` phrase continuations, `x=`, or `30kg to `.
+   empty, for cases such as a blank expression line, `roi ` phrase continuations, `x=`, or
+   `30kg to `.
 9. The manual autocomplete shortcut is configurable in Settings by recording a key combination.
    The default is `Ctrl + Shift + K`, avoiding common OS-reserved space shortcuts.
 10. Settings must not record shortcuts that are likely to be intercepted by the OS before the
@@ -172,3 +173,5 @@ ranking above `msr`, and `msr` ranking above generic substring matches.
 15. Recording a new manual autocomplete shortcut in Settings changes the editor command without
     requiring a page refresh.
 16. Reserved shortcuts such as `Ctrl + Space` and `Cmd + Space` are ignored by the recorder.
+17. On a blank line, the manual autocomplete command opens complete contextual suggestions for
+    available variables and functions instead of silently doing nothing.

@@ -110,7 +110,7 @@ function openManualAutocomplete(view: EditorView, options: AutocompleteOptions):
 
 function isEditorFocusWithin(view: EditorView): boolean {
   const activeElement = document.activeElement;
-  return Boolean(activeElement && view.dom.contains(activeElement));
+  return view.hasFocus() || Boolean(activeElement && view.dom.contains(activeElement));
 }
 
 export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
