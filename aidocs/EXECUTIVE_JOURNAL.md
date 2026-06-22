@@ -7427,6 +7427,25 @@
     *   RC gate is not green.
     *   Browser currency fetches currently show CORS failures for external FX providers.
 
+## Entry J-2026-06-22-06
+
+*   Timestamp: 2026-06-22 00:00 CEST
+*   Summary:
+    *   User validated the next launch block: choose signup/update capture first, then build the standalone promotional website later.
+    *   User approved Brevo as the signup provider if people can enter their email directly on the SmartPad website without being redirected to a third-party page.
+    *   Assistant recorded Brevo as the current signup decision and left implementation gated on confirming embedded no-redirect behavior, in-page success/error states, and no exposed client-side secrets.
+*   Artifacts changed:
+    *   `aidocs/WEB_LAUNCH_BRIEF.md`
+    *   `aidocs/LAUNCH_EXECUTION_ROADMAP.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   Documentation-only decision update; no code tests required.
+*   Pending:
+    *   Human review/confirmation before commit.
+    *   Validate Brevo integration constraints before implementing signup.
+    *   Review promotional website visual direction before implementation.
+
 ## Entry J-2026-06-20-01
 
 *   Timestamp: 2026-06-20 00:00 CEST

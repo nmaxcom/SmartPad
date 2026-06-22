@@ -123,24 +123,25 @@ Asset capture rules:
 
 ## Signup Decision
 
-Default recommendation:
+Decision:
 
-- Start with a static-compatible external provider such as Buttondown, ConvertKit, Mailchimp, or a GitHub Discussions/community link.
-- Prefer simplest operational setup over custom backend.
+- Use Brevo for the first promotional-site update signup, provided it supports an embedded form where people enter their email on the SmartPad website and complete signup without being redirected to a third-party page.
+- Prefer the simplest static-compatible Brevo embed or API flow over a custom backend for launch.
+- If Brevo forces a redirect-first experience or visually breaks the product-site quality bar, pause and re-check provider options before implementation.
 - Do not add app telemetry for signup.
-- Website signup analytics may track form submissions if documented.
+- Website signup analytics may track form submissions only if documented.
 
 Signup copy:
 
 - `Get SmartPad updates and desktop beta notes.`
 - `No account required to use SmartPad. Unsubscribe anytime.`
 
-Needs decision:
+Needs implementation check:
 
-- Provider.
-- Whether form posts directly from GitHub Pages.
+- Confirm the Brevo flow works from the chosen static hosting route without exposing secrets in client code.
+- Confirm whether double opt-in is required and what confirmation copy users see.
+- Confirm success, duplicate-email, invalid-email, and network-error states can stay inside the SmartPad website UI.
 - Where private replies/support go.
-- Whether signup is embedded or links out.
 
 ## Privacy And Tracking
 
@@ -167,7 +168,7 @@ Open implementation decisions for a later, user-reviewed block:
 
 - Whether the promotional site lives inside the main Vite app, a separate Vite package, or a separate deployable workspace.
 - Exact route/domain strategy.
-- Signup provider.
+- Brevo integration method and form styling.
 - Video capture format and hosting.
 - Hero layout and art direction.
 
