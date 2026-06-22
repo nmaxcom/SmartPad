@@ -31,6 +31,7 @@
     *   Assistant set package version to `1.0.0-rc.1` and updated `CHANGELOG.md` for the first web public beta release candidate.
     *   Assistant added a minimal Electron shell that loads the production Vite build from disk with isolated renderer settings.
     *   Assistant added desktop build/start/smoke scripts and a docs URL regression for relative `./` Vite base builds.
+    *   Follow-up: user asked to proceed with unsigned macOS artifact and Windows/Linux path; assistant added `electron-builder` config and generated the macOS arm64 beta artifact.
 *   Decisions:
     *   Launch scope is web public beta first.
     *   Desktop continues as beta, starting with macOS unsigned smoke.
@@ -41,6 +42,7 @@
     *   `yarn.lock`
     *   `desktop/electron/main.cjs`
     *   `desktop/electron/preload.cjs`
+    *   `electron-builder.json`
     *   `tests/unit/docsUrl.test.ts`
     *   `CHANGELOG.md`
     *   `aidocs/DESKTOP_PACKAGING_DECISION.md`
@@ -52,9 +54,12 @@
     *   `npm run desktop:build` passed after rerunning outside the sandbox so the docs generator could use `trash`.
     *   `npm run desktop:smoke` passed: Electron loaded the built app from disk and printed `SmartPad Electron smoke loaded: SmartPad`.
     *   `npm run desktop:smoke:runtime` passed: Electron verified storage persistence across relaunch, markdown export/import, settings persistence, desktop-safe docs href, and FX warning behavior.
+    *   `npm run desktop:package:mac` passed and produced `release/desktop/mac-arm64/SmartPad.app` plus `release/desktop/SmartPad-1.0.0-rc.1-arm64-mac.zip`.
+    *   Packaged binary smoke passed: `SMARTPAD_ELECTRON_SMOKE=1 release/desktop/mac-arm64/SmartPad.app/Contents/MacOS/SmartPad`.
 *   Pending:
     *   User review/confirmation before committing this block.
-    *   Unsigned macOS artifact generation and Windows/Linux artifact plan.
+    *   Decide whether Finder/Gatekeeper manual smoke is required before linking the beta artifact later.
+    *   Real Windows/Linux artifacts still need native runners/workstations.
 *   Risks/blockers:
     *   `npm install --save-dev electron` reports existing dependency audit vulnerabilities; not addressed in this block.
     *   Build still reports the known large bundle warning.

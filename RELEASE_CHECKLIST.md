@@ -100,9 +100,22 @@ Desktop smoke:
 
 ```bash
 npm run build
+npm run desktop:smoke
+npm run desktop:smoke:runtime
 ```
 
-Then run the desktop packaging script once it exists and perform manual packaged-app smoke from `aidocs/DESKTOP_PACKAGING_DECISION.md`.
+Then run the desktop packaging script and perform manual packaged-app smoke from `aidocs/DESKTOP_PACKAGING_DECISION.md`:
+
+```bash
+npm run desktop:package:mac
+```
+
+The first beta artifact is unsigned. Label it as beta and expect macOS Gatekeeper warnings until signing/notarization is configured.
+
+Expected first macOS outputs:
+
+- `release/desktop/mac-arm64/SmartPad.app`
+- `release/desktop/SmartPad-1.0.0-rc.1-arm64-mac.zip`
 
 ## Release Publication
 

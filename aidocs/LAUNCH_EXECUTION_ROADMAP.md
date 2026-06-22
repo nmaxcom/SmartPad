@@ -183,7 +183,7 @@ Dry run evidence:
 
 ## Phase 5: Desktop Beta
 
-Status: minimal Electron shell and runtime smoke passed for macOS unsigned beta path; packaging/signing/cross-platform artifacts remain future work.
+Status: minimal Electron shell, runtime smoke, and unsigned macOS artifact smoke passed; signing/notarization and Windows/Linux artifacts remain future work.
 
 Primary task:
 
@@ -200,8 +200,8 @@ Actions:
 2. Completed: added desktop build/start/smoke scripts using relative Vite assets for `file://`.
 3. Completed: basic Electron smoke loaded the app title from disk on macOS.
 4. Completed: `desktop:smoke:runtime` verifies storage persistence, markdown export/import, docs href, FX warning behavior, and settings persistence in the desktop runtime.
-5. Pending: produce unsigned macOS beta artifact.
-6. Pending: document Windows/Linux artifact generation path.
+5. Completed: `desktop:package:mac` produced `release/desktop/mac-arm64/SmartPad.app` and `release/desktop/SmartPad-1.0.0-rc.1-arm64-mac.zip`; packaged binary smoke passed.
+6. Completed: documented Windows/Linux artifact generation path using native OS runners/workstations.
 
 Exit criteria:
 
@@ -260,11 +260,9 @@ Rules:
 
 ## Current Critical Path
 
-1. Produce or document the unsigned macOS beta artifact path.
-2. Document Windows/Linux artifact generation path.
-3. Decide signup/update capture provider for the future promotional website.
-4. Build standalone promotional website and capture final assets.
-5. Link approved docs/support/privacy pages from the promotional site and verify the full journey.
+1. Decide signup/update capture provider for the future promotional website.
+2. Build standalone promotional website and capture final assets.
+3. Link approved docs/support/privacy pages from the promotional site and verify the full journey.
 
 ## Current Blockers
 
@@ -272,7 +270,7 @@ P0:
 
 - Historical migration coverage is deferred unless a concrete old-data case appears.
 - SmartPad-owned FX endpoint is not required for launch, but should be planned as future hardening if external provider reliability becomes a problem.
-- Desktop shell/runtime smoke passed, but packaged unsigned macOS artifact and Windows/Linux artifact path are not complete.
+- Desktop unsigned macOS artifact smoke passed, but signing/notarization and real Windows/Linux artifacts are not complete.
 - Standalone promotional website/signup/assets are not implemented and intentionally come last.
 
 P1:

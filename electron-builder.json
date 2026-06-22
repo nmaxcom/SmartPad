@@ -1,0 +1,33 @@
+{
+  "appId": "app.smartpad.beta",
+  "productName": "SmartPad",
+  "directories": {
+    "output": "release/desktop"
+  },
+  "files": [
+    "dist/**/*",
+    "desktop/electron/**/*",
+    "package.json"
+  ],
+  "asar": true,
+  "mac": {
+    "category": "public.app-category.productivity",
+    "target": [
+      "dir",
+      "zip"
+    ],
+    "identity": null,
+    "hardenedRuntime": false
+  },
+  "win": {
+    "target": [
+      "nsis"
+    ]
+  },
+  "linux": {
+    "target": [
+      "AppImage"
+    ],
+    "category": "Utility"
+  }
+}

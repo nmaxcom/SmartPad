@@ -43,15 +43,18 @@ Phase 1 minimal Electron shell is underway for `1.0.0-rc.1`:
 - `desktop:build`, `desktop:start`, and `desktop:smoke` scripts exist.
 - `npm run desktop:smoke` passed on macOS: the Electron shell loaded the built app from disk and reported `SmartPad Electron smoke loaded: SmartPad`.
 - `npm run desktop:smoke:runtime` passed on macOS: storage persistence across relaunch, markdown export/import, settings persistence, desktop-safe docs href, and FX warning behavior.
+- `electron-builder` is configured for unsigned macOS beta artifacts in `release/desktop/`.
+- `npm run desktop:package:mac` produced `release/desktop/mac-arm64/SmartPad.app` and `release/desktop/SmartPad-1.0.0-rc.1-arm64-mac.zip`.
+- Packaged app smoke passed with `SMARTPAD_ELECTRON_SMOKE=1 release/desktop/mac-arm64/SmartPad.app/Contents/MacOS/SmartPad`.
 
-The current scope is a macOS unsigned desktop beta smoke first. Installer packaging, signing/notarization, Windows/Linux artifacts, auto-update, and final download copy remain future steps.
+The current scope is a macOS unsigned desktop beta artifact first. Signing/notarization, Windows/Linux artifacts, auto-update, and final download copy remain future steps.
 
 Still not proven:
 
 - Docs external-open behavior from a visible interactive desktop window.
 - Settings reset inside the Electron runtime.
 - Offline FX/cache behavior inside the Electron runtime.
-- Installable unsigned macOS artifact.
+- User-facing install/open smoke through Finder after unzip.
 
 ## First Desktop Beta Scope
 
@@ -103,8 +106,11 @@ Verification:
 
 Deliverables:
 
-- Add a packaging tool such as electron-builder or Electron Forge after Phase 1 proves runtime behavior.
-- Produce unsigned macOS local beta artifact.
+- Use `electron-builder` with `electron-builder.json`.
+- Produce unsigned macOS local beta artifacts:
+  - `npm run desktop:package:mac`
+  - output: `release/desktop/mac-arm64/SmartPad.app`
+  - output: `release/desktop/SmartPad-1.0.0-rc.1-arm64-mac.zip`
 - Document unsigned-install warning expectations.
 - Add package metadata: app name, product name, version, icon placeholder, app id.
 
@@ -115,11 +121,16 @@ Verification:
 - Confirm import/export works outside dev server.
 - Confirm docs/app external links behave intentionally.
 
+Current artifact smoke:
+
+- `SMARTPAD_ELECTRON_SMOKE=1 release/desktop/mac-arm64/SmartPad.app/Contents/MacOS/SmartPad` passed.
+- Full manual Finder/Gatekeeper smoke is still pending.
+
 ### Phase 3: Cross-Platform Release Path
 
 Deliverables:
 
-- Add GitHub Actions release job or documented manual build commands for macOS, Windows, and Linux.
+- Add GitHub Actions release job or run documented platform-specific build commands on each OS.
 - Decide artifact formats:
   - macOS: `.dmg` or `.zip`
   - Windows: `.exe` or `.msi`
@@ -131,6 +142,14 @@ Verification:
 
 - Dry-run release artifact generation in CI or documented local commands.
 - Release checklist references exact artifact paths and smoke steps.
+
+Current command plan:
+
+- macOS unsigned beta, from macOS: `npm run desktop:package:mac`
+- Windows unsigned beta, from Windows runner/workstation: `npm run desktop:build && npx electron-builder --win nsis --config electron-builder.json`
+- Linux unsigned beta, from Linux runner/workstation: `npm run desktop:build && npx electron-builder --linux AppImage --config electron-builder.json`
+
+Cross-building Windows/Linux from macOS is not the launch path. Use native OS runners for predictable signing, permissions, and smoke checks.
 
 ## Tauri Revisit Trigger
 
