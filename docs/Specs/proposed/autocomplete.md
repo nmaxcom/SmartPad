@@ -44,6 +44,9 @@ The first version focuses on reusing names and syntax that already exist in the 
     appear last.
 12. Autocomplete should not truncate matching suggestions by default; the menu should scroll and
     keyboard navigation should keep the active item visible.
+13. The manual shortcut should make the menu visible in the same interaction frame. Large result
+    sets may render additional rows in follow-up animation frames, but all ranked suggestions must
+    remain available.
 
 ## Source types
 
@@ -184,3 +187,5 @@ ranking above `msr`, and `msr` ranking above generic substring matches.
     existing variables and user-defined functions.
 19. Manual autocomplete returns the full ranked suggestion set by default, rather than hiding
     lower-ranked items behind an arbitrary cap.
+20. With at least 80 available variables, the manual shortcut paints the menu and its first visible
+    rows synchronously, then appends the remaining suggestions without truncating them.

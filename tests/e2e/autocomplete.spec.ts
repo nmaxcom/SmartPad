@@ -7,7 +7,9 @@ test.describe("Autocomplete", () => {
     await waitForEditorReady(page);
   });
 
-  test("inserts a phrase variable from the suggestion menu", async ({ page }) => {
+  test("inserts a phrase variable from the suggestion menu", async ({
+    page,
+  }) => {
     await page.evaluate(() => {
       const editor = (window as any).tiptapEditor;
       editor.commands.setContent("monthly subscription revenue = $1200\n");
@@ -19,7 +21,9 @@ test.describe("Autocomplete", () => {
     await page.keyboard.press("Enter");
     await page.keyboard.type("total = monthly sub");
     await expect(page.locator(".smartpad-autocomplete-menu")).toBeVisible();
-    await expect(page.getByRole("option", { name: /monthly subscription revenue/i })).toBeVisible();
+    await expect(
+      page.getByRole("option", { name: /monthly subscription revenue/i }),
+    ).toBeVisible();
 
     await page.keyboard.press("Tab");
 
@@ -31,7 +35,7 @@ test.describe("Autocomplete", () => {
     await page.evaluate(() => {
       const editor = (window as any).tiptapEditor;
       editor.commands.setContent(
-        "<p>compound(principal, rate, years) = principal * (1 + rate)^years</p>"
+        "<p>compound(principal, rate, years) = principal * (1 + rate)^years</p>",
       );
       editor.commands.focus("end");
       window.dispatchEvent(new Event("forceEvaluation"));
@@ -49,7 +53,9 @@ test.describe("Autocomplete", () => {
     expect(text).toContain("growth = compound(");
   });
 
-  test("does not open just by moving the caret onto an existing variable", async ({ page }) => {
+  test("does not open just by moving the caret onto an existing variable", async ({
+    page,
+  }) => {
     await page.evaluate(() => {
       const editor = (window as any).tiptapEditor;
       editor.commands.setContent("roi = 44%\nwin = roi");
@@ -67,7 +73,9 @@ test.describe("Autocomplete", () => {
     await expect(page.locator(".smartpad-autocomplete-menu")).toBeHidden();
   });
 
-  test("closes exact variable suggestions after a trailing space", async ({ page }) => {
+  test("closes exact variable suggestions after a trailing space", async ({
+    page,
+  }) => {
     await page.evaluate(() => {
       const editor = (window as any).tiptapEditor;
       editor.commands.setContent("roi = 44%\n");
@@ -84,7 +92,9 @@ test.describe("Autocomplete", () => {
     await expect(page.locator(".smartpad-autocomplete-menu")).toBeHidden();
   });
 
-  test("auto-suggest waits for a token character after whitespace", async ({ page }) => {
+  test("auto-suggest waits for a token character after whitespace", async ({
+    page,
+  }) => {
     await page.evaluate(() => {
       const editor = (window as any).tiptapEditor;
       editor.commands.setContent("<p>roi = 44%</p><p>roi tax = 21%</p>");
@@ -102,7 +112,9 @@ test.describe("Autocomplete", () => {
     await expect(page.getByRole("option", { name: /roi tax/i })).toBeVisible();
   });
 
-  test("manual shortcut opens contextual suggestions without a token prefix", async ({ page }) => {
+  test("manual shortcut opens contextual suggestions without a token prefix", async ({
+    page,
+  }) => {
     await page.evaluate(() => {
       const editor = (window as any).tiptapEditor;
       editor.commands.setContent("<p>roi = 44%</p><p>roi tax = 21%</p>");
@@ -120,9 +132,60 @@ test.describe("Autocomplete", () => {
     await expect(page.getByRole("option", { name: /roi tax/i })).toBeVisible();
   });
 
-  test("manual autocomplete shortcut can be changed in settings", async ({ page }) => {
+  test("manual shortcut paints a bounded first batch before rendering the full menu", async ({
+    page,
+  }) => {
+    const variableCount = 80;
+    await page.evaluate((count) => {
+      const editor = (window as any).tiptapEditor;
+      const lines = Array.from(
+        { length: count },
+        (_, index) =>
+          `launcher item ${String(index).padStart(3, "0")} = ${index + 1}`,
+      );
+      editor.commands.setContent(
+        lines.map((line) => `<p>${line}</p>`).join("") + "<p></p>",
+      );
+      editor.commands.focus("end");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    }, variableCount);
+    await waitForUIRenderComplete(page);
+
+    const immediate = await page.evaluate(() => {
+      document.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          key: "k",
+          code: "KeyK",
+          ctrlKey: true,
+          shiftKey: true,
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+      const menu = document.querySelector<HTMLElement>(
+        ".smartpad-autocomplete-menu",
+      );
+      return {
+        display: menu?.style.display,
+        itemCount: menu?.querySelectorAll('[role="option"]').length || 0,
+      };
+    });
+
+    expect(immediate).toEqual({ display: "block", itemCount: 24 });
+    await expect
+      .poll(() =>
+        page.locator(".smartpad-autocomplete-menu [role='option']").count(),
+      )
+      .toBeGreaterThan(variableCount);
+  });
+
+  test("manual autocomplete shortcut can be changed in settings", async ({
+    page,
+  }) => {
     await page.getByLabel("Open Settings", { exact: true }).click();
-    const shortcutRecorder = page.locator("#settings-modal-autocomplete-manual-shortcut");
+    const shortcutRecorder = page.locator(
+      "#settings-modal-autocomplete-manual-shortcut",
+    );
     await shortcutRecorder.click();
     await page.keyboard.press("Control+Alt+K");
     await expect(shortcutRecorder).toContainText("Ctrl+Alt+K");
@@ -151,7 +214,9 @@ test.describe("Autocomplete", () => {
     page,
   }) => {
     await page.getByLabel("Open Settings", { exact: true }).click();
-    const shortcutRecorder = page.locator("#settings-modal-autocomplete-manual-shortcut");
+    const shortcutRecorder = page.locator(
+      "#settings-modal-autocomplete-manual-shortcut",
+    );
     await shortcutRecorder.click();
     await page.keyboard.press("Control+Alt+K");
     await expect(shortcutRecorder).toContainText("Ctrl+Alt+K");
@@ -175,13 +240,17 @@ test.describe("Autocomplete", () => {
     await expect(page.locator(".smartpad-autocomplete-menu")).toBeVisible();
     await expect(page.getByRole("option", { name: /roi 44%/i })).toBeVisible();
     await expect(page.getByRole("option", { name: /roi tax/i })).toBeVisible();
-    await expect(page.getByRole("option", { name: /sqrt\(value\)/i })).toBeVisible();
+    await expect(
+      page.getByRole("option", { name: /sqrt\(value\)/i }),
+    ).toBeVisible();
   });
 
   test("closes when a variable name is completed exactly", async ({ page }) => {
     await page.evaluate(() => {
       const editor = (window as any).tiptapEditor;
-      editor.commands.setContent("market = 7%\nfundfee = 0.35%\nplatformfee = 0.15%\n");
+      editor.commands.setContent(
+        "market = 7%\nfundfee = 0.35%\nplatformfee = 0.15%\n",
+      );
       editor.commands.focus("end");
       window.dispatchEvent(new Event("forceEvaluation"));
     });
@@ -192,7 +261,9 @@ test.describe("Autocomplete", () => {
     await expect(page.locator(".smartpad-autocomplete-menu")).toBeHidden();
   });
 
-  test("keeps the highlighted option visible while navigating long menus", async ({ page }) => {
+  test("keeps the highlighted option visible while navigating long menus", async ({
+    page,
+  }) => {
     await page.evaluate(() => {
       const editor = (window as any).tiptapEditor;
       const suffixes = [
@@ -211,8 +282,12 @@ test.describe("Autocomplete", () => {
         "mike",
         "november",
       ];
-      const variables = suffixes.map((suffix, index) => `item ${suffix} = ${index + 1}`);
-      editor.commands.setContent(variables.map((line) => `<p>${line}</p>`).join(""));
+      const variables = suffixes.map(
+        (suffix, index) => `item ${suffix} = ${index + 1}`,
+      );
+      editor.commands.setContent(
+        variables.map((line) => `<p>${line}</p>`).join(""),
+      );
       editor.commands.focus("end");
       window.dispatchEvent(new Event("forceEvaluation"));
     });
@@ -228,9 +303,11 @@ test.describe("Autocomplete", () => {
     }
 
     const geometry = await page.evaluate(() => {
-      const menuEl = document.querySelector(".smartpad-autocomplete-menu") as HTMLElement | null;
+      const menuEl = document.querySelector(
+        ".smartpad-autocomplete-menu",
+      ) as HTMLElement | null;
       const activeEl = document.querySelector(
-        ".smartpad-autocomplete-item-active"
+        ".smartpad-autocomplete-item-active",
       ) as HTMLElement | null;
       if (!menuEl || !activeEl) return null;
       const menuRect = menuEl.getBoundingClientRect();
@@ -246,7 +323,11 @@ test.describe("Autocomplete", () => {
 
     expect(geometry).not.toBeNull();
     expect((geometry as any).scrollTop).toBeGreaterThan(0);
-    expect((geometry as any).activeTop).toBeGreaterThanOrEqual((geometry as any).menuTop);
-    expect((geometry as any).activeBottom).toBeLessThanOrEqual((geometry as any).menuBottom);
+    expect((geometry as any).activeTop).toBeGreaterThanOrEqual(
+      (geometry as any).menuTop,
+    );
+    expect((geometry as any).activeBottom).toBeLessThanOrEqual(
+      (geometry as any).menuBottom,
+    );
   });
 });

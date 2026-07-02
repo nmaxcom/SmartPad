@@ -4,6 +4,13 @@ All notable user-facing changes to SmartPad will be documented in this file.
 
 SmartPad uses semantic versioning. Pre-release builds use `-beta.N` or `-rc.N` suffixes.
 
+## 1.0.0-rc.3 - 2026-07-02
+
+### Fixed
+
+- The manual autocomplete launcher now appears immediately on large sheets while the remaining
+  suggestions render progressively.
+
 ## 1.0.0-rc.2 - 2026-06-23
 
 ### Added

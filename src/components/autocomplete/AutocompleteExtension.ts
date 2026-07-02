@@ -5,10 +5,7 @@ import type { EditorView } from "prosemirror-view";
 import type { FunctionDefinitionNode } from "../../parsing/ast";
 import type { AutocompleteManualShortcut, Variable } from "../../state/types";
 import { keyboardShortcutMatchesEvent } from "../../utils/keyboardShortcut";
-import {
-  AutocompleteItem,
-  getAutocompleteSuggestions,
-} from "./suggestions";
+import { AutocompleteItem, getAutocompleteSuggestions } from "./suggestions";
 
 interface AutocompleteState {
   active: boolean;
@@ -24,6 +21,8 @@ interface AutocompleteOptions {
 }
 
 const pluginKey = new PluginKey<AutocompleteState>("smartpad-autocomplete");
+const INITIAL_RENDER_ITEM_COUNT = 24;
+const FOLLOW_UP_RENDER_ITEM_COUNT = 64;
 
 const emptyState: AutocompleteState = {
   active: false,
@@ -59,7 +58,7 @@ function buildState(
   state: EditorState,
   options: AutocompleteOptions,
   selectedIndex = 0,
-  trigger: "auto" | "manual" = "auto"
+  trigger: "auto" | "manual" = "auto",
 ): AutocompleteState {
   const cursorContext = getTextCursorContext(state);
   if (!cursorContext) {
@@ -95,14 +94,21 @@ function setMeta(tr: Transaction, value: Partial<AutocompleteState> | "close") {
 }
 
 function applyItem(view: EditorView, item: AutocompleteItem) {
-  const tr = view.state.tr.insertText(item.insertText, item.replaceFrom, item.replaceTo);
+  const tr = view.state.tr.insertText(
+    item.insertText,
+    item.replaceFrom,
+    item.replaceTo,
+  );
   const cursorPos = item.replaceFrom + item.insertText.length;
   tr.setSelection(TextSelection.create(tr.doc, cursorPos));
   view.dispatch(setMeta(tr, "close"));
   view.focus();
 }
 
-function openManualAutocomplete(view: EditorView, options: AutocompleteOptions): boolean {
+function openManualAutocomplete(
+  view: EditorView,
+  options: AutocompleteOptions,
+): boolean {
   const nextState = buildState(view.state, options, 0, "manual");
   view.dispatch(setMeta(view.state.tr, nextState.active ? nextState : "close"));
   return nextState.active;
@@ -110,7 +116,10 @@ function openManualAutocomplete(view: EditorView, options: AutocompleteOptions):
 
 function isEditorFocusWithin(view: EditorView): boolean {
   const activeElement = document.activeElement;
-  return view.hasFocus() || Boolean(activeElement && view.dom.contains(activeElement));
+  return (
+    view.hasFocus() ||
+    Boolean(activeElement && view.dom.contains(activeElement))
+  );
 }
 
 export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
@@ -150,7 +159,8 @@ export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
         props: {
           handleKeyDown(view, event) {
             const state = pluginKey.getState(view.state) || emptyState;
-            const manualShortcut = options.getManualShortcut?.() || "Ctrl+Shift+K";
+            const manualShortcut =
+              options.getManualShortcut?.() || "Ctrl+Shift+K";
             if (keyboardShortcutMatchesEvent(manualShortcut, event)) {
               event.preventDefault();
               openManualAutocomplete(view, options);
@@ -163,7 +173,8 @@ export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
 
             if (event.key === "ArrowDown") {
               event.preventDefault();
-              const selectedIndex = (state.selectedIndex + 1) % state.items.length;
+              const selectedIndex =
+                (state.selectedIndex + 1) % state.items.length;
               view.dispatch(setMeta(view.state.tr, { selectedIndex }));
               return true;
             }
@@ -171,7 +182,8 @@ export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
             if (event.key === "ArrowUp") {
               event.preventDefault();
               const selectedIndex =
-                (state.selectedIndex - 1 + state.items.length) % state.items.length;
+                (state.selectedIndex - 1 + state.items.length) %
+                state.items.length;
               view.dispatch(setMeta(view.state.tr, { selectedIndex }));
               return true;
             }
@@ -199,7 +211,61 @@ export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
           menu.style.display = "none";
           document.body.appendChild(menu);
 
+          let pendingRenderFrame: number | null = null;
+          let renderGeneration = 0;
+
+          const cancelPendingRender = () => {
+            renderGeneration += 1;
+            if (pendingRenderFrame !== null) {
+              window.cancelAnimationFrame(pendingRenderFrame);
+              pendingRenderFrame = null;
+            }
+          };
+
+          const createItemButton = (
+            item: AutocompleteItem,
+            index: number,
+            state: AutocompleteState,
+          ) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className =
+              index === state.selectedIndex
+                ? "smartpad-autocomplete-item smartpad-autocomplete-item-active"
+                : "smartpad-autocomplete-item";
+            button.setAttribute("role", "option");
+            button.setAttribute("aria-setsize", String(state.items.length));
+            button.setAttribute("aria-posinset", String(index + 1));
+            button.setAttribute(
+              "aria-selected",
+              index === state.selectedIndex ? "true" : "false",
+            );
+            button.addEventListener("mousedown", (event) => {
+              event.preventDefault();
+              applyItem(view, item);
+            });
+
+            const label = document.createElement("span");
+            label.className = "smartpad-autocomplete-label";
+            label.textContent = item.label;
+
+            const detail = document.createElement("span");
+            detail.className = "smartpad-autocomplete-detail";
+            detail.textContent = item.detail;
+
+            const kind = document.createElement("span");
+            kind.className = `smartpad-autocomplete-kind smartpad-autocomplete-kind-${item.kind}`;
+            kind.textContent = item.kind;
+
+            button.appendChild(label);
+            button.appendChild(detail);
+            button.appendChild(kind);
+            return button;
+          };
+
           const render = () => {
+            cancelPendingRender();
+            const generation = renderGeneration;
             const state = pluginKey.getState(view.state) || emptyState;
             menu.textContent = "";
 
@@ -208,45 +274,54 @@ export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
               return;
             }
 
-            state.items.forEach((item, index) => {
-              const button = document.createElement("button");
-              button.type = "button";
-              button.className =
-                index === state.selectedIndex
-                  ? "smartpad-autocomplete-item smartpad-autocomplete-item-active"
-                  : "smartpad-autocomplete-item";
-              button.setAttribute("role", "option");
-              button.setAttribute("aria-selected", index === state.selectedIndex ? "true" : "false");
-              button.addEventListener("mousedown", (event) => {
-                event.preventDefault();
-                applyItem(view, item);
-              });
-
-              const label = document.createElement("span");
-              label.className = "smartpad-autocomplete-label";
-              label.textContent = item.label;
-
-              const detail = document.createElement("span");
-              detail.className = "smartpad-autocomplete-detail";
-              detail.textContent = item.detail;
-
-              const kind = document.createElement("span");
-              kind.className = `smartpad-autocomplete-kind smartpad-autocomplete-kind-${item.kind}`;
-              kind.textContent = item.kind;
-
-              button.appendChild(label);
-              button.appendChild(detail);
-              button.appendChild(kind);
-              menu.appendChild(button);
-            });
-
-            const activeItem = menu.querySelector(".smartpad-autocomplete-item-active");
-            activeItem?.scrollIntoView({ block: "nearest" });
-
             const coords = view.coordsAtPos(state.anchorPos);
             menu.style.left = `${Math.max(8, Math.min(coords.left, window.innerWidth - 328))}px`;
             menu.style.top = `${Math.min(coords.bottom + 8, window.innerHeight - 48)}px`;
             menu.style.display = "block";
+
+            const appendItems = (start: number, end: number) => {
+              const fragment = document.createDocumentFragment();
+              for (let index = start; index < end; index += 1) {
+                fragment.appendChild(
+                  createItemButton(state.items[index], index, state),
+                );
+              }
+              menu.appendChild(fragment);
+            };
+
+            let renderedCount = Math.min(
+              state.items.length,
+              Math.max(INITIAL_RENDER_ITEM_COUNT, state.selectedIndex + 1),
+            );
+            appendItems(0, renderedCount);
+            menu
+              .querySelector(".smartpad-autocomplete-item-active")
+              ?.scrollIntoView({ block: "nearest" });
+
+            const appendNextBatch = () => {
+              pendingRenderFrame = null;
+              if (
+                generation !== renderGeneration ||
+                renderedCount >= state.items.length
+              ) {
+                return;
+              }
+              const nextCount = Math.min(
+                state.items.length,
+                renderedCount + FOLLOW_UP_RENDER_ITEM_COUNT,
+              );
+              appendItems(renderedCount, nextCount);
+              renderedCount = nextCount;
+              if (renderedCount < state.items.length) {
+                pendingRenderFrame =
+                  window.requestAnimationFrame(appendNextBatch);
+              }
+            };
+
+            if (renderedCount < state.items.length) {
+              pendingRenderFrame =
+                window.requestAnimationFrame(appendNextBatch);
+            }
           };
 
           render();
@@ -255,7 +330,8 @@ export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
             if (event.defaultPrevented || !isEditorFocusWithin(view)) {
               return;
             }
-            const manualShortcut = options.getManualShortcut?.() || "Ctrl+Shift+K";
+            const manualShortcut =
+              options.getManualShortcut?.() || "Ctrl+Shift+K";
             if (!keyboardShortcutMatchesEvent(manualShortcut, event)) {
               return;
             }
@@ -271,7 +347,12 @@ export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
               render();
             },
             destroy() {
-              document.removeEventListener("keydown", handleDocumentKeyDown, true);
+              cancelPendingRender();
+              document.removeEventListener(
+                "keydown",
+                handleDocumentKeyDown,
+                true,
+              );
               menu.remove();
             },
           };

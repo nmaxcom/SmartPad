@@ -7676,3 +7676,37 @@
     *   `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, `npm run spec:trust`, `npm run build`, and `npm run verify:changed` passed.
 *   Risks/blockers:
     *   Human gate is mandatory before committing this correction block.
+
+## Entry J-2026-07-02-01
+
+*   Timestamp: 2026-07-02 14:04 CEST / 2026-07-02 12:04 UTC
+*   Summary:
+    *   User reported noticeable latency between the manual autocomplete shortcut and launcher appearance.
+    *   Assistant traced the delay to synchronous creation of every suggestion row after the default result cap was removed.
+    *   The launcher now paints its first 24 rows in the shortcut interaction and appends the full remaining ranked set in animation-frame batches.
+*   Decisions:
+    *   Preserve the no-truncation contract and full keyboard access rather than restoring an arbitrary suggestion cap.
+    *   Keep the maintenance task open until the user confirms the perceived latency is resolved.
+*   User directives:
+    *   Remove the noticeable delay between the shortcut and launcher appearance.
+*   Assistant commitments:
+    *   Deliver progressive menu rendering, regression coverage, required version/spec/changelog updates, and full repository validation.
+*   Artifacts changed:
+    *   `src/components/autocomplete/AutocompleteExtension.ts`
+    *   `tests/e2e/autocomplete.spec.ts`
+    *   `docs/Specs/proposed/autocomplete.md`
+    *   `package.json`
+    *   `package-lock.json`
+    *   `CHANGELOG.md`
+    *   `aidocs/TODO_BACKLOG.md`
+    *   `aidocs/EXECUTIVE_JOURNAL.md`
+*   Validation:
+    *   Autocomplete and shortcut unit tests passed: 24 tests.
+    *   Autocomplete browser regression suite passed: 11 tests.
+    *   `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, and `npm run spec:trust` passed.
+    *   `npm run build` passed with the existing large-bundle warning.
+    *   `npm run verify:changed -- HEAD` passed for the working change set.
+*   Pending:
+    *   User confirmation that shortcut-to-launcher latency is resolved in normal use.
+*   Risks/blockers:
+    *   No machine blocker. Human completion gate remains pending.
