@@ -7710,3 +7710,37 @@
     *   User confirmation that shortcut-to-launcher latency is resolved in normal use.
 *   Risks/blockers:
     *   No machine blocker. Human completion gate remains pending.
+
+## Entry J-2026-07-15-01
+
+*   Timestamp: 2026-07-15 06:39 CEST / 2026-07-15 04:39 UTC
+*   Summary:
+    *   User asked for a candid product review and ambitious ideas that advance SmartPad's original goal: a more useful, flexible, intuitive, interactive, and powerful thinking tool inspired by Calca and Soulver.
+    *   Assistant reviewed the shipped/proposed specs, product UI, architecture, templates, public guides, current competitor capabilities, and the interaction-focused browser suites.
+    *   Product conclusion: SmartPad's strongest territory is an executable decision notebook where plain-language models become directly manipulable simulations, rather than a feature-for-feature text-calculator clone.
+*   Decisions:
+    *   Prioritize the short loop `question -> assumptions -> live model -> exploration -> decision` as the product north star.
+    *   Treat direct manipulation, semantic values, dependency visibility, reverse solving, scenarios, and uncertainty as one integrated product system.
+    *   Recommend reliability and discoverability of scrubbing/result reuse before broadening the syntax surface.
+    *   Keep generic AI assistance secondary to transparent, deterministic modeling and never let AI silently alter a trusted model.
+*   User directives:
+    *   Review what SmartPad can do today and propose large and small innovative improvements consistent with the original vision.
+*   Assistant commitments:
+    *   Deliver a candid capability assessment, differentiated product vision, prioritized idea set, and staged roadmap for user review.
+    *   Do not implement feature bets until the user chooses the direction to pursue.
+*   Artifacts changed:
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry only).
+    *   No product code or behavior changed.
+*   Validation:
+    *   Visual review captured the current Quick Tour first-run screen in a local Playwright artifact.
+    *   Interaction batch: 40 of 43 tests passed across Quick Tour, goal seek, plot interaction, and result-reference drag workflows.
+    *   Three result-reference drag tests failed and failed again in isolation: visible-result insertion, middle-line boundary drop, and boundary drop without a paragraph line id.
+*   Pending:
+    *   Owner: User; due: TBD; status: todo; choose the first product bet after reviewing the proposed direction.
+    *   Owner: Assistant; due: TBD; status: todo; once directed, convert the chosen bet into a narrow spec/prototype with explicit success criteria and verification.
+    *   Owner: Assistant; due: TBD; status: todo; repair the three reproducible result-reference drag failures if the user prioritizes the direct-manipulation reliability block.
+*   Risks/blockers:
+    *   The core product promise depends on tactile trust; reproducible drag/drop failures directly weaken that promise.
+    *   The current first-run experience exposes many labs and technical concepts before demonstrating one unmistakable decision-making moment.
+    *   Large editor/plot interaction modules concentrate product complexity and will raise the cost of adding scenarios, uncertainty, and richer direct manipulation without architectural extraction.
+    *   Human completion gate remains pending until the user confirms the review/direction.
