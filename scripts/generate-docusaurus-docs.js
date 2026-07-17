@@ -951,6 +951,8 @@ const renderGuidePages = () => {
         "",
         "Numbers highlighted in the editor can be dragged left or right. That is called scrubbing: it lets you feel how a model changes before you decide on the exact value.",
         "",
+        "Hold `Shift` while dragging for fine adjustments, or `Alt`/`Option` for larger jumps. Press `Escape` before releasing to cancel the experiment and restore the exact starting value.",
+        "",
         renderPlayground({
           title: "Scrub the assumptions",
           description: "Try dragging `40`, `82`, or `22` in the app.",
@@ -1024,6 +1026,10 @@ const renderGuidePages = () => {
         "## Scrubbing numbers",
         "",
         "Highlighted numbers can be dragged left or right. Scrubbing edits the number in the sheet, so downstream results and plots update while you explore.",
+        "",
+        "- Hold `Shift` for fine control.",
+        "- Hold `Alt` or `Option` for coarse control.",
+        "- Press `Escape` before releasing to cancel and restore the exact starting text.",
         "",
         renderPlayground({
           title: "Scrub a planning variable",

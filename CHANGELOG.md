@@ -4,6 +4,13 @@ All notable user-facing changes to SmartPad will be documented in this file.
 
 SmartPad uses semantic versioning. Pre-release builds use `-beta.N` or `-rc.N` suffixes.
 
+## 1.0.0-rc.5 - 2026-07-18
+
+### Fixed
+
+- Local docs generation now preserves the documented `Shift`, `Alt`/`Option`, and `Escape`
+  number-scrubbing controls instead of removing them during `npm run dev`.
+
 ## 1.0.0-rc.4 - 2026-07-18
 
 ### Added

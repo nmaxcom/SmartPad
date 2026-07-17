@@ -7818,3 +7818,27 @@
     *   Goal Seek currently follows direct equation dependencies but does not yet solve through an arbitrary chain of intermediate variables; the starter model keeps the chosen input directly present in the target equation.
     *   The production build remains green but retains the existing large-chunk warning.
     *   Human completion gate remains pending until the user confirms this milestone.
+
+## Entry J-2026-07-18-03
+
+*   Timestamp: 2026-07-18 01:47 CEST / 2026-07-17 23:47 UTC
+*   Summary:
+    *   User asked to run SmartPad and provide the web app.
+    *   Assistant started the local development server at `http://127.0.0.1:3200/`, verified both the app and `/docs/` return HTTP 200, and opened the app in the user's browser.
+    *   The normal pre-development documentation generation exposed that the new scrubber guidance was being overwritten because it had been edited only in generated guide files.
+    *   Assistant moved the guidance into the Docusaurus generator source, regenerated/synced public docs, and advanced the version to `1.0.0-rc.5`.
+*   Decisions:
+    *   Generated documentation must be changed at its generator source so `npm run dev` remains idempotent.
+    *   Keep the verified local server running for user review.
+*   Artifacts changed:
+    *   `scripts/generate-docusaurus-docs.js`, generated `public/docs/` output, version files, and `CHANGELOG.md`.
+*   Validation:
+    *   App root and `/docs/` returned HTTP 200.
+    *   `npm run docs:docusaurus:publish-local` completed successfully.
+    *   Docs IA browser check: 3 of 3 tests passed.
+    *   Docs map/drift, spec sync/trust, `npm run verify:changed -- HEAD`, and production build passed.
+*   Pending:
+    *   Owner: User; due: TBD; status: todo; review SmartPad at the local URL and confirm or report desired adjustments.
+*   Risks/blockers:
+    *   The local URL is available only while this development-server session remains running.
+    *   The production build retains the existing large-chunk warning.
