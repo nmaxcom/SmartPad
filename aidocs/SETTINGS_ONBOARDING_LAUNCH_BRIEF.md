@@ -14,6 +14,7 @@ Existing implementation:
 - Settings persistence: `src/state/settingsStore.ts`
 - Settings panel/modal: `src/components/ui/SettingsPanel.tsx`, `src/components/ui/SettingsModal.tsx`
 - First-run quick tour content: `src/templates/quickTourTemplate.ts`
+- Focused first-run model: `src/templates/decisionPlaygroundTemplate.ts`
 - Template panel: `src/components/VariablePanel/TemplatePanel.tsx`
 
 Existing coverage:
@@ -24,11 +25,15 @@ Existing coverage:
 - `tests/unit/quickTourTemplate.test.ts`
 - `tests/e2e/quick-tour-template.spec.ts`
 - `tests/e2e/template-basic-functionality.spec.ts`
+- `tests/unit/decisionPlaygroundTemplate.test.ts`
+- `tests/e2e/decision-playground-template.spec.ts`
 
 Launch gap:
 
 - Settings now has an approved professional layout in commit `ed5511db`, with section navigation, responsive behavior, and existing controls preserved.
-- First-run visual onboarding was explicitly deferred by the user on 2026-06-17; the current Quick Tour/template entry remains the launch-candidate baseline.
+- On 2026-07-18 the user chose to move the product toward a focused Decision Playground. First run
+  now demonstrates one complete loop—assumptions, live outputs, scrubbing, plotting, and goal
+  seek—while Quick Tour remains available for broad capability discovery.
 - Final launch screenshots should wait until release-candidate stability checks are complete.
 
 ## Settings Status

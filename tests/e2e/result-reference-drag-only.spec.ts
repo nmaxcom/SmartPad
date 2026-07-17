@@ -588,11 +588,12 @@ test.describe("Result references (drag-only)", () => {
       .nth(2)
       .locator(".semantic-result-display, .semantic-live-result-display");
     await sourceChip.hover();
-    await sourceChip
-      .locator(".semantic-result-menu")
-      .evaluate((button: HTMLElement) => button.click());
+    const menuButton = sourceChip.locator(".semantic-result-menu");
+    await expect(menuButton).toBeVisible();
+    await menuButton.click({ force: true });
 
     const menu = page.locator(".semantic-result-action-menu");
+    await expect(menu).toBeVisible();
     await expect(menu.getByRole("menuitem", { name: "Plot from result" })).toBeEnabled();
     await menu.getByRole("menuitem", { name: "Plot from result" }).click();
     await waitForUIRenderComplete(page);

@@ -23,7 +23,20 @@ interface NumberScrubState {
   deltaChip: HTMLDivElement | null;
 }
 
+type NumberScrubMode = "normal" | "fine" | "coarse";
+
 const SCRUBBABLE_LITERAL_REGEX = /^[-+]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/;
+const SCRUB_MODE_MULTIPLIER: Record<NumberScrubMode, number> = {
+  normal: 1,
+  fine: 0.1,
+  coarse: 10,
+};
+
+function getNumberScrubMode(event: MouseEvent): NumberScrubMode {
+  if (event.altKey) return "coarse";
+  if (event.shiftKey) return "fine";
+  return "normal";
+}
 
 function parseScrubbableLiteral(text: string): number | null {
   const trimmed = text.trim();
@@ -93,7 +106,41 @@ export const NumberScrubberExtension = Extension.create({
                 document.body.classList.add("number-scrubbing");
 
                 // Add global mouse handlers
-                const handleMouseMove = (e: MouseEvent) => {
+                let isFinished = false;
+
+                function removeGlobalHandlers() {
+                  document.removeEventListener("mousemove", handleMouseMove);
+                  document.removeEventListener("mouseup", handleMouseUp);
+                  document.removeEventListener("keydown", handleKeyDown, true);
+                  window.removeEventListener("mouseleave", handleMouseUp);
+                }
+
+                function finishScrub(cancelled = false) {
+                  if (isFinished) return;
+                  isFinished = true;
+                  removeGlobalHandlers();
+
+                  if (cancelled && scrubState.hasMoved) {
+                    applyScrubValue(view, scrubState, scrubState.originalText);
+                  }
+
+                  if (scrubState.dragElement) {
+                    scrubState.dragElement.classList.remove("dragging");
+                  }
+                  document.body.classList.remove("number-scrubbing");
+
+                  if (!scrubState.hasMoved && !cancelled) {
+                    const tr = view.state.tr;
+                    tr.setSelection(TextSelection.create(tr.doc, cursorPos));
+                    view.dispatch(tr);
+                    view.focus();
+                  }
+
+                  removeDeltaChip(scrubState.deltaChip);
+                  delete (plugin as any).scrubState;
+                }
+
+                function handleMouseMove(e: MouseEvent) {
                   const deltaX = Math.abs(e.clientX - scrubState.startX);
 
                   // If we've moved more than a few pixels, start dragging
@@ -117,7 +164,9 @@ export const NumberScrubberExtension = Extension.create({
                       scrubState.startValue,
                       scrubState.decimalPlaces
                     );
-                    const deltaValue = actualDeltaX * sensitivity;
+                    const mode = getNumberScrubMode(e);
+                    const deltaValue =
+                      actualDeltaX * sensitivity * SCRUB_MODE_MULTIPLIER[mode];
                     const newValue = scrubState.startValue + deltaValue;
 
                     // Apply bounds (prevent division by zero, extreme values)
@@ -136,40 +185,27 @@ export const NumberScrubberExtension = Extension.create({
                       deltaFromStart,
                       scrubState.decimalPlaces,
                       view,
-                      scrubState
+                      scrubState,
+                      mode
                     );
                   }
-                };
+                }
 
-                const handleMouseUp = () => {
-                  document.removeEventListener("mousemove", handleMouseMove);
-                  document.removeEventListener("mouseup", handleMouseUp);
-                  window.removeEventListener("mouseleave", handleMouseUp);
+                function handleMouseUp() {
+                  finishScrub(false);
+                }
 
-                  // Remove dragging class and global cursor immediately
-                  if (scrubState.dragElement) {
-                    scrubState.dragElement.classList.remove("dragging");
-                  }
-                  document.body.classList.remove("number-scrubbing");
-
-                  // If we didn't move (simple click), allow normal cursor placement
-                  if (!scrubState.hasMoved) {
-                    removeDeltaChip(scrubState.deltaChip);
-                    // Place cursor at click position but keep the scrubbable mark
-                    const tr = view.state.tr;
-                    tr.setSelection(TextSelection.create(tr.doc, cursorPos));
-                    view.dispatch(tr);
-                    view.focus();
-                    delete (plugin as any).scrubState;
-                    return;
-                  }
-
-                  removeDeltaChip(scrubState.deltaChip);
-                  delete (plugin as any).scrubState;
-                };
+                function handleKeyDown(e: KeyboardEvent) {
+                  if (e.key !== "Escape" || !scrubState.isDragging) return;
+                  e.preventDefault();
+                  e.stopPropagation();
+                  finishScrub(true);
+                  view.focus();
+                }
 
                 document.addEventListener("mousemove", handleMouseMove);
                 document.addEventListener("mouseup", handleMouseUp);
+                document.addEventListener("keydown", handleKeyDown, true);
                 window.addEventListener("mouseleave", handleMouseUp); // Clean up if mouse leaves window
 
                 return true; // Always handle scrubbable number clicks
@@ -288,7 +324,8 @@ function updateDeltaChip(
   deltaValue: number,
   decimalPlaces: number,
   view: EditorView,
-  scrubState: NumberScrubState
+  scrubState: NumberScrubState,
+  mode: NumberScrubMode
 ): void {
   if (!chip) return;
 
@@ -313,9 +350,10 @@ function updateDeltaChip(
     }
   }
 
-  chip.textContent = formattedDelta;
+  chip.textContent = mode === "normal" ? formattedDelta : `${formattedDelta} · ${mode}`;
   chip.style.left = `${x}px`;
   chip.style.top = `${y - 6}px`;
+  chip.dataset.mode = mode;
   chip.classList.toggle("is-positive", deltaValue >= 0);
   chip.classList.toggle("is-negative", deltaValue < 0);
 }

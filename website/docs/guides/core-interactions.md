@@ -34,6 +34,10 @@ A copied value is just text. A reference stays connected to the result it came f
 
 Highlighted numbers can be dragged left or right. Scrubbing edits the number in the sheet, so downstream results and plots update while you explore.
 
+- Hold `Shift` for fine control.
+- Hold `Alt` or `Option` for coarse control.
+- Press `Escape` before releasing to cancel and restore the exact starting text.
+
 <ExamplePlayground title={"Scrub a planning variable"} description={"Drag `18` or `9` to explore the model."} code={"principal = $12000\nannual return = 9%\nyears = 18\nestimated value = principal * (1 + annual return)^years"} />
 
 > GIF/video marker: scrub `years` and show the result changing live.

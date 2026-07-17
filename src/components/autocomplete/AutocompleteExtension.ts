@@ -27,7 +27,7 @@ const FOLLOW_UP_RENDER_ITEM_COUNT = 64;
 const emptyState: AutocompleteState = {
   active: false,
   items: [],
-  selectedIndex: 0,
+  selectedIndex: -1,
   anchorPos: 0,
 };
 
@@ -57,7 +57,7 @@ function getTextCursorContext(state: EditorState): {
 function buildState(
   state: EditorState,
   options: AutocompleteOptions,
-  selectedIndex = 0,
+  selectedIndex: number | undefined = undefined,
   trigger: "auto" | "manual" = "auto",
 ): AutocompleteState {
   const cursorContext = getTextCursorContext(state);
@@ -84,7 +84,12 @@ function buildState(
   return {
     active: true,
     items,
-    selectedIndex: Math.max(0, Math.min(selectedIndex, items.length - 1)),
+    selectedIndex:
+      typeof selectedIndex === "number"
+        ? Math.max(-1, Math.min(selectedIndex, items.length - 1))
+        : trigger === "manual"
+          ? 0
+          : -1,
     anchorPos: state.selection.from,
   };
 }
@@ -174,7 +179,9 @@ export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
             if (event.key === "ArrowDown") {
               event.preventDefault();
               const selectedIndex =
-                (state.selectedIndex + 1) % state.items.length;
+                state.selectedIndex < 0
+                  ? 0
+                  : (state.selectedIndex + 1) % state.items.length;
               view.dispatch(setMeta(view.state.tr, { selectedIndex }));
               return true;
             }
@@ -182,13 +189,31 @@ export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
             if (event.key === "ArrowUp") {
               event.preventDefault();
               const selectedIndex =
-                (state.selectedIndex - 1 + state.items.length) %
-                state.items.length;
+                state.selectedIndex < 0
+                  ? state.items.length - 1
+                  : (state.selectedIndex - 1 + state.items.length) %
+                    state.items.length;
               view.dispatch(setMeta(view.state.tr, { selectedIndex }));
               return true;
             }
 
-            if (event.key === "Enter" || event.key === "Tab") {
+            if (event.key === "Tab") {
+              event.preventDefault();
+              applyItem(
+                view,
+                state.items[state.selectedIndex >= 0 ? state.selectedIndex : 0],
+              );
+              return true;
+            }
+
+            if (event.key === "Enter") {
+              if (state.selectedIndex < 0) {
+                // Automatic suggestions are informational until the user navigates
+                // them. Preserve Enter as the editor's newline command so a passive
+                // menu can never rewrite a completed expression.
+                view.dispatch(setMeta(view.state.tr, "close"));
+                return false;
+              }
               event.preventDefault();
               applyItem(view, state.items[state.selectedIndex]);
               return true;

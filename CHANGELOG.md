@@ -4,6 +4,23 @@ All notable user-facing changes to SmartPad will be documented in this file.
 
 SmartPad uses semantic versioning. Pre-release builds use `-beta.N` or `-rc.N` suffixes.
 
+## 1.0.0-rc.4 - 2026-07-18
+
+### Added
+
+- First run now opens a focused Decision Playground that connects editable assumptions, live profit
+  and margin, a reactive plot, and one-variable goal seek in a single practical model. The broader
+  Quick Tour remains available as a secondary template.
+- Number scrubbing now supports `Shift` fine control, `Alt`/`Option` coarse control, and `Escape`
+  to restore the exact value from before the gesture.
+
+### Fixed
+
+- Passive automatic autocomplete suggestions no longer intercept `Enter` and rewrite a completed
+  expression. Arrow navigation still selects a suggestion, while `Tab` can accept the first item.
+- Result-chip drag/drop workflows that were corrupted by passive autocomplete now preserve their
+  source and target expressions.
+
 ## 1.0.0-rc.3 - 2026-07-02
 
 ### Fixed

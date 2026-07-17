@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { deriveTitleFromContent, applyTitleToContent, DEFAULT_SHEET_TITLE } from "../utils/sheetTitle";
 import { SheetRecord, deleteSheet, generateSheetId, getAllSheets, getSheet, putSheet } from "../storage/sheetsDb";
-import { QUICK_TOUR_TEMPLATE } from "../templates/quickTourTemplate";
+import { DECISION_PLAYGROUND_TEMPLATE } from "../templates/decisionPlaygroundTemplate";
 import { parseEmbedPreviewParams, parseRuntimeModeParams } from "../utils/runtimeMode";
 
 interface SheetContextValue {
@@ -295,10 +295,10 @@ export function SheetProvider({ children }: { children: React.ReactNode }) {
       if (records.length === 0) {
         const id = generateSheetId();
         const now = Date.now();
-        const content = applyTitleToContent(QUICK_TOUR_TEMPLATE, "Quick Tour");
+        const content = applyTitleToContent(DECISION_PLAYGROUND_TEMPLATE, "Decision Playground");
         const record: SheetRecord = {
           id,
-          title: "Quick Tour",
+          title: "Decision Playground",
           content,
           last_modified: now,
           is_trashed: false,
@@ -322,12 +322,12 @@ export function SheetProvider({ children }: { children: React.ReactNode }) {
       const activeNonTrashed = sorted.filter((sheet) => !sheet.is_trashed);
       if (activeNonTrashed.length === 1 && isEffectivelyEmptySheet(activeNonTrashed[0])) {
         const emptySheet = activeNonTrashed[0];
-        const quickTourTitle = ensureUniqueTitle("Quick Tour", emptySheet.id);
-        const quickTourContent = applyTitleToContent(QUICK_TOUR_TEMPLATE, quickTourTitle);
+        const playgroundTitle = ensureUniqueTitle("Decision Playground", emptySheet.id);
+        const playgroundContent = applyTitleToContent(DECISION_PLAYGROUND_TEMPLATE, playgroundTitle);
         const upgradedSheet: SheetRecord = {
           ...emptySheet,
-          title: quickTourTitle,
-          content: quickTourContent,
+          title: playgroundTitle,
+          content: playgroundContent,
           last_modified: Date.now(),
         };
         await saveSheetRecord(upgradedSheet, true);

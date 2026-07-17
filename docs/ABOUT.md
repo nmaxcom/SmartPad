@@ -1,12 +1,13 @@
 Smartpad is a lightweight computational notebook designed for thinking with numbers, not just calculating them. It blends calculator-style expressions, unit-aware math, variables, percentages, dates, lists, and light symbolic reasoning into a single plain-text surface. The core idea is that you write things close to the way you’d naturally think about them (including units, currencies, and phrases), and Smartpad continuously interprets them as meaningful computations. It’s closer to a “quantitative scratchpad” than a programming language or a spreadsheet.
 
-Any number, whether assigned to a variable or not, can be scrubbed with the mouse by just hoving over it and draggin to either side make its value go up and down. All calculations update live. This adds a new way to understand the shape of the relationship between different values and a quick way to fiddle with magnitudes to find a more desirable result quicker.
+Any literal number, whether assigned to a variable or not, can be scrubbed by dragging it left or right. Hold `Shift` for fine control, `Alt`/`Option` for coarse control, or press `Escape` to restore the exact starting value. All calculations update live, making it easier to feel the shape of a relationship and find a useful result quickly.
 
 Smartpad emphasizes readability and intent over strict syntax. Units are first-class, conversions are semantic (to, in, on, off, as %), variables can be named with spaces, and results can be previewed live or explicitly committed. The goal is to make everyday quantitative reasoning—finance, planning, science, estimation—fast, expressive, and low-friction.
 
 It's a node web application, written in typescript and react.
 
 Recent template updates:
+- First run now opens a focused `Decision Playground`: one practical workshop model combines scrubbable assumptions, live profit and margin, a connected plot, and a valid goal-seek target. The broader `Quick Tour` remains available as a secondary template.
 - The `Live Result` quick template now includes implicit multiplication examples (`2(3+4)`, `(2+3)(4+5)`).
 - The same template now includes compact no-space rate-duration arithmetic (`9L/min*18min`).
 - The template now includes time-slot ranges (`09:00..11:00 step 30 min`) and deferred dependency examples (`total deferred = price*qty` before defining `qty`).

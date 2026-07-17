@@ -9,6 +9,23 @@ jest.mock("../../src/state/SheetContext", () => ({
 }));
 
 describe("TemplatePanel", () => {
+  test("creates the focused Decision Playground as an active sheet", () => {
+    const createSheetFromContent = jest.fn().mockResolvedValue(undefined);
+    (useSheetContext as jest.Mock).mockReturnValue({
+      createSheetFromContent,
+    });
+
+    render(<TemplatePanel />);
+    fireEvent.click(screen.getByRole("button", { name: /Decision Playground/i }));
+
+    expect(createSheetFromContent).toHaveBeenCalledTimes(1);
+    const [content, title, makeActive] = createSheetFromContent.mock.calls[0];
+    expect(content).toContain("ticket price = 32 EUR");
+    expect(content).toContain("make profit = 2500 EUR by ticket price =>");
+    expect(title).toBe("Decision Playground");
+    expect(makeActive).toBe(true);
+  });
+
   test("creates a new active sheet from template content", () => {
     const createSheetFromContent = jest.fn().mockResolvedValue(undefined);
     (useSheetContext as jest.Mock).mockReturnValue({

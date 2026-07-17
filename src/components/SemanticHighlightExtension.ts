@@ -178,7 +178,14 @@ export const ScrubbableNumberMark = Mark.create({
     return [{ tag: "span.semantic-scrubbableNumber" }];
   },
   renderHTML() {
-    return ["span", { class: "semantic-scrubbableNumber" }, 0];
+    return [
+      "span",
+      {
+        class: "semantic-scrubbableNumber",
+        title: "Drag to adjust · Shift for fine · Alt/Option for coarse · Esc to cancel",
+      },
+      0,
+    ];
   },
 });
 

@@ -56,9 +56,11 @@ test.describe("mobile sheet navigation", () => {
     await drawer.getByLabel("Create new sheet").click();
     await expect(drawer.locator(".sheet-item.active .sheet-title-text")).toContainText("Untitled");
 
-    await drawer.getByText("Quick Tour").click();
+    await drawer.getByText("Decision Playground").click();
     await expect(drawer).not.toHaveClass(/is-mobile-open/);
-    await expect(page.getByRole("button", { name: /Current sheet\s+Quick Tour/i })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /Current sheet\s+Decision Playground/i })
+    ).toBeVisible();
     await expect(page.locator('[data-testid="smart-pad-editor"]')).toBeVisible();
 
     drawer = await openSheetDrawer(page);

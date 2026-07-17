@@ -47,10 +47,33 @@ test.describe("Autocomplete", () => {
     await expect(page.locator(".smartpad-autocomplete-menu")).toBeVisible();
     await expect(page.getByRole("option", { name: /compound/i })).toBeVisible();
 
+    await page.keyboard.press("ArrowDown");
     await page.keyboard.press("Enter");
 
     const text = await page.locator(".ProseMirror").innerText();
     expect(text).toContain("growth = compound(");
+  });
+
+  test("Enter keeps a passive automatic suggestion from rewriting the line", async ({
+    page,
+  }) => {
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      editor.commands.setContent("<p>a = 200</p><p>b = 12</p><p></p>");
+      editor.commands.focus("end");
+      window.dispatchEvent(new Event("forceEvaluation"));
+    });
+    await waitForUIRenderComplete(page);
+
+    await page.locator(".ProseMirror p").last().click();
+    await page.keyboard.type("result = a * b");
+    await expect(page.locator(".smartpad-autocomplete-menu")).toBeVisible();
+    await page.keyboard.press("Enter");
+
+    const lines = page.locator(".ProseMirror p");
+    await expect(lines).toHaveCount(4);
+    await expect(lines.nth(2)).toContainText("result = a * b");
+    await expect(lines.nth(2)).not.toContainText("abs(");
   });
 
   test("does not open just by moving the caret onto an existing variable", async ({

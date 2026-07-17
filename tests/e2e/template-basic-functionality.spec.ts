@@ -43,6 +43,7 @@ test.describe("Template Basic Functionality", () => {
 
   test("All launch templates create result widgets without errors", async ({ page }) => {
     const templates = [
+      "Decision Playground",
       "Quick Tour",
       "Capability Sprint",
       "New stuff",

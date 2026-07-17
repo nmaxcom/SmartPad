@@ -5,6 +5,7 @@
 - Mapped group: `Editor And Result Chips`
 - Verification tests:
   - `tests/e2e/result-reference-drag-only.spec.ts`
+  - `tests/e2e/number-scrubber-interactions.spec.ts`
   - `tests/e2e/result-reference.spec.ts`
   - `tests/e2e/results-decorator-regression.spec.ts`
   - `tests/e2e/user-issues-fixed.spec.ts`
@@ -21,3 +22,5 @@ Implemented interaction contract:
 - Inline reference chips render as lightweight text-value references without visible fill, border, padding, or hover ring; hovering a reference highlights the source line with background only.
 - Internal reference placeholder ids are evaluation-only and must not appear in visible result chips, warnings, or copied readable reference text.
 - Dragged references carry their current rendered value as a fallback so dependent expressions can evaluate cleanly while source-line identity is being resolved.
+- Highlighted numeric literals can be scrubbed directly: `Shift` gives fine control,
+  `Alt`/`Option` gives coarse control, and `Escape` restores the exact pre-gesture text.

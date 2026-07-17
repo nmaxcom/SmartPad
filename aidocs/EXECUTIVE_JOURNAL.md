@@ -7779,3 +7779,42 @@
     *   First-run UX currently presents a dense template catalog and a global FX warning before a single unmistakable decision-making moment.
     *   `Editor.tsx`, `PlotViewExtension.ts`, `ResultReferenceInteractionExtension.ts`, and `expressionEvaluatorV2.ts` concentrate substantial product complexity and increase the risk of regressions in richer interaction work.
     *   Human completion gate remains pending until the user confirms the product direction.
+
+## Entry J-2026-07-18-02
+
+*   Timestamp: 2026-07-18 01:39 CEST / 2026-07-17 23:39 UTC
+*   Summary:
+    *   User said `adelante`, authorizing the recommended first concrete product milestone after the SmartPad direction review.
+    *   Assistant shipped a focused Decision Playground as the fresh-profile sheet and first template while retaining the broader Quick Tour as a secondary template.
+    *   The first-run model connects scrubbable workshop assumptions to live profit/margin, a reactive plot, and a valid one-variable goal-seek answer in one readable sheet.
+    *   Investigation proved the three reported result-drag failures were caused by passive autocomplete accepting the first suggestion on `Enter` and rewriting completed expressions; drag/drop itself was not the failing subsystem.
+*   Decisions:
+    *   Automatic autocomplete opens with no active selection. `Enter` keeps normal newline behavior until the user navigates the menu; `Tab` may still accept the first suggestion.
+    *   Number scrubbing now supports `Shift` fine control, `Alt`/`Option` coarse control, and `Escape` cancellation with exact source-text restoration.
+    *   First-run onboarding should demonstrate one complete decision loop before exposing the full capability catalog.
+    *   Version advanced to `1.0.0-rc.4`; behavior, specs, public guides, launch briefs, trust registry, and spec map were updated together.
+*   User directives:
+    *   Proceed with improving SmartPad toward the recommended transparent decision-playground direction.
+*   Assistant commitments:
+    *   Keep the current milestone at ready-for-review until the user explicitly confirms the human completion gate.
+    *   After confirmation, propose the next narrow vertical slice around first-class assumption controls and scenario comparison.
+*   Artifacts changed:
+    *   Product code for first-run sheet/template selection, autocomplete interaction safety, and number-scrubbing modifiers/cancellation.
+    *   Unit and browser regressions for Decision Playground, autocomplete, scrubbing, mobile first-run selection, templates, and result-menu stability.
+    *   `CHANGELOG.md`, version files, behavior specs, canonical trust card/registry, public interaction guides, launch/onboarding documents, and todo backlog.
+    *   `output/playwright/decision-playground-2026-07-18.png` (local visual QA artifact; intentionally not staged).
+*   Validation:
+    *   Targeted unit batch: 46 of 46 tests passed.
+    *   Targeted browser batch: 53 of 53 tests passed, including all result-reference drag cases that failed during the review.
+    *   Repeated focused stability check: passive autocomplete and function-backed result-menu workflows passed twice each.
+    *   `npm run docs:map -- HEAD`, `npm run docs:drift`, `npm run spec:test`, and `npm run spec:trust` passed.
+    *   `npm run verify:changed -- HEAD` passed, including 29 related unit tests and a production Vite build.
+    *   `npm run docs:docusaurus:build` passed for the updated public interaction guides.
+    *   Visual QA confirmed the opening viewport shows the assumptions, live profit/margin, connected plot, and reverse-solved target as one flow.
+*   Pending:
+    *   Owner: User; due: TBD; status: todo; review and confirm the Decision Playground first-run experience in normal use.
+    *   Owner: Assistant; due: TBD; status: todo; after confirmation, specify the smallest first-class assumption-control and scenario-comparison slice.
+*   Risks/blockers:
+    *   Goal Seek currently follows direct equation dependencies but does not yet solve through an arbitrary chain of intermediate variables; the starter model keeps the chosen input directly present in the target equation.
+    *   The production build remains green but retains the existing large-chunk warning.
+    *   Human completion gate remains pending until the user confirms this milestone.

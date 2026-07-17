@@ -1,4 +1,5 @@
 import React from "react";
+import { DECISION_PLAYGROUND_TEMPLATE } from "../../templates/decisionPlaygroundTemplate";
 import { QUICK_TOUR_TEMPLATE } from "../../templates/quickTourTemplate";
 import { CAPABILITY_SPRINT_TEMPLATE } from "../../templates/capabilitySprintTemplate";
 import { NEW_STUFF_TEMPLATE } from "../../templates/visualInsightsTemplate";
@@ -10,6 +11,12 @@ import "./TemplatePanel.css";
 
 // Template data with modern variable names (spaces and phrases)
 const templates = [
+  {
+    id: "decision-playground",
+    emoji: "🎛️",
+    name: "Decision Playground",
+    content: DECISION_PLAYGROUND_TEMPLATE,
+  },
   {
     id: "quick-tour",
     emoji: "✨",

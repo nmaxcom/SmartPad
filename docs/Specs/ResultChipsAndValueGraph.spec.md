@@ -248,6 +248,25 @@ Guardrails:
 7. Goal-seek actions must never overwrite source variables automatically; applying a solved value is a separate future action.
 8. Disabled planned actions must be visually disabled and must not pretend a feature is currently available.
 
+### 5.6 Direct number scrubbing
+
+Flow:
+
+1. Drag a highlighted numeric literal left or right to edit that literal in place.
+2. Downstream results and plots update during the gesture.
+3. Hold `Shift` for fine control at one tenth of normal sensitivity.
+4. Hold `Alt` or `Option` for coarse control at ten times normal sensitivity.
+5. Press `Escape` before release to restore the exact text that existed before the gesture.
+6. The floating delta chip identifies fine or coarse mode while that modifier is active.
+
+Guardrails:
+
+1. A click without a drag still places the caret inside the number.
+2. Cancelling must restore the original literal text, including its precision, rather than merely
+   recalculating an equivalent number.
+3. Scrubbing changes only literal numeric tokens; result chips and generated result text are not
+   rewritten by the gesture.
+
 ---
 
 ## 6) Broken Dependency UX (Requested "tax" case)
@@ -555,6 +574,8 @@ Interpretation goals:
 11. Dragging a result chip through intermediate `dragleave` events still inserts at drop target.
 12. If source chip `data-result` is stale but visible chip value is correct, inserted reference uses visible value.
 13. Dropping near the bottom edge of the last line inserts on a new line without pixel-perfect positioning.
+14. Number scrubbing supports normal, `Shift` fine, and `Alt`/`Option` coarse sensitivity, and
+    `Escape` restores the exact pre-gesture literal.
 
 ---
 

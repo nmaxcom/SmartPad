@@ -25,26 +25,31 @@ The first version focuses on reusing names and syntax that already exist in the 
 
 1. Suggestions may appear while typing inside expression-like contexts only after the user has
    typed at least one non-whitespace character in the current token.
-2. `ArrowUp` and `ArrowDown` move the active suggestion.
-3. `Enter` or `Tab` applies the active suggestion.
-4. `Escape` closes suggestions without changing text.
-5. Clicking a suggestion applies it.
-6. Applying a suggestion replaces only the current query range, not the whole line.
-7. When keyboard navigation moves through a long suggestion list, the menu scroll position follows
+2. Automatic suggestions open without an active selection; the menu is informative until the
+   user navigates it or explicitly accepts it.
+3. `ArrowUp` and `ArrowDown` activate and move the selected suggestion.
+4. `Enter` applies an actively selected suggestion. If an automatic menu is merely visible and no
+   item has been selected, `Enter` keeps its normal editor behavior and creates a new line.
+5. `Tab` applies the active suggestion, or the first suggestion when an automatic menu has no
+   active selection.
+6. `Escape` closes suggestions without changing text.
+7. Clicking a suggestion applies it.
+8. Applying a suggestion replaces only the current query range, not the whole line.
+9. When keyboard navigation moves through a long suggestion list, the menu scroll position follows
    the highlighted option so the active item remains visible.
-8. The manual autocomplete command opens contextual suggestions even when the current token is
+10. The manual autocomplete command opens contextual suggestions even when the current token is
    empty, for cases such as a blank expression line, `roi ` phrase continuations, `x=`, or
    `30kg to `.
-9. The manual autocomplete shortcut is configurable in Settings by recording a key combination.
+11. The manual autocomplete shortcut is configurable in Settings by recording a key combination.
    The default is `Ctrl + Shift + K`, avoiding common OS-reserved space shortcuts.
-10. Settings must not record shortcuts that are likely to be intercepted by the OS before the
+12. Settings must not record shortcuts that are likely to be intercepted by the OS before the
     browser receives them, such as `Ctrl + Space` or `Cmd + Space`.
-11. For blank-line manual suggestions, existing variables appear first, user-defined functions
+13. For blank-line manual suggestions, existing variables appear first, user-defined functions
     appear after variables, and SmartPad built-in functions such as `sqrt`, `ceil`, and `avg`
     appear last.
-12. Autocomplete should not truncate matching suggestions by default; the menu should scroll and
+14. Autocomplete should not truncate matching suggestions by default; the menu should scroll and
     keyboard navigation should keep the active item visible.
-13. The manual shortcut should make the menu visible in the same interaction frame. Large result
+15. The manual shortcut should make the menu visible in the same interaction frame. Large result
     sets may render additional rows in follow-up animation frames, but all ranked suggestions must
     remain available.
 
@@ -160,6 +165,8 @@ ranking above `msr`, and `msr` ranking above generic substring matches.
 8. If the query exactly matches a completed variable or function name, do not keep showing that
    exact item while the user continues editing the same token.
 9. Automatic autocomplete must not open only because the user types a space after a variable.
+10. A passive automatic suggestion must never rewrite a completed expression when the user presses
+    `Enter` to continue on the next line.
 
 ## Acceptance tests
 
@@ -189,3 +196,5 @@ ranking above `msr`, and `msr` ranking above generic substring matches.
     lower-ranked items behind an arbitrary cap.
 20. With at least 80 available variables, the manual shortcut paints the menu and its first visible
     rows synchronously, then appends the remaining suggestions without truncating them.
+21. With `a` already defined, typing `result = a * b` and pressing `Enter` while the automatic
+    `abs` suggestion is visible preserves the exact expression and creates a new line.

@@ -58,6 +58,7 @@
       "mappedGroups": ["Editor And Result Chips"],
       "testRefs": [
         "tests/e2e/result-reference-drag-only.spec.ts",
+        "tests/e2e/number-scrubber-interactions.spec.ts",
         "tests/e2e/result-reference.spec.ts",
         "tests/e2e/results-decorator-regression.spec.ts",
         "tests/e2e/user-issues-fixed.spec.ts",
