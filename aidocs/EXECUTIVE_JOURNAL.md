@@ -7744,3 +7744,38 @@
     *   The current first-run experience exposes many labs and technical concepts before demonstrating one unmistakable decision-making moment.
     *   Large editor/plot interaction modules concentrate product complexity and will raise the cost of adding scenarios, uncertainty, and richer direct manipulation without architectural extraction.
     *   Human completion gate remains pending until the user confirms the review/direction.
+
+## Entry J-2026-07-18-01
+
+*   Timestamp: 2026-07-18 00:43 CEST / 2026-07-17 22:43 UTC
+*   Summary:
+    *   User asked for a deep review of SmartPad and creative product ideas that fulfill the original ambition of making models easier to understand, manipulate, and visualize live.
+    *   Assistant refreshed the repository/product audit, captured the current first-run experience, reran the core interaction suite, and compared SmartPad with current official capabilities from Calca, Soulver, Apple Math Notes, Desmos, Observable, and Mathcad.
+    *   Product conclusion: live calculation, scrubbing, and 2D/3D plotting are becoming baseline capabilities; SmartPad should differentiate as a transparent decision playground that connects assumptions, direct manipulation, scenarios, sensitivity, constraints, uncertainty, and decisions in one readable sheet.
+*   Decisions:
+    *   Recommend the product loop `question -> assumptions -> live model -> explore -> compare -> decide` as the next-level product contract.
+    *   Sequence work from tactile trust/discoverability, to first-class assumption controls and scenario comparison, then sensitivity/constraint exploration, uncertainty/data, and finally richer 2D/3D model surfaces.
+    *   Treat AI as an optional model critic/translator that proposes visible edits; deterministic sheet semantics remain authoritative.
+    *   Do not add another large syntax family until direct manipulation is reliable and the editor/plot/result interaction modules have clearer internal boundaries.
+*   User directives:
+    *   Review current capabilities and propose both large and small innovative improvements consistent with the original SmartPad vision.
+*   Assistant commitments:
+    *   Deliver a candid capability assessment, competitive interpretation, prioritized idea set, and recommended first product bet.
+    *   Wait for the user to choose the direction before implementing a major feature bet.
+*   Artifacts changed:
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry).
+    *   `output/playwright/smartpad-product-review-2026-07-18.png` (local visual review artifact; intentionally not staged).
+    *   No product code or behavior changed.
+*   Validation:
+    *   Core interaction browser batch: 40 of 43 tests passed across Quick Tour, goal seek, plot interaction, and result-reference drag workflows.
+    *   Three reproducible result-reference drag tests failed: visible-result insertion, middle-line boundary drop, and boundary drop without a paragraph line id.
+    *   Current-source review covered official product documentation/pages for Calca, Soulver, Apple Math Notes, Desmos 3D, Observable notebooks/inputs/canvases, and Mathcad Prime 11.
+*   Pending:
+    *   Owner: User; due: TBD; status: todo; choose whether the first bet is the recommended `Decision Playground` vertical slice or another direction from the review.
+    *   Owner: Assistant; due: TBD; status: todo; turn the chosen bet into a narrow spec/prototype with explicit experience and verification criteria.
+    *   Owner: Assistant; due: TBD; status: todo; repair the three reproducible result-reference drag failures as the minimum tactile-trust block before expanding direct manipulation.
+*   Risks/blockers:
+    *   Apple Math Notes now overlaps directly with variables, value scrubbing, automatic graph updates, and rotatable 3D graphs, so SmartPad cannot rely on those primitives alone as its durable differentiation.
+    *   First-run UX currently presents a dense template catalog and a global FX warning before a single unmistakable decision-making moment.
+    *   `Editor.tsx`, `PlotViewExtension.ts`, `ResultReferenceInteractionExtension.ts`, and `expressionEvaluatorV2.ts` concentrate substantial product complexity and increase the risk of regressions in richer interaction work.
+    *   Human completion gate remains pending until the user confirms the product direction.
