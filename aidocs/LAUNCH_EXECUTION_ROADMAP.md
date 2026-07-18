@@ -71,16 +71,20 @@ Actions:
 
 1. Completed: Settings was reorganized into a professional app preferences surface with section navigation, responsive layout, and existing behavior preserved in commit `ed5511db`.
 2. Completed: Settings desktop/mobile screenshots were reviewed and approved by the user.
-3. Updated decision (2026-07-18): use a focused Decision Playground as the first-run baseline and
-   retain Quick Tour as the secondary broad capability tour.
-4. Carry Decision Playground and Quick Tour checks into the release-candidate stability pass.
-5. Capture final launch screenshots after the release-candidate pass, not before.
+3. Completed and user-confirmed (2026-07-18): use a focused Decision Playground as the first-run
+   baseline and retain Quick Tour as the secondary broad capability tour.
+4. Add the next embedded guidance slice: capture a per-sheet baseline, scrub the model, and compare
+   direct inputs with propagated derived changes in the Variables panel.
+5. Carry Decision Playground, baseline comparison, and Quick Tour checks into the release-candidate
+   stability pass.
+6. Capture final launch screenshots after the release-candidate pass, not before.
 
 Exit criteria:
 
 - Settings approval is recorded.
-- The first-run Decision Playground is ready for user review and confirmation.
-- Decision Playground and Quick Tour behavior are covered in the stability pass.
+- The first-run Decision Playground has explicit user confirmation.
+- Baseline comparison is machine-green and ready for user review/confirmation.
+- Decision Playground, baseline comparison, and Quick Tour behavior are covered in the stability pass.
 
 ## Phase 2: Launch Stability Candidate
 

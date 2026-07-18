@@ -27,6 +27,9 @@ Existing coverage:
 - `tests/e2e/template-basic-functionality.spec.ts`
 - `tests/unit/decisionPlaygroundTemplate.test.ts`
 - `tests/e2e/decision-playground-template.spec.ts`
+- `tests/unit/variableBaselineStore.test.ts`
+- `tests/unit/variablePanelBaseline.test.tsx`
+- `tests/e2e/variable-baseline-comparison.spec.ts`
 
 Launch gap:
 
@@ -34,6 +37,9 @@ Launch gap:
 - On 2026-07-18 the user chose to move the product toward a focused Decision Playground. First run
   now demonstrates one complete loop—assumptions, live outputs, scrubbing, plotting, and goal
   seek—while Quick Tour remains available for broad capability discovery.
+- The user confirmed that focused first-run experience on 2026-07-18. The next slice now teaches a
+  persistent baseline-versus-current loop in the same sheet: capture, scrub, inspect propagated
+  input/derived changes, update, or clear.
 - Final launch screenshots should wait until release-candidate stability checks are complete.
 
 ## Settings Status
@@ -182,7 +188,8 @@ Launch copy:
 
 ## Onboarding Status
 
-No new visual onboarding will be added before the next stability pass.
+The focused Decision Playground is the accepted first-run baseline. Guidance remains embedded in
+the sheet and existing panels rather than adding a blocking modal.
 
 Required first-run signals:
 
@@ -194,17 +201,20 @@ Required first-run signals:
 - Result chips can be copied or reused.
 - Sheets are local-first; export important work.
 
-Current quick tour:
+Current first-run model:
 
-- Good: shows currency, percentages, conversion, chart, lists, dates, solve, and result chip reuse.
-- Risk: feature-dense for screenshots and first-time users; may feel like a demo sheet rather than guided onboarding.
+- Good: demonstrates one decision model with direct assumptions, live results, a plot, goal seek,
+  and a complete `Set baseline -> scrub -> compare` gesture.
+- The broader Quick Tour stays available as a secondary template for capability discovery.
+- Risk: the right-side template catalog is still visually dense; keep it secondary to the model and
+  comparison gesture in launch framing.
 
 Launch approach:
 
-1. Keep the quick tour as the existing first-run/template path.
-2. Avoid modal onboarding and avoid adding a new visible onboarding layer for now.
-3. Revisit only if stability review or user testing shows first-run confusion.
-4. Keep Getting Started docs available through the existing Docs path.
+1. Keep Decision Playground as the fresh-profile sheet and first template.
+2. Teach `Set baseline -> scrub -> compare` in its opening comments and Variables panel.
+3. Keep Quick Tour as the secondary broad-capability template.
+4. Avoid modal onboarding and keep Getting Started docs available through the existing Docs path.
 
 ## Empty And Recovery States
 
@@ -235,6 +245,7 @@ Capture after implementation:
 
 - First-run default app at 1440px.
 - First-run default app at 390px.
+- Baseline captured plus one visibly changed input and derived result.
 - Settings overview at 1440px.
 - Settings/date locale section.
 - Settings/reuse export section.
@@ -252,8 +263,8 @@ Do not capture:
 Targeted commands after implementation:
 
 ```bash
-npm run test:unit -- tests/unit/settingsStore.test.ts tests/unit/quickTourTemplate.test.ts --runInBand
-npx playwright test tests/e2e/settings-integration.spec.ts tests/e2e/grouped-input-and-date-settings.spec.ts tests/e2e/quick-tour-template.spec.ts tests/e2e/template-basic-functionality.spec.ts --project=chromium --config=playwright.config.ts --workers=1
+npm run test:unit -- tests/unit/settingsStore.test.ts tests/unit/quickTourTemplate.test.ts tests/unit/decisionPlaygroundTemplate.test.ts tests/unit/variableBaselineStore.test.ts tests/unit/variablePanelBaseline.test.tsx --runInBand
+npx playwright test tests/e2e/settings-integration.spec.ts tests/e2e/grouped-input-and-date-settings.spec.ts tests/e2e/quick-tour-template.spec.ts tests/e2e/decision-playground-template.spec.ts tests/e2e/variable-baseline-comparison.spec.ts tests/e2e/template-basic-functionality.spec.ts --project=chromium --config=playwright.config.ts --workers=1
 npm run docs:map
 npm run docs:drift
 npm run spec:test

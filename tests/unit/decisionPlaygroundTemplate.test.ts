@@ -33,7 +33,9 @@ describe("Decision Playground template", () => {
         return line.length > 0 && !line.startsWith("#");
       });
 
-    context.astNodes = executable.map(({ raw, lineNumber }) => parseLine(raw, lineNumber));
+    context.astNodes = executable.map(({ raw, lineNumber }) =>
+      parseLine(raw, lineNumber),
+    );
 
     const failures: string[] = [];
     executable.forEach(({ raw, lineNumber }, index) => {
@@ -44,7 +46,10 @@ describe("Decision Playground template", () => {
       syncVariables(context);
 
       if (result?.type === "error") {
-        const message = (result as any).displayText || (result as any).error || "unknown error";
+        const message =
+          (result as any).displayText ||
+          (result as any).error ||
+          "unknown error";
         failures.push(`line ${lineNumber}: "${raw}" -> ${String(message)}`);
       }
     });
@@ -53,12 +58,14 @@ describe("Decision Playground template", () => {
   });
 
   test("keeps one clear first move plus live plot and goal-seek prompts", () => {
-    expect(DECISION_PLAYGROUND_TEMPLATE).toContain("First move: drag 32");
     expect(DECISION_PLAYGROUND_TEMPLATE).toContain(
-      "@view plot x=ticket price y=profit domain=20..65 size=md"
+      "First move: Set baseline in Variables, then drag 32",
     );
     expect(DECISION_PLAYGROUND_TEMPLATE).toContain(
-      "make profit = 2500 EUR by ticket price =>"
+      "@view plot x=ticket price y=profit domain=20..65 size=md",
+    );
+    expect(DECISION_PLAYGROUND_TEMPLATE).toContain(
+      "make profit = 2500 EUR by ticket price =>",
     );
   });
 });

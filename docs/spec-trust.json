@@ -123,7 +123,10 @@
       "sourceSpec": "docs/Specs/duration.spec.md",
       "canonicalSpec": "docs/Specs/implemented/duration-and-time-values.md",
       "mappedGroups": ["Date Time And Duration", "Units And Conversions"],
-      "testRefs": ["tests/unit/durationMath.test.ts", "tests/unit/dateMathEvaluator.test.ts"]
+      "testRefs": [
+        "tests/unit/durationMath.test.ts",
+        "tests/unit/dateMathEvaluator.test.ts"
+      ]
     },
     {
       "id": "file-management",
@@ -131,7 +134,10 @@
       "sourceSpec": "docs/Specs/FileManagement.spec.md",
       "canonicalSpec": "docs/Specs/implemented/file-management.md",
       "mappedGroups": ["Sheet Storage And File Management"],
-      "testRefs": ["tests/e2e/save-load-buttons.spec.ts", "tests/e2e/migration-verification.spec.ts"]
+      "testRefs": [
+        "tests/e2e/save-load-buttons.spec.ts",
+        "tests/e2e/migration-verification.spec.ts"
+      ]
     },
     {
       "id": "solve-and-symbolic-math",
@@ -161,6 +167,20 @@
       ]
     },
     {
+      "id": "baseline-comparison",
+      "status": "implemented",
+      "sourceSpec": "docs/Specs/BaselineComparison.spec.md",
+      "canonicalSpec": "docs/Specs/implemented/baseline-comparison.md",
+      "mappedGroups": ["UI Panels And Settings"],
+      "testRefs": [
+        "tests/unit/variableBaselineStore.test.ts",
+        "tests/unit/variablePanelBaseline.test.tsx",
+        "tests/e2e/variable-baseline-comparison.spec.ts",
+        "tests/unit/decisionPlaygroundTemplate.test.ts",
+        "tests/e2e/decision-playground-template.spec.ts"
+      ]
+    },
+    {
       "id": "feature-vision",
       "status": "proposed",
       "sourceSpec": "docs/Specs/proposed/feature-vision.md",
@@ -181,7 +201,10 @@
       "status": "proposed",
       "sourceSpec": "docs/Specs/proposed/scenario-comparison-sheets.md",
       "canonicalSpec": "docs/Specs/proposed/scenario-comparison-sheets.md",
-      "mappedGroups": ["Sheet Storage And File Management", "UI Panels And Settings"],
+      "mappedGroups": [
+        "Sheet Storage And File Management",
+        "UI Panels And Settings"
+      ],
       "testRefs": []
     },
     {
@@ -198,7 +221,10 @@
       "sourceSpec": "docs/Specs/proposed/autocomplete.md",
       "canonicalSpec": "docs/Specs/proposed/autocomplete.md",
       "mappedGroups": ["Editor And Result Chips", "Units And Conversions"],
-      "testRefs": ["tests/unit/autocompleteSuggestions.test.ts", "tests/e2e/autocomplete.spec.ts"]
+      "testRefs": [
+        "tests/unit/autocompleteSuggestions.test.ts",
+        "tests/e2e/autocomplete.spec.ts"
+      ]
     },
     {
       "id": "human-first-solve-phrasing",
@@ -222,7 +248,10 @@
       "sourceSpec": "docs/Specs/proposed/unit-aliases-and-ratio.md",
       "canonicalSpec": "docs/Specs/proposed/unit-aliases-and-ratio.md",
       "mappedGroups": ["Units And Conversions"],
-      "testRefs": ["tests/unit/unitAliasExamples.test.ts", "tests/unit/unitAliasDecisionMatrix.test.ts"]
+      "testRefs": [
+        "tests/unit/unitAliasExamples.test.ts",
+        "tests/unit/unitAliasDecisionMatrix.test.ts"
+      ]
     },
     {
       "id": "unit-decision-forks",

@@ -41,3 +41,16 @@ Highlighted numbers can be dragged left or right. Scrubbing edits the number in 
 <ExamplePlayground title={"Scrub a planning variable"} description={"Drag `18` or `9` to explore the model."} code={"principal = $12000\nannual return = 9%\nyears = 18\nestimated value = principal * (1 + annual return)^years"} />
 
 > GIF/video marker: scrub `years` and show the result changing live.
+
+## Compare with a baseline
+
+Choose **Set baseline** in the Variables panel before changing a model. SmartPad captures the current numeric variables for this sheet, then compares them with every edit or scrub in real time.
+
+- `input` marks a direct numeric assumption such as a price, rate, quantity, percentage, or unit value.
+- `derived` marks a result calculated from other values.
+- `Base` keeps the captured value visible beside its current delta.
+- **Update** accepts the current model as the new baseline; **Clear** stops comparing.
+
+The baseline persists locally for that sheet across reloads. It never changes the sheet or creates hidden formulas.
+
+> GIF/video marker: set a baseline, scrub one input, and show both the input and dependent results changing against their base values.

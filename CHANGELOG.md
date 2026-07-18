@@ -4,6 +4,16 @@ All notable user-facing changes to SmartPad will be documented in this file.
 
 SmartPad uses semantic versioning. Pre-release builds use `-beta.N` or `-rc.N` suffixes.
 
+## 1.0.0-rc.6 - 2026-07-18
+
+### Added
+
+- The Variables panel can capture one persistent baseline per sheet, then show live changed counts,
+  previous values, and percentage deltas while the model is edited or scrubbed.
+- Numeric variables are labeled as direct `input` assumptions or `derived` results, making the
+  structure and propagation of a model easier to read.
+- The first-run Decision Playground now teaches the full capture, scrub, and compare gesture.
+
 ## 1.0.0-rc.5 - 2026-07-18
 
 ### Fixed

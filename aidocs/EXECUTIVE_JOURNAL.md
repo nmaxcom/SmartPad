@@ -7842,3 +7842,43 @@
 *   Risks/blockers:
     *   The local URL is available only while this development-server session remains running.
     *   The production build retains the existing large-chunk warning.
+
+## Entry J-2026-07-18-04
+
+*   Timestamp: 2026-07-18 13:21 CEST / 2026-07-18 11:21 UTC
+*   Summary:
+    *   User confirmed that the focused Decision Playground first-run experience looked correct and asked the assistant to continue.
+    *   Assistant closed that human gate and implemented the next decision-playground slice: one persistent baseline-versus-current comparison per sheet in the Variables panel.
+    *   Users can now capture the current numeric model, scrub or edit the sheet, and see changed counts, captured base values, semantic percentage deltas, and propagated changes across direct inputs and derived results.
+*   Decisions:
+    *   Keep the sheet as the sole model source of truth; a baseline is a local read-only snapshot and never a hidden second model.
+    *   Label standalone numeric/unit/currency/percentage assignments as `input` and expression-backed numeric variables as `derived` without changing evaluator semantics.
+    *   Persist baselines by sheet id in local storage, with explicit `Update` and `Clear` actions and quiet recovery from corrupt or unavailable storage.
+    *   Treat this as the shipped precursor to named scenario sheets; multi-scenario branching, inherited overrides, and comparison tables remain proposed.
+    *   Advance SmartPad to `1.0.0-rc.6` and teach the complete `Set baseline -> scrub -> compare` gesture in Decision Playground and public docs.
+*   User directives:
+    *   Continue taking SmartPad toward a more useful, intuitive, interactive decision playground after approving the focused first-run model.
+*   Assistant commitments:
+    *   Keep baseline comparison at ready-for-review until the user explicitly confirms the human completion gate.
+    *   After confirmation, choose the next narrow slice between named scenario comparison and sensitivity ranking based on the user's preferred thinking workflow.
+*   Artifacts changed:
+    *   Variable-panel comparison UI and per-sheet baseline storage.
+    *   Unit and browser regressions for classification, capture, semantic deltas, persistence, update, clear, scrubbing propagation, and first-run guidance.
+    *   Behavior spec, canonical trust card/registry, spec map, version/changelog, About, public guides, launch/onboarding documents, and todo backlog.
+    *   `output/playwright/baseline-comparison-changed-2026-07-18.png` (local visual QA artifact; intentionally not staged).
+*   Validation:
+    *   Focused baseline/template unit coverage: 10 of 10 tests passed, including semantic type-change handling.
+    *   Broader targeted unit batch: 46 of 46 tests passed across baseline, variables, templates, and mobile sheet behavior.
+    *   Targeted browser batch: 14 of 14 tests passed across baseline comparison, Decision Playground, scrubber controls, templates, mobile navigation, and docs IA.
+    *   `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, and `npm run spec:trust` passed.
+    *   `npm run verify:changed -- HEAD` passed, including related unit tests and a production Vite build.
+    *   `npm run docs:docusaurus:publish-local` passed and the regenerated guides retain the baseline workflow.
+    *   Visual QA confirmed the opening instruction, baseline status, unchanged `same` state, changed row accent, base value, positive delta, live result chips, goal answer, and chart remain readable together.
+*   Pending:
+    *   Owner: User; due: TBD; status: todo; review and confirm the baseline comparison flow in normal use.
+    *   Owner: Assistant; due: TBD; status: todo; after confirmation, specify either named scenario comparison or sensitivity ranking as the next small vertical slice.
+*   Risks/blockers:
+    *   This first slice pairs variables by name; variables added, removed, or renamed after capture are not yet represented as scenario differences.
+    *   Baselines are local UI state and are not currently included in sheet export/import.
+    *   The production build remains green but retains the existing large-chunk warning.
+    *   Human completion gate remains pending until the user confirms this comparison milestone.
