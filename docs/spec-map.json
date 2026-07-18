@@ -155,11 +155,13 @@
         "src/components/Result",
         "src/components/Reference",
         "src/components/resultBaselineInteraction.ts",
+        "src/state/scenarioComparisonStore.ts",
         "src/state/variableBaselineStore.ts",
         "docs/Specs/ResultChipsAndValueGraph.spec.md",
         "docs/Specs/implemented/result-chips-and-references.md",
         "docs/Specs/BaselineComparison.spec.md",
         "docs/Specs/implemented/baseline-comparison.md",
+        "docs/Specs/proposed/scenario-comparison-sheets.md",
         "docs/Specs/proposed/autocomplete.md"
       ],
       "docPrefixes": [
@@ -169,6 +171,7 @@
         "docs/Specs/implemented/plotting-and-dependency-views.md",
         "docs/Specs/BaselineComparison.spec.md",
         "docs/Specs/implemented/baseline-comparison.md",
+        "docs/Specs/proposed/scenario-comparison-sheets.md",
         "docs/Specs/proposed/autocomplete.md",
         "public/docs/"
       ],
@@ -179,10 +182,13 @@
       "specPrefixes": [
         "src/storage/",
         "src/components/SheetSync.tsx",
+        "src/state/scenarioComparisonStore.ts",
+        "docs/Specs/proposed/scenario-comparison-sheets.md",
         "docs/Specs/FileManagement.spec.md"
       ],
       "docPrefixes": [
         "docs/Specs/FileManagement.spec.md",
+        "docs/Specs/proposed/scenario-comparison-sheets.md",
         "docs/ABOUT.md",
         "public/docs/"
       ],

@@ -54,3 +54,19 @@ Open the `⋯` actions menu on any result chip and choose **Set baseline** befor
 The baseline persists locally for that sheet across reloads. It never changes the sheet or creates hidden formulas.
 
 > GIF/video marker: open a result menu, set a baseline, scrub one input, and show its captured value plus dependent result deltas in the sheet.
+
+## Keep named scenarios
+
+After setting a baseline, change the model and choose **Save current scenario…** from the `⋯` menu of the result you care about. Give the snapshot a short name such as `Higher ticket` or `Extra worker`.
+
+SmartPad adds a compact strip beside that result:
+
+- **Base** is the fixed baseline value.
+- Each named scenario is a fixed snapshot and includes its delta from Base.
+- **Live** keeps reacting while you edit or scrub.
+- Open another named result's menu and choose **Compare this result** to move the strip there.
+- Remove one scenario with its discreet `×`, or choose **Clear scenarios** from the result menu.
+
+A sheet keeps up to six named scenarios locally across reloads. The snapshots never alter the sheet, add hidden formulas, or put controls in the Variables panel.
+
+> GIF/video marker: set a baseline, scrub one input, save `Higher ticket`, continue scrubbing so only Live changes, then move the strip from profit to margin.

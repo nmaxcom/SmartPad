@@ -107,7 +107,10 @@
   padding-right: 10rem;
 }
 
-.editor-container.result-lane-enabled .editor-content p .semantic-lane-result-wrapper {
+.editor-container.result-lane-enabled
+  .editor-content
+  p
+  .semantic-lane-result-wrapper {
   position: absolute;
   right: 0;
   top: 50%;
@@ -117,7 +120,10 @@
   max-width: 42%;
 }
 
-.editor-container.result-lane-enabled .editor-content p .semantic-wrapper[data-result-node="true"] {
+.editor-container.result-lane-enabled
+  .editor-content
+  p
+  .semantic-wrapper[data-result-node="true"] {
   position: absolute;
   right: 0;
   top: 50%;
@@ -145,14 +151,20 @@
     padding-right: 0;
   }
 
-  .editor-container.result-lane-enabled .editor-content p .semantic-lane-result-wrapper {
+  .editor-container.result-lane-enabled
+    .editor-content
+    p
+    .semantic-lane-result-wrapper {
     position: static;
     transform: none;
     display: inline-flex;
     max-width: none;
   }
 
-  .editor-container.result-lane-enabled .editor-content p .semantic-wrapper[data-result-node="true"] {
+  .editor-container.result-lane-enabled
+    .editor-content
+    p
+    .semantic-wrapper[data-result-node="true"] {
     position: static;
     transform: none;
     display: inline-flex;
@@ -279,7 +291,8 @@ body.number-scrubbing * {
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.01em;
-  box-shadow: 0 3px 10px color-mix(in srgb, var(--color-background) 30%, transparent 70%);
+  box-shadow: 0 3px 10px
+    color-mix(in srgb, var(--color-background) 30%, transparent 70%);
   transition: opacity 90ms ease;
 }
 
@@ -288,12 +301,20 @@ body.number-scrubbing * {
 }
 
 .number-scrub-delta-chip.is-positive {
-  border-color: color-mix(in srgb, var(--color-teal) 65%, var(--color-border) 35%);
+  border-color: color-mix(
+    in srgb,
+    var(--color-teal) 65%,
+    var(--color-border) 35%
+  );
   color: var(--color-teal);
 }
 
 .number-scrub-delta-chip.is-negative {
-  border-color: color-mix(in srgb, var(--color-pink) 65%, var(--color-border) 35%);
+  border-color: color-mix(
+    in srgb,
+    var(--color-pink) 65%,
+    var(--color-border) 35%
+  );
   color: var(--color-pink);
 }
 
@@ -567,7 +588,8 @@ body.number-scrubbing * {
 }
 
 .semantic-result-display[data-copy-state="copied"] .semantic-result-copy,
-.semantic-live-result-display[data-copy-state="copied"] .semantic-live-result-copy {
+.semantic-live-result-display[data-copy-state="copied"]
+  .semantic-live-result-copy {
   color: var(--color-teal);
   background: transparent;
 }
@@ -621,6 +643,148 @@ body.number-scrubbing * {
   pointer-events: none;
 }
 
+.editor-content p.semantic-scenario-comparison-line {
+  position: relative;
+  padding-bottom: 56px;
+}
+
+.editor-container.result-lane-enabled
+  .editor-content
+  p.semantic-scenario-comparison-line
+  .semantic-lane-result-wrapper,
+.editor-container.result-lane-enabled
+  .editor-content
+  p.semantic-scenario-comparison-line
+  .semantic-wrapper[data-result-node="true"] {
+  top: 0.15em;
+  transform: none;
+}
+
+.semantic-scenario-comparison {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 5px 6px;
+  border: 1px solid
+    color-mix(in srgb, var(--color-teal) 24%, var(--color-border));
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--color-teal) 4%, var(--color-surface));
+  color: var(--color-text-primary);
+  font-family: var(--font-family-sans);
+  font-size: 10px;
+  line-height: 1.15;
+  pointer-events: auto;
+  user-select: text;
+}
+
+.semantic-scenario-comparison-title {
+  flex: 0 0 auto;
+  color: var(--color-teal);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.semantic-scenario-comparison-values {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.semantic-scenario-value {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-areas:
+    "label delta"
+    "value value";
+  column-gap: 5px;
+  flex: 0 0 auto;
+  min-width: 68px;
+  padding: 4px 7px;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  background: var(--ui-surface-subtle);
+}
+
+.semantic-scenario-value.is-base,
+.semantic-scenario-value.is-live {
+  background: color-mix(in srgb, var(--color-teal) 8%, var(--color-surface));
+}
+
+.semantic-scenario-value.is-saved {
+  padding-right: 20px;
+}
+
+.semantic-scenario-value-label {
+  grid-area: label;
+  max-width: 110px;
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  font-size: 9px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.semantic-scenario-value-number {
+  grid-area: value;
+  margin-top: 2px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.semantic-scenario-value-delta {
+  grid-area: delta;
+  justify-self: end;
+  font-size: 9px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.semantic-scenario-value.is-up .semantic-scenario-value-delta {
+  color: var(--color-green-700);
+}
+
+.semantic-scenario-value.is-down .semantic-scenario-value-delta {
+  color: var(--color-red-700);
+}
+
+.semantic-scenario-value.is-same .semantic-scenario-value-delta {
+  color: var(--color-text-secondary);
+}
+
+.semantic-scenario-remove {
+  position: absolute;
+  top: 1px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 13px;
+  line-height: 16px;
+  cursor: pointer;
+}
+
+.semantic-scenario-remove:hover,
+.semantic-scenario-remove:focus-visible {
+  background: var(--ui-surface-subtle-hover);
+  color: var(--color-text-primary);
+  outline: none;
+}
+
 .semantic-result-action-menu {
   position: fixed;
   z-index: 1000;
@@ -669,6 +833,80 @@ body.number-scrubbing * {
 
 .semantic-result-action-menu button.semantic-result-baseline-clear-action {
   color: var(--color-text-secondary);
+}
+
+.semantic-result-action-menu button.semantic-result-scenario-action {
+  margin-top: 2px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-teal);
+  font-weight: 600;
+}
+
+.semantic-result-action-menu button.semantic-result-scenario-pin-action {
+  color: var(--color-text-primary);
+}
+
+.semantic-result-action-menu button.semantic-result-scenario-clear-action {
+  color: var(--color-text-secondary);
+}
+
+.semantic-scenario-name-menu {
+  width: 232px;
+  gap: 6px;
+  padding: 10px;
+}
+
+.semantic-scenario-name-label {
+  color: var(--color-text-primary);
+  font-family: var(--font-family-sans);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.semantic-scenario-name-input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  background: var(--ui-surface-subtle);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 12px;
+  outline: none;
+}
+
+.semantic-scenario-name-input:focus {
+  border-color: var(--color-teal);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-teal) 18%, transparent);
+}
+
+.semantic-scenario-name-feedback {
+  min-height: 1em;
+  color: var(--color-red-700);
+  font-size: 10px;
+}
+
+.semantic-scenario-name-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.semantic-result-action-menu.semantic-scenario-name-menu
+  .semantic-scenario-name-actions
+  button {
+  flex: 0 0 auto;
+  padding: 5px 9px;
+}
+
+.semantic-result-action-menu.semantic-scenario-name-menu
+  .semantic-scenario-name-actions
+  button.is-primary {
+  background: var(--color-teal);
+  color: var(--color-surface);
+  font-weight: 700;
 }
 
 .semantic-result-action-menu button.semantic-result-plot-suggestion {
@@ -834,7 +1072,9 @@ body.number-scrubbing * {
 .semantic-error,
 .semantic-error-result,
 .semantic-trigger {
-  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out;
+  transition:
+    color 0.15s ease-in-out,
+    background-color 0.15s ease-in-out;
 }
 
 .semantic-wrapper,
@@ -1304,7 +1544,10 @@ body.number-scrubbing * {
   fill: none;
   opacity: 0.82;
   filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.25));
-  transition: opacity 0.2s ease, stroke-width 0.2s ease, filter 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    stroke-width 0.2s ease,
+    filter 0.2s ease;
 }
 
 .plot-view-area {

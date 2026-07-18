@@ -198,14 +198,17 @@
     },
     {
       "id": "scenario-comparison-sheets",
-      "status": "proposed",
+      "status": "partial",
       "sourceSpec": "docs/Specs/proposed/scenario-comparison-sheets.md",
       "canonicalSpec": "docs/Specs/proposed/scenario-comparison-sheets.md",
       "mappedGroups": [
         "Sheet Storage And File Management",
-        "UI Panels And Settings"
+        "Editor And Result Chips"
       ],
-      "testRefs": []
+      "testRefs": [
+        "tests/unit/scenarioComparisonStore.test.ts",
+        "tests/e2e/scenario-comparison.spec.ts"
+      ]
     },
     {
       "id": "auto-suggested-plots",

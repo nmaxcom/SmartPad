@@ -1,10 +1,53 @@
 # Scenario Comparison Sheets
 
-Status: proposed
+Status: partial
 
-This document defines a scenario workflow for SmartPad where a user can branch one sheet into multiple variants, compare selected outputs, and preserve the text-first editing model.
+This document spans two scenario layers: the implemented named-snapshot comparison inside a normal sheet, and a future workflow where a user can branch one sheet into multiple editable variants.
 
-Shipped precursor: SmartPad now supports one persistent baseline-versus-current comparison per sheet through result-chip actions and inline change markers. That smaller workflow is defined in `docs/Specs/BaselineComparison.spec.md`. Named scenarios, inherited overrides, compare lines, and cross-scenario tables remain proposed here.
+The implemented layer deliberately keeps every action and comparison beside the text and result chips. Scenario sheets, inherited overrides, compare lines, independent editing, and apply-back remain proposed.
+
+## 0. Implemented partial: named in-sheet snapshots
+
+### 0.1 User flow
+
+1. Open a named result chip's discreet `⋯` menu and choose `Set baseline`.
+2. Edit or scrub the model until it represents a useful alternative.
+3. Open the result menu again and choose `Save current scenario…`.
+4. Name the scenario in the small form anchored to that result menu.
+5. Read the inline comparison strip beside the result: `Base`, each saved scenario, and `Live`.
+
+The strip shows each available value and its delta from Base. Saved snapshots remain fixed while Live continues to update as the sheet changes.
+
+### 0.2 Result-menu actions
+
+- `Save current scenario…` captures all current numeric variables and pins the strip to that result.
+- `Compare this result` moves the existing strip to another named numeric result without changing any snapshot.
+- `Clear scenarios` removes the sheet's named snapshots.
+- The discreet `×` on a saved value removes that snapshot only.
+
+No scenario action belongs in the Variables panel or another navigation surface.
+
+### 0.3 State and guardrails
+
+1. A sheet may keep at most six named snapshots.
+2. Names are trimmed, whitespace-normalized, limited to 48 characters, and made unique within the sheet.
+3. Baselines and scenarios persist locally per sheet across reloads.
+4. A snapshot stores display, numeric, semantic-type, and input/derived-role information for each numeric variable available at capture time.
+5. If the pinned variable did not exist in a saved snapshot, that saved cell reads `Not available`; other cells remain usable.
+6. Scenario state never edits sheet text, creates hidden formulas, or changes the baseline.
+7. Scenario state is not yet included in sheet export/import.
+
+### 0.4 Implemented acceptance examples
+
+- After Base profit is `1,022.4 EUR`, saving `Higher ticket` at `2,500.8 EUR` shows the fixed scenario value and `+145%` beside profit.
+- Scrubbing again changes only Live; `Base` and `Higher ticket` stay fixed.
+- Choosing `Compare this result` from margin moves the same Base/scenario/Live strip to margin.
+- Reloading keeps the pinned output and saved names; clearing scenarios removes the strip.
+
+Verification:
+
+- `tests/unit/scenarioComparisonStore.test.ts`
+- `tests/e2e/scenario-comparison.spec.ts`
 
 ## 1. Purpose
 
@@ -24,7 +67,7 @@ The goal is not version control. The goal is decision-making.
 3. Scenario sheets store only overrides and inherit everything else from the base.
 4. Comparison focuses on chosen outputs, not raw diffs.
 
-## 3. Creation flow
+## 3. Proposed full-sheet creation flow
 
 ### 3.1 Sheet menu action
 
@@ -48,7 +91,7 @@ Rules:
 - it produces no scalar result
 - it defines which outputs appear in the scenario comparison bar or panel
 
-## 4. UX model
+## 4. Proposed full-sheet UX model
 
 Base sheet:
 
@@ -169,9 +212,9 @@ If a compare line names a value that does not resolve in one scenario:
 - comparison cell shows broken state
 - base and other scenarios remain readable
 
-## 10. Implementation gate
+## 10. Full-sheet implementation gate
 
-Promotion requires:
+Promotion of the remaining full-sheet workflow requires:
 
 1. targeted Jest coverage for inheritance, override resolution, compare-line parsing, and persistence
 2. targeted Playwright coverage for scenario creation, editing, compare UI, and broken-output states

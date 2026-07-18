@@ -13,7 +13,8 @@ const SPEC_CATALOG = [
     fileName: "LiveResult.spec.md",
     slug: "live-results",
     title: "Live Results",
-    summary: "See useful results while you type, without adding `=>` to every line.",
+    summary:
+      "See useful results while you type, without adding `=>` to every line.",
     focus: [
       "Fast feedback while you type",
       "Success-only live rendering (no noisy live errors)",
@@ -33,30 +34,54 @@ const SPEC_CATALOG = [
       success: [
         {
           title: "Quick arithmetic while drafting",
-          description: "Live chips appear for valid lines even before adding `=>`.",
-          code: ["hours = 38", "rate = $95/hour", "weekly pay = hours * rate", "weekly pay in EUR"].join("\n"),
+          description:
+            "Live chips appear for valid lines even before adding `=>`.",
+          code: [
+            "hours = 38",
+            "rate = $95/hour",
+            "weekly pay = hours * rate",
+            "weekly pay in EUR",
+          ].join("\n"),
         },
         {
           title: "Conversion while typing",
-          description: "Unit-aware preview appears as soon as the expression is complete.",
-          code: ["distance = 42 km", "distance in mi", "pace = 10 km / 52 min", "pace in min/km"].join("\n"),
+          description:
+            "Unit-aware preview appears as soon as the expression is complete.",
+          code: [
+            "distance = 42 km",
+            "distance in mi",
+            "pace = 10 km / 52 min",
+            "pace in min/km",
+          ].join("\n"),
         },
         {
           title: "Compact syntax still resolves",
-          description: "Live mode supports implicit multiplication and compact unit forms.",
-          code: ["run rate = 9L/min*18min", "carry = 2(3+4)", "combined = (2+3)(4+5)"].join("\n"),
+          description:
+            "Live mode supports implicit multiplication and compact unit forms.",
+          code: [
+            "run rate = 9L/min*18min",
+            "carry = 2(3+4)",
+            "combined = (2+3)(4+5)",
+          ].join("\n"),
         },
       ],
       guardrails: [
         {
           title: "Incomplete lines are intentionally silent",
-          description: "These lines should show no preview until they are complete.",
-          code: ["draft = 3*", "conversion = 4lb to", "unknown = missingVar + 2"].join("\n"),
+          description:
+            "These lines should show no preview until they are complete.",
+          code: [
+            "draft = 3*",
+            "conversion = 4lb to",
+            "unknown = missingVar + 2",
+          ].join("\n"),
         },
         {
           title: "Explicit trigger still wins",
           description: "Using `=>` keeps the classic explicit-result workflow.",
-          code: ["base = 120", "tax = 8%", "total = base + base * tax =>"].join("\n"),
+          code: ["base = 120", "tax = 8%", "total = base + base * tax =>"].join(
+            "\n",
+          ),
         },
       ],
     },
@@ -65,7 +90,8 @@ const SPEC_CATALOG = [
     fileName: "ResultChipsAndValueGraph.spec.md",
     slug: "result-chips-and-references",
     title: "Result Chips and References",
-    summary: "Reuse previous results without retyping values or losing where they came from.",
+    summary:
+      "Reuse previous results without retyping values or losing where they came from.",
     focus: [
       "A chip is the small result pill SmartPad shows next to a computed line.",
       "Use the chip actions to copy values, insert references, or reuse a result elsewhere.",
@@ -85,7 +111,8 @@ const SPEC_CATALOG = [
       success: [
         {
           title: "Reference-first budgeting",
-          description: "Use chip references when a total should keep following earlier values.",
+          description:
+            "Use chip references when a total should keep following earlier values.",
           code: [
             "monthly rent = $2500",
             "phone bill = $45",
@@ -96,7 +123,8 @@ const SPEC_CATALOG = [
         },
         {
           title: "Percent workflows with chip reuse",
-          description: "Reuse earlier results for taxes and discounts without copying numbers by hand.",
+          description:
+            "Reuse earlier results for taxes and discounts without copying numbers by hand.",
           code: [
             "subtotal = $420",
             "tax = 8.5% on subtotal =>",
@@ -106,7 +134,8 @@ const SPEC_CATALOG = [
         },
         {
           title: "Reference chains across units",
-          description: "Referenced values keep their meaning, including units and currencies.",
+          description:
+            "Referenced values keep their meaning, including units and currencies.",
           code: [
             "distance = 42 km",
             "time = 52 min",
@@ -118,7 +147,8 @@ const SPEC_CATALOG = [
       guardrails: [
         {
           title: "Broken source behavior",
-          description: "Downstream references should clearly indicate source failure.",
+          description:
+            "Downstream references should clearly indicate source failure.",
           code: [
             "subtotal = 120",
             "tax = subtotal * 0.15 =>",
@@ -128,8 +158,13 @@ const SPEC_CATALOG = [
         },
         {
           title: "Cycle prevention mindset",
-          description: "Avoid making a line depend on itself through chip insertion.",
-          code: ["base = 100", "profit = base * 0.2 =>", "base = profit + 50"].join("\n"),
+          description:
+            "Avoid making a line depend on itself through chip insertion.",
+          code: [
+            "base = 100",
+            "profit = base * 0.2 =>",
+            "base = profit + 50",
+          ].join("\n"),
         },
       ],
     },
@@ -174,7 +209,12 @@ const SPEC_CATALOG = [
         {
           title: "Two-series comparison",
           description: "Compare linear and quadratic behavior in one view.",
-          code: ["x = 4", "f = 2*x + 1", "g = x^2", "@view plot x=x y=f,g"].join("\n"),
+          code: [
+            "x = 4",
+            "f = 2*x + 1",
+            "g = x^2",
+            "@view plot x=x y=f,g",
+          ].join("\n"),
         },
         {
           title: "Viewport control",
@@ -192,12 +232,20 @@ const SPEC_CATALOG = [
         {
           title: "Malformed directive",
           description: "Keep `@view` syntax strict and explicit.",
-          code: ["revenue = 12000", "cost = 9000", "profit = revenue - cost =>", "@view plot years"].join("\n"),
+          code: [
+            "revenue = 12000",
+            "cost = 9000",
+            "profit = revenue - cost =>",
+            "@view plot years",
+          ].join("\n"),
         },
         {
           title: "Disconnected source",
-          description: "View should enter recoverable disconnected state if source disappears.",
-          code: ["f = 2*x + 1", "@view plot x=x", "f = unknownVar + 1"].join("\n"),
+          description:
+            "View should enter recoverable disconnected state if source disappears.",
+          code: ["f = 2*x + 1", "@view plot x=x", "f = unknownVar + 1"].join(
+            "\n",
+          ),
         },
       ],
     },
@@ -206,7 +254,8 @@ const SPEC_CATALOG = [
     fileName: "Currency.spec.md",
     slug: "currency-and-fx",
     title: "Currency and FX",
-    summary: "Work with money naturally, including conversions and fallback rates.",
+    summary:
+      "Work with money naturally, including conversions and fallback rates.",
     focus: [
       "Currency behaves like unit-aware data, not plain strings",
       "`to`/`in` conversions use live FX with deterministic fallback",
@@ -226,7 +275,8 @@ const SPEC_CATALOG = [
       success: [
         {
           title: "Travel planning",
-          description: "Convert spending between currencies while preserving units.",
+          description:
+            "Convert spending between currencies while preserving units.",
           code: [
             "hotel = EUR 240",
             "meals = EUR 180",
@@ -237,23 +287,36 @@ const SPEC_CATALOG = [
         {
           title: "Manual FX override",
           description: "Pin rates for a fixed-budget scenario.",
-          code: ["EUR = 1.10 USD", "meal = EUR 18", "meal in USD =>", "budget = USD 1500", "budget in EUR =>"].join("\n"),
+          code: [
+            "EUR = 1.10 USD",
+            "meal = EUR 18",
+            "meal in USD =>",
+            "budget = USD 1500",
+            "budget in EUR =>",
+          ].join("\n"),
         },
         {
           title: "Currency with rates",
           description: "Convert only currency portion inside compound units.",
-          code: ["hourly = $85/hour", "hourly in EUR/hour =>", "monthly hours = 168 h", "pay = hourly * monthly hours =>"].join("\n"),
+          code: [
+            "hourly = $85/hour",
+            "hourly in EUR/hour =>",
+            "monthly hours = 168 h",
+            "pay = hourly * monthly hours =>",
+          ].join("\n"),
         },
       ],
       guardrails: [
         {
           title: "Unsupported conversion target",
-          description: "Invalid or unknown targets should surface clear errors.",
+          description:
+            "Invalid or unknown targets should surface clear errors.",
           code: ["budget = $1200", "budget in ABC =>"].join("\n"),
         },
         {
           title: "Missing FX rate context",
-          description: "Cross-currency conversion fails when no rate source is available.",
+          description:
+            "Cross-currency conversion fails when no rate source is available.",
           code: ["amount = GBP 79", "amount in BTC =>"].join("\n"),
         },
       ],
@@ -284,17 +347,27 @@ const SPEC_CATALOG = [
         {
           title: "Duration conversion",
           description: "Convert composite durations into scalar target units.",
-          code: ["prep = 3h 7min 12s", "prep to min =>", "prep to s =>"].join("\n"),
+          code: ["prep = 3h 7min 12s", "prep to min =>", "prep to s =>"].join(
+            "\n",
+          ),
         },
         {
           title: "Time-of-day rollover",
           description: "Time plus duration wraps with day context.",
-          code: ["start = 19:30", "duration = 5h 20min 3s", "finish = start + duration =>"].join("\n"),
+          code: [
+            "start = 19:30",
+            "duration = 5h 20min 3s",
+            "finish = start + duration =>",
+          ].join("\n"),
         },
         {
           title: "Datetime with natural duration",
-          description: "Subtract duration phrases directly from datetime literals.",
-          code: ["meeting = 01/04/2025 19:30", "travel back = meeting - 2hours 1min =>"].join("\n"),
+          description:
+            "Subtract duration phrases directly from datetime literals.",
+          code: [
+            "meeting = 01/04/2025 19:30",
+            "travel back = meeting - 2hours 1min =>",
+          ].join("\n"),
         },
       ],
       guardrails: [
@@ -306,7 +379,9 @@ const SPEC_CATALOG = [
         {
           title: "Invalid time math",
           description: "Adding two clock times is intentionally rejected.",
-          code: ["first = 19:30", "second = 18:00", "first + second =>"].join("\n"),
+          code: ["first = 19:30", "second = 18:00", "first + second =>"].join(
+            "\n",
+          ),
         },
       ],
     },
@@ -335,7 +410,8 @@ const SPEC_CATALOG = [
       success: [
         {
           title: "Monthly expense summary",
-          description: "Aggregate costs, inspect max, and compute average quickly.",
+          description:
+            "Aggregate costs, inspect max, and compute average quickly.",
           code: [
             "rent = $1250",
             "utilities = $185",
@@ -371,7 +447,12 @@ const SPEC_CATALOG = [
         {
           title: "Nested list rejection",
           description: "Aggregators reject nested list shapes.",
-          code: ["rent = 1200, 1200", "utilities = 200, 200", "expenses = rent, utilities", "sum(expenses) =>"].join("\n"),
+          code: [
+            "rent = 1200, 1200",
+            "utilities = 200, 200",
+            "expenses = rent, utilities",
+            "sum(expenses) =>",
+          ].join("\n"),
         },
         {
           title: "Zip length mismatch",
@@ -406,7 +487,12 @@ const SPEC_CATALOG = [
         {
           title: "Numeric scenarios",
           description: "Build sensitivity ranges with custom step size.",
-          code: ["1..5 =>", "0..10 step 2 =>", "(1..5) * 2 =>", "sum(1..5) =>"].join("\n"),
+          code: [
+            "1..5 =>",
+            "0..10 step 2 =>",
+            "(1..5) * 2 =>",
+            "sum(1..5) =>",
+          ].join("\n"),
         },
         {
           title: "Descending ranges",
@@ -437,7 +523,8 @@ const SPEC_CATALOG = [
     fileName: "Locale.spec.md",
     slug: "locale-date-time",
     title: "Locale Date and Time",
-    summary: "Write dates in familiar formats and keep date ranges predictable.",
+    summary:
+      "Write dates in familiar formats and keep date ranges predictable.",
     focus: [
       "Locale-aware parsing handles real-world date input",
       "Range routing prevents parser misclassification",
@@ -458,16 +545,25 @@ const SPEC_CATALOG = [
         {
           title: "Locale-aware literal parsing",
           description: "es-ES style date inputs resolve deterministically.",
-          code: ["d = 01-02-2023", "d =>", "dt = 01-02-2023 09:30", "dt =>"].join("\n"),
+          code: [
+            "d = 01-02-2023",
+            "d =>",
+            "dt = 01-02-2023 09:30",
+            "dt =>",
+          ].join("\n"),
         },
         {
           title: "Time slot generation",
           description: "Temporal ranges with explicit duration step.",
-          code: ["09:00..11:00 step 30 min =>", "2026-01-01..2026-01-05 step 1 day =>"].join("\n"),
+          code: [
+            "09:00..11:00 step 30 min =>",
+            "2026-01-01..2026-01-05 step 1 day =>",
+          ].join("\n"),
         },
         {
           title: "Month-end anchored stepping",
-          description: "Anchor day is preserved with clamp-to-month-end behavior.",
+          description:
+            "Anchor day is preserved with clamp-to-month-end behavior.",
           code: ["2026-01-31..2026-05-31 step 1 month =>"].join("\n"),
         },
       ],
@@ -510,28 +606,52 @@ const SPEC_CATALOG = [
         {
           title: "Markdown-first sheet",
           description: "A sheet remains plain text and portable.",
-          code: ["# Weekly planning", "hours = 38", "rate = $95/hour", "weekly pay = hours * rate =>"].join("\n"),
+          code: [
+            "# Weekly planning",
+            "hours = 38",
+            "rate = $95/hour",
+            "weekly pay = hours * rate =>",
+          ].join("\n"),
         },
         {
           title: "Import-ready notebook",
-          description: "Structure sheets so zip/md imports stay clean and conflict-resistant.",
-          code: ["# Trip budget", "hotel = EUR 240", "meals = EUR 180", "total = hotel + meals =>"].join("\n"),
+          description:
+            "Structure sheets so zip/md imports stay clean and conflict-resistant.",
+          code: [
+            "# Trip budget",
+            "hotel = EUR 240",
+            "meals = EUR 180",
+            "total = hotel + meals =>",
+          ].join("\n"),
         },
         {
           title: "Multi-tab safe editing",
-          description: "Behavioral expectation: updates synchronize across tabs.",
-          code: ["# Shared plan", "baseline = 1200", "tax = 8%", "total = baseline + baseline * tax =>"].join("\n"),
+          description:
+            "Behavioral expectation: updates synchronize across tabs.",
+          code: [
+            "# Shared plan",
+            "baseline = 1200",
+            "tax = 8%",
+            "total = baseline + baseline * tax =>",
+          ].join("\n"),
         },
       ],
       guardrails: [
         {
           title: "Title collision import",
-          description: "Conflicting names should be suffixed instead of overwritten.",
-          code: ["# Budget", "rent = $1250", "utilities = $185", "sum(rent, utilities) =>"].join("\n"),
+          description:
+            "Conflicting names should be suffixed instead of overwritten.",
+          code: [
+            "# Budget",
+            "rent = $1250",
+            "utilities = $185",
+            "sum(rent, utilities) =>",
+          ].join("\n"),
         },
         {
           title: "Trash safety workflow",
-          description: "Deletion should move to trash first, not hard delete by default.",
+          description:
+            "Deletion should move to trash first, not hard delete by default.",
           code: ["# Notes", "backup = 1"].join("\n"),
         },
       ],
@@ -570,7 +690,9 @@ const shouldKeepExplicitTriggers = ({ title, description }) =>
   );
 
 const renderPlayground = ({ title, description, code }) => {
-  const playgroundCode = shouldKeepExplicitTriggers({ title, description }) ? code : stripUnneededExplicitTriggers(code);
+  const playgroundCode = shouldKeepExplicitTriggers({ title, description })
+    ? code
+    : stripUnneededExplicitTriggers(code);
   return `<ExamplePlayground title=${mdxStringProp(title)} description=${mdxStringProp(description)} code=${mdxStringProp(playgroundCode)} />`;
 };
 
@@ -585,7 +707,9 @@ const trashPath = (targetPath) => {
   const result = spawnSync("trash", [targetPath], { encoding: "utf8" });
   if (result.status !== 0) {
     const message = result.stderr || result.stdout || "`trash` command failed";
-    throw new Error(`Unable to move generated path to trash: ${targetPath}\n${message}`);
+    throw new Error(
+      `Unable to move generated path to trash: ${targetPath}\n${message}`,
+    );
   }
 };
 
@@ -596,7 +720,8 @@ const resetGeneratedDirs = () => {
   ensureDir(guidesOutDir);
 };
 
-const readSpecContent = (fileName) => fs.readFileSync(path.join(specsDir, fileName), "utf8");
+const readSpecContent = (fileName) =>
+  fs.readFileSync(path.join(specsDir, fileName), "utf8");
 
 const cleanSectionTitle = (value) =>
   value
@@ -620,12 +745,19 @@ const extractContractBullets = (content) => {
   const chosen = [];
   for (const line of lines) {
     if (!/^[-*]\s+|^\d+[\)\.:-]\s+/.test(line)) continue;
-    const normalized = line.replace(/^[-*]\s+/, "").replace(/^\d+[\)\.:-]\s+/, "").trim();
+    const normalized = line
+      .replace(/^[-*]\s+/, "")
+      .replace(/^\d+[\)\.:-]\s+/, "")
+      .trim();
     if (!normalized) continue;
     if (normalized.length < 30 || normalized.length > 180) continue;
     if (/^#+\s/.test(normalized)) continue;
     if (/^`{3}/.test(normalized)) continue;
-    if (!/(must|should|default|error|fallback|preserve|require|cannot|never|scope|guardrail|include|exclude)/i.test(normalized)) {
+    if (
+      !/(must|should|default|error|fallback|preserve|require|cannot|never|scope|guardrail|include|exclude)/i.test(
+        normalized,
+      )
+    ) {
       continue;
     }
     if (!/[a-z]/i.test(normalized)) continue;
@@ -671,7 +803,10 @@ const extractObjectLiteral = (source, marker) => {
 const loadSupportedUnits = () => {
   const registryPath = path.join(repoRoot, "src", "syntax", "registry.ts");
   const source = fs.readFileSync(registryPath, "utf8");
-  const literal = extractObjectLiteral(source, "export const SUPPORTED_UNITS =");
+  const literal = extractObjectLiteral(
+    source,
+    "export const SUPPORTED_UNITS =",
+  );
   return Function(`\"use strict\"; return (${literal});`)();
 };
 
@@ -736,7 +871,9 @@ const renderUnitsReferenceSection = () => {
   const units = loadSupportedUnits();
   const siPrefixes = loadSiPrefixes();
   const currencies = loadSupportedCurrencySymbols();
-  const categories = Object.values(units).filter((category) => category?.name && Array.isArray(category.units));
+  const categories = Object.values(units).filter(
+    (category) => category?.name && Array.isArray(category.units),
+  );
   const prefixGroups = [
     ["Large", siPrefixes.filter((prefix) => prefix.factor > 1)],
     ["Small", siPrefixes.filter((prefix) => prefix.factor < 1)],
@@ -757,7 +894,9 @@ const renderUnitsReferenceSection = () => {
     "",
     "| Group | Prefixes |\n| --- | --- |",
     ...prefixGroups.map(([label, prefixes]) => {
-      const rendered = prefixes.map((prefix) => `\`${prefix.symbol}\` ${prefix.name}`).join(", ");
+      const rendered = prefixes
+        .map((prefix) => `\`${prefix.symbol}\` ${prefix.name}`)
+        .join(", ");
       return `| ${label} | ${rendered} |`;
     }),
     "",
@@ -769,7 +908,8 @@ const renderUnitsReferenceSection = () => {
     "",
     renderPlayground({
       title: "Compound units and conversions",
-      description: "Mix prefixes, derived units, compact rates, and conversion targets.",
+      description:
+        "Mix prefixes, derived units, compact rates, and conversion targets.",
       code: [
         "distance = 120 km",
         "time = 90 min",
@@ -814,7 +954,9 @@ const renderUnitsReferenceSection = () => {
     lines.push("");
     lines.push("| Symbol | Name | Aliases |\n| --- | --- | --- |");
     category.units.forEach((unit) => {
-      const aliases = Array.isArray(unit.aliases) ? unit.aliases.join(", ") : "";
+      const aliases = Array.isArray(unit.aliases)
+        ? unit.aliases.join(", ")
+        : "";
       lines.push(`| \`${unit.symbol}\` | ${unit.name} | ${aliases} |`);
     });
     lines.push("");
@@ -825,7 +967,8 @@ const renderUnitsReferenceSection = () => {
   lines.push(
     renderPlayground({
       title: "Rates across units",
-      description: "Use rates as first-class values, then normalize the unit side before multiplying.",
+      description:
+        "Use rates as first-class values, then normalize the unit side before multiplying.",
       code: [
         "download = 6 Mbit/s * 2 h",
         "download in MB",
@@ -931,7 +1074,8 @@ const renderGuidePages = () => {
         "",
         renderPlayground({
           title: "A tiny weekly model",
-          description: "Change any assumption and the rest of the sheet follows.",
+          description:
+            "Change any assumption and the rest of the sheet follows.",
           code: [
             "hours = 40",
             "rate = $82/hour",
@@ -954,6 +1098,7 @@ const renderGuidePages = () => {
         "Hold `Shift` while dragging for fine adjustments, or `Alt`/`Option` for larger jumps. Press `Escape` before releasing to cancel the experiment and restore the exact starting value.",
         "",
         "Before you explore, open the `⋯` menu on any result chip and choose **Set baseline**. SmartPad will keep each changed input's starting value beside its editable line and show propagated deltas beside the results.",
+        "When an alternative is worth keeping, return to that result menu and choose **Save current scenario…**. Name it and SmartPad will compare Base, the saved snapshot, and Live beside the result.",
         "",
         renderPlayground({
           title: "Scrub the assumptions",
@@ -1013,7 +1158,8 @@ const renderGuidePages = () => {
         "",
         renderPlayground({
           title: "Reference-friendly model",
-          description: "Use chips in the app to reuse `base cost` without retyping it.",
+          description:
+            "Use chips in the app to reuse `base cost` without retyping it.",
           code: [
             "seats = 12",
             "price = $19/seat",
@@ -1059,6 +1205,22 @@ const renderGuidePages = () => {
         "",
         "> GIF/video marker: open a result menu, set a baseline, scrub one input, and show its captured value plus dependent result deltas in the sheet.",
         "",
+        "## Keep named scenarios",
+        "",
+        "After setting a baseline, change the model and choose **Save current scenario…** from the `⋯` menu of the result you care about. Give the snapshot a short name such as `Higher ticket` or `Extra worker`.",
+        "",
+        "SmartPad adds a compact strip beside that result:",
+        "",
+        "- **Base** is the fixed baseline value.",
+        "- Each named scenario is a fixed snapshot and includes its delta from Base.",
+        "- **Live** keeps reacting while you edit or scrub.",
+        "- Open another named result's menu and choose **Compare this result** to move the strip there.",
+        "- Remove one scenario with its discreet `×`, or choose **Clear scenarios** from the result menu.",
+        "",
+        "A sheet keeps up to six named scenarios locally across reloads. The snapshots never alter the sheet, add hidden formulas, or put controls in the Variables panel.",
+        "",
+        "> GIF/video marker: set a baseline, scrub one input, save `Higher ticket`, continue scrubbing so only Live changes, then move the strip from profit to margin.",
+        "",
       ].join("\n"),
     },
     {
@@ -1080,7 +1242,8 @@ const renderGuidePages = () => {
         "",
         renderPlayground({
           title: "Monthly budget with category shares",
-          description: "A small budget you can adjust without building a spreadsheet.",
+          description:
+            "A small budget you can adjust without building a spreadsheet.",
           code: [
             "rent = $1250",
             "utilities = $185",
@@ -1096,7 +1259,8 @@ const renderGuidePages = () => {
         "",
         renderPlayground({
           title: "Trip cost with a fixed FX rate",
-          description: "Define the exchange rate in the sheet so the example is reproducible.",
+          description:
+            "Define the exchange rate in the sheet so the example is reproducible.",
           code: [
             "hotel = 240 EUR",
             "food = 180 EUR",
@@ -1111,7 +1275,8 @@ const renderGuidePages = () => {
         "",
         renderPlayground({
           title: "Hourly rate planning",
-          description: "Turn one hourly rate into weekly and monthly planning numbers.",
+          description:
+            "Turn one hourly rate into weekly and monthly planning numbers.",
           code: [
             "hourly = $85/hour",
             "weekly hours = 38",
@@ -1125,7 +1290,8 @@ const renderGuidePages = () => {
         "",
         renderPlayground({
           title: "Time slots and date ranges",
-          description: "Generate planning windows without hand-writing every date or time.",
+          description:
+            "Generate planning windows without hand-writing every date or time.",
           code: [
             "slots = 09:00..11:00 step 30 min",
             "sprint days = 2026-01-01..2026-01-14 step 1 day",
@@ -1137,7 +1303,8 @@ const renderGuidePages = () => {
         "",
         renderPlayground({
           title: "Bandwidth and storage",
-          description: "Let rates, storage units, and billing units do the bookkeeping.",
+          description:
+            "Let rates, storage units, and billing units do the bookkeeping.",
           code: [
             "download = 6 Mbit/s * 2 h",
             "download in GB",
@@ -1209,7 +1376,8 @@ const renderGuidePages = () => {
         "",
         renderPlayground({
           title: "Filtering lists",
-          description: "Use `where` when you want the values that pass a condition.",
+          description:
+            "Use `where` when you want the values that pass a condition.",
           code: [
             "quotes = $1800, $2100, $1950, $2050",
             "quotes where < $2000",
@@ -1243,7 +1411,8 @@ const renderGuidePages = () => {
         "",
         renderPlayground({
           title: "Numeric, time, and date ranges",
-          description: "Use the Range Spec Lab and Date Math templates for longer examples.",
+          description:
+            "Use the Range Spec Lab and Date Math templates for longer examples.",
           code: [
             "numbers = 1..10 step 2",
             "slots = 09:00..11:00 step 30 min",
@@ -1274,7 +1443,8 @@ const renderGuidePages = () => {
         "",
         renderPlayground({
           title: "Goal seek command",
-          description: "Use the Goal Seek template when you want several real examples.",
+          description:
+            "Use the Goal Seek template when you want several real examples.",
           code: [
             "items = 12",
             "unit price = 9 EUR",
@@ -1289,7 +1459,8 @@ const renderGuidePages = () => {
         "",
         renderPlayground({
           title: "Simple plot view",
-          description: "The New stuff and Capability Sprint templates go deeper.",
+          description:
+            "The New stuff and Capability Sprint templates go deeper.",
           code: [
             "x = 0",
             "growth(x) = 2*x + 5",
@@ -1383,7 +1554,8 @@ const renderGuidePages = () => {
         "",
         renderPlayground({
           title: "Debug by simplification",
-          description: "Split a failing expression into explicit intermediate lines.",
+          description:
+            "Split a failing expression into explicit intermediate lines.",
           code: [
             "prices = $10, $20, $30",
             "qty = 2, 1, 3",
@@ -1480,7 +1652,10 @@ const renderSpecIndexPage = (entries) => {
     "",
     "## Read in order",
     "",
-    ...entries.map((entry, idx) => `${idx + 1}. [${entry.title}](./${entry.slug}) - ${entry.summary}`),
+    ...entries.map(
+      (entry, idx) =>
+        `${idx + 1}. [${entry.title}](./${entry.slug}) - ${entry.summary}`,
+    ),
     "",
   ];
 
@@ -1570,10 +1745,16 @@ const renderSpecPage = (entry, content, sidebarPosition) => {
     ...renderFeatureGuideExtraSections(entry.slug),
     "## Examples to try",
     "",
-    ...entry.examples.success.flatMap((example) => [renderPlayground(example), ""]),
+    ...entry.examples.success.flatMap((example) => [
+      renderPlayground(example),
+      "",
+    ]),
     "## When SmartPad should push back",
     "",
-    ...entry.examples.guardrails.flatMap((example) => [renderPlayground(example), ""]),
+    ...entry.examples.guardrails.flatMap((example) => [
+      renderPlayground(example),
+      "",
+    ]),
     "## Good habits",
     "",
     ...entry.checklist.map((item) => `- ${item}`),
@@ -1597,7 +1778,11 @@ const writeSidebar = () => {
     "",
   ];
 
-  fs.writeFileSync(path.join(repoRoot, "website", "sidebars.ts"), lines.join("\n"), "utf8");
+  fs.writeFileSync(
+    path.join(repoRoot, "website", "sidebars.ts"),
+    lines.join("\n"),
+    "utf8",
+  );
 };
 
 const writeDocs = () => {

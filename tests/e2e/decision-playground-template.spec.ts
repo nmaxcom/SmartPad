@@ -15,8 +15,9 @@ test.describe("Decision Playground first run", () => {
 
     const editor = page.locator(".ProseMirror");
     await expect(editor).toContainText(
-      "First move: open the profit result menu (⋯), choose Set baseline, then drag 32.",
+      "First move: open profit's result menu (⋯), choose Set baseline, then drag 32.",
     );
+    await expect(editor).toContainText("Save current scenario…");
     await expect(editor).toContainText(
       "make profit = 2500 EUR by ticket price =>",
     );

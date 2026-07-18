@@ -4,11 +4,15 @@ Any literal number, whether assigned to a variable or not, can be scrubbed by dr
 
 A result chip's `⋯` menu can capture a persistent baseline for its sheet. As numbers are edited or scrubbed, Smartpad keeps direct-input comparisons beside the editable text and propagated deltas beside their results, without introducing hidden formulas or alternate model state.
 
+After setting a baseline, the same discreet result menu can save the current model as a named scenario. Smartpad places a compact Base / saved scenarios / Live comparison beside the chosen result, updates Live continuously, and lets the user move or clear the comparison without leaving the sheet.
+
 Smartpad emphasizes readability and intent over strict syntax. Units are first-class, conversions are semantic (to, in, on, off, as %), variables can be named with spaces, and results can be previewed live or explicitly committed. The goal is to make everyday quantitative reasoning—finance, planning, science, estimation—fast, expressive, and low-friction.
 
 It's a node web application, written in typescript and react.
 
 Recent template updates:
+
+- Decision Playground now teaches the complete named-scenario gesture: set a baseline, scrub an assumption, save the current scenario from a result menu, and compare it beside another result.
 - The focused Decision Playground now starts with a complete comparison gesture: open a result chip's `⋯` menu, set a baseline, scrub the ticket price, and watch input and result deltas appear in the sheet.
 - First run now opens a focused `Decision Playground`: one practical workshop model combines scrubbable assumptions, live profit and margin, a connected plot, and a valid goal-seek target. The broader `Quick Tour` remains available as a secondary template.
 - The `Live Result` quick template now includes implicit multiplication examples (`2(3+4)`, `(2+3)(4+5)`).
@@ -32,21 +36,24 @@ Recent template updates:
 - Autocomplete is less aggressive: automatic suggestions wait for a typed token character, while a recorded Settings shortcut opens contextual suggestions on demand, including on blank expression lines. The default avoids common OS-reserved shortcuts.
 
 These are some examples of its syntax:
+
 # Start Here: SmartPad Quick Tour
+
 # First action: hover attendees base or ticket list and drag left/right.
+
 # Watch the dependent results, currency math, date ranges, and chart update together.
 
 2 + 3 => 5
 sqrt(16) + 2.5 => 6.5
 abs(-4.2) => 4.2
-max(3, 7) * 2 => 14
+max(3, 7) _ 2 => 14
 10 mod 3 => 1
 (44 mod 4) + 5 => 5
-PI * 2 => 6.283
+PI _ 2 => 6.283
 
 price=3
 total = price^2 * 5*qty + 1 => 3^2 * 5*qty + 1
-qty => (total - 1) / (3 ^ 2 * 5)
+qty => (total - 1) / (3 ^ 2 \* 5)
 
 # Scientific notation: huge/small values are shown with e-notation (thresholds in Settings)
 
@@ -63,7 +70,7 @@ monthly rent = $1250
 utilities = $185
 internet = $75
 monthly total = monthly rent + utilities + internet => $1510
-yearly total = monthly total * 12 => $18120
+yearly total = monthly total \* 12 => $18120
 
 # A shared bill split with a phrase variable
 
@@ -107,11 +114,11 @@ temp c to K => 298.15 K
 
 mass = 2 kg
 accel = 3 m/s^2
-force = mass * accel => 6 N
+force = mass _ accel => 6 N
 distance = 4 m
-energy = force * distance => 24 J
+energy = force _ distance => 24 J
 energy to kWh => 6.667e-6 kWh
-raw energy = 1 kg*m^2/s^2 => 1 J
+raw energy = 1 kg\*m^2/s^2 => 1 J
 raw energy to J => 1 J
 surface load = 5 kg/m^2 => 5 kg/m^2
 surface load to g/cm^2 => 0.5 g/cm^2
@@ -123,8 +130,8 @@ pressure to bar => 3.000e-4 bar
 # Powers and geometry
 
 radius = 4 m
-area = PI * radius^2 => 50.265 m^2
-volume = area * 2 m => 100.531 m^3
+area = PI _ radius^2 => 50.265 m^2
+volume = area _ 2 m => 100.531 m^3
 volume to cm^3 => 100,530,964.915 cm^3
 
 # Rates, density, and frequency
@@ -164,11 +171,12 @@ goal => 70
 x => 0
 
 price=3
-total = price * qty => 3 * qty
+total = price _ qty => 3 _ qty
 qty => total / 3
-solve qty in total = price * qty =>
+solve qty in total = price \* qty =>
 
 # Explicit solve with inline assumptions
+
 taxi base = 6
 taxi rate = 0.85
 rideshare base = 2
@@ -178,39 +186,48 @@ solve break_even_km in taxi base + taxi rate*break_even_km = rideshare base + ri
 # Date Math: calendar-aware calculations
 
 # ISO + month carry vs exact days
+
 start date = 2024-01-31
 start date + 1 month => 2024-02-29
 start date + 30 days => 2024-03-01
 
 # Natural language dates
+
 launch day = 5 June 2004
 launch day + 2 months + 1 year => 2005-08-05
 
 # Date/time and zone offsets
+
 meeting = 2024-06-05 17:00 UTC
 meeting + 2h => 2024-06-05 19:00 UTC
 meeting in +05:00 => 2024-06-05 22:00 +05:00
 
 # Locale numeric dates (uses your system locale)
+
 06/05/2024 => 2024-05-06
 
 # Today/now shortcuts
+
 now => 2026-01-10 23:44 UTC+1
 today + 10 days => 2026-01-20
 
 # Business days (Mon-Fri)
+
 2024-11-25 + 5 business days => 2024-12-02
 2024-12-02 - 1 business day => 2024-11-29
 
 # Relative weekdays
+
 next Monday => 2026-01-12
 next Monday + 2 weeks => 2026-01-26
 last Friday => 2026-01-09
 
 # Date differences (in days)
+
 2024-06-30 - 2024-06-01 => 29 days
 
 # Mixed: chain operations
+
 trip = 2024-09-12 08:00 +05:00
 trip + 3 days + 4 hours => 2024-09-15 12:00 +05:00
 trip in UTC => 2024-09-12 03:00 UTC

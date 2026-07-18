@@ -18,8 +18,20 @@ import {
   createVariableBaselineEntry,
   loadVariableBaseline,
   saveVariableBaseline,
+  type VariableBaselineEntry,
   type VariableBaselineSnapshot,
 } from "../state/variableBaselineStore";
+import {
+  MAX_SCENARIOS_PER_SHEET,
+  captureScenario,
+  clearScenarioComparison,
+  compareStoredScenarioEntries,
+  loadScenarioComparison,
+  pinScenarioVariable,
+  removeScenario,
+  suggestScenarioName,
+  type SavedScenario,
+} from "../state/scenarioComparisonStore";
 import type { SettingsState, Variable } from "../state/types";
 import { ListValue, SemanticParsers, SemanticValue } from "../types";
 import {
@@ -50,6 +62,7 @@ const LAST_LINE_DROP_EXTRA_PX = 56;
 const COPY_FEEDBACK_MS = 800;
 const BASELINE_REFRESH_META = "spBaselineRefresh";
 const BASELINE_INPUT_WIDGET_CLASS = "semantic-baseline-input-delta";
+const SCENARIO_COMPARISON_WIDGET_CLASS = "semantic-scenario-comparison";
 
 type ResultInteractionSettings = Pick<
   SettingsState,
@@ -204,9 +217,12 @@ const logRefDebug = (...args: any[]) => {
 const getTextAt = (doc: any, from: number, to: number): string =>
   doc.textBetween(Math.max(0, from), Math.max(0, to), "", "");
 
-const isWordBoundary = (value: string): boolean => !/[a-zA-Z0-9_]/.test(value || "");
+const isWordBoundary = (value: string): boolean =>
+  !/[a-zA-Z0-9_]/.test(value || "");
 
-const getEventElement = (eventTarget: EventTarget | null): HTMLElement | null => {
+const getEventElement = (
+  eventTarget: EventTarget | null,
+): HTMLElement | null => {
   if (!eventTarget) return null;
   if (eventTarget instanceof HTMLElement) return eventTarget;
   if (eventTarget instanceof Element) return eventTarget as HTMLElement;
@@ -217,7 +233,9 @@ const getEventElement = (eventTarget: EventTarget | null): HTMLElement | null =>
   return null;
 };
 
-const uniqueNonEmptyValues = (values: Array<string | null | undefined>): string[] => {
+const uniqueNonEmptyValues = (
+  values: Array<string | null | undefined>,
+): string[] => {
   const seen = new Set<string>();
   const result: string[] = [];
   values.forEach((value) => {
@@ -231,16 +249,21 @@ const uniqueNonEmptyValues = (values: Array<string | null | undefined>): string[
   return result;
 };
 
-const isOperatorPrefix = (value: string): boolean => /^[+\-*/^%=<>!]/.test(value);
+const isOperatorPrefix = (value: string): boolean =>
+  /^[+\-*/^%=<>!]/.test(value);
 
-const stripEchoedReferencePrefix = (text: string, payload: ReferencePayload | null): string => {
+const stripEchoedReferencePrefix = (
+  text: string,
+  payload: ReferencePayload | null,
+): string => {
   const input = String(text || "");
   if (!payload || !input) {
     return input;
   }
-  const candidates = uniqueNonEmptyValues([payload.sourceValue, payload.sourceLabel]).sort(
-    (a, b) => b.length - a.length
-  );
+  const candidates = uniqueNonEmptyValues([
+    payload.sourceValue,
+    payload.sourceLabel,
+  ]).sort((a, b) => b.length - a.length);
   for (const candidate of candidates) {
     if (!input.startsWith(candidate)) {
       continue;
@@ -336,11 +359,17 @@ const resolveLineIdByLineNumber = (doc: any, sourceLine: number): string => {
   return matchedLineId;
 };
 
-const resolvePayloadLineIdentity = (state: any, payload: ReferencePayload): ReferencePayload => {
+const resolvePayloadLineIdentity = (
+  state: any,
+  payload: ReferencePayload,
+): ReferencePayload => {
   if (payload.sourceLineId) {
     return payload;
   }
-  const resolvedLineId = resolveLineIdByLineNumber(state.doc, payload.sourceLine);
+  const resolvedLineId = resolveLineIdByLineNumber(
+    state.doc,
+    payload.sourceLine,
+  );
   if (!resolvedLineId) {
     return payload;
   }
@@ -355,13 +384,16 @@ const insertReferenceAt = (
   payload: ReferencePayload,
   pos: number,
   mode: "reference" | "value" = "reference",
-  options?: { moveRange?: ReferenceMovePayload | null }
+  options?: { moveRange?: ReferenceMovePayload | null },
 ): number | null => {
   const { state } = view;
   const resolvedPayload = resolvePayloadLineIdentity(state, payload);
   if (!resolvedPayload.sourceLineId) return null;
-  const insertTextValue = String(payload.sourceValue || payload.sourceLabel || "value");
-  const referenceNode = mode === "reference" ? createReferenceNode(state, resolvedPayload) : null;
+  const insertTextValue = String(
+    payload.sourceValue || payload.sourceLabel || "value",
+  );
+  const referenceNode =
+    mode === "reference" ? createReferenceNode(state, resolvedPayload) : null;
   if (mode === "reference" && !referenceNode) return null;
   try {
     const moveRange =
@@ -383,17 +415,17 @@ const insertReferenceAt = (
     }
 
     const adjustedPos = moveRange && pos > moveRange.to ? pos - moveSize : pos;
-    const insertionPos = Math.max(0, Math.min(adjustedPos, tr.doc.content.size));
-    const before = insertionPos > 0 ? getTextAt(tr.doc, insertionPos - 1, insertionPos) : "";
+    const insertionPos = Math.max(
+      0,
+      Math.min(adjustedPos, tr.doc.content.size),
+    );
+    const before =
+      insertionPos > 0 ? getTextAt(tr.doc, insertionPos - 1, insertionPos) : "";
     const after = getTextAt(tr.doc, insertionPos, insertionPos + 1);
     const prefix = before && !isWordBoundary(before) ? " " : "";
     // Keep a trailing text slot after inserted atom references so caret can
     // remain visible and stable when the reference lands at end-of-line.
-    const suffix = after
-      ? !isWordBoundary(after)
-        ? " "
-        : ""
-      : " ";
+    const suffix = after ? (!isWordBoundary(after) ? " " : "") : " ";
 
     let cursor = insertionPos;
     if (prefix) {
@@ -412,7 +444,10 @@ const insertReferenceAt = (
       cursor += suffix.length;
     }
     let selectionPos = Math.max(1, Math.min(cursor, tr.doc.content.size));
-    while (selectionPos > 1 && !tr.doc.resolve(selectionPos).parent.inlineContent) {
+    while (
+      selectionPos > 1 &&
+      !tr.doc.resolve(selectionPos).parent.inlineContent
+    ) {
       selectionPos -= 1;
     }
     tr.setSelection(TextSelection.create(tr.doc, selectionPos));
@@ -466,7 +501,7 @@ const getLastTextblockSplitPos = (doc: any): number | null => {
 const insertReferenceOnBottomNewLine = (
   view: any,
   payload: ReferencePayload,
-  mode: "reference" | "value" = "reference"
+  mode: "reference" | "value" = "reference",
 ): number | null => {
   const { state } = view;
   const splitPos = getLastTextblockSplitPos(state.doc);
@@ -474,7 +509,10 @@ const insertReferenceOnBottomNewLine = (
     return insertReferenceAt(view, payload, state.doc.content.size, mode);
   }
   try {
-    const splitSelectionPos = Math.max(1, Math.min(splitPos + 1, state.doc.content.size));
+    const splitSelectionPos = Math.max(
+      1,
+      Math.min(splitPos + 1, state.doc.content.size),
+    );
     const splitTr = state.tr.split(splitPos);
     splitTr.setSelection(TextSelection.create(splitTr.doc, splitSelectionPos));
     view.dispatch(splitTr);
@@ -484,7 +522,10 @@ const insertReferenceOnBottomNewLine = (
   }
 };
 
-const getTextblockSplitPosByLineId = (doc: any, sourceLineId: string): number | null => {
+const getTextblockSplitPosByLineId = (
+  doc: any,
+  sourceLineId: string,
+): number | null => {
   if (!sourceLineId) return null;
   let splitPos: number | null = null;
   doc.descendants((node: any, pos: number) => {
@@ -501,7 +542,10 @@ const getTextblockSplitPosByLineId = (doc: any, sourceLineId: string): number | 
   return splitPos;
 };
 
-const getTextblockSplitPosByLineNumber = (doc: any, sourceLine: number): number | null => {
+const getTextblockSplitPosByLineNumber = (
+  doc: any,
+  sourceLine: number,
+): number | null => {
   if (!Number.isFinite(sourceLine) || sourceLine <= 0) return null;
   let line = 0;
   let splitPos: number | null = null;
@@ -523,7 +567,7 @@ const insertReferenceAfterBoundary = (
   view: any,
   payload: ReferencePayload,
   target: LineBoundaryDropTarget,
-  mode: "reference" | "value" = "reference"
+  mode: "reference" | "value" = "reference",
 ): number | null => {
   const { state } = view;
   const splitPosById = target.sourceLineId
@@ -537,7 +581,10 @@ const insertReferenceAfterBoundary = (
     return insertReferenceOnBottomNewLine(view, payload, mode);
   }
   try {
-    const splitSelectionPos = Math.max(1, Math.min(splitPos + 1, state.doc.content.size));
+    const splitSelectionPos = Math.max(
+      1,
+      Math.min(splitPos + 1, state.doc.content.size),
+    );
     const splitTr = state.tr.split(splitPos);
     splitTr.setSelection(TextSelection.create(splitTr.doc, splitSelectionPos));
     view.dispatch(splitTr);
@@ -550,7 +597,7 @@ const insertReferenceAfterBoundary = (
 const insertTextAfterSourceLine = (
   view: any,
   payload: ReferencePayload,
-  text: string
+  text: string,
 ): number | null => {
   const resolvedPayload = resolvePayloadLineIdentity(view.state, payload);
   const splitPosById = resolvedPayload.sourceLineId
@@ -559,12 +606,18 @@ const insertTextAfterSourceLine = (
   const splitPos =
     typeof splitPosById === "number" && splitPosById > 0
       ? splitPosById
-      : getTextblockSplitPosByLineNumber(view.state.doc, resolvedPayload.sourceLine);
+      : getTextblockSplitPosByLineNumber(
+          view.state.doc,
+          resolvedPayload.sourceLine,
+        );
   if (typeof splitPos !== "number" || splitPos <= 0) {
     return null;
   }
   try {
-    const splitSelectionPos = Math.max(1, Math.min(splitPos + 1, view.state.doc.content.size));
+    const splitSelectionPos = Math.max(
+      1,
+      Math.min(splitPos + 1, view.state.doc.content.size),
+    );
     const splitTr = view.state.tr.split(splitPos);
     splitTr.setSelection(TextSelection.create(splitTr.doc, splitSelectionPos));
     view.dispatch(splitTr);
@@ -579,17 +632,27 @@ const insertTextAfterSourceLine = (
   }
 };
 
-const resolveBoundaryDropTarget = (view: any, event: DragEvent): LineBoundaryDropTarget | null => {
+const resolveBoundaryDropTarget = (
+  view: any,
+  event: DragEvent,
+): LineBoundaryDropTarget | null => {
   const editorRect = view.dom.getBoundingClientRect();
-  const paragraphs = Array.from(view.dom.querySelectorAll("p")) as HTMLElement[];
+  const paragraphs = Array.from(
+    view.dom.querySelectorAll("p"),
+  ) as HTMLElement[];
   if (paragraphs.length === 0) {
     return null;
   }
 
-  const candidates: Array<{ distance: number; target: LineBoundaryDropTarget }> = [];
+  const candidates: Array<{
+    distance: number;
+    target: LineBoundaryDropTarget;
+  }> = [];
   for (let idx = 0; idx < paragraphs.length; idx += 1) {
     const paragraph = paragraphs[idx];
-    const sourceLineId = String(paragraph.getAttribute("data-line-id") || "").trim();
+    const sourceLineId = String(
+      paragraph.getAttribute("data-line-id") || "",
+    ).trim();
     const rect = paragraph.getBoundingClientRect();
     const isLastLine = idx === paragraphs.length - 1;
     const nextParagraph = !isLastLine ? paragraphs[idx + 1] : null;
@@ -597,9 +660,13 @@ const resolveBoundaryDropTarget = (view: any, event: DragEvent): LineBoundaryDro
     const lowerBandLimit =
       typeof nextTop === "number"
         ? nextTop + DROP_BOUNDARY_BAND_PX
-        : Math.max(rect.bottom + LAST_LINE_DROP_EXTRA_PX, editorRect.bottom - 4);
+        : Math.max(
+            rect.bottom + LAST_LINE_DROP_EXTRA_PX,
+            editorRect.bottom - 4,
+          );
     const inBoundaryBand =
-      event.clientY >= rect.bottom - DROP_BOUNDARY_BAND_PX && event.clientY <= lowerBandLimit;
+      event.clientY >= rect.bottom - DROP_BOUNDARY_BAND_PX &&
+      event.clientY <= lowerBandLimit;
     if (!inBoundaryBand) {
       continue;
     }
@@ -632,7 +699,7 @@ const resolveInlineDropPos = (view: any, event: DragEvent): number | null => {
 const shouldPreferInlineDrop = (
   view: any,
   event: DragEvent,
-  inlinePos: number | null
+  inlinePos: number | null,
 ): boolean => {
   if (typeof inlinePos !== "number") {
     return false;
@@ -646,7 +713,10 @@ const shouldPreferInlineDrop = (
   return event.clientY >= rect.top + 4 && event.clientY <= rect.bottom - 4;
 };
 
-const normalizeChipText = (value: string): string => String(value || "").replace(/\s+/g, " ").trim();
+const normalizeChipText = (value: string): string =>
+  String(value || "")
+    .replace(/\s+/g, " ")
+    .trim();
 
 const normalizeGoalSeekTargetValue = (value: string): string =>
   normalizeChipText(value).replace(/(\d),(?=\d{3}(\D|$))/g, "$1");
@@ -673,7 +743,7 @@ const getTextblockTextWithoutResultTokens = (node: any): string => {
 
 const findSourceTextblockSnapshot = (
   view: any,
-  payload: ReferencePayload | null
+  payload: ReferencePayload | null,
 ): SourceTextblockSnapshot | null => {
   if (!payload) return null;
   const resolvedPayload = resolvePayloadLineIdentity(view.state, payload);
@@ -692,10 +762,17 @@ const findSourceTextblockSnapshot = (
       lineNumber,
       text: getTextblockTextWithoutResultTokens(node),
     };
-    if (!fallback && resolvedPayload.sourceLine > 0 && lineNumber === resolvedPayload.sourceLine) {
+    if (
+      !fallback &&
+      resolvedPayload.sourceLine > 0 &&
+      lineNumber === resolvedPayload.sourceLine
+    ) {
       fallback = snapshot;
     }
-    if (resolvedPayload.sourceLineId && lineId === resolvedPayload.sourceLineId) {
+    if (
+      resolvedPayload.sourceLineId &&
+      lineId === resolvedPayload.sourceLineId
+    ) {
       matchedById = snapshot;
       return false;
     }
@@ -705,7 +782,9 @@ const findSourceTextblockSnapshot = (
   return matchedById || fallback;
 };
 
-const collectExpressionVariables = (components: ExpressionComponent[]): string[] => {
+const collectExpressionVariables = (
+  components: ExpressionComponent[],
+): string[] => {
   const variables: string[] = [];
   const visit = (component: ExpressionComponent | undefined) => {
     if (!component) return;
@@ -727,7 +806,7 @@ const collectExpressionVariables = (components: ExpressionComponent[]): string[]
 
 const findSingleInputFunctionCall = (
   components: ExpressionComponent[],
-  functionStore: Map<string, FunctionDefinitionNode> | undefined
+  functionStore: Map<string, FunctionDefinitionNode> | undefined,
 ): FunctionPlotActionSource | null => {
   if (!functionStore || functionStore.size === 0) return null;
   let match: FunctionPlotActionSource | null = null;
@@ -745,7 +824,12 @@ const findSingleInputFunctionCall = (
       }
     }
     if (component.children?.some((child) => visit(child))) return true;
-    if (component.args?.some((arg) => arg.components.some((child) => visit(child)))) return true;
+    if (
+      component.args?.some((arg) =>
+        arg.components.some((child) => visit(child)),
+      )
+    )
+      return true;
     if (component.access) {
       if (visit(component.access.base)) return true;
       const accessComponents = [
@@ -763,7 +847,7 @@ const findSingleInputFunctionCall = (
 
 const buildPlotSourcePlan = (
   view: any,
-  payload: ReferencePayload | null
+  payload: ReferencePayload | null,
 ): PlotSourcePlan | null => {
   const source = findSourceTextblockSnapshot(view, payload);
   if (!source) return null;
@@ -796,7 +880,7 @@ const buildPlotSourcePlan = (
   }
 
   const xVariables = collectExpressionVariables(components).filter(
-    (variable) => variable !== targetName
+    (variable) => variable !== targetName,
   );
   if (xVariables.length === 0) {
     return null;
@@ -812,7 +896,7 @@ const buildPlotSourcePlan = (
 const buildPlotMenuActions = (
   view: any,
   payload: ReferencePayload | null,
-  functionStore?: Map<string, FunctionDefinitionNode>
+  functionStore?: Map<string, FunctionDefinitionNode>,
 ): PlotMenuAction[] => {
   const plan = buildPlotSourcePlan(view, payload);
   if (!plan) {
@@ -832,7 +916,10 @@ const buildPlotMenuActions = (
               }
             })()
           : [];
-    const functionSource = findSingleInputFunctionCall(components, functionStore);
+    const functionSource = findSingleInputFunctionCall(
+      components,
+      functionStore,
+    );
     if (!functionSource) return [];
     const { functionName, parameterName } = functionSource;
     return [
@@ -845,7 +932,8 @@ const buildPlotMenuActions = (
   }
   const yParam = plan.targetName ? ` y=${plan.targetName}` : "";
   return plan.xVariables.map((xVariable) => ({
-    label: plan.xVariables.length > 1 ? `Plot vs ${xVariable}` : "Plot from result",
+    label:
+      plan.xVariables.length > 1 ? `Plot vs ${xVariable}` : "Plot from result",
     directive: `@view plot x=${xVariable}${yParam} size=md`,
     title: plan.targetName
       ? `Create a live plot of ${plan.targetName} against ${xVariable}`
@@ -855,7 +943,7 @@ const buildPlotMenuActions = (
 
 const buildSourceResultInfo = (
   view: any,
-  payload: ReferencePayload | null
+  payload: ReferencePayload | null,
 ): SourceResultInfo | null => {
   const source = findSourceTextblockSnapshot(view, payload);
   if (!source) return null;
@@ -900,7 +988,7 @@ const parseNumericListLength = (raw: string): number | null => {
 
 const collectNamedNumericListSources = (
   view: any,
-  excludeName?: string
+  excludeName?: string,
 ): NamedNumericListSource[] => {
   const sources: NamedNumericListSource[] = [];
   let lineNumber = 0;
@@ -909,7 +997,10 @@ const collectNamedNumericListSources = (
       return true;
     }
     lineNumber += 1;
-    const astNode = parseLine(getTextblockTextWithoutResultTokens(node), lineNumber);
+    const astNode = parseLine(
+      getTextblockTextWithoutResultTokens(node),
+      lineNumber,
+    );
     const name = isCombinedAssignmentNode(astNode)
       ? astNode.variableName
       : isVariableAssignmentNode(astNode)
@@ -934,7 +1025,7 @@ const collectNamedNumericListSources = (
 
 const buildVisualPlotMenuActions = (
   view: any,
-  payload: ReferencePayload | null
+  payload: ReferencePayload | null,
 ): PlotMenuAction[] => {
   if (!payload) return [];
   const sourceInfo = buildSourceResultInfo(view, payload);
@@ -969,7 +1060,7 @@ const buildVisualPlotMenuActions = (
 
 const buildGoalSeekMenuActions = (
   view: any,
-  payload: ReferencePayload | null
+  payload: ReferencePayload | null,
 ): GoalSeekMenuAction[] => {
   if (!payload) return [];
   const sourceInfo = buildSourceResultInfo(view, payload);
@@ -978,31 +1069,49 @@ const buildGoalSeekMenuActions = (
     return [];
   }
   const target = (sourceInfo.targetName || sourceInfo.expression).trim();
-  const currentValue = normalizeGoalSeekTargetValue(payload.sourceValue || payload.sourceLabel || "");
+  const currentValue = normalizeGoalSeekTargetValue(
+    payload.sourceValue || payload.sourceLabel || "",
+  );
   if (!target || !currentValue) {
     return [];
   }
   return plan.xVariables.map((variable) => ({
-    label: plan.xVariables.length > 1 ? `Set target by ${variable}` : "Set target...",
+    label:
+      plan.xVariables.length > 1
+        ? `Set target by ${variable}`
+        : "Set target...",
     line: `make ${target} = ${currentValue} by ${variable} =>`,
     title: `Insert an editable goal-seek line that solves ${variable}`,
   }));
 };
 
 const resolveDisplayedResultValue = (target: HTMLElement): string => {
-  const explicitResultValue = normalizeChipText(String(target.getAttribute("data-result-value") || ""));
+  const explicitResultValue = normalizeChipText(
+    String(target.getAttribute("data-result-value") || ""),
+  );
   if (explicitResultValue) return explicitResultValue;
-  const attributeResult = normalizeChipText(String(target.getAttribute("data-result") || ""));
-  if (attributeResult && target.classList.contains("semantic-live-result-display")) {
+  const attributeResult = normalizeChipText(
+    String(target.getAttribute("data-result") || ""),
+  );
+  if (
+    attributeResult &&
+    target.classList.contains("semantic-live-result-display")
+  ) {
     return attributeResult;
   }
   // Prefer the literal rendered chip text so inserted references match exactly
   // what the user sees, even if attributes are stale.
-  const visibleText = normalizeChipText(target.innerText || target.textContent || "");
+  const visibleText = normalizeChipText(
+    target.innerText || target.textContent || "",
+  );
   if (visibleText) return visibleText;
-  const ariaValue = normalizeChipText(String(target.getAttribute("aria-label") || ""));
+  const ariaValue = normalizeChipText(
+    String(target.getAttribute("aria-label") || ""),
+  );
   if (ariaValue) return ariaValue;
-  const titleValue = normalizeChipText(String(target.getAttribute("title") || ""));
+  const titleValue = normalizeChipText(
+    String(target.getAttribute("title") || ""),
+  );
   if (titleValue) return titleValue;
   return normalizeChipText(String(target.getAttribute("data-result") || ""));
 };
@@ -1050,11 +1159,15 @@ const showCopyFeedback = (resultEl: HTMLElement) => {
   copyFeedbackTimers.set(resultEl, timer);
 };
 
-const resolveResultElementFromTarget = (target: HTMLElement | null): HTMLElement | null => {
+const resolveResultElementFromTarget = (
+  target: HTMLElement | null,
+): HTMLElement | null => {
   if (!target) return null;
   const direct = target.closest(RESULT_SELECTOR) as HTMLElement | null;
   if (direct) return direct;
-  const wrapper = target.closest(".semantic-wrapper, .semantic-result-container") as HTMLElement | null;
+  const wrapper = target.closest(
+    ".semantic-wrapper, .semantic-result-container",
+  ) as HTMLElement | null;
   if (!wrapper) return null;
   return wrapper.querySelector(RESULT_SELECTOR) as HTMLElement | null;
 };
@@ -1067,18 +1180,23 @@ const payloadFromElement = (target: HTMLElement): ReferencePayload | null => {
     return null;
   }
   const fallbackParagraph = target.closest("p") as HTMLElement | null;
-  const fallbackLineId = String(fallbackParagraph?.getAttribute("data-line-id") || "").trim();
+  const fallbackLineId = String(
+    fallbackParagraph?.getAttribute("data-line-id") || "",
+  ).trim();
   const fallbackSourceLine =
     fallbackParagraph && fallbackParagraph.parentElement
       ? Math.max(
           0,
-          Array.from(fallbackParagraph.parentElement.querySelectorAll("p")).indexOf(
-            fallbackParagraph
-          ) + 1
+          Array.from(
+            fallbackParagraph.parentElement.querySelectorAll("p"),
+          ).indexOf(fallbackParagraph) + 1,
         )
       : 0;
-  const lineId = String(target.getAttribute("data-source-line-id") || fallbackLineId).trim();
-  const sourceLine = Number(target.getAttribute("data-source-line") || 0) || fallbackSourceLine;
+  const lineId = String(
+    target.getAttribute("data-source-line-id") || fallbackLineId,
+  ).trim();
+  const sourceLine =
+    Number(target.getAttribute("data-source-line") || 0) || fallbackSourceLine;
   if (!lineId && sourceLine <= 0) return null;
   const label =
     String(target.getAttribute("data-source-label") || "").trim() ||
@@ -1086,7 +1204,9 @@ const payloadFromElement = (target: HTMLElement): ReferencePayload | null => {
   const renderedText = normalizeChipText(target.textContent || "");
   const value = resolveDisplayedResultValue(target);
   const sourceValue = value || renderedText;
-  const placeholderKey = String(target.getAttribute("data-placeholder-key") || "").trim();
+  const placeholderKey = String(
+    target.getAttribute("data-placeholder-key") || "",
+  ).trim();
   return {
     sourceLineId: lineId,
     sourceLine,
@@ -1103,11 +1223,17 @@ const installResultDragImage = (event: DragEvent, resultEl: HTMLElement) => {
     const clone = resultEl.cloneNode(true) as HTMLElement;
     clone.classList.add("semantic-result-drag-image");
     clone
-      .querySelectorAll(".semantic-result-actions, .semantic-live-result-actions")
+      .querySelectorAll(
+        ".semantic-result-actions, .semantic-live-result-actions",
+      )
       .forEach((element) => element.parentElement?.removeChild(element));
     document.body.appendChild(clone);
     const rect = resultEl.getBoundingClientRect();
-    dataTransfer.setDragImage(clone, Math.max(0, rect.width / 2), Math.max(0, rect.height / 2));
+    dataTransfer.setDragImage(
+      clone,
+      Math.max(0, rect.width / 2),
+      Math.max(0, rect.height / 2),
+    );
     window.setTimeout(() => {
       if (clone.parentElement) {
         clone.parentElement.removeChild(clone);
@@ -1116,22 +1242,32 @@ const installResultDragImage = (event: DragEvent, resultEl: HTMLElement) => {
   } catch {}
 };
 
-const payloadFromReferenceElement = (target: HTMLElement): ReferencePayload | null => {
+const payloadFromReferenceElement = (
+  target: HTMLElement,
+): ReferencePayload | null => {
   if (!target.matches(REFERENCE_SELECTOR)) {
     return null;
   }
-  const sourceLineId = String(target.getAttribute("data-source-line-id") || "").trim();
+  const sourceLineId = String(
+    target.getAttribute("data-source-line-id") || "",
+  ).trim();
   const sourceLine = Number(target.getAttribute("data-source-line") || 0);
   if (!sourceLineId && sourceLine <= 0) return null;
   const sourceValue = normalizeChipText(
-    String(target.getAttribute("data-source-value") || target.getAttribute("data-result") || "")
+    String(
+      target.getAttribute("data-source-value") ||
+        target.getAttribute("data-result") ||
+        "",
+    ),
   );
   const label =
     normalizeChipText(String(target.getAttribute("data-source-label") || "")) ||
     normalizeChipText(target.textContent || "") ||
     sourceValue ||
     "value";
-  const placeholderKey = String(target.getAttribute("data-placeholder-key") || "").trim();
+  const placeholderKey = String(
+    target.getAttribute("data-placeholder-key") || "",
+  ).trim();
   return {
     sourceLineId,
     sourceLine,
@@ -1143,7 +1279,7 @@ const payloadFromReferenceElement = (target: HTMLElement): ReferencePayload | nu
 
 const getReferenceRangeFromElement = (
   view: any,
-  referenceEl: HTMLElement
+  referenceEl: HTMLElement,
 ): ReferenceMovePayload | null => {
   const referenceType = view.state.schema.nodes.referenceToken;
   if (!referenceType) return null;
@@ -1165,7 +1301,10 @@ const getReferenceRangeFromElement = (
 const findSelectedReferencePayload = (state: any): ReferencePayload | null => {
   const referenceType = state.schema.nodes.referenceToken;
   if (!referenceType) return null;
-  if (state.selection instanceof NodeSelection && state.selection.node?.type === referenceType) {
+  if (
+    state.selection instanceof NodeSelection &&
+    state.selection.node?.type === referenceType
+  ) {
     const node = state.selection.node;
     return {
       sourceLineId: String(node.attrs.sourceLineId || ""),
@@ -1193,7 +1332,9 @@ const findSelectedReferencePayload = (state: any): ReferencePayload | null => {
   return found;
 };
 
-const findDirectlySelectedReferencePayload = (state: any): ReferencePayload | null => {
+const findDirectlySelectedReferencePayload = (
+  state: any,
+): ReferencePayload | null => {
   const referenceType = state.schema.nodes.referenceToken;
   if (!referenceType) return null;
   if (!(state.selection instanceof NodeSelection)) return null;
@@ -1208,12 +1349,17 @@ const findDirectlySelectedReferencePayload = (state: any): ReferencePayload | nu
   };
 };
 
-const getReferenceRangeInSelection = (state: any): { from: number; to: number } | null => {
+const getReferenceRangeInSelection = (
+  state: any,
+): { from: number; to: number } | null => {
   const referenceType = state.schema.nodes.referenceToken;
   if (!referenceType) return null;
   const { selection } = state;
 
-  if (selection instanceof NodeSelection && selection.node?.type === referenceType) {
+  if (
+    selection instanceof NodeSelection &&
+    selection.node?.type === referenceType
+  ) {
     return { from: selection.from, to: selection.to };
   }
 
@@ -1229,19 +1375,23 @@ const getReferenceRangeInSelection = (state: any): { from: number; to: number } 
   }
 
   let found: { from: number; to: number } | null = null;
-  state.doc.nodesBetween(selection.from, selection.to, (node: any, pos: number) => {
-    if (node.type === referenceType) {
-      found = { from: pos, to: pos + node.nodeSize };
-      return false;
-    }
-    return undefined;
-  });
+  state.doc.nodesBetween(
+    selection.from,
+    selection.to,
+    (node: any, pos: number) => {
+      if (node.type === referenceType) {
+        found = { from: pos, to: pos + node.nodeSize };
+        return false;
+      }
+      return undefined;
+    },
+  );
   return found;
 };
 
 const getReferenceTextInsertionPos = (
   state: any,
-  range: { from: number; to: number }
+  range: { from: number; to: number },
 ): number => {
   const referenceType = state.schema.nodes.referenceToken;
   const { selection } = state;
@@ -1275,7 +1425,9 @@ const jumpToSourceLine = (view: any, sourceLineId: string): boolean => {
   if (!paragraph) return false;
   const pos = view.posAtDOM(paragraph, 0);
   const target = Math.max(1, Math.min(pos + 1, view.state.doc.content.size));
-  const tr = view.state.tr.setSelection(TextSelection.create(view.state.doc, target));
+  const tr = view.state.tr.setSelection(
+    TextSelection.create(view.state.doc, target),
+  );
   view.dispatch(tr);
   view.focus();
   return true;
@@ -1284,7 +1436,7 @@ const jumpToSourceLine = (view: any, sourceLineId: string): boolean => {
 const getSourceHighlightRange = (
   doc: any,
   sourceLineId: string | null,
-  sourceLine: number = 0
+  sourceLine: number = 0,
 ): { from: number; to: number } | null => {
   let line = 0;
   let fallback: { from: number; to: number } | null = null;
@@ -1318,7 +1470,8 @@ export const ResultReferenceInteractionExtension = Extension.create({
         scientificTrimTrailingZeros: true,
         groupThousands: true,
       }),
-      getFunctionStore: (): Map<string, FunctionDefinitionNode> | undefined => undefined,
+      getFunctionStore: (): Map<string, FunctionDefinitionNode> | undefined =>
+        undefined,
       getVariableContext: (): Map<string, Variable> => new Map(),
       getActiveSheetId: (): string => "",
     };
@@ -1339,7 +1492,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
           return false;
         }
         const tr = state.tr.setSelection(
-          TextSelection.create(state.doc, state.selection.to)
+          TextSelection.create(state.doc, state.selection.to),
         );
         view.dispatch(tr);
         return false;
@@ -1352,7 +1505,9 @@ export const ResultReferenceInteractionExtension = Extension.create({
       | (() => ResultInteractionSettings)
       | undefined;
     const getReferenceTextExportMode = (): "preserve" | "readable" =>
-      getSettings?.().referenceTextExportMode === "readable" ? "readable" : "preserve";
+      getSettings?.().referenceTextExportMode === "readable"
+        ? "readable"
+        : "preserve";
     const getFunctionStore = this.options.getFunctionStore as
       | (() => Map<string, FunctionDefinitionNode> | undefined)
       | undefined;
@@ -1364,10 +1519,15 @@ export const ResultReferenceInteractionExtension = Extension.create({
       | undefined;
     const serializeReferencePayload = (
       payload: ReferencePayload,
-      mode: "preserve" | "readable"
+      mode: "preserve" | "readable",
     ): string => {
       if (mode === "preserve") {
-        return payload.placeholderKey || payload.sourceValue || payload.sourceLabel || "value";
+        return (
+          payload.placeholderKey ||
+          payload.sourceValue ||
+          payload.sourceLabel ||
+          "value"
+        );
       }
       return payload.sourceValue || payload.sourceLabel || "value";
     };
@@ -1384,18 +1544,26 @@ export const ResultReferenceInteractionExtension = Extension.create({
     let activeInlineDropPos: number | null = null;
     let activeMenu: HTMLElement | null = null;
     let activeMenuButton: HTMLElement | null = null;
+    let activePluginView: any = null;
     let baselineRefreshFrame: number | null = null;
     let baselineScrubMouseUpPending = false;
     const clearDropTargetIndicator = (view: any) => {
       view.dom
         .querySelectorAll(`p.${DROP_TARGET_AFTER_CLASS}`)
-        .forEach((paragraph) => paragraph.classList.remove(DROP_TARGET_AFTER_CLASS));
+        .forEach((paragraph) =>
+          paragraph.classList.remove(DROP_TARGET_AFTER_CLASS),
+        );
       activeBoundaryDropTarget = null;
     };
-    const applyDropTargetIndicator = (view: any, target: LineBoundaryDropTarget | null) => {
+    const applyDropTargetIndicator = (
+      view: any,
+      target: LineBoundaryDropTarget | null,
+    ) => {
       clearDropTargetIndicator(view);
       if (!target) return;
-      const paragraphs = Array.from(view.dom.querySelectorAll("p")) as HTMLElement[];
+      const paragraphs = Array.from(
+        view.dom.querySelectorAll("p"),
+      ) as HTMLElement[];
       const paragraph = paragraphs[target.paragraphIndex] || null;
       if (!paragraph) return;
       paragraph.classList.add(DROP_TARGET_AFTER_CLASS);
@@ -1443,7 +1611,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
         title?: string;
         accent?: boolean;
         className?: string;
-      }
+      },
     ): HTMLButtonElement => {
       const button = document.createElement("button");
       button.type = "button";
@@ -1474,11 +1642,20 @@ export const ResultReferenceInteractionExtension = Extension.create({
       }
       return button;
     };
-    const positionResultActionMenu = (menu: HTMLElement, button: HTMLElement) => {
+    const positionResultActionMenu = (
+      menu: HTMLElement,
+      button: HTMLElement,
+    ) => {
       const rect = button.getBoundingClientRect();
       const menuWidth = Math.max(184, menu.offsetWidth || 0);
-      const left = Math.max(8, Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - 8));
-      const top = Math.min(rect.bottom + 6, window.innerHeight - menu.offsetHeight - 8);
+      const left = Math.max(
+        8,
+        Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - 8),
+      );
+      const top = Math.min(
+        rect.bottom + 6,
+        window.innerHeight - menu.offsetHeight - 8,
+      );
       menu.style.left = `${left}px`;
       menu.style.top = `${Math.max(8, top)}px`;
     };
@@ -1488,58 +1665,77 @@ export const ResultReferenceInteractionExtension = Extension.create({
       return sheetId ? loadVariableBaseline(sheetId) : null;
     };
 
-    const captureBaselineForActiveSheet = (): VariableBaselineSnapshot | null => {
-      const sheetId = getActiveSheetId?.() || "";
-      const variables = getVariableContext?.() || new Map<string, Variable>();
-      if (!sheetId || variables.size === 0) return null;
-
+    const getNumericDisplayOptions = () => {
       const settings = getSettings?.();
-      const displayOptions = {
+      return {
         precision: settings?.decimalPlaces ?? 6,
         scientificUpperThreshold: Math.pow(
           10,
-          settings?.scientificUpperExponent ?? 12
+          settings?.scientificUpperExponent ?? 12,
         ),
         scientificLowerThreshold: Math.pow(
           10,
-          settings?.scientificLowerExponent ?? -4
+          settings?.scientificLowerExponent ?? -4,
         ),
         trimTrailingZeros: settings?.scientificTrimTrailingZeros ?? true,
         groupThousands: settings?.groupThousands ?? true,
       };
-      const entries = Object.fromEntries(
-        Array.from(variables.entries()).flatMap(([name, variable]) => {
-          const displayValue = variable.value.toString(displayOptions);
-          const entry = createVariableBaselineEntry(variable, displayValue);
-          return entry ? [[name, entry] as const] : [];
-        })
-      );
-      if (Object.keys(entries).length === 0) return null;
+    };
 
-      const snapshot: VariableBaselineSnapshot = {
-        capturedAt: Date.now(),
-        entries,
+    const captureCurrentNumericSnapshot =
+      (): VariableBaselineSnapshot | null => {
+        const variables = getVariableContext?.() || new Map<string, Variable>();
+        if (variables.size === 0) return null;
+
+        const displayOptions = getNumericDisplayOptions();
+        const entries = Object.fromEntries(
+          Array.from(variables.entries()).flatMap(([name, variable]) => {
+            const displayValue = variable.value.toString(displayOptions);
+            const entry = createVariableBaselineEntry(variable, displayValue);
+            return entry ? [[name, entry] as const] : [];
+          }),
+        );
+        if (Object.keys(entries).length === 0) return null;
+
+        const snapshot: VariableBaselineSnapshot = {
+          capturedAt: Date.now(),
+          entries,
+        };
+        return snapshot;
       };
-      saveVariableBaseline(sheetId, snapshot);
-      return snapshot;
+
+    const captureBaselineForActiveSheet =
+      (): VariableBaselineSnapshot | null => {
+        const sheetId = getActiveSheetId?.() || "";
+        if (!sheetId) return null;
+        const snapshot = captureCurrentNumericSnapshot();
+        if (!snapshot) return null;
+        saveVariableBaseline(sheetId, snapshot);
+        return snapshot;
+      };
+
+    const resolveVariableNameForPayload = (
+      view: any,
+      payload: ReferencePayload | null,
+    ): string | null => {
+      if (!payload) return null;
+      const source = findSourceTextblockSnapshot(view, payload);
+      return resolveBaselineVariableName(source?.text || payload.sourceLabel);
     };
 
     const resolveBaselineComparisonForPayload = (
       view: any,
-      payload: ReferencePayload | null
+      payload: ReferencePayload | null,
     ) => {
       const baseline = getBaselineForActiveSheet();
-      if (!baseline || !payload) return null;
-      const source = findSourceTextblockSnapshot(view, payload);
-      const variableName = resolveBaselineVariableName(source?.text || payload.sourceLabel);
+      if (!baseline) return null;
+      const variableName = resolveVariableNameForPayload(view, payload);
       if (!variableName) return null;
       const baselineEntry = baseline.entries[variableName];
       const variable = getVariableContext?.().get(variableName);
       if (!baselineEntry || !variable) return null;
       const comparison = compareVariableWithBaseline(baselineEntry, variable);
-      return comparison
-        ? { baselineEntry, comparison, variableName }
-        : null;
+      return comparison ? { baselineEntry, comparison, variableName } : null;
     };
 
     const refreshBaselineResultDeltas = (view: any) => {
@@ -1552,7 +1748,10 @@ export const ResultReferenceInteractionExtension = Extension.create({
           resultEl.removeAttribute("data-baseline-delta");
           resultEl.removeAttribute("data-baseline-direction");
           resultEl.removeAttribute("data-baseline-value");
-          resultEl.setAttribute("aria-label", resolveDisplayedResultValue(resultEl));
+          resultEl.setAttribute(
+            "aria-label",
+            resolveDisplayedResultValue(resultEl),
+          );
           resultEl.title = resolveDisplayedResultValue(resultEl);
         });
 
@@ -1564,17 +1763,23 @@ export const ResultReferenceInteractionExtension = Extension.create({
           const resultEl = node as HTMLElement;
           const resolved = resolveBaselineComparisonForPayload(
             view,
-            payloadFromElement(resultEl)
+            payloadFromElement(resultEl),
           );
           if (!resolved?.comparison.changed) return;
 
           const deltaLabel = formatBaselineDeltaLabel(resolved.comparison);
           resultEl.setAttribute("data-baseline-delta", deltaLabel);
-          resultEl.setAttribute("data-baseline-direction", resolved.comparison.direction);
-          resultEl.setAttribute("data-baseline-value", resolved.baselineEntry.displayValue);
+          resultEl.setAttribute(
+            "data-baseline-direction",
+            resolved.comparison.direction,
+          );
+          resultEl.setAttribute(
+            "data-baseline-value",
+            resolved.baselineEntry.displayValue,
+          );
           resultEl.setAttribute(
             "aria-label",
-            `${resolveDisplayedResultValue(resultEl)} · ${resolved.variableName} ${deltaLabel} from baseline ${resolved.baselineEntry.displayValue}`
+            `${resolveDisplayedResultValue(resultEl)} · ${resolved.variableName} ${deltaLabel} from baseline ${resolved.baselineEntry.displayValue}`,
           );
           resultEl.title = `Baseline ${resolved.baselineEntry.displayValue}`;
         });
@@ -1616,7 +1821,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 "data-baseline-value": baselineEntry.displayValue,
                 title: `Baseline ${baselineEntry.displayValue}`,
                 "aria-label": `${variableName} ${deltaLabel} from baseline ${baselineEntry.displayValue}`,
-              })
+              }),
             );
           }
           return true;
@@ -1640,10 +1845,168 @@ export const ResultReferenceInteractionExtension = Extension.create({
             {
               side: 1,
               key: `baseline-input-${variableName}-${deltaLabel}-${baselineEntry.displayValue}`,
-            }
-          )
+            },
+          ),
         );
         return true;
+      });
+      return decorations;
+    };
+
+    const buildScenarioComparisonDecorations = (state: any): Decoration[] => {
+      const sheetId = getActiveSheetId?.() || "";
+      const baseline = getBaselineForActiveSheet();
+      const scenarioComparison = sheetId
+        ? loadScenarioComparison(sheetId)
+        : null;
+      const variables = getVariableContext?.() || new Map<string, Variable>();
+      const pinnedVariable = scenarioComparison?.pinnedVariable || "";
+      if (
+        !baseline ||
+        !scenarioComparison ||
+        scenarioComparison.scenarios.length === 0 ||
+        !pinnedVariable
+      ) {
+        return [];
+      }
+
+      const baselineEntry = baseline.entries[pinnedVariable] || null;
+      const liveVariable = variables.get(pinnedVariable);
+      const liveEntry = liveVariable
+        ? createVariableBaselineEntry(
+            liveVariable,
+            liveVariable.value.toString(getNumericDisplayOptions()),
+          )
+        : null;
+      const widgetKey = [
+        pinnedVariable,
+        baselineEntry?.displayValue || "missing",
+        liveEntry?.displayValue || "missing",
+        ...scenarioComparison.scenarios.map(
+          (scenario) =>
+            `${scenario.id}:${scenario.entries[pinnedVariable]?.displayValue || "missing"}`,
+        ),
+      ].join("|");
+
+      const decorations: Decoration[] = [];
+      let pinnedLineFound = false;
+      state.doc.descendants((node: any, pos: number) => {
+        if (pinnedLineFound || !node?.isTextblock) return true;
+        const variableName = resolveBaselineVariableName(
+          getTextblockTextWithoutResultTokens(node),
+        );
+        if (variableName !== pinnedVariable) return true;
+        pinnedLineFound = true;
+
+        decorations.push(
+          Decoration.node(pos, pos + node.nodeSize, {
+            class: "semantic-scenario-comparison-line",
+          }),
+        );
+        decorations.push(
+          Decoration.widget(
+            pos + node.nodeSize - 1,
+            () => {
+              const comparison = document.createElement("span");
+              comparison.className = SCENARIO_COMPARISON_WIDGET_CLASS;
+              comparison.setAttribute("contenteditable", "false");
+              comparison.setAttribute("role", "group");
+              comparison.setAttribute("data-pinned-variable", pinnedVariable);
+              comparison.setAttribute(
+                "aria-label",
+                `Scenario comparison for ${pinnedVariable}`,
+              );
+
+              const title = document.createElement("span");
+              title.className = "semantic-scenario-comparison-title";
+              title.textContent = `Scenarios · ${pinnedVariable}`;
+              comparison.appendChild(title);
+
+              const values = document.createElement("span");
+              values.className = "semantic-scenario-comparison-values";
+              comparison.appendChild(values);
+
+              const appendValue = (
+                label: string,
+                entry: VariableBaselineEntry | null,
+                options?: {
+                  kind?: "base" | "saved" | "live";
+                  scenario?: SavedScenario;
+                },
+              ) => {
+                const card = document.createElement("span");
+                card.className = `semantic-scenario-value is-${options?.kind || "saved"}`;
+                const delta =
+                  baselineEntry && entry && options?.kind !== "base"
+                    ? compareStoredScenarioEntries(baselineEntry, entry)
+                    : null;
+                if (delta) card.classList.add(`is-${delta.direction}`);
+
+                const cardLabel = document.createElement("span");
+                cardLabel.className = "semantic-scenario-value-label";
+                cardLabel.textContent = label;
+                card.appendChild(cardLabel);
+
+                const cardValue = document.createElement("span");
+                cardValue.className = "semantic-scenario-value-number";
+                cardValue.textContent = entry?.displayValue || "Not available";
+                card.appendChild(cardValue);
+
+                if (delta) {
+                  const cardDelta = document.createElement("span");
+                  cardDelta.className = "semantic-scenario-value-delta";
+                  cardDelta.textContent = formatBaselineDeltaLabel(delta);
+                  card.appendChild(cardDelta);
+                }
+
+                if (options?.scenario) {
+                  const remove = document.createElement("button");
+                  remove.type = "button";
+                  remove.className = "semantic-scenario-remove";
+                  remove.textContent = "×";
+                  remove.title = `Remove scenario ${options.scenario.name}`;
+                  remove.setAttribute(
+                    "aria-label",
+                    `Remove scenario ${options.scenario.name}`,
+                  );
+                  remove.addEventListener("mousedown", (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                  });
+                  remove.addEventListener("click", (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    removeScenario(sheetId, options.scenario?.id || "");
+                    if (activePluginView) {
+                      refreshBaselinePresentation(activePluginView);
+                    }
+                  });
+                  card.appendChild(remove);
+                }
+                values.appendChild(card);
+              };
+
+              appendValue("Base", baselineEntry, { kind: "base" });
+              scenarioComparison.scenarios.forEach((scenario) => {
+                appendValue(
+                  scenario.name,
+                  scenario.entries[pinnedVariable] || null,
+                  {
+                    kind: "saved",
+                    scenario,
+                  },
+                );
+              });
+              appendValue("Live", liveEntry, { kind: "live" });
+              return comparison;
+            },
+            {
+              side: 3,
+              key: `scenario-comparison-${widgetKey}`,
+            },
+          ),
+        );
+        return false;
       });
       return decorations;
     };
@@ -1662,10 +2025,117 @@ export const ResultReferenceInteractionExtension = Extension.create({
       });
     };
 
+    const openScenarioNameMenu = (
+      view: any,
+      resultEl: HTMLElement,
+      button: HTMLElement,
+      payload: ReferencePayload | null,
+    ) => {
+      const sheetId = getActiveSheetId?.() || "";
+      const variableName = resolveVariableNameForPayload(view, payload);
+      if (!sheetId || !variableName) return;
+
+      closeResultActionMenu();
+      const menu = document.createElement("div");
+      menu.className =
+        "semantic-result-action-menu semantic-scenario-name-menu";
+      menu.setAttribute("role", "dialog");
+      menu.setAttribute("aria-label", `Save scenario for ${variableName}`);
+
+      const heading = document.createElement("label");
+      heading.className = "semantic-scenario-name-label";
+      heading.textContent = `Save scenario for ${variableName}`;
+      menu.appendChild(heading);
+
+      const input = document.createElement("input");
+      input.className = "semantic-scenario-name-input";
+      input.type = "text";
+      input.maxLength = 48;
+      input.value = suggestScenarioName(loadScenarioComparison(sheetId));
+      input.setAttribute("aria-label", "Scenario name");
+      heading.htmlFor = `scenario-name-${Math.random().toString(36).slice(2, 8)}`;
+      input.id = heading.htmlFor;
+      menu.appendChild(input);
+
+      const feedback = document.createElement("span");
+      feedback.className = "semantic-scenario-name-feedback";
+      feedback.setAttribute("role", "status");
+      menu.appendChild(feedback);
+
+      const actions = document.createElement("span");
+      actions.className = "semantic-scenario-name-actions";
+      const save = document.createElement("button");
+      save.type = "button";
+      save.textContent = "Save";
+      save.className = "is-primary";
+      const cancel = document.createElement("button");
+      cancel.type = "button";
+      cancel.textContent = "Cancel";
+      actions.append(save, cancel);
+      menu.appendChild(actions);
+
+      const submit = () => {
+        const name = input.value.replace(/\s+/g, " ").trim();
+        if (!name) {
+          feedback.textContent = "Give this scenario a name.";
+          input.focus();
+          return;
+        }
+        const snapshot = captureCurrentNumericSnapshot();
+        const saved = snapshot
+          ? captureScenario(sheetId, variableName, name, snapshot)
+          : null;
+        if (!saved) {
+          feedback.textContent = `SmartPad can keep up to ${MAX_SCENARIOS_PER_SHEET} scenarios here.`;
+          return;
+        }
+        refreshBaselinePresentation(view);
+        closeResultActionMenu();
+        resultEl.focus?.();
+      };
+      [save, cancel].forEach((action) => {
+        action.addEventListener("mousedown", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        });
+      });
+      save.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        submit();
+      });
+      cancel.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        closeResultActionMenu();
+        button.focus();
+      });
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          submit();
+        } else if (event.key === "Escape") {
+          event.preventDefault();
+          closeResultActionMenu();
+          button.focus();
+        }
+      });
+
+      document.body.appendChild(menu);
+      activeMenu = menu;
+      activeMenuButton = button;
+      button.setAttribute("aria-expanded", "true");
+      positionResultActionMenu(menu, button);
+      window.requestAnimationFrame(() => {
+        input.focus();
+        input.select();
+      });
+    };
+
     const openResultActionMenu = (
       view: any,
       resultEl: HTMLElement,
-      button: HTMLElement
+      button: HTMLElement,
     ) => {
       const wasOpenForButton = activeMenuButton === button;
       closeResultActionMenu();
@@ -1687,24 +2157,30 @@ export const ResultReferenceInteractionExtension = Extension.create({
             }
           });
           closeResultActionMenu();
-        })
+        }),
       );
 
       const activeSheetId = getActiveSheetId?.() || "";
       const activeBaseline = getBaselineForActiveSheet();
+      const payload = payloadFromElement(resultEl);
+      const scenarioVariableName = resolveVariableNameForPayload(view, payload);
+      const scenarioState = activeSheetId
+        ? loadScenarioComparison(activeSheetId)
+        : null;
       if (!activeBaseline) {
         menu.appendChild(
           buildMenuButton(
             "Set baseline",
             () => {
               if (captureBaselineForActiveSheet()) {
-                refreshBaselineResultDeltas(view);
+                refreshBaselinePresentation(view);
               }
               closeResultActionMenu();
             },
             {
               disabled: !activeSheetId,
-              title: "Capture the current numeric model before exploring changes",
+              title:
+                "Capture the current numeric model before exploring changes",
               className: "semantic-result-baseline-action",
             },
           ),
@@ -1743,14 +2219,72 @@ export const ResultReferenceInteractionExtension = Extension.create({
         );
       }
 
-      const payload = payloadFromElement(resultEl);
+      if (activeBaseline) {
+        menu.appendChild(
+          buildMenuButton(
+            "Save current scenario…",
+            () => openScenarioNameMenu(view, resultEl, button, payload),
+            {
+              disabled:
+                !scenarioVariableName ||
+                (scenarioState?.scenarios.length || 0) >=
+                  MAX_SCENARIOS_PER_SHEET,
+              title: scenarioVariableName
+                ? "Keep the current model as a named comparison"
+                : "Available for named result lines",
+              className: "semantic-result-scenario-action",
+            },
+          ),
+        );
+      }
+      if (scenarioState?.scenarios.length) {
+        const alreadyPinned =
+          scenarioVariableName === scenarioState.pinnedVariable;
+        menu.appendChild(
+          buildMenuButton(
+            alreadyPinned ? "Comparing this result" : "Compare this result",
+            () => {
+              if (activeSheetId && scenarioVariableName) {
+                pinScenarioVariable(activeSheetId, scenarioVariableName);
+                refreshBaselinePresentation(view);
+              }
+              closeResultActionMenu();
+            },
+            {
+              disabled: !scenarioVariableName || alreadyPinned,
+              title: alreadyPinned
+                ? "The scenario strip is pinned to this result"
+                : "Move the inline comparison to this result",
+              className: "semantic-result-scenario-pin-action",
+            },
+          ),
+        );
+        menu.appendChild(
+          buildMenuButton(
+            "Clear scenarios",
+            () => {
+              if (activeSheetId) {
+                clearScenarioComparison(activeSheetId);
+                refreshBaselinePresentation(view);
+              }
+              closeResultActionMenu();
+            },
+            {
+              title: "Remove every saved scenario from this sheet",
+              className: "semantic-result-scenario-clear-action",
+            },
+          ),
+        );
+      }
+
       const goalSeekActions = buildGoalSeekMenuActions(view, payload);
       if (goalSeekActions.length === 0) {
         menu.appendChild(
           buildMenuButton("Set target...", () => {}, {
             disabled: true,
-            title: "Available when the result depends on a variable SmartPad can solve for",
-          })
+            title:
+              "Available when the result depends on a variable SmartPad can solve for",
+          }),
         );
       } else {
         goalSeekActions.forEach((goalAction) => {
@@ -1762,7 +2296,11 @@ export const ResultReferenceInteractionExtension = Extension.create({
                   closeResultActionMenu();
                   return;
                 }
-                const insertedCursor = insertTextAfterSourceLine(view, payload, goalAction.line);
+                const insertedCursor = insertTextAfterSourceLine(
+                  view,
+                  payload,
+                  goalAction.line,
+                );
                 if (typeof insertedCursor === "number") {
                   postInsertCursor = insertedCursor;
                   consumeResultClick = true;
@@ -1770,8 +2308,8 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 }
                 closeResultActionMenu();
               },
-              { title: goalAction.title }
-            )
+              { title: goalAction.title },
+            ),
           );
         });
       }
@@ -1788,7 +2326,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
               const insertedCursor = insertTextAfterSourceLine(
                 view,
                 payload,
-                plotAction.directive
+                plotAction.directive,
               );
               if (typeof insertedCursor === "number") {
                 postInsertCursor = insertedCursor;
@@ -1797,17 +2335,22 @@ export const ResultReferenceInteractionExtension = Extension.create({
               }
               closeResultActionMenu();
             },
-            { title: plotAction.title, accent: plotAction.accent }
-          )
+            { title: plotAction.title, accent: plotAction.accent },
+          ),
         );
       });
-      const plotActions = buildPlotMenuActions(view, payload, getFunctionStore?.());
+      const plotActions = buildPlotMenuActions(
+        view,
+        payload,
+        getFunctionStore?.(),
+      );
       if (plotActions.length === 0 && visualPlotActions.length === 0) {
         menu.appendChild(
           buildMenuButton("Plot from result", () => {}, {
             disabled: true,
-            title: "Available when the source result depends on a plottable variable",
-          })
+            title:
+              "Available when the source result depends on a plottable variable",
+          }),
         );
       } else {
         plotActions.forEach((plotAction) => {
@@ -1822,7 +2365,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 const insertedCursor = insertTextAfterSourceLine(
                   view,
                   payload,
-                  plotAction.directive
+                  plotAction.directive,
                 );
                 if (typeof insertedCursor === "number") {
                   postInsertCursor = insertedCursor;
@@ -1831,8 +2374,8 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 }
                 closeResultActionMenu();
               },
-              { title: plotAction.title }
-            )
+              { title: plotAction.title },
+            ),
           );
         });
       }
@@ -1840,7 +2383,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
         buildMenuButton("Explore dependencies", () => {}, {
           disabled: true,
           title: "Planned action",
-        })
+        }),
       );
 
       document.body.appendChild(menu);
@@ -1848,7 +2391,9 @@ export const ResultReferenceInteractionExtension = Extension.create({
       activeMenuButton = button;
       button.setAttribute("aria-expanded", "true");
       positionResultActionMenu(menu, button);
-      const firstAction = menu.querySelector("button:not(:disabled)") as HTMLButtonElement | null;
+      const firstAction = menu.querySelector(
+        "button:not(:disabled)",
+      ) as HTMLButtonElement | null;
       firstAction?.focus();
     };
     const refreshHighlightDecorations = (view: any) => {
@@ -1869,7 +2414,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
       view: any,
       sourceLineId: string,
       sourceLine: number,
-      options?: { persistent?: boolean; lockMs?: number }
+      options?: { persistent?: boolean; lockMs?: number },
     ) => {
       if (!sourceLineId && sourceLine <= 0) {
         return;
@@ -1893,20 +2438,25 @@ export const ResultReferenceInteractionExtension = Extension.create({
     return [
       new Plugin({
         view: (view) => {
+          activePluginView = view;
           installRefTraceApi();
           const syncHoverHighlight = () => {
             const hoveredReference = view.dom.querySelector(
-              `${REFERENCE_SELECTOR}:hover`
+              `${REFERENCE_SELECTOR}:hover`,
             ) as HTMLElement | null;
             if (hoveredReference) {
               const sourceLineId = String(
-                hoveredReference.getAttribute("data-source-line-id") || ""
+                hoveredReference.getAttribute("data-source-line-id") || "",
               ).trim();
-              const sourceLine = Number(hoveredReference.getAttribute("data-source-line") || 0);
+              const sourceLine = Number(
+                hoveredReference.getAttribute("data-source-line") || 0,
+              );
               const currentKey = `${highlightedSource?.sourceLineId || ""}:${highlightedSource?.sourceLine || 0}`;
               const nextKey = `${sourceLineId}:${sourceLine}`;
               if (currentKey !== nextKey) {
-                highlightSource(view, sourceLineId, sourceLine, { persistent: true });
+                highlightSource(view, sourceLineId, sourceLine, {
+                  persistent: true,
+                });
               }
               return;
             }
@@ -1918,20 +2468,30 @@ export const ResultReferenceInteractionExtension = Extension.create({
 
           const handlePointerOver = (event: Event) => {
             const target = getEventElement(event.target);
-            const referenceEl = target?.closest(REFERENCE_SELECTOR) as HTMLElement | null;
+            const referenceEl = target?.closest(
+              REFERENCE_SELECTOR,
+            ) as HTMLElement | null;
             if (!referenceEl) return;
             const sourceLineId = String(
-              referenceEl.getAttribute("data-source-line-id") || ""
+              referenceEl.getAttribute("data-source-line-id") || "",
             ).trim();
-            const sourceLine = Number(referenceEl.getAttribute("data-source-line") || 0);
-            highlightSource(view, sourceLineId, sourceLine, { persistent: true });
+            const sourceLine = Number(
+              referenceEl.getAttribute("data-source-line") || 0,
+            );
+            highlightSource(view, sourceLineId, sourceLine, {
+              persistent: true,
+            });
           };
 
           const handlePointerOut = (event: Event) => {
             const target = getEventElement(event.target);
-            const referenceEl = target?.closest(REFERENCE_SELECTOR) as HTMLElement | null;
+            const referenceEl = target?.closest(
+              REFERENCE_SELECTOR,
+            ) as HTMLElement | null;
             if (!referenceEl) return;
-            const related = getEventElement((event as PointerEvent).relatedTarget);
+            const related = getEventElement(
+              (event as PointerEvent).relatedTarget,
+            );
             if (related?.closest(REFERENCE_SELECTOR)) {
               return;
             }
@@ -1946,7 +2506,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
             const target = getEventElement(event.target);
             if (!target) return;
             const menuAction = target.closest(
-              ".semantic-result-menu, .semantic-live-result-menu"
+              ".semantic-result-menu, .semantic-live-result-menu",
             ) as HTMLElement | null;
             if (menuAction) {
               const resultEl = resolveResultElementFromTarget(menuAction);
@@ -1958,7 +2518,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
               return;
             }
             const copyAction = target.closest(
-              ".semantic-result-copy, .semantic-live-result-copy"
+              ".semantic-result-copy, .semantic-live-result-copy",
             ) as HTMLElement | null;
             if (copyAction) {
               const resultEl = resolveResultElementFromTarget(copyAction);
@@ -1974,30 +2534,45 @@ export const ResultReferenceInteractionExtension = Extension.create({
               event.stopPropagation();
               return;
             }
-            const referenceEl = target.closest(REFERENCE_SELECTOR) as HTMLElement | null;
+            const referenceEl = target.closest(
+              REFERENCE_SELECTOR,
+            ) as HTMLElement | null;
             if (!referenceEl) return;
             const sourceLineId = String(
-              referenceEl.getAttribute("data-source-line-id") || ""
+              referenceEl.getAttribute("data-source-line-id") || "",
             ).trim();
-            const sourceLine = Number(referenceEl.getAttribute("data-source-line") || 0);
+            const sourceLine = Number(
+              referenceEl.getAttribute("data-source-line") || 0,
+            );
             highlightSource(view, sourceLineId, sourceLine, { lockMs: 1200 });
           };
 
           view.dom.addEventListener("pointerover", handlePointerOver);
           view.dom.addEventListener("pointerout", handlePointerOut);
-          view.dom.addEventListener("click", handleReferenceClickHighlight, true);
+          view.dom.addEventListener(
+            "click",
+            handleReferenceClickHighlight,
+            true,
+          );
           const handleDocumentPointerDown = (event: Event) => {
             const target = getEventElement(event.target);
             if (!target) {
               closeResultActionMenu();
               return;
             }
-            if (activeMenu?.contains(target) || activeMenuButton?.contains(target)) {
+            if (
+              activeMenu?.contains(target) ||
+              activeMenuButton?.contains(target)
+            ) {
               return;
             }
             closeResultActionMenu();
           };
-          document.addEventListener("mousedown", handleDocumentPointerDown, true);
+          document.addEventListener(
+            "mousedown",
+            handleDocumentPointerDown,
+            true,
+          );
           const handleBaselineScrubMouseUp = () => {
             baselineScrubMouseUpPending = false;
             if (getBaselineForActiveSheet()) {
@@ -2020,7 +2595,9 @@ export const ResultReferenceInteractionExtension = Extension.create({
             });
           };
           const handleActiveSheetChanged = () => {
-            window.requestAnimationFrame(() => refreshBaselinePresentation(view));
+            window.requestAnimationFrame(() =>
+              refreshBaselinePresentation(view),
+            );
           };
           window.addEventListener("uiRenderComplete", handleUiRenderComplete);
           window.addEventListener(
@@ -2032,12 +2609,27 @@ export const ResultReferenceInteractionExtension = Extension.create({
 
           return {
             destroy() {
+              activePluginView = null;
               view.dom.removeEventListener("pointerover", handlePointerOver);
               view.dom.removeEventListener("pointerout", handlePointerOut);
-              view.dom.removeEventListener("click", handleReferenceClickHighlight, true);
-              document.removeEventListener("mousedown", handleDocumentPointerDown, true);
-              document.removeEventListener("mouseup", handleBaselineScrubMouseUp);
-              window.removeEventListener("uiRenderComplete", handleUiRenderComplete);
+              view.dom.removeEventListener(
+                "click",
+                handleReferenceClickHighlight,
+                true,
+              );
+              document.removeEventListener(
+                "mousedown",
+                handleDocumentPointerDown,
+                true,
+              );
+              document.removeEventListener(
+                "mouseup",
+                handleBaselineScrubMouseUp,
+              );
+              window.removeEventListener(
+                "uiRenderComplete",
+                handleUiRenderComplete,
+              );
               window.removeEventListener(
                 "smartpadActiveSheetChanged",
                 handleActiveSheetChanged,
@@ -2063,22 +2655,33 @@ export const ResultReferenceInteractionExtension = Extension.create({
         },
         props: {
           decorations: (state) => {
-            const decorations: Decoration[] = buildBaselineDecorations(state);
+            const decorations: Decoration[] = [
+              ...buildBaselineDecorations(state),
+              ...buildScenarioComparisonDecorations(state),
+            ];
             if (highlightedSource) {
-              const sourceLineId = String(highlightedSource.sourceLineId || "").trim() || null;
+              const sourceLineId =
+                String(highlightedSource.sourceLineId || "").trim() || null;
               const sourceLine = Number(highlightedSource.sourceLine || 0);
-              const range = getSourceHighlightRange(state.doc, sourceLineId, sourceLine);
+              const range = getSourceHighlightRange(
+                state.doc,
+                sourceLineId,
+                sourceLine,
+              );
               if (range) {
                 decorations.push(
                   Decoration.node(range.from, range.to, {
                     class: SOURCE_LINE_HIGHLIGHT_CLASS,
-                  })
+                  }),
                 );
               }
             }
 
             if (typeof activeInlineDropPos === "number") {
-              const inlinePos = Math.max(1, Math.min(activeInlineDropPos, state.doc.content.size));
+              const inlinePos = Math.max(
+                1,
+                Math.min(activeInlineDropPos, state.doc.content.size),
+              );
               decorations.push(
                 Decoration.widget(
                   inlinePos,
@@ -2088,8 +2691,8 @@ export const ResultReferenceInteractionExtension = Extension.create({
                     caret.setAttribute("aria-hidden", "true");
                     return caret;
                   },
-                  { side: -1 }
-                )
+                  { side: -1 },
+                ),
               );
             }
 
@@ -2109,7 +2712,10 @@ export const ResultReferenceInteractionExtension = Extension.create({
               return false;
             }
             const selectedPayload = findSelectedReferencePayload(view.state);
-            const insertText = stripEchoedReferencePrefix(text, selectedPayload);
+            const insertText = stripEchoedReferencePrefix(
+              text,
+              selectedPayload,
+            );
             const insertPos = getReferenceTextInsertionPos(view.state, range);
             appendRefTrace("handleTextInputOverReference", {
               originalText: text,
@@ -2126,8 +2732,14 @@ export const ResultReferenceInteractionExtension = Extension.create({
             if (!insertText) {
               return true;
             }
-            const tr = view.state.tr.insertText(insertText, insertPos, insertPos);
-            tr.setSelection(TextSelection.create(tr.doc, insertPos + insertText.length));
+            const tr = view.state.tr.insertText(
+              insertText,
+              insertPos,
+              insertPos,
+            );
+            tr.setSelection(
+              TextSelection.create(tr.doc, insertPos + insertText.length),
+            );
             view.dispatch(tr);
             return true;
           },
@@ -2141,20 +2753,30 @@ export const ResultReferenceInteractionExtension = Extension.create({
           handleDOMEvents: {
             mouseover: (view, event) => {
               const target = getEventElement(event.target);
-              const referenceEl = target?.closest(REFERENCE_SELECTOR) as HTMLElement | null;
+              const referenceEl = target?.closest(
+                REFERENCE_SELECTOR,
+              ) as HTMLElement | null;
               if (!referenceEl) return false;
               const sourceLineId = String(
-                referenceEl.getAttribute("data-source-line-id") || ""
+                referenceEl.getAttribute("data-source-line-id") || "",
               ).trim();
-              const sourceLine = Number(referenceEl.getAttribute("data-source-line") || 0);
-              highlightSource(view, sourceLineId, sourceLine, { persistent: true });
+              const sourceLine = Number(
+                referenceEl.getAttribute("data-source-line") || 0,
+              );
+              highlightSource(view, sourceLineId, sourceLine, {
+                persistent: true,
+              });
               return false;
             },
             mouseout: (view, event) => {
               const target = getEventElement(event.target);
-              const referenceEl = target?.closest(REFERENCE_SELECTOR) as HTMLElement | null;
+              const referenceEl = target?.closest(
+                REFERENCE_SELECTOR,
+              ) as HTMLElement | null;
               if (!referenceEl) return false;
-              const related = getEventElement((event as MouseEvent).relatedTarget);
+              const related = getEventElement(
+                (event as MouseEvent).relatedTarget,
+              );
               if (related?.closest(REFERENCE_SELECTOR)) {
                 return false;
               }
@@ -2177,7 +2799,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
               const target = getEventElement(event.target);
               if (!target) return false;
               const copyAction = target.closest(
-                ".semantic-result-copy, .semantic-live-result-copy"
+                ".semantic-result-copy, .semantic-live-result-copy",
               ) as HTMLElement | null;
               if (copyAction) {
                 const resultEl = resolveResultElementFromTarget(copyAction);
@@ -2194,14 +2816,16 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 return true;
               }
               const menuAction = target.closest(
-                ".semantic-result-menu, .semantic-live-result-menu"
+                ".semantic-result-menu, .semantic-live-result-menu",
               ) as HTMLElement | null;
               if (menuAction) {
                 event.preventDefault();
                 event.stopPropagation();
                 return true;
               }
-              const referenceEl = target.closest(REFERENCE_SELECTOR) as HTMLElement | null;
+              const referenceEl = target.closest(
+                REFERENCE_SELECTOR,
+              ) as HTMLElement | null;
               if (referenceEl) {
                 const payload = payloadFromReferenceElement(referenceEl);
                 if (payload) {
@@ -2210,15 +2834,20 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 view.focus();
                 selectReferenceNode(view, referenceEl);
                 const highlightSourceLineId = String(
-                  referenceEl.getAttribute("data-source-line-id") || ""
+                  referenceEl.getAttribute("data-source-line-id") || "",
                 ).trim();
                 const highlightSourceLine = Number(
-                  referenceEl.getAttribute("data-source-line") || 0
+                  referenceEl.getAttribute("data-source-line") || 0,
                 );
                 if (highlightSourceLineId || highlightSourceLine > 0) {
-                  highlightSource(view, highlightSourceLineId, highlightSourceLine, {
-                    lockMs: 1200,
-                  });
+                  highlightSource(
+                    view,
+                    highlightSourceLineId,
+                    highlightSourceLine,
+                    {
+                      lockMs: 1200,
+                    },
+                  );
                 }
                 return false;
               }
@@ -2243,7 +2872,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
               const target = getEventElement(event.target);
               if (!target) return false;
               const copyAction = target.closest(
-                ".semantic-result-copy, .semantic-live-result-copy"
+                ".semantic-result-copy, .semantic-live-result-copy",
               ) as HTMLElement | null;
               if (copyAction) {
                 const resultEl = resolveResultElementFromTarget(copyAction);
@@ -2259,7 +2888,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 return true;
               }
               const menuAction = target.closest(
-                ".semantic-result-menu, .semantic-live-result-menu"
+                ".semantic-result-menu, .semantic-live-result-menu",
               ) as HTMLElement | null;
               if (menuAction) {
                 const resultEl = resolveResultElementFromTarget(menuAction);
@@ -2270,25 +2899,33 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 return true;
               }
 
-              const referenceEl = target.closest(REFERENCE_SELECTOR) as HTMLElement | null;
+              const referenceEl = target.closest(
+                REFERENCE_SELECTOR,
+              ) as HTMLElement | null;
               if (referenceEl) {
                 const payload = payloadFromReferenceElement(referenceEl);
                 if (payload) {
                   lastReferencePayload = payload;
                 }
                 const highlightSourceLineId = String(
-                  referenceEl.getAttribute("data-source-line-id") || ""
+                  referenceEl.getAttribute("data-source-line-id") || "",
                 ).trim();
                 const highlightSourceLine = Number(
-                  referenceEl.getAttribute("data-source-line") || 0
+                  referenceEl.getAttribute("data-source-line") || 0,
                 );
                 if (highlightSourceLineId || highlightSourceLine > 0) {
-                  highlightSource(view, highlightSourceLineId, highlightSourceLine, {
-                    lockMs: 1200,
-                  });
+                  highlightSource(
+                    view,
+                    highlightSourceLineId,
+                    highlightSourceLine,
+                    {
+                      lockMs: 1200,
+                    },
+                  );
                 }
-                const sourceLineId =
-                  String(referenceEl.getAttribute("data-source-line-id") || "").trim();
+                const sourceLineId = String(
+                  referenceEl.getAttribute("data-source-line-id") || "",
+                ).trim();
                 const isBroken =
                   referenceEl.classList.contains("semantic-reference-broken") ||
                   !!referenceEl.closest(".semantic-reference-broken");
@@ -2299,15 +2936,17 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 return false;
               }
 
-              const resultEl = target.closest(RESULT_SELECTOR) as HTMLElement | null;
+              const resultEl = target.closest(
+                RESULT_SELECTOR,
+              ) as HTMLElement | null;
               if (!resultEl) return false;
               if (consumeResultClick && typeof postInsertCursor === "number") {
                 const clamped = Math.max(
                   1,
-                  Math.min(postInsertCursor, view.state.doc.content.size)
+                  Math.min(postInsertCursor, view.state.doc.content.size),
                 );
                 const tr = view.state.tr.setSelection(
-                  TextSelection.create(view.state.doc, clamped)
+                  TextSelection.create(view.state.doc, clamped),
                 );
                 view.dispatch(tr);
                 logRefDebug("consume result click restore", {
@@ -2359,10 +2998,14 @@ export const ResultReferenceInteractionExtension = Extension.create({
             dragstart: (_view, event) => {
               const target = getEventElement(event.target);
               if (!target) return false;
-              const referenceEl = target.closest(REFERENCE_SELECTOR) as HTMLElement | null;
+              const referenceEl = target.closest(
+                REFERENCE_SELECTOR,
+              ) as HTMLElement | null;
               if (referenceEl) {
                 const payload = payloadFromReferenceElement(referenceEl);
-                const moveRange = payload ? getReferenceRangeFromElement(_view, referenceEl) : null;
+                const moveRange = payload
+                  ? getReferenceRangeFromElement(_view, referenceEl)
+                  : null;
                 if (!payload || !moveRange || !event.dataTransfer) return false;
                 activeDragPayload = payload;
                 activeDragMoveRange = moveRange;
@@ -2370,10 +3013,13 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 _view.dom.classList.add(RESULT_DRAGGING_CLASS);
                 event.dataTransfer.effectAllowed = "move";
                 event.dataTransfer.setData(DND_MIME, JSON.stringify(payload));
-                event.dataTransfer.setData(REFERENCE_MOVE_MIME, JSON.stringify(moveRange));
+                event.dataTransfer.setData(
+                  REFERENCE_MOVE_MIME,
+                  JSON.stringify(moveRange),
+                );
                 event.dataTransfer.setData(
                   "text/plain",
-                  payload.sourceValue || payload.sourceLabel || "value"
+                  payload.sourceValue || payload.sourceLabel || "value",
                 );
                 event.stopPropagation();
                 if (typeof window !== "undefined") {
@@ -2393,7 +3039,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
               event.dataTransfer.setData(DND_MIME, JSON.stringify(payload));
               event.dataTransfer.setData(
                 "text/plain",
-                payload.sourceValue || payload.sourceLabel || "value"
+                payload.sourceValue || payload.sourceLabel || "value",
               );
               if (typeof window !== "undefined") {
                 (window as any)[RESULT_DRAG_ACTIVE_WINDOW_FLAG] = true;
@@ -2404,9 +3050,11 @@ export const ResultReferenceInteractionExtension = Extension.create({
               const dragEvent = event as DragEvent;
               if (!dragEvent.dataTransfer && !activeDragPayload) return false;
               const dragTypes = Array.from(dragEvent.dataTransfer?.types || []);
-              const hasMimePayload = Boolean(dragEvent.dataTransfer?.getData(DND_MIME));
+              const hasMimePayload = Boolean(
+                dragEvent.dataTransfer?.getData(DND_MIME),
+              );
               const hasMovePayload = Boolean(
-                dragEvent.dataTransfer?.getData(REFERENCE_MOVE_MIME)
+                dragEvent.dataTransfer?.getData(REFERENCE_MOVE_MIME),
               );
               const windowDragActive =
                 typeof window !== "undefined" &&
@@ -2428,8 +3076,15 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 activeDragMoveRange || hasMovePayload ? "move" : "copy";
               const boundaryTarget = resolveBoundaryDropTarget(view, dragEvent);
               const inlinePos = resolveInlineDropPos(view, dragEvent);
-              const preferInline = shouldPreferInlineDrop(view, dragEvent, inlinePos);
-              if (typeof inlinePos === "number" && (preferInline || !boundaryTarget)) {
+              const preferInline = shouldPreferInlineDrop(
+                view,
+                dragEvent,
+                inlinePos,
+              );
+              if (
+                typeof inlinePos === "number" &&
+                (preferInline || !boundaryTarget)
+              ) {
                 clearDropTargetIndicator(view);
                 setInlineDropIndicator(view, inlinePos);
               } else if (boundaryTarget) {
@@ -2444,11 +3099,19 @@ export const ResultReferenceInteractionExtension = Extension.create({
             dragleave: (view, event) => {
               const dragEvent = event as DragEvent;
               const types = Array.from(dragEvent.dataTransfer?.types || []);
-              const hasMimePayload = Boolean(dragEvent.dataTransfer?.getData(DND_MIME));
-              if (!types.includes(DND_MIME) && !hasMimePayload && !activeDragPayload) {
+              const hasMimePayload = Boolean(
+                dragEvent.dataTransfer?.getData(DND_MIME),
+              );
+              if (
+                !types.includes(DND_MIME) &&
+                !hasMimePayload &&
+                !activeDragPayload
+              ) {
                 return false;
               }
-              const related = getEventElement((event as any).relatedTarget || null);
+              const related = getEventElement(
+                (event as any).relatedTarget || null,
+              );
               if (!related || !view.dom.contains(related)) {
                 clearDropTargetIndicator(view);
                 clearInlineDropIndicator(view);
@@ -2480,11 +3143,13 @@ export const ResultReferenceInteractionExtension = Extension.create({
               const boundaryTarget =
                 typeof inlineDropPos === "number"
                   ? null
-                  : activeBoundaryDropTarget || resolveBoundaryDropTarget(view, dragEvent);
+                  : activeBoundaryDropTarget ||
+                    resolveBoundaryDropTarget(view, dragEvent);
               clearDropTargetIndicator(view);
               clearInlineDropIndicator(view);
               const raw = event.dataTransfer?.getData(DND_MIME) || "";
-              const rawMove = event.dataTransfer?.getData(REFERENCE_MOVE_MIME) || "";
+              const rawMove =
+                event.dataTransfer?.getData(REFERENCE_MOVE_MIME) || "";
               try {
                 const payload = raw
                   ? (JSON.parse(raw) as ReferencePayload)
@@ -2499,9 +3164,15 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 const insertMode: "reference" = "reference";
                 const insertedCursor =
                   typeof inlineDropPos === "number"
-                    ? insertReferenceAt(view, payload, inlineDropPos, insertMode, {
-                        moveRange,
-                      })
+                    ? insertReferenceAt(
+                        view,
+                        payload,
+                        inlineDropPos,
+                        insertMode,
+                        {
+                          moveRange,
+                        },
+                      )
                     : boundaryTarget
                       ? moveRange
                         ? insertReferenceAt(
@@ -2509,18 +3180,33 @@ export const ResultReferenceInteractionExtension = Extension.create({
                             payload,
                             getTextblockSplitPosByLineNumber(
                               view.state.doc,
-                              boundaryTarget.sourceLine
+                              boundaryTarget.sourceLine,
                             ) ?? view.state.selection.from,
                             insertMode,
-                            { moveRange }
+                            { moveRange },
                           )
-                        : insertReferenceAfterBoundary(view, payload, boundaryTarget, insertMode)
+                        : insertReferenceAfterBoundary(
+                            view,
+                            payload,
+                            boundaryTarget,
+                            insertMode,
+                          )
                       : (() => {
-                          const inlinePos = resolveInlineDropPos(view, event as DragEvent);
-                          const insertionPos = inlinePos ?? view.state.selection.from;
-                          return insertReferenceAt(view, payload, insertionPos, insertMode, {
-                            moveRange,
-                          });
+                          const inlinePos = resolveInlineDropPos(
+                            view,
+                            event as DragEvent,
+                          );
+                          const insertionPos =
+                            inlinePos ?? view.state.selection.from;
+                          return insertReferenceAt(
+                            view,
+                            payload,
+                            insertionPos,
+                            insertMode,
+                            {
+                              moveRange,
+                            },
+                          );
                         })();
                 if (typeof insertedCursor === "number") {
                   postInsertCursor = insertedCursor;
@@ -2541,10 +3227,16 @@ export const ResultReferenceInteractionExtension = Extension.create({
               if (!event.clipboardData) return false;
               const payload = findDirectlySelectedReferencePayload(view.state);
               if (!payload) return false;
-              event.clipboardData.setData(CLIPBOARD_MIME, JSON.stringify(payload));
+              event.clipboardData.setData(
+                CLIPBOARD_MIME,
+                JSON.stringify(payload),
+              );
               event.clipboardData.setData(
                 "text/plain",
-                serializeReferencePayload(payload, getReferenceTextExportMode())
+                serializeReferencePayload(
+                  payload,
+                  getReferenceTextExportMode(),
+                ),
               );
               event.preventDefault();
               return true;
@@ -2556,7 +3248,12 @@ export const ResultReferenceInteractionExtension = Extension.create({
               try {
                 const payload = JSON.parse(raw) as ReferencePayload;
                 const insertionPos = view.state.selection.from;
-                const insertedCursor = insertReferenceAt(view, payload, insertionPos, "reference");
+                const insertedCursor = insertReferenceAt(
+                  view,
+                  payload,
+                  insertionPos,
+                  "reference",
+                );
                 if (typeof insertedCursor === "number") {
                   postInsertCursor = insertedCursor;
                   event.preventDefault();

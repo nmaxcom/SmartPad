@@ -4,6 +4,16 @@ All notable user-facing changes to SmartPad will be documented in this file.
 
 SmartPad uses semantic versioning. Pre-release builds use `-beta.N` or `-rc.N` suffixes.
 
+## 1.0.0-rc.8 - 2026-07-18
+
+### Added
+
+- A result chip's `⋯` menu can save the current model as a named scenario after a baseline is set.
+- A compact comparison strip stays inside the sheet and shows the baseline, saved scenarios, and
+  live result with deltas; it can be moved to another result or cleared from the same result menu.
+- Named scenario snapshots persist per sheet, can be removed individually, and never add hidden
+  formulas or controls to the Variables panel.
+
 ## 1.0.0-rc.7 - 2026-07-18
 
 ### Changed

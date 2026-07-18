@@ -1,7 +1,8 @@
 export const DECISION_PLAYGROUND_TEMPLATE = `# Decision Playground: Workshop Go / No-Go
-# First move: open the profit result menu (⋯), choose Set baseline, then drag 32.
+# First move: open profit's result menu (⋯), choose Set baseline, then drag 32.
 # Shift = fine · Alt/Option = fast · Esc = cancel.
 # Watch profit, margin, the target answer, and the chart react together.
+# Keep a useful variant with profit ⋯ > Save current scenario…
 
 # Assumptions
 attendees = 140
@@ -25,6 +26,7 @@ make profit = 2500 EUR by ticket price =>
 
 # Try next
 # - scrub attendees and compare its effect with ticket price
+# - save another named scenario, then compare it beside margin
 # - open the profit chip menu to explore another plot or target
 # - drag the profit chip into a new line to reuse it as a live dependency
 `;

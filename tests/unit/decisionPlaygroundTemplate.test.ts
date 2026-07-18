@@ -59,8 +59,9 @@ describe("Decision Playground template", () => {
 
   test("keeps one clear first move plus live plot and goal-seek prompts", () => {
     expect(DECISION_PLAYGROUND_TEMPLATE).toContain(
-      "First move: open the profit result menu (⋯), choose Set baseline, then drag 32",
+      "First move: open profit's result menu (⋯), choose Set baseline, then drag 32",
     );
+    expect(DECISION_PLAYGROUND_TEMPLATE).toContain("Save current scenario…");
     expect(DECISION_PLAYGROUND_TEMPLATE).toContain(
       "@view plot x=ticket price y=profit domain=20..65 size=md",
     );

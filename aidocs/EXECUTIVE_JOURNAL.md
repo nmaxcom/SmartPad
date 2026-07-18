@@ -7956,3 +7956,36 @@
     *   Status was read directly from `aidocs/TODO_BACKLOG.md`; no product behavior or backlog status changed.
 *   Pending:
     *   Owner: User; due: TBD; status: todo; confirm whether to run the ready-for-review closure pass or start the next build slice.
+
+## Entry J-2026-07-19-01
+
+*   Timestamp: 2026-07-19 00:04 CEST / 2026-07-18 22:04 UTC
+*   Summary:
+    *   User authorized the ready-for-review closure pass and asked the assistant to continue.
+    *   Assistant closed the six verified interaction slices, reconciled two obsolete plot records and one duplicate scenario record, and advanced the canonical scenario-comparison item.
+    *   SmartPad now saves named numeric model snapshots from a result chip's `⋯` menu and renders a compact Base / saved / Live comparison beside the chosen result inside the sheet.
+*   Decisions:
+    *   Keep scenario capture, naming, pinning, removal, and clearing entirely in result-adjacent UI; the Variables panel remains read-only.
+    *   Treat named snapshots as an implemented partial of the larger scenario-sheets proposal. Editable branch sheets, inherited overrides, compare syntax, and apply-back remain proposed.
+    *   Limit each sheet to six locally persisted named snapshots; keep Base and saved values fixed while Live continues reacting to edits and scrubbing.
+    *   Advance SmartPad to `1.0.0-rc.8`.
+*   Artifacts changed:
+    *   Added `src/state/scenarioComparisonStore.ts`, its unit coverage, and `tests/e2e/scenario-comparison.spec.ts`.
+    *   Extended result-chip interactions and editor styles with the anchored naming form, inline scenario strip, output pinning, individual removal, and clear action.
+    *   Updated Decision Playground guidance, public docs generation, ABOUT, changelog, version, scenario spec/trust/map, and the feature backlog.
+*   Validation:
+    *   Scenario/baseline/template unit focus passed: 14 of 14.
+    *   Scenario, baseline, Decision Playground browser focus passed: 3 of 3.
+    *   Broad result interaction regression passed: 71 of 71 browser tests across scenarios, baseline, drag/drop, plots, Goal Seek, autocomplete, and live-result parity.
+    *   Live-after-save scenario regression passed and confirms that a saved value stays fixed while Live changes.
+    *   Visual QA confirmed the strip remains compact and readable beneath the result with no Variables-panel controls.
+    *   `npm run docs:docusaurus:publish-local`, `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, and `npm run spec:trust` passed.
+    *   `npm run verify:changed -- HEAD` passed with related units and the production build.
+*   Pending:
+    *   Owner: User; due: TBD; status: todo; verify the exact in-sheet scenario flow and confirm or request refinements.
+    *   Owner: Assistant; due: TBD; status: todo; after human confirmation, choose between deeper editable scenario branches and sensitivity ranking as the next decision-modeling slice.
+*   Risks/blockers:
+    *   Named snapshots are local per-sheet UI state and are not yet included in sheet export/import.
+    *   This partial compares captured variables by name; renamed or newly introduced outputs may read `Not available` for older snapshots.
+    *   The production build remains green with the existing large-chunk warning.
+    *   Human completion gate remains open for the named-scenario slice.

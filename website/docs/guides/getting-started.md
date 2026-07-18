@@ -29,6 +29,7 @@ Numbers highlighted in the editor can be dragged left or right. That is called s
 Hold `Shift` while dragging for fine adjustments, or `Alt`/`Option` for larger jumps. Press `Escape` before releasing to cancel the experiment and restore the exact starting value.
 
 Before you explore, open the `⋯` menu on any result chip and choose **Set baseline**. SmartPad will keep each changed input's starting value beside its editable line and show propagated deltas beside the results.
+When an alternative is worth keeping, return to that result menu and choose **Save current scenario…**. Name it and SmartPad will compare Base, the saved snapshot, and Live beside the result.
 
 <ExamplePlayground title={"Scrub the assumptions"} description={"Try dragging `40`, `82`, or `22` in the app."} code={"hours = 40\nrate = $82/hour\ngross = hours * rate\ntax = 22% on gross\nnet = gross - tax"} />
 
