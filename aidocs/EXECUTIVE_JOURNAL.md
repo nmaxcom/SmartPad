@@ -7989,3 +7989,22 @@
     *   This partial compares captured variables by name; renamed or newly introduced outputs may read `Not available` for older snapshots.
     *   The production build remains green with the existing large-chunk warning.
     *   Human completion gate remains open for the named-scenario slice.
+
+## Entry J-2026-07-19-02
+
+*   Timestamp: 2026-07-19 00:11 CEST / 2026-07-18 22:11 UTC
+*   Summary:
+    *   User explicitly confirmed that the inline named-scenario workflow is correct.
+    *   Both the machine gate and human gate are now closed for `T-2026-05-24-05`.
+*   Decisions:
+    *   Mark the minimal scenario-comparison slice done without changing the implemented behavior or release version.
+    *   Keep editable scenario branches, inheritance, isolated overrides, and apply-back as a distinct future layer.
+*   Artifacts changed:
+    *   `aidocs/TODO_BACKLOG.md` status and completion evidence.
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this confirmation entry only).
+*   Validation:
+    *   No code changed after the already-green `1.0.0-rc.8` machine gate: 14 focused units, 71 broad browser regressions, final Live-after-save browser regression, docs/spec/trust checks, visual QA, and production build.
+*   Pending:
+    *   Owner: Assistant; due: TBD; status: todo; select the next active feature slice when the user asks to continue.
+*   Risks/blockers:
+    *   No blocker remains for the confirmed named-scenario milestone.
