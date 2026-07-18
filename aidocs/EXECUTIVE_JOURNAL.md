@@ -7938,3 +7938,21 @@
     *   This first slice still pairs variables by name and does not include baseline state in sheet export/import.
     *   The production build remains green with the existing large-chunk warning.
     *   Human completion gate remains open until the user confirms the corrected inline interaction.
+
+## Entry J-2026-07-18-07
+
+*   Timestamp: 2026-07-18 21:17 CEST / 2026-07-18 19:17 UTC
+*   Summary:
+    *   User asked which roadmap items remain after the inline baseline-comparison correction.
+    *   Assistant reviewed the active `feature` lane first, as required by focus mode.
+*   Status:
+    *   The lane contains 22 open records: 6 implemented slices awaiting user review/confirmation and 16 todo records.
+    *   The immediate human gate is `T-2026-07-18-02`, the corrected inline baseline workflow.
+    *   Several older plot/scenario records overlap shipped work or duplicate newer roadmap items and should be reconciled before treating the raw count as 22 distinct builds.
+*   Recommendation:
+    *   Batch-review the six ready slices, close or refine them from concrete feedback, then make minimal named scenario comparison the next major implementation.
+    *   Follow scenarios with solve/chip accessibility and sensitivity analysis, which build directly on the baseline workflow and SmartPad's decision-playground direction.
+*   Validation:
+    *   Status was read directly from `aidocs/TODO_BACKLOG.md`; no product behavior or backlog status changed.
+*   Pending:
+    *   Owner: User; due: TBD; status: todo; confirm whether to run the ready-for-review closure pass or start the next build slice.
