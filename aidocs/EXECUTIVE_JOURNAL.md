@@ -8008,3 +8008,18 @@
     *   Owner: Assistant; due: TBD; status: todo; select the next active feature slice when the user asks to continue.
 *   Risks/blockers:
     *   No blocker remains for the confirmed named-scenario milestone.
+
+## Entry J-2026-07-19-03
+
+*   Timestamp: 2026-07-19 00:18 CEST / 2026-07-18 22:18 UTC
+*   Summary:
+    *   User asked what the next work item should be after confirming named scenarios.
+    *   Assistant reviewed the active `feature` lane and the approved post-chip roadmap order.
+*   Recommendation:
+    *   Execute `T-2026-05-24-06` next: make result chips and advanced solve actions fully keyboard-operable and rewrite their labels/messages in human-first language.
+    *   Keep the work inside the sheet/result surface: focusable chips, visible focus, `Enter`/`Space` menu activation, arrow-key menu navigation, `Escape` dismissal, keyboard activation of plot/Goal Seek/scenario actions, and reliable jump-to-source behavior.
+    *   Treat sensitivity analysis and tornado charts as the next large decision-modeling capability after this interaction foundation is complete.
+*   Validation:
+    *   Recommendation was read from `aidocs/TODO_BACKLOG.md`; no product behavior or backlog status changed.
+*   Pending:
+    *   Owner: User; due: TBD; status: todo; authorize the result-chip accessibility and solve-language slice or choose a different feature item.
