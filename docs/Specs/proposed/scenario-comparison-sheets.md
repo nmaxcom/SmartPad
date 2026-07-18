@@ -4,7 +4,7 @@ Status: proposed
 
 This document defines a scenario workflow for SmartPad where a user can branch one sheet into multiple variants, compare selected outputs, and preserve the text-first editing model.
 
-Shipped precursor: SmartPad now supports one persistent baseline-versus-current comparison per sheet in the Variables panel. That smaller workflow is defined in `docs/Specs/BaselineComparison.spec.md`. Named scenarios, inherited overrides, compare lines, and cross-scenario tables remain proposed here.
+Shipped precursor: SmartPad now supports one persistent baseline-versus-current comparison per sheet through result-chip actions and inline change markers. That smaller workflow is defined in `docs/Specs/BaselineComparison.spec.md`. Named scenarios, inherited overrides, compare lines, and cross-scenario tables remain proposed here.
 
 ## 1. Purpose
 

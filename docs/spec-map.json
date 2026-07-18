@@ -154,8 +154,12 @@
         "src/components/VariableHoverExtension.ts",
         "src/components/Result",
         "src/components/Reference",
+        "src/components/resultBaselineInteraction.ts",
+        "src/state/variableBaselineStore.ts",
         "docs/Specs/ResultChipsAndValueGraph.spec.md",
         "docs/Specs/implemented/result-chips-and-references.md",
+        "docs/Specs/BaselineComparison.spec.md",
+        "docs/Specs/implemented/baseline-comparison.md",
         "docs/Specs/proposed/autocomplete.md"
       ],
       "docPrefixes": [
@@ -163,6 +167,8 @@
         "docs/Specs/implemented/result-chips-and-references.md",
         "docs/Specs/Plotting.spec.md",
         "docs/Specs/implemented/plotting-and-dependency-views.md",
+        "docs/Specs/BaselineComparison.spec.md",
+        "docs/Specs/implemented/baseline-comparison.md",
         "docs/Specs/proposed/autocomplete.md",
         "public/docs/"
       ],
@@ -192,7 +198,6 @@
         "src/components/VariablePanel/TemplatePanel.tsx",
         "src/components/VariablePanel/templateTriggerNormalization.ts",
         "src/state/SheetContext.tsx",
-        "src/state/variableBaselineStore.ts",
         "src/state/settingsStore.ts",
         "src/state/types.ts",
         "src/state/SettingsContext.tsx",
@@ -207,14 +212,10 @@
         "src/App.tsx",
         "src/utils/keyboardShortcut.ts",
         "src/utils/runtimeMode.ts",
-        "src/vite-env.d.ts",
-        "docs/Specs/BaselineComparison.spec.md",
-        "docs/Specs/implemented/baseline-comparison.md"
+        "src/vite-env.d.ts"
       ],
       "docPrefixes": [
         "docs/ABOUT.md",
-        "docs/Specs/BaselineComparison.spec.md",
-        "docs/Specs/implemented/baseline-comparison.md",
         "docs/Specs/proposed/ux-feature-ideas-backlog.md",
         "public/docs/"
       ],

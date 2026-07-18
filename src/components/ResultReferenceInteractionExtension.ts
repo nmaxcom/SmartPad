@@ -12,8 +12,20 @@ import { parseLine } from "../parsing/astParser";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
 import { getPlotNumericValue } from "../plotting/plottingUtils";
 import { createReferencePlaceholder } from "../references/referenceIds";
-import type { SettingsState } from "../state/types";
+import {
+  clearVariableBaseline,
+  compareVariableWithBaseline,
+  createVariableBaselineEntry,
+  loadVariableBaseline,
+  saveVariableBaseline,
+  type VariableBaselineSnapshot,
+} from "../state/variableBaselineStore";
+import type { SettingsState, Variable } from "../state/types";
 import { ListValue, SemanticParsers, SemanticValue } from "../types";
+import {
+  formatBaselineDeltaLabel,
+  resolveBaselineVariableName,
+} from "./resultBaselineInteraction";
 
 const RESULT_SELECTOR =
   ".semantic-result-display, .semantic-live-result-display";
@@ -36,6 +48,18 @@ const RESULT_DRAGGING_CLASS = "sp-result-chip-dragging";
 const DROP_BOUNDARY_BAND_PX = 28;
 const LAST_LINE_DROP_EXTRA_PX = 56;
 const COPY_FEEDBACK_MS = 800;
+const BASELINE_REFRESH_META = "spBaselineRefresh";
+const BASELINE_INPUT_WIDGET_CLASS = "semantic-baseline-input-delta";
+
+type ResultInteractionSettings = Pick<
+  SettingsState,
+  | "referenceTextExportMode"
+  | "decimalPlaces"
+  | "scientificUpperExponent"
+  | "scientificLowerExponent"
+  | "scientificTrimTrailingZeros"
+  | "groupThousands"
+>;
 
 interface ReferencePayload {
   sourceLineId: string;
@@ -1286,10 +1310,17 @@ export const ResultReferenceInteractionExtension = Extension.create({
 
   addOptions() {
     return {
-      getSettings: (): Pick<SettingsState, "referenceTextExportMode"> => ({
+      getSettings: (): ResultInteractionSettings => ({
         referenceTextExportMode: "preserve",
+        decimalPlaces: 6,
+        scientificUpperExponent: 12,
+        scientificLowerExponent: -4,
+        scientificTrimTrailingZeros: true,
+        groupThousands: true,
       }),
       getFunctionStore: (): Map<string, FunctionDefinitionNode> | undefined => undefined,
+      getVariableContext: (): Map<string, Variable> => new Map(),
+      getActiveSheetId: (): string => "",
     };
   },
 
@@ -1318,12 +1349,18 @@ export const ResultReferenceInteractionExtension = Extension.create({
 
   addProseMirrorPlugins() {
     const getSettings = this.options.getSettings as
-      | (() => Pick<SettingsState, "referenceTextExportMode">)
+      | (() => ResultInteractionSettings)
       | undefined;
     const getReferenceTextExportMode = (): "preserve" | "readable" =>
       getSettings?.().referenceTextExportMode === "readable" ? "readable" : "preserve";
     const getFunctionStore = this.options.getFunctionStore as
       | (() => Map<string, FunctionDefinitionNode> | undefined)
+      | undefined;
+    const getVariableContext = this.options.getVariableContext as
+      | (() => Map<string, Variable>)
+      | undefined;
+    const getActiveSheetId = this.options.getActiveSheetId as
+      | (() => string)
       | undefined;
     const serializeReferencePayload = (
       payload: ReferencePayload,
@@ -1347,6 +1384,8 @@ export const ResultReferenceInteractionExtension = Extension.create({
     let activeInlineDropPos: number | null = null;
     let activeMenu: HTMLElement | null = null;
     let activeMenuButton: HTMLElement | null = null;
+    let baselineRefreshFrame: number | null = null;
+    let baselineScrubMouseUpPending = false;
     const clearDropTargetIndicator = (view: any) => {
       view.dom
         .querySelectorAll(`p.${DROP_TARGET_AFTER_CLASS}`)
@@ -1399,7 +1438,12 @@ export const ResultReferenceInteractionExtension = Extension.create({
     const buildMenuButton = (
       label: string,
       action: () => void,
-      options?: { disabled?: boolean; title?: string; accent?: boolean }
+      options?: {
+        disabled?: boolean;
+        title?: string;
+        accent?: boolean;
+        className?: string;
+      }
     ): HTMLButtonElement => {
       const button = document.createElement("button");
       button.type = "button";
@@ -1407,6 +1451,9 @@ export const ResultReferenceInteractionExtension = Extension.create({
       button.textContent = label;
       if (options?.accent) {
         button.classList.add("semantic-result-plot-suggestion");
+      }
+      if (options?.className) {
+        button.classList.add(options.className);
       }
       if (options?.title) {
         button.title = options.title;
@@ -1435,6 +1482,186 @@ export const ResultReferenceInteractionExtension = Extension.create({
       menu.style.left = `${left}px`;
       menu.style.top = `${Math.max(8, top)}px`;
     };
+
+    const getBaselineForActiveSheet = (): VariableBaselineSnapshot | null => {
+      const sheetId = getActiveSheetId?.() || "";
+      return sheetId ? loadVariableBaseline(sheetId) : null;
+    };
+
+    const captureBaselineForActiveSheet = (): VariableBaselineSnapshot | null => {
+      const sheetId = getActiveSheetId?.() || "";
+      const variables = getVariableContext?.() || new Map<string, Variable>();
+      if (!sheetId || variables.size === 0) return null;
+
+      const settings = getSettings?.();
+      const displayOptions = {
+        precision: settings?.decimalPlaces ?? 6,
+        scientificUpperThreshold: Math.pow(
+          10,
+          settings?.scientificUpperExponent ?? 12
+        ),
+        scientificLowerThreshold: Math.pow(
+          10,
+          settings?.scientificLowerExponent ?? -4
+        ),
+        trimTrailingZeros: settings?.scientificTrimTrailingZeros ?? true,
+        groupThousands: settings?.groupThousands ?? true,
+      };
+      const entries = Object.fromEntries(
+        Array.from(variables.entries()).flatMap(([name, variable]) => {
+          const displayValue = variable.value.toString(displayOptions);
+          const entry = createVariableBaselineEntry(variable, displayValue);
+          return entry ? [[name, entry] as const] : [];
+        })
+      );
+      if (Object.keys(entries).length === 0) return null;
+
+      const snapshot: VariableBaselineSnapshot = {
+        capturedAt: Date.now(),
+        entries,
+      };
+      saveVariableBaseline(sheetId, snapshot);
+      return snapshot;
+    };
+
+    const resolveBaselineComparisonForPayload = (
+      view: any,
+      payload: ReferencePayload | null
+    ) => {
+      const baseline = getBaselineForActiveSheet();
+      if (!baseline || !payload) return null;
+      const source = findSourceTextblockSnapshot(view, payload);
+      const variableName = resolveBaselineVariableName(source?.text || payload.sourceLabel);
+      if (!variableName) return null;
+      const baselineEntry = baseline.entries[variableName];
+      const variable = getVariableContext?.().get(variableName);
+      if (!baselineEntry || !variable) return null;
+      const comparison = compareVariableWithBaseline(baselineEntry, variable);
+      return comparison
+        ? { baselineEntry, comparison, variableName }
+        : null;
+    };
+
+    const refreshBaselineResultDeltas = (view: any) => {
+      const baseline = getBaselineForActiveSheet();
+      view.dom.classList.toggle("sp-baseline-active", Boolean(baseline));
+      view.dom
+        .querySelectorAll(".semantic-live-result-display")
+        .forEach((node: Element) => {
+          const resultEl = node as HTMLElement;
+          resultEl.removeAttribute("data-baseline-delta");
+          resultEl.removeAttribute("data-baseline-direction");
+          resultEl.removeAttribute("data-baseline-value");
+          resultEl.setAttribute("aria-label", resolveDisplayedResultValue(resultEl));
+          resultEl.title = resolveDisplayedResultValue(resultEl);
+        });
+
+      if (!baseline) return;
+
+      view.dom
+        .querySelectorAll(".semantic-live-result-display")
+        .forEach((node: Element) => {
+          const resultEl = node as HTMLElement;
+          const resolved = resolveBaselineComparisonForPayload(
+            view,
+            payloadFromElement(resultEl)
+          );
+          if (!resolved?.comparison.changed) return;
+
+          const deltaLabel = formatBaselineDeltaLabel(resolved.comparison);
+          resultEl.setAttribute("data-baseline-delta", deltaLabel);
+          resultEl.setAttribute("data-baseline-direction", resolved.comparison.direction);
+          resultEl.setAttribute("data-baseline-value", resolved.baselineEntry.displayValue);
+          resultEl.setAttribute(
+            "aria-label",
+            `${resolveDisplayedResultValue(resultEl)} · ${resolved.variableName} ${deltaLabel} from baseline ${resolved.baselineEntry.displayValue}`
+          );
+          resultEl.title = `Baseline ${resolved.baselineEntry.displayValue}`;
+        });
+    };
+
+    const buildBaselineDecorations = (state: any): Decoration[] => {
+      const baseline = getBaselineForActiveSheet();
+      const variables = getVariableContext?.() || new Map<string, Variable>();
+      if (!baseline || variables.size === 0) return [];
+
+      const decorations: Decoration[] = [];
+      state.doc.descendants((node: any, pos: number) => {
+        if (!node?.isTextblock) return true;
+        const variableName = resolveBaselineVariableName(
+          getTextblockTextWithoutResultTokens(node),
+        );
+        if (!variableName) return true;
+        const baselineEntry = baseline.entries[variableName];
+        const variable = variables.get(variableName);
+        if (!baselineEntry || !variable) return true;
+        const comparison = compareVariableWithBaseline(baselineEntry, variable);
+        if (!comparison?.changed) return true;
+
+        const deltaLabel = formatBaselineDeltaLabel(comparison);
+        if (baselineEntry.role !== "input") {
+          let resultNodeRange: { from: number; to: number } | null = null;
+          node.forEach((child: any, offset: number) => {
+            if (!resultNodeRange && child.type?.name === "resultToken") {
+              const from = pos + 1 + offset;
+              resultNodeRange = { from, to: from + child.nodeSize };
+            }
+          });
+          if (resultNodeRange) {
+            decorations.push(
+              Decoration.node(resultNodeRange.from, resultNodeRange.to, {
+                class: `semantic-baseline-result-node is-${comparison.direction}`,
+                "data-baseline-delta": deltaLabel,
+                "data-baseline-direction": comparison.direction,
+                "data-baseline-value": baselineEntry.displayValue,
+                title: `Baseline ${baselineEntry.displayValue}`,
+                "aria-label": `${variableName} ${deltaLabel} from baseline ${baselineEntry.displayValue}`,
+              })
+            );
+          }
+          return true;
+        }
+
+        decorations.push(
+          Decoration.widget(
+            pos + node.nodeSize - 1,
+            () => {
+              const marker = document.createElement("span");
+              marker.className = `${BASELINE_INPUT_WIDGET_CLASS} is-${comparison.direction}`;
+              marker.setAttribute("contenteditable", "false");
+              marker.setAttribute(
+                "aria-label",
+                `${variableName} ${deltaLabel} from baseline ${baselineEntry.displayValue}`,
+              );
+              marker.title = `Baseline ${baselineEntry.displayValue}`;
+              marker.textContent = `Base ${baselineEntry.displayValue} · ${deltaLabel}`;
+              return marker;
+            },
+            {
+              side: 1,
+              key: `baseline-input-${variableName}-${deltaLabel}-${baselineEntry.displayValue}`,
+            }
+          )
+        );
+        return true;
+      });
+      return decorations;
+    };
+
+    const refreshBaselinePresentation = (view: any) => {
+      const tr = view.state.tr;
+      tr.setMeta(BASELINE_REFRESH_META, Date.now());
+      tr.setMeta("addToHistory", false);
+      view.dispatch(tr);
+      if (baselineRefreshFrame !== null) {
+        window.cancelAnimationFrame(baselineRefreshFrame);
+      }
+      baselineRefreshFrame = window.requestAnimationFrame(() => {
+        baselineRefreshFrame = null;
+        refreshBaselineResultDeltas(view);
+      });
+    };
+
     const openResultActionMenu = (
       view: any,
       resultEl: HTMLElement,
@@ -1462,6 +1689,60 @@ export const ResultReferenceInteractionExtension = Extension.create({
           closeResultActionMenu();
         })
       );
+
+      const activeSheetId = getActiveSheetId?.() || "";
+      const activeBaseline = getBaselineForActiveSheet();
+      if (!activeBaseline) {
+        menu.appendChild(
+          buildMenuButton(
+            "Set baseline",
+            () => {
+              if (captureBaselineForActiveSheet()) {
+                refreshBaselineResultDeltas(view);
+              }
+              closeResultActionMenu();
+            },
+            {
+              disabled: !activeSheetId,
+              title: "Capture the current numeric model before exploring changes",
+              className: "semantic-result-baseline-action",
+            },
+          ),
+        );
+      } else {
+        menu.appendChild(
+          buildMenuButton(
+            "Update baseline",
+            () => {
+              if (captureBaselineForActiveSheet()) {
+                refreshBaselinePresentation(view);
+              }
+              closeResultActionMenu();
+            },
+            {
+              title: "Use the current model as the new baseline",
+              className: "semantic-result-baseline-action",
+            },
+          ),
+        );
+        menu.appendChild(
+          buildMenuButton(
+            "Clear baseline",
+            () => {
+              if (activeSheetId) {
+                clearVariableBaseline(activeSheetId);
+                refreshBaselinePresentation(view);
+              }
+              closeResultActionMenu();
+            },
+            {
+              title: "Stop comparing this sheet with its baseline",
+              className: "semantic-result-baseline-clear-action",
+            },
+          ),
+        );
+      }
+
       const payload = payloadFromElement(resultEl);
       const goalSeekActions = buildGoalSeekMenuActions(view, payload);
       if (goalSeekActions.length === 0) {
@@ -1717,7 +1998,37 @@ export const ResultReferenceInteractionExtension = Extension.create({
             closeResultActionMenu();
           };
           document.addEventListener("mousedown", handleDocumentPointerDown, true);
+          const handleBaselineScrubMouseUp = () => {
+            baselineScrubMouseUpPending = false;
+            if (getBaselineForActiveSheet()) {
+              refreshBaselinePresentation(view);
+            }
+          };
+          const handleUiRenderComplete = () => {
+            window.requestAnimationFrame(() => {
+              refreshBaselineResultDeltas(view);
+              if (document.body.classList.contains("number-scrubbing")) {
+                if (!baselineScrubMouseUpPending) {
+                  baselineScrubMouseUpPending = true;
+                  document.addEventListener(
+                    "mouseup",
+                    handleBaselineScrubMouseUp,
+                    { once: true },
+                  );
+                }
+              }
+            });
+          };
+          const handleActiveSheetChanged = () => {
+            window.requestAnimationFrame(() => refreshBaselinePresentation(view));
+          };
+          window.addEventListener("uiRenderComplete", handleUiRenderComplete);
+          window.addEventListener(
+            "smartpadActiveSheetChanged",
+            handleActiveSheetChanged,
+          );
           const hoverSyncTimer = window.setInterval(syncHoverHighlight, 80);
+          window.requestAnimationFrame(() => refreshBaselineResultDeltas(view));
 
           return {
             destroy() {
@@ -1725,7 +2036,18 @@ export const ResultReferenceInteractionExtension = Extension.create({
               view.dom.removeEventListener("pointerout", handlePointerOut);
               view.dom.removeEventListener("click", handleReferenceClickHighlight, true);
               document.removeEventListener("mousedown", handleDocumentPointerDown, true);
+              document.removeEventListener("mouseup", handleBaselineScrubMouseUp);
+              window.removeEventListener("uiRenderComplete", handleUiRenderComplete);
+              window.removeEventListener(
+                "smartpadActiveSheetChanged",
+                handleActiveSheetChanged,
+              );
               window.clearInterval(hoverSyncTimer);
+              if (baselineRefreshFrame !== null) {
+                window.cancelAnimationFrame(baselineRefreshFrame);
+                baselineRefreshFrame = null;
+              }
+              view.dom.classList.remove("sp-baseline-active");
               if (clearHighlightTimer) {
                 clearTimeout(clearHighlightTimer);
                 clearHighlightTimer = null;
@@ -1741,7 +2063,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
         },
         props: {
           decorations: (state) => {
-            const decorations: Decoration[] = [];
+            const decorations: Decoration[] = buildBaselineDecorations(state);
             if (highlightedSource) {
               const sourceLineId = String(highlightedSource.sourceLineId || "").trim() || null;
               const sourceLine = Number(highlightedSource.sourceLine || 0);

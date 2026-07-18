@@ -4,6 +4,15 @@ All notable user-facing changes to SmartPad will be documented in this file.
 
 SmartPad uses semantic versioning. Pre-release builds use `-beta.N` or `-rc.N` suffixes.
 
+## 1.0.0-rc.7 - 2026-07-18
+
+### Changed
+
+- Baseline controls now live in each result chip's discreet actions menu instead of the Variables
+  panel, keeping the complete exploration workflow inside the sheet.
+- Changed inputs show their captured value and delta beside the editable line, while propagated
+  changes appear directly beside their result chips.
+
 ## 1.0.0-rc.6 - 2026-07-18
 
 ### Added

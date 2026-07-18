@@ -521,6 +521,23 @@ body.number-scrubbing * {
   pointer-events: auto;
 }
 
+.ProseMirror.sp-baseline-active .semantic-result-menu,
+.ProseMirror.sp-baseline-active .semantic-live-result-menu {
+  position: relative;
+}
+
+.ProseMirror.sp-baseline-active .semantic-result-menu::after,
+.ProseMirror.sp-baseline-active .semantic-live-result-menu::after {
+  content: "";
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  top: 1px;
+  right: 0;
+  border-radius: 999px;
+  background: var(--color-teal);
+}
+
 .semantic-result-copy:hover,
 .semantic-live-result-copy:hover,
 .semantic-result-menu:hover,
@@ -553,6 +570,55 @@ body.number-scrubbing * {
 .semantic-live-result-display[data-copy-state="copied"] .semantic-live-result-copy {
   color: var(--color-teal);
   background: transparent;
+}
+
+.semantic-wrapper[data-baseline-delta]::after,
+.semantic-live-result-display[data-baseline-delta]::after {
+  content: attr(data-baseline-delta);
+  flex: 0 0 auto;
+  margin-left: 5px;
+  padding-left: 5px;
+  border-left: 1px solid color-mix(in srgb, currentColor 32%, transparent);
+  font-family: var(--font-family-sans);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  opacity: 0.82;
+}
+
+.semantic-wrapper[data-baseline-direction="up"]::after,
+.semantic-live-result-display[data-baseline-direction="up"]::after,
+.semantic-baseline-input-delta.is-up {
+  color: var(--color-green-700);
+}
+
+.semantic-wrapper[data-baseline-direction="down"]::after,
+.semantic-live-result-display[data-baseline-direction="down"]::after,
+.semantic-baseline-input-delta.is-down {
+  color: var(--color-red-700);
+}
+
+.semantic-wrapper[data-baseline-direction="same"]::after,
+.semantic-live-result-display[data-baseline-direction="same"]::after,
+.semantic-baseline-input-delta.is-same {
+  color: var(--color-teal);
+}
+
+.semantic-baseline-input-delta {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 1ch;
+  padding: 2px 5px;
+  border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 7%, transparent);
+  font-family: var(--font-family-sans);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  vertical-align: middle;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .semantic-result-action-menu {
@@ -591,6 +657,18 @@ body.number-scrubbing * {
   color: var(--color-text-secondary);
   cursor: not-allowed;
   opacity: 0.62;
+}
+
+.semantic-result-action-menu button.semantic-result-baseline-action {
+  margin-top: 2px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-teal);
+  font-weight: 600;
+}
+
+.semantic-result-action-menu button.semantic-result-baseline-clear-action {
+  color: var(--color-text-secondary);
 }
 
 .semantic-result-action-menu button.semantic-result-plot-suggestion {

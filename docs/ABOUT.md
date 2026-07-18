@@ -2,14 +2,14 @@ Smartpad is a lightweight computational notebook designed for thinking with numb
 
 Any literal number, whether assigned to a variable or not, can be scrubbed by dragging it left or right. Hold `Shift` for fine control, `Alt`/`Option` for coarse control, or press `Escape` to restore the exact starting value. All calculations update live, making it easier to feel the shape of a relationship and find a useful result quickly.
 
-The Variables panel can capture a persistent baseline for each sheet. As numbers are edited or scrubbed, Smartpad distinguishes direct inputs from derived results, counts what changed, and shows each current value against its captured base without introducing hidden formulas or alternate model state.
+A result chip's `⋯` menu can capture a persistent baseline for its sheet. As numbers are edited or scrubbed, Smartpad keeps direct-input comparisons beside the editable text and propagated deltas beside their results, without introducing hidden formulas or alternate model state.
 
 Smartpad emphasizes readability and intent over strict syntax. Units are first-class, conversions are semantic (to, in, on, off, as %), variables can be named with spaces, and results can be previewed live or explicitly committed. The goal is to make everyday quantitative reasoning—finance, planning, science, estimation—fast, expressive, and low-friction.
 
 It's a node web application, written in typescript and react.
 
 Recent template updates:
-- The focused Decision Playground now starts with a complete comparison gesture: set a baseline in Variables, scrub the ticket price, and watch both assumptions and derived results move against their captured values.
+- The focused Decision Playground now starts with a complete comparison gesture: open a result chip's `⋯` menu, set a baseline, scrub the ticket price, and watch input and result deltas appear in the sheet.
 - First run now opens a focused `Decision Playground`: one practical workshop model combines scrubbable assumptions, live profit and margin, a connected plot, and a valid goal-seek target. The broader `Quick Tour` remains available as a secondary template.
 - The `Live Result` quick template now includes implicit multiplication examples (`2(3+4)`, `(2+3)(4+5)`).
 - The same template now includes compact no-space rate-duration arithmetic (`9L/min*18min`).

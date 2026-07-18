@@ -171,10 +171,10 @@
       "status": "implemented",
       "sourceSpec": "docs/Specs/BaselineComparison.spec.md",
       "canonicalSpec": "docs/Specs/implemented/baseline-comparison.md",
-      "mappedGroups": ["UI Panels And Settings"],
+      "mappedGroups": ["Editor And Result Chips"],
       "testRefs": [
         "tests/unit/variableBaselineStore.test.ts",
-        "tests/unit/variablePanelBaseline.test.tsx",
+        "tests/unit/resultBaselineInteraction.test.ts",
         "tests/e2e/variable-baseline-comparison.spec.ts",
         "tests/unit/decisionPlaygroundTemplate.test.ts",
         "tests/e2e/decision-playground-template.spec.ts"

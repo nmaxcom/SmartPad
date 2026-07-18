@@ -7882,3 +7882,59 @@
     *   Baselines are local UI state and are not currently included in sheet export/import.
     *   The production build remains green but retains the existing large-chunk warning.
     *   Human completion gate remains pending until the user confirms this comparison milestone.
+
+## Entry J-2026-07-18-05
+
+*   Timestamp: 2026-07-18 13:39 CEST / 2026-07-18 11:39 UTC
+*   Summary:
+    *   User reported that it was not clear how to click a variable and asked for more specific verification instructions.
+    *   Assistant clarified that variable rows are intentionally read-only in this slice: the user captures from the `Set baseline` button in the Variables-panel header, then manipulates the highlighted numeric literal in the central sheet.
+*   Decisions:
+    *   Give verification instructions using exact visible labels and locations, including hidden-panel, already-active-baseline, and disabled-button recovery states.
+    *   Treat the user's confusion as discoverability feedback for the pending human gate; do not claim that Variable-panel rows are editable controls.
+*   User directives:
+    *   Explain precisely how to verify the baseline-comparison changes.
+*   Artifacts changed:
+    *   `aidocs/EXECUTIVE_JOURNAL.md` (this entry only).
+    *   No product code or behavior changed.
+*   Validation:
+    *   Source review confirmed the header toggle label `Toggle Variables`, the panel action labels `Set baseline`, `Update`, and `Clear`, and the Decision Playground `ticket price = 32 EUR` scrub target.
+*   Pending:
+    *   Owner: User; due: TBD; status: todo; follow the explicit capture-and-scrub walkthrough and report whether the comparison becomes visible.
+    *   Owner: Assistant; due: TBD; status: todo; if the walkthrough still feels unclear, improve in-product discoverability rather than adding more off-screen explanation.
+*   Risks/blockers:
+    *   The Variables panel appears below Quick Templates and may require page/sidebar scrolling on shorter viewports.
+    *   Variable rows are informational in this slice, so expecting them to be clickable is understandable and indicates a UX affordance gap.
+
+## Entry J-2026-07-18-06
+
+*   Timestamp: 2026-07-18 20:12 CEST / 2026-07-18 18:12 UTC
+*   Summary:
+    *   User rejected baseline navigation in the Variables panel and established a product rule: exploration actions must stay where the text, results, and graphs live.
+    *   Assistant moved `Set baseline`, `Update baseline`, and `Clear baseline` into the existing result-chip `⋯` menu and restored Variables to a read-only information panel.
+    *   Changed direct inputs now show `Base <value> · <delta>` beside the editable assignment; propagated changes show compact deltas beside their result chips.
+*   Decisions:
+    *   Reuse the established result actions menu instead of introducing another control surface.
+    *   Keep unchanged values quiet, indicate an active baseline with a tiny result-menu accent, and make comparison readable with text rather than color alone.
+    *   Keep one local baseline per sheet and preserve update, clear, reload persistence, semantic comparison, and no-hidden-formula guarantees.
+    *   Advance SmartPad to `1.0.0-rc.7` and treat the Variables-panel version in `rc.6` as superseded by the inline workflow.
+*   User directives:
+    *   Keep all user navigation and actions in the sheet/result/graph surface; make the result-menu interaction discreet and intuitive.
+*   Artifacts changed:
+    *   Result-chip interaction extension, editor integration/styles, and inline baseline helpers.
+    *   Variables-panel baseline controls and their component test were removed; storage semantics remain covered independently.
+    *   Decision Playground guidance, behavior spec/canonical card/trust registry/spec map, public docs, launch documents, backlog, version, and changelog were synchronized.
+    *   `output/playwright/baseline-comparison-inline-2026-07-18.png` and `output/playwright/baseline-comparison-inline-input-2026-07-18.png` are local visual-QA artifacts and remain unstaged.
+*   Validation:
+    *   Focused baseline/template units: 10 of 10 passed.
+    *   Result-menu, scrubber, reference, decorator, onboarding, and baseline browser regressions: 37 of 37 passed.
+    *   `npm run docs:docusaurus:publish-local`, `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, and `npm run spec:trust` passed.
+    *   `npm run verify:changed -- HEAD` passed, including 14 related unit tests and the production build.
+    *   Visual QA confirmed the input base capsule, propagated result deltas, active-menu accent, update/clear menu actions, readable chart, and read-only Variables panel.
+*   Pending:
+    *   Owner: User; due: TBD; status: todo; verify the exact inline flow in the running app and explicitly confirm or report refinements.
+    *   Owner: Assistant; due: TBD; status: todo; only after confirmation, choose the next decision-modeling slice with the user.
+*   Risks/blockers:
+    *   This first slice still pairs variables by name and does not include baseline state in sheet export/import.
+    *   The production build remains green with the existing large-chunk warning.
+    *   Human completion gate remains open until the user confirms the corrected inline interaction.

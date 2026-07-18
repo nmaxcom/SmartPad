@@ -28,7 +28,7 @@ Existing coverage:
 - `tests/unit/decisionPlaygroundTemplate.test.ts`
 - `tests/e2e/decision-playground-template.spec.ts`
 - `tests/unit/variableBaselineStore.test.ts`
-- `tests/unit/variablePanelBaseline.test.tsx`
+- `tests/unit/resultBaselineInteraction.test.ts`
 - `tests/e2e/variable-baseline-comparison.spec.ts`
 
 Launch gap:
@@ -189,7 +189,7 @@ Launch copy:
 ## Onboarding Status
 
 The focused Decision Playground is the accepted first-run baseline. Guidance remains embedded in
-the sheet and existing panels rather than adding a blocking modal.
+the sheet rather than adding a blocking modal or moving exploration into a side panel.
 
 Required first-run signals:
 
@@ -212,7 +212,7 @@ Current first-run model:
 Launch approach:
 
 1. Keep Decision Playground as the fresh-profile sheet and first template.
-2. Teach `Set baseline -> scrub -> compare` in its opening comments and Variables panel.
+2. Teach `Set baseline -> scrub -> compare` in its opening comments, result menus, and inline markers.
 3. Keep Quick Tour as the secondary broad-capability template.
 4. Avoid modal onboarding and keep Getting Started docs available through the existing Docs path.
 
@@ -263,7 +263,7 @@ Do not capture:
 Targeted commands after implementation:
 
 ```bash
-npm run test:unit -- tests/unit/settingsStore.test.ts tests/unit/quickTourTemplate.test.ts tests/unit/decisionPlaygroundTemplate.test.ts tests/unit/variableBaselineStore.test.ts tests/unit/variablePanelBaseline.test.tsx --runInBand
+npm run test:unit -- tests/unit/settingsStore.test.ts tests/unit/quickTourTemplate.test.ts tests/unit/decisionPlaygroundTemplate.test.ts tests/unit/variableBaselineStore.test.ts tests/unit/resultBaselineInteraction.test.ts --runInBand
 npx playwright test tests/e2e/settings-integration.spec.ts tests/e2e/grouped-input-and-date-settings.spec.ts tests/e2e/quick-tour-template.spec.ts tests/e2e/decision-playground-template.spec.ts tests/e2e/variable-baseline-comparison.spec.ts tests/e2e/template-basic-functionality.spec.ts --project=chromium --config=playwright.config.ts --workers=1
 npm run docs:map
 npm run docs:drift

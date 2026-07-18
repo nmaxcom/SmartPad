@@ -74,7 +74,7 @@ Actions:
 3. Completed and user-confirmed (2026-07-18): use a focused Decision Playground as the first-run
    baseline and retain Quick Tour as the secondary broad capability tour.
 4. Add the next embedded guidance slice: capture a per-sheet baseline, scrub the model, and compare
-   direct inputs with propagated derived changes in the Variables panel.
+   direct inputs with propagated derived changes inline through result-chip actions.
 5. Carry Decision Playground, baseline comparison, and Quick Tour checks into the release-candidate
    stability pass.
 6. Capture final launch screenshots after the release-candidate pass, not before.

@@ -44,13 +44,13 @@ Highlighted numbers can be dragged left or right. Scrubbing edits the number in 
 
 ## Compare with a baseline
 
-Choose **Set baseline** in the Variables panel before changing a model. SmartPad captures the current numeric variables for this sheet, then compares them with every edit or scrub in real time.
+Open the `⋯` actions menu on any result chip and choose **Set baseline** before changing a model. SmartPad captures the current numeric variables for this sheet, then compares them with every edit or scrub in real time.
 
-- `input` marks a direct numeric assumption such as a price, rate, quantity, percentage, or unit value.
-- `derived` marks a result calculated from other values.
-- `Base` keeps the captured value visible beside its current delta.
-- **Update** accepts the current model as the new baseline; **Clear** stops comparing.
+- A changed direct input shows `Base <captured value> · <delta>` beside its editable line.
+- A propagated change shows a compact delta beside its result chip.
+- A tiny dot on result-menu controls indicates that comparison is active.
+- **Update baseline** accepts the current model as the new reference; **Clear baseline** stops comparing.
 
 The baseline persists locally for that sheet across reloads. It never changes the sheet or creates hidden formulas.
 
-> GIF/video marker: set a baseline, scrub one input, and show both the input and dependent results changing against their base values.
+> GIF/video marker: open a result menu, set a baseline, scrub one input, and show its captured value plus dependent result deltas in the sheet.

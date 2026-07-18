@@ -9,6 +9,7 @@ import "./Editor.css";
 import { useVariables } from "../state/useVariables";
 import { useVariableContext } from "../state/VariableContext";
 import { useSettingsContext } from "../state/SettingsContext";
+import { useSheetContext } from "../state/SheetContext";
 import { Variable } from "../state/types";
 import { ReactiveVariableStore } from "../state/variableStore";
 import {
@@ -322,7 +323,9 @@ export const useEditorContext = () => {
 export function EditorProvider({ children }: { children: React.ReactNode }) {
   const { replaceAllVariables } = useVariables();
   const { settings } = useSettingsContext();
+  const { activeSheetId } = useSheetContext();
   const settingsRef = useRef(settings);
+  const activeSheetIdRef = useRef(activeSheetId);
   const lineResultStatusByIdRef = useRef<Map<string, LineResultStatus>>(new Map());
   const functionStoreRef = useRef<Map<string, FunctionDefinitionNode>>(new Map());
   const isUpdatingRef = useRef(false);
@@ -330,6 +333,11 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     settingsRef.current = settings;
   }, [settings]);
+
+  useEffect(() => {
+    activeSheetIdRef.current = activeSheetId;
+    window.dispatchEvent(new CustomEvent("smartpadActiveSheetChanged"));
+  }, [activeSheetId]);
 
   // Use the reactive store from VariableContext
   const { reactiveStore } = useVariableContext();
@@ -1091,6 +1099,11 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       ResultReferenceInteractionExtension.configure({
         getSettings: () => settingsRef.current,
         getFunctionStore: () => functionStoreRef.current,
+        getVariableContext: () => {
+          const variables = reactiveStore.getAllVariables();
+          return new Map(variables.map((variable) => [variable.name, variable]));
+        },
+        getActiveSheetId: () => activeSheetIdRef.current || "",
       }),
       // Number scrubber for interactive dragging
       NumberScrubberExtension,

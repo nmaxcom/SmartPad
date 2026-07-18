@@ -1,5 +1,5 @@
 export const DECISION_PLAYGROUND_TEMPLATE = `# Decision Playground: Workshop Go / No-Go
-# First move: Set baseline in Variables, then drag 32 in ticket price.
+# First move: open the profit result menu (⋯), choose Set baseline, then drag 32.
 # Shift = fine · Alt/Option = fast · Esc = cancel.
 # Watch profit, margin, the target answer, and the chart react together.
 
