@@ -8050,3 +8050,19 @@
     *   Owner: User; due: TBD; status: in_progress; verify the exact in-sheet keyboard sequence and explicitly confirm or request refinements.
 *   Risks/blockers:
     *   No machine blocker remains. The human completion gate is open.
+
+## Entry J-2026-07-19-05
+
+*   Timestamp: 2026-07-19 04:19 CEST / 2026-07-19 02:19 UTC
+*   Summary:
+    *   User explicitly confirmed the in-sheet keyboard result and reference workflow, then asked the assistant to continue.
+    *   Both gates are now closed for `T-2026-05-24-06`, its older duplicate `T-2026-02-14-08`, and the complete five-step post-chip roadmap `T-2026-05-24-01`.
+*   Decisions:
+    *   Preserve the shipped `1.0.0-rc.9` behavior and close the milestone without another version change.
+    *   Advance to `T-2026-06-14-09`: a narrow sensitivity-ranking and tornado-chart slice entered from the selected result inside the sheet.
+*   Validation:
+    *   No code changed after the already-green machine gate: 50 focused units, 62 broad Chromium regressions, public-docs build, docs/spec/trust/changed checks, and production build.
+*   Pending:
+    *   Owner: Assistant; due: TBD; status: in_progress; define and implement the smallest transparent sensitivity workflow with ranking correctness, inline visualization, and live model behavior.
+*   Risks/blockers:
+    *   The initial sensitivity slice must stay deterministic and understandable; probability distributions and Monte Carlo remain separate future capabilities.
