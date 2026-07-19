@@ -8138,3 +8138,25 @@
 *   Risks/blockers:
     *   The Playwright skill's bundled CLI wrapper still exits on a line-16 shell syntax error; the repository's installed Playwright runner completed all browser validation instead.
     *   No product or machine blocker remains. The human completion gate is open.
+
+## Entry J-2026-07-19-09
+
+*   Timestamp: 2026-07-19 22:20 CEST / 2026-07-19 20:20 UTC
+*   Summary:
+    *   User explicitly confirmed bounded Goal Seek, closing both gates for `T-2026-06-14-08`.
+    *   User also gave candid product feedback that the recent advanced features have not felt especially useful or intuitive and asked what meaningful improvements remain.
+*   Decisions:
+    *   Preserve the shipped `1.0.0-rc.11` behavior and close the bounded one-variable milestone without another version change.
+    *   Do not continue immediately into multi-variable Goal Seek, Monte Carlo, distributions, or additional isolated result-menu actions.
+    *   Recommend consolidating result understanding and exploration into one coherent in-sheet interaction before adding more analytical depth.
+*   Product assessment:
+    *   Highest-value next direction: a unified result exploration surface that answers where a result came from, exposes the few assumptions that drive it, lets the user manipulate them beside the text, and shows the result/plot changing immediately.
+    *   Next candidates after that interaction foundation: proactive contextual insights, direct manipulation of chart points/targets, a visible natural-language-to-SmartPad command flow, structured data import, reusable local blocks, and only then uncertainty/Monte Carlo.
+    *   Existing backlog items `T-2026-06-14-01`, `T-2026-06-14-02`, and `T-2026-06-14-03` are the closest ingredients but should be designed as one product loop rather than three unrelated controls.
+*   Validation:
+    *   No product code changed after the already-green `1.0.0-rc.11` machine gate.
+*   Pending:
+    *   Owner: User; due: TBD; status: todo; choose whether to pursue the recommended unified result-exploration direction or another ranked candidate.
+    *   Owner: Assistant; due: TBD; status: todo; once chosen, turn the direction into one narrow visual prototype with a task-based usefulness test before implementing a broad feature.
+*   Risks/blockers:
+    *   Continuing to add isolated menu actions would increase capability while worsening discovery and cognitive load.
