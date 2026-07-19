@@ -2,6 +2,15 @@ import { Extension } from "@tiptap/core";
 import { NodeSelection, Plugin, TextSelection } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import {
+  calculateSensitivity,
+  collectLeafSensitivityInputs,
+  resolveSensitivityBarPercent,
+  type SensitivityAnalysis,
+  type SensitivityCandidate,
+  type SensitivityEvaluation,
+} from "../analysis/sensitivityAnalysis";
+import { defaultRegistry, type EvaluationContext } from "../eval";
+import {
   ExpressionComponent,
   FunctionDefinitionNode,
   isCombinedAssignmentNode,
@@ -12,6 +21,13 @@ import { parseLine } from "../parsing/astParser";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
 import { getPlotNumericValue } from "../plotting/plottingUtils";
 import { createReferencePlaceholder } from "../references/referenceIds";
+import { recordEquationFromNode } from "../solve/equationStore";
+import {
+  clearSensitivityAnalysis,
+  loadSensitivityAnalysis,
+  saveSensitivityAnalysis,
+  type PinnedSensitivityAnalysis,
+} from "../state/sensitivityAnalysisStore";
 import {
   clearVariableBaseline,
   compareVariableWithBaseline,
@@ -33,7 +49,14 @@ import {
   type SavedScenario,
 } from "../state/scenarioComparisonStore";
 import type { SettingsState, Variable } from "../state/types";
-import { ListValue, SemanticParsers, SemanticValue } from "../types";
+import { ReactiveVariableStore } from "../state/variableStore";
+import {
+  ListValue,
+  NumberValue,
+  PercentageValue,
+  SemanticParsers,
+  SemanticValue,
+} from "../types";
 import {
   formatBaselineDeltaLabel,
   resolveBaselineVariableName,
@@ -68,6 +91,7 @@ const COPY_FEEDBACK_MS = 800;
 const BASELINE_REFRESH_META = "spBaselineRefresh";
 const BASELINE_INPUT_WIDGET_CLASS = "semantic-baseline-input-delta";
 const SCENARIO_COMPARISON_WIDGET_CLASS = "semantic-scenario-comparison";
+const SENSITIVITY_ANALYSIS_WIDGET_CLASS = "semantic-sensitivity-analysis";
 
 type ResultInteractionSettings = Pick<
   SettingsState,
@@ -143,6 +167,14 @@ interface SourceResultInfo {
 interface NamedNumericListSource {
   name: string;
   length: number;
+}
+
+interface SensitivitySourcePlan {
+  sourceLineId: string;
+  sourceLine: number;
+  targetName: string;
+  candidates: SensitivityCandidate[];
+  baseline: SensitivityEvaluation;
 }
 
 const HIGHLIGHT_REFRESH_META = "spRefHighlightRefresh";
@@ -1087,6 +1119,150 @@ const buildGoalSeekMenuActions = (
   }));
 };
 
+const SENSITIVITY_NUMERIC_TYPES = new Set([
+  "number",
+  "percentage",
+  "currency",
+  "unit",
+  "currencyUnit",
+  "duration",
+]);
+
+const isSensitivityNumericValue = (
+  value: SemanticValue | null | undefined,
+): value is SemanticValue =>
+  Boolean(
+    value &&
+      value.isNumeric() &&
+      SENSITIVITY_NUMERIC_TYPES.has(value.getType()) &&
+      Number.isFinite(value.getNumericValue()),
+  );
+
+const collectSensitivityDependencyMap = (
+  view: any,
+): Map<string, string[]> => {
+  const dependencyMap = new Map<string, string[]>();
+  let lineNumber = 0;
+  view.state.doc.descendants((node: any) => {
+    if (!node?.isTextblock) return true;
+    lineNumber += 1;
+    const astNode = parseLine(
+      getTextblockTextWithoutResultTokens(node),
+      lineNumber,
+    );
+    const variableName = isCombinedAssignmentNode(astNode)
+      ? astNode.variableName
+      : isVariableAssignmentNode(astNode)
+        ? astNode.variableName
+        : "";
+    if (!variableName) return true;
+    let components: ExpressionComponent[] = [];
+    if (isCombinedAssignmentNode(astNode)) {
+      components = astNode.components;
+    } else if (isVariableAssignmentNode(astNode)) {
+      try {
+        components = parseExpressionComponents(astNode.rawValue);
+      } catch {
+        components = [];
+      }
+    }
+    dependencyMap.set(
+      variableName,
+      collectExpressionVariables(components).filter(
+        (dependency) => dependency !== variableName,
+      ),
+    );
+    return true;
+  });
+  return dependencyMap;
+};
+
+const buildSensitivitySourcePlan = (
+  view: any,
+  payload: ReferencePayload | null,
+  variables: Map<string, Variable>,
+  displayOptions: Parameters<SemanticValue["toString"]>[0],
+): SensitivitySourcePlan | null => {
+  const source = findSourceTextblockSnapshot(view, payload);
+  if (!source || !payload) return null;
+  const astNode = parseLine(source.text, source.lineNumber);
+  const targetName = isCombinedAssignmentNode(astNode)
+    ? astNode.variableName
+    : isVariableAssignmentNode(astNode)
+      ? astNode.variableName
+      : "";
+  if (!targetName) return null;
+
+  let components: ExpressionComponent[] = [];
+  if (isCombinedAssignmentNode(astNode)) {
+    components = astNode.components;
+  } else if (isVariableAssignmentNode(astNode)) {
+    try {
+      components = parseExpressionComponents(astNode.rawValue);
+    } catch {
+      components = [];
+    }
+  }
+  const targetDependencies = collectExpressionVariables(components).filter(
+    (dependency) => dependency !== targetName,
+  );
+  if (targetDependencies.length === 0) return null;
+
+  const targetValue = variables.get(targetName)?.value;
+  if (!isSensitivityNumericValue(targetValue)) return null;
+  const numericVariables = new Set(
+    Array.from(variables.entries()).flatMap(([name, variable]) =>
+      isSensitivityNumericValue(variable.value) ? [name] : [],
+    ),
+  );
+  const inputNames = collectLeafSensitivityInputs({
+    targetDependencies,
+    dependencyMap: collectSensitivityDependencyMap(view),
+    numericVariables,
+    excludedVariables: new Set([targetName]),
+  });
+  const candidates = inputNames.flatMap((name) => {
+    const input = variables.get(name)?.value;
+    if (!isSensitivityNumericValue(input)) return [];
+    const baseInput = input.getNumericValue();
+    if (Math.abs(baseInput) <= Number.EPSILON) return [];
+    return [{ name, baseInput }];
+  });
+  if (candidates.length === 0) return null;
+
+  return {
+    sourceLineId: source.lineId || payload.sourceLineId,
+    sourceLine: source.lineNumber,
+    targetName,
+    candidates,
+    baseline: {
+      numericValue: targetValue.getNumericValue(),
+      displayValue: targetValue.toString(displayOptions),
+    },
+  };
+};
+
+const scaleSensitivityInputValue = (
+  value: SemanticValue,
+  factor: number,
+): SemanticValue | null => {
+  try {
+    if (value instanceof PercentageValue) {
+      return new PercentageValue(value.getDisplayPercentage() * factor);
+    }
+    return value.multiply(NumberValue.from(factor));
+  } catch {
+    return null;
+  }
+};
+
+const parseSensitivityRenderValue = (renderNode: any): SemanticValue | null => {
+  const rawResult = renderNode?.result;
+  if (typeof rawResult === "number") return NumberValue.from(rawResult);
+  if (typeof rawResult !== "string") return null;
+  return SemanticParsers.parse(rawResult.trim());
+};
+
 const resolveDisplayedResultValue = (target: HTMLElement): string => {
   const explicitResultValue = normalizeChipText(
     String(target.getAttribute("data-result-value") || ""),
@@ -1565,6 +1741,10 @@ export const ResultReferenceInteractionExtension = Extension.create({
     let activePluginView: any = null;
     let baselineRefreshFrame: number | null = null;
     let baselineScrubMouseUpPending = false;
+    let sensitivityAnalysisCache: {
+      key: string;
+      analysis: SensitivityAnalysis;
+    } | null = null;
     const clearDropTargetIndicator = (view: any) => {
       view.dom
         .querySelectorAll(`p.${DROP_TARGET_AFTER_CLASS}`)
@@ -1796,6 +1976,103 @@ export const ResultReferenceInteractionExtension = Extension.create({
         ),
         trimTrailingZeros: settings?.scientificTrimTrailingZeros ?? true,
         groupThousands: settings?.groupThousands ?? true,
+      };
+    };
+
+    const evaluateSensitivityVariant = (
+      view: any,
+      plan: SensitivitySourcePlan,
+      inputName: string,
+      factor: number,
+    ): SensitivityEvaluation | null => {
+      const currentVariables =
+        getVariableContext?.() || new Map<string, Variable>();
+      const sourceInput = currentVariables.get(inputName);
+      if (!sourceInput || !isSensitivityNumericValue(sourceInput.value)) {
+        return null;
+      }
+      const scaledValue = scaleSensitivityInputValue(sourceInput.value, factor);
+      if (!scaledValue) return null;
+
+      const lines: SourceTextblockSnapshot[] = [];
+      let lineNumber = 0;
+      view.state.doc.descendants((node: any) => {
+        if (!node?.isTextblock) return true;
+        lineNumber += 1;
+        lines.push({
+          lineId: String((node as any).attrs?.lineId || "").trim(),
+          lineNumber,
+          text: getTextblockTextWithoutResultTokens(node),
+        });
+        return lineNumber < plan.sourceLine;
+      });
+      const astNodes = lines.map((line) =>
+        parseLine(line.text, line.lineNumber),
+      );
+      const variableStore = new ReactiveVariableStore();
+      const functionStore = new Map<string, FunctionDefinitionNode>();
+      const equationStore: import("../solve/equationStore").EquationEntry[] =
+        [];
+      const settings = getSettings?.();
+      const syncVariableContext = (): Map<string, Variable> =>
+        new Map(
+          variableStore
+            .getAllVariables()
+            .map((variable) => [variable.name, variable]),
+        );
+      let targetValue: SemanticValue | null = null;
+
+      for (let index = 0; index < astNodes.length; index += 1) {
+        const node = astNodes[index];
+        const variableName = isCombinedAssignmentNode(node)
+          ? node.variableName
+          : isVariableAssignmentNode(node)
+            ? node.variableName
+            : "";
+        if (variableName === inputName) {
+          variableStore.setVariableWithMetadata({
+            ...sourceInput,
+            value: scaledValue,
+            rawValue: scaledValue.toString(getNumericDisplayOptions()),
+            updatedAt: new Date(),
+          });
+          recordEquationFromNode(node, equationStore);
+        } else {
+          const evaluationContext: EvaluationContext = {
+            variableStore,
+            variableContext: syncVariableContext(),
+            functionStore,
+            equationStore,
+            astNodes,
+            lineNumber: index + 1,
+            decimalPlaces: settings?.decimalPlaces ?? 6,
+            scientificUpperThreshold: Math.pow(
+              10,
+              settings?.scientificUpperExponent ?? 12,
+            ),
+            scientificLowerThreshold: Math.pow(
+              10,
+              settings?.scientificLowerExponent ?? -4,
+            ),
+            scientificTrimTrailingZeros:
+              settings?.scientificTrimTrailingZeros ?? true,
+            groupThousands: settings?.groupThousands ?? true,
+          };
+          const renderNode = defaultRegistry.evaluate(node, evaluationContext);
+          recordEquationFromNode(node, equationStore);
+          if (index + 1 === plan.sourceLine) {
+            targetValue =
+              variableStore.getVariable(plan.targetName)?.value ||
+              parseSensitivityRenderValue(renderNode);
+          }
+        }
+        if (index + 1 >= plan.sourceLine) break;
+      }
+
+      if (!isSensitivityNumericValue(targetValue)) return null;
+      return {
+        numericValue: targetValue.getNumericValue(),
+        displayValue: targetValue.toString(getNumericDisplayOptions()),
       };
     };
 
@@ -2128,6 +2405,239 @@ export const ResultReferenceInteractionExtension = Extension.create({
       return decorations;
     };
 
+    const buildSensitivityDecorations = (state: any): Decoration[] => {
+      const view = activePluginView;
+      const sheetId = getActiveSheetId?.() || "";
+      const selection = sheetId ? loadSensitivityAnalysis(sheetId) : null;
+      if (!view || !selection) return [];
+
+      const variables = getVariableContext?.() || new Map<string, Variable>();
+      const plan = buildSensitivitySourcePlan(
+        view,
+        {
+          sourceLineId: selection.sourceLineId,
+          sourceLine: selection.sourceLine,
+          sourceLabel: selection.targetName,
+          sourceValue: "",
+        },
+        variables,
+        getNumericDisplayOptions(),
+      );
+      if (!plan || plan.targetName !== selection.targetName) return [];
+
+      const cacheKey = [
+        sheetId,
+        selection.sourceLineId,
+        selection.sourceLine,
+        selection.targetName,
+        selection.variation,
+        state.doc.textContent,
+        ...plan.candidates.map((candidate) => {
+          const value = variables.get(candidate.name)?.value;
+          return `${candidate.name}:${value?.getType() || "missing"}:${value?.getNumericValue() ?? "missing"}`;
+        }),
+        `target:${plan.baseline.numericValue}`,
+      ].join("|");
+      if (sensitivityAnalysisCache?.key !== cacheKey) {
+        sensitivityAnalysisCache = {
+          key: cacheKey,
+          analysis: calculateSensitivity({
+            baseline: plan.baseline,
+            candidates: plan.candidates,
+            variation: selection.variation,
+            evaluate: (inputName, factor) =>
+              evaluateSensitivityVariant(view, plan, inputName, factor),
+          }),
+        };
+      }
+      const analysis = sensitivityAnalysisCache.analysis;
+
+      let line = 0;
+      let targetRange: { from: number; to: number; widgetPos: number } | null =
+        null;
+      let fallbackRange: {
+        from: number;
+        to: number;
+        widgetPos: number;
+      } | null = null;
+      state.doc.descendants((node: any, pos: number) => {
+        if (targetRange || !node?.isTextblock) return true;
+        line += 1;
+        const lineId = String((node as any).attrs?.lineId || "").trim();
+        const range = {
+          from: pos,
+          to: pos + node.nodeSize,
+          widgetPos: pos + node.nodeSize - 1,
+        };
+        if (!fallbackRange && line === selection.sourceLine) {
+          fallbackRange = range;
+        }
+        if (selection.sourceLineId && lineId !== selection.sourceLineId) {
+          return true;
+        }
+        if (!selection.sourceLineId && line !== selection.sourceLine) {
+          return true;
+        }
+        targetRange = range;
+        return false;
+      });
+      targetRange = targetRange || fallbackRange;
+      if (!targetRange) return [];
+
+      const variationPercent = Math.round(selection.variation * 100);
+      const widgetKey = [
+        cacheKey,
+        ...analysis.impacts.map(
+          (impact) =>
+            `${impact.name}:${impact.minusOutput.numericValue}:${impact.plusOutput.numericValue}`,
+        ),
+        ...analysis.failedInputs,
+      ].join("|");
+
+      return [
+        Decoration.node(targetRange.from, targetRange.to, {
+          class: "semantic-sensitivity-line",
+        }),
+        Decoration.widget(
+          targetRange.widgetPos,
+          () => {
+            const container = document.createElement("span");
+            container.className = SENSITIVITY_ANALYSIS_WIDGET_CLASS;
+            container.setAttribute("contenteditable", "false");
+            container.setAttribute("role", "group");
+            container.setAttribute("data-sensitivity-target", plan.targetName);
+            container.setAttribute(
+              "data-sensitivity-input-count",
+              String(analysis.impacts.length),
+            );
+            container.setAttribute(
+              "data-sensitivity-top-input",
+              analysis.impacts[0]?.name || "",
+            );
+            container.setAttribute(
+              "aria-label",
+              `What matters most for ${plan.targetName}. Each input changes by plus or minus ${variationPercent} percent, one at a time.`,
+            );
+
+            const header = document.createElement("span");
+            header.className = "semantic-sensitivity-header";
+            const heading = document.createElement("span");
+            heading.className = "semantic-sensitivity-title";
+            heading.textContent = `What matters most · ${plan.targetName}`;
+            header.appendChild(heading);
+            const method = document.createElement("span");
+            method.className = "semantic-sensitivity-method";
+            method.textContent = `±${variationPercent}% · one input at a time`;
+            header.appendChild(method);
+            const close = document.createElement("button");
+            close.type = "button";
+            close.className = "semantic-sensitivity-close";
+            close.textContent = "×";
+            close.title = "Hide sensitivity analysis";
+            close.setAttribute("aria-label", "Hide sensitivity analysis");
+            close.addEventListener("mousedown", (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+            });
+            close.addEventListener("click", (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              clearSensitivityAnalysis(sheetId);
+              sensitivityAnalysisCache = null;
+              if (activePluginView) {
+                refreshBaselinePresentation(activePluginView);
+              }
+            });
+            header.appendChild(close);
+            container.appendChild(header);
+
+            const baseline = document.createElement("span");
+            baseline.className = "semantic-sensitivity-baseline";
+            baseline.textContent = `Live result ${analysis.baseline.displayValue}`;
+            container.appendChild(baseline);
+
+            const legend = document.createElement("span");
+            legend.className = "semantic-sensitivity-legend";
+            legend.innerHTML = `<span class="is-minus">−${variationPercent}% input</span><span class="is-plus">+${variationPercent}% input</span>`;
+            container.appendChild(legend);
+
+            const rows = document.createElement("span");
+            rows.className = "semantic-sensitivity-rows";
+            rows.setAttribute("role", "list");
+            analysis.impacts.forEach((impact, index) => {
+              const row = document.createElement("span");
+              row.className = "semantic-sensitivity-row";
+              row.setAttribute("role", "listitem");
+              row.setAttribute("data-sensitivity-input", impact.name);
+              row.setAttribute("data-sensitivity-rank", String(index + 1));
+              row.setAttribute(
+                "aria-label",
+                `${impact.name}. Minus ${variationPercent} percent gives ${impact.minusOutput.displayValue}. Plus ${variationPercent} percent gives ${impact.plusOutput.displayValue}.`,
+              );
+
+              const label = document.createElement("span");
+              label.className = "semantic-sensitivity-input";
+              label.textContent = impact.name;
+              row.appendChild(label);
+
+              const track = document.createElement("span");
+              track.className = "semantic-sensitivity-track";
+              const axis = document.createElement("span");
+              axis.className = "semantic-sensitivity-axis";
+              track.appendChild(axis);
+              const appendBar = (
+                kind: "minus" | "plus",
+                delta: number,
+                output: SensitivityEvaluation,
+              ) => {
+                const bar = document.createElement("span");
+                const direction =
+                  delta < 0 ? "left" : delta > 0 ? "right" : "zero";
+                bar.className = `semantic-sensitivity-bar is-${kind} is-${direction}`;
+                bar.style.setProperty(
+                  "--sensitivity-bar-width",
+                  `${resolveSensitivityBarPercent(delta, analysis.maxAbsDelta)}%`,
+                );
+                bar.title = `${kind === "minus" ? "−" : "+"}${variationPercent}% ${impact.name} → ${output.displayValue}`;
+                track.appendChild(bar);
+              };
+              appendBar("minus", impact.minusDelta, impact.minusOutput);
+              appendBar("plus", impact.plusDelta, impact.plusOutput);
+              row.appendChild(track);
+
+              const outputs = document.createElement("span");
+              outputs.className = "semantic-sensitivity-outputs";
+              const minus = document.createElement("span");
+              minus.className = "is-minus";
+              minus.textContent = impact.minusOutput.displayValue;
+              outputs.appendChild(minus);
+              const plus = document.createElement("span");
+              plus.className = "is-plus";
+              plus.textContent = impact.plusOutput.displayValue;
+              outputs.appendChild(plus);
+              row.appendChild(outputs);
+              rows.appendChild(row);
+            });
+            container.appendChild(rows);
+
+            const footer = document.createElement("span");
+            footer.className = "semantic-sensitivity-footer";
+            if (analysis.impacts.length > 0) {
+              footer.textContent = `${analysis.impacts[0].name} moves ${plan.targetName} the most in this range.`;
+            } else {
+              footer.textContent = "SmartPad could not recalculate these inputs.";
+            }
+            if (analysis.failedInputs.length > 0) {
+              footer.title = `Could not recalculate: ${analysis.failedInputs.join(", ")}`;
+            }
+            container.appendChild(footer);
+            return container;
+          },
+          { side: 4, key: `sensitivity-analysis-${widgetKey}` },
+        ),
+      ];
+    };
+
     const refreshBaselinePresentation = (view: any) => {
       const tr = view.state.tr;
       tr.setMeta(BASELINE_REFRESH_META, Date.now());
@@ -2452,6 +2962,55 @@ export const ResultReferenceInteractionExtension = Extension.create({
           );
         });
       }
+      const sensitivityPlan = buildSensitivitySourcePlan(
+        view,
+        payload,
+        getVariableContext?.() || new Map<string, Variable>(),
+        getNumericDisplayOptions(),
+      );
+      const pinnedSensitivity = activeSheetId
+        ? loadSensitivityAnalysis(activeSheetId)
+        : null;
+      const sensitivityShownHere = Boolean(
+        sensitivityPlan &&
+          pinnedSensitivity &&
+          pinnedSensitivity.targetName === sensitivityPlan.targetName &&
+          ((pinnedSensitivity.sourceLineId &&
+            pinnedSensitivity.sourceLineId ===
+              sensitivityPlan.sourceLineId) ||
+            (!pinnedSensitivity.sourceLineId &&
+              pinnedSensitivity.sourceLine === sensitivityPlan.sourceLine)),
+      );
+      menu.appendChild(
+        buildMenuButton(
+          sensitivityShownHere
+            ? "Sensitivity shown here"
+            : pinnedSensitivity
+              ? "Move sensitivity here"
+              : "See what matters most",
+          () => {
+            if (activeSheetId && sensitivityPlan) {
+              saveSensitivityAnalysis(activeSheetId, {
+                sourceLineId: sensitivityPlan.sourceLineId,
+                sourceLine: sensitivityPlan.sourceLine,
+                targetName: sensitivityPlan.targetName,
+              });
+              sensitivityAnalysisCache = null;
+              refreshBaselinePresentation(view);
+            }
+            closeResultActionMenu();
+          },
+          {
+            disabled:
+              !activeSheetId || !sensitivityPlan || sensitivityShownHere,
+            title: sensitivityPlan
+              ? `Vary ${sensitivityPlan.candidates.length} root input${sensitivityPlan.candidates.length === 1 ? "" : "s"} by ±10%, one at a time`
+              : "Available for a named numeric result with non-zero numeric inputs",
+            className: "semantic-result-sensitivity-action",
+            accent: Boolean(sensitivityPlan && !sensitivityShownHere),
+          },
+        ),
+      );
       const visualPlotActions = buildVisualPlotMenuActions(view, payload);
       visualPlotActions.forEach((plotAction) => {
         menu.appendChild(
@@ -2722,6 +3281,14 @@ export const ResultReferenceInteractionExtension = Extension.create({
             window.requestAnimationFrame(() => {
               refreshBaselineResultDeltas(view);
               syncActiveMenuActivatorAria();
+              const activeSheetId = getActiveSheetId?.() || "";
+              if (
+                activeSheetId &&
+                loadSensitivityAnalysis(activeSheetId)
+              ) {
+                sensitivityAnalysisCache = null;
+                refreshBaselinePresentation(view);
+              }
               if (document.body.classList.contains("number-scrubbing")) {
                 if (!baselineScrubMouseUpPending) {
                   baselineScrubMouseUpPending = true;
@@ -2735,6 +3302,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
             });
           };
           const handleActiveSheetChanged = () => {
+            sensitivityAnalysisCache = null;
             window.requestAnimationFrame(() =>
               refreshBaselinePresentation(view),
             );
@@ -2779,6 +3347,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 window.cancelAnimationFrame(baselineRefreshFrame);
                 baselineRefreshFrame = null;
               }
+              sensitivityAnalysisCache = null;
               view.dom.classList.remove("sp-baseline-active");
               if (clearHighlightTimer) {
                 clearTimeout(clearHighlightTimer);
@@ -2798,6 +3367,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
             const decorations: Decoration[] = [
               ...buildBaselineDecorations(state),
               ...buildScenarioComparisonDecorations(state),
+              ...buildSensitivityDecorations(state),
             ];
             if (highlightedSource) {
               const sourceLineId =

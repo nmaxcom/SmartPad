@@ -8066,3 +8066,32 @@
     *   Owner: Assistant; due: TBD; status: in_progress; define and implement the smallest transparent sensitivity workflow with ranking correctness, inline visualization, and live model behavior.
 *   Risks/blockers:
     *   The initial sensitivity slice must stay deterministic and understandable; probability distributions and Monte Carlo remain separate future capabilities.
+
+## Entry J-2026-07-19-06
+
+*   Timestamp: 2026-07-19 12:28 CEST / 2026-07-19 10:28 UTC
+*   Summary:
+    *   SmartPad now turns a named numeric result into a live local sensitivity experiment through `See what matters most` in the existing result menu.
+    *   It recursively follows derived variables to their numeric root assumptions, changes each one by ±10% in isolation, reevaluates the model through the selected result, and ranks the largest observed output impact.
+    *   A compact tornado stays beside the result with the live center, both recalculated outcomes, shared-scale bars, the leading assumption, move/persistence behavior, and a discreet close action.
+*   Decisions:
+    *   Keep the first method deliberately transparent: fixed ±10%, one input at a time, deterministic ranking, and no probability claims.
+    *   Require a named numeric output and finite non-zero numeric/currency/percentage/unit/duration leaves so the analysis remains stable and explainable.
+    *   Reevaluate in an isolated variable/function/equation context; never change sheet text, live variables, baseline, scenarios, or undo history.
+    *   Keep one locally persisted sensitivity selection per sheet and allow moving it from one result to another.
+    *   Advance SmartPad to `1.0.0-rc.10` and register sensitivity analysis as a trusted implemented contract.
+*   Artifacts changed:
+    *   Added sensitivity ranking, leaf-dependency discovery, bar scaling, per-sheet persistence, focused units, and a derived currency-model browser regression.
+    *   Extended result actions, inline decorations, accessible tornado styling, public Core Interactions guidance, ABOUT, specs/trust/map, changelog, version, and the feature backlog.
+*   Validation:
+    *   Focused sensitivity, accessibility, solve, baseline, and scenario unit coverage passed: 56 of 56.
+    *   Broad Chromium result regression passed: 63 of 63 across sensitivity, keyboard access, references, live results, Goal Seek, plots, baseline, and named scenarios.
+    *   The sensitivity browser flow verifies root expansion through derived currency variables, exact ranking/outcomes, live recalculation, move-to-result, persistence, no Variables-panel controls, and hide behavior.
+    *   Visual QA confirmed the two-color shared-scale tornado remains compact and keeps both recalculated outputs visible.
+    *   `npm run docs:docusaurus:publish-local`, `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, and `npm run spec:trust` passed.
+    *   `npm run verify:changed -- HEAD` passed with related units and the production build; only the existing large-chunk warning remains.
+*   Pending:
+    *   Owner: User; due: TBD; status: in_progress; verify the exact in-sheet sensitivity flow and explicitly confirm or request refinements.
+*   Risks/blockers:
+    *   Zero inputs, clock/date values, lists, adjustable ranges, correlations, distributions, multiple simultaneous changes, and Monte Carlo are intentionally outside this first slice.
+    *   The human completion gate remains open.

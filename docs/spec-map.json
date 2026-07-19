@@ -132,14 +132,20 @@
       "name": "Plotting And Visualization",
       "specPrefixes": [
         "src/plotting/",
+        "src/analysis/sensitivityAnalysis.ts",
+        "src/state/sensitivityAnalysisStore.ts",
         "src/components/PlotViewExtension.ts",
         "src/eval/plotViewEvaluator.ts",
         "docs/Specs/Plotting.spec.md",
-        "docs/Specs/implemented/plotting-and-dependency-views.md"
+        "docs/Specs/implemented/plotting-and-dependency-views.md",
+        "docs/Specs/SensitivityAnalysis.spec.md",
+        "docs/Specs/implemented/sensitivity-analysis.md"
       ],
       "docPrefixes": [
         "docs/Specs/Plotting.spec.md",
         "docs/Specs/implemented/plotting-and-dependency-views.md",
+        "docs/Specs/SensitivityAnalysis.spec.md",
+        "docs/Specs/implemented/sensitivity-analysis.md",
         "public/docs/"
       ],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
@@ -158,12 +164,16 @@
         "src/components/Reference",
         "src/components/resultActionAccessibility.ts",
         "src/components/resultBaselineInteraction.ts",
+        "src/analysis/sensitivityAnalysis.ts",
+        "src/state/sensitivityAnalysisStore.ts",
         "src/state/scenarioComparisonStore.ts",
         "src/state/variableBaselineStore.ts",
         "docs/Specs/ResultChipsAndValueGraph.spec.md",
         "docs/Specs/implemented/result-chips-and-references.md",
         "docs/Specs/BaselineComparison.spec.md",
         "docs/Specs/implemented/baseline-comparison.md",
+        "docs/Specs/SensitivityAnalysis.spec.md",
+        "docs/Specs/implemented/sensitivity-analysis.md",
         "docs/Specs/proposed/scenario-comparison-sheets.md",
         "docs/Specs/proposed/goal-seek-interactions.md",
         "docs/Specs/proposed/autocomplete.md"
@@ -175,6 +185,8 @@
         "docs/Specs/implemented/plotting-and-dependency-views.md",
         "docs/Specs/BaselineComparison.spec.md",
         "docs/Specs/implemented/baseline-comparison.md",
+        "docs/Specs/SensitivityAnalysis.spec.md",
+        "docs/Specs/implemented/sensitivity-analysis.md",
         "docs/Specs/proposed/scenario-comparison-sheets.md",
         "docs/Specs/proposed/goal-seek-interactions.md",
         "docs/Specs/proposed/autocomplete.md",

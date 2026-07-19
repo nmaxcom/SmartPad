@@ -221,6 +221,7 @@ Flow:
 4. Dragging the chip itself starts result-reference drag/drop. There is no separate drag handle.
 5. The action menu exposes current supported commands such as `Copy value` and enables plot creation when the source result depends on a plottable variable.
    - Results with one or more solve candidates expose human-first `Find <variable> for a target…` actions that insert editable `make ... by ... =>` goal-seek lines below the source.
+   - Named numeric results with eligible non-zero root inputs expose `See what matters most`, which pins a live ±10% one-at-a-time sensitivity tornado below the result without inserting syntax or mutating the model.
    - Goal-seek actions insert parser-safe numeric targets even when the visible chip uses grouped thousands; for example a rendered `2,520,000 EUR` target is inserted as `2520000 EUR`.
    - Single-input unnamed results insert a source-adjacent directive such as `@view plot x=x size=md`, relying on the existing nearest-expression binding instead of copying the formula into `y=...`.
    - Named results insert a live named binding such as `@view plot x=time y=speed size=md`, so later edits to `speed = ... =>` update the plot without rewriting the directive.
@@ -246,7 +247,8 @@ Guardrails:
 5. `Plot from result` must stay disabled for scalar-only results that would create a disconnected chart.
 6. Histogram/scatter suggestions must only appear for list shapes the renderer can connect immediately.
 7. Goal-seek actions must never overwrite source variables automatically; applying a solved value is a separate future action.
-8. Disabled planned actions must be visually disabled and must not pretend a feature is currently available.
+8. Sensitivity actions must use isolated reevaluation and must never overwrite source variables, baselines, scenarios, or sheet text.
+9. Disabled planned actions must be visually disabled and must not pretend a feature is currently available.
 
 ### 5.6 Keyboard result and reference workflow
 

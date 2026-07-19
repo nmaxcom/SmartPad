@@ -66,7 +66,8 @@
         "tests/e2e/semantic-highlighting.spec.ts",
         "tests/e2e/live-result.spec.ts",
         "tests/e2e/result-chip-keyboard-accessibility.spec.ts",
-        "tests/unit/resultActionAccessibility.test.ts"
+        "tests/unit/resultActionAccessibility.test.ts",
+        "tests/e2e/sensitivity-analysis.spec.ts"
       ]
     },
     {
@@ -180,6 +181,20 @@
         "tests/e2e/variable-baseline-comparison.spec.ts",
         "tests/unit/decisionPlaygroundTemplate.test.ts",
         "tests/e2e/decision-playground-template.spec.ts"
+      ]
+    },
+    {
+      "id": "sensitivity-analysis",
+      "status": "implemented",
+      "sourceSpec": "docs/Specs/SensitivityAnalysis.spec.md",
+      "canonicalSpec": "docs/Specs/implemented/sensitivity-analysis.md",
+      "mappedGroups": ["Plotting And Visualization", "Editor And Result Chips"],
+      "testRefs": [
+        "tests/unit/sensitivityAnalysis.test.ts",
+        "tests/unit/sensitivityAnalysisStore.test.ts",
+        "tests/e2e/sensitivity-analysis.spec.ts",
+        "tests/e2e/result-chip-keyboard-accessibility.spec.ts",
+        "tests/e2e/result-reference-drag-only.spec.ts"
       ]
     },
     {

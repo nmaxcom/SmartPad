@@ -6,12 +6,15 @@ A result chip's `⋯` menu can capture a persistent baseline for its sheet. As n
 
 After setting a baseline, the same discreet result menu can save the current model as a named scenario. Smartpad places a compact Base / saved scenarios / Live comparison beside the chosen result, updates Live continuously, and lets the user move or clear the comparison without leaving the sheet.
 
+For a named numeric result, `See what matters most` varies every non-zero root assumption by ±10% one at a time, recalculates the full model, and places a live tornado ranking directly below the result. The method and both outcomes stay visible, while the experiment never changes the sheet itself.
+
 Smartpad emphasizes readability and intent over strict syntax. Units are first-class, conversions are semantic (to, in, on, off, as %), variables can be named with spaces, and results can be previewed live or explicitly committed. The goal is to make everyday quantitative reasoning—finance, planning, science, estimation—fast, expressive, and low-friction.
 
 It's a node web application, written in typescript and react.
 
 Recent template updates:
 
+- Named numeric results can now open a persistent inline sensitivity tornado from `See what matters most`; it recursively finds root assumptions, ranks their ±10% one-at-a-time impact, and stays live while the model changes.
 - Decision Playground now teaches the complete named-scenario gesture: set a baseline, scrub an assumption, save the current scenario from a result menu, and compare it beside another result.
 - The focused Decision Playground now starts with a complete comparison gesture: open a result chip's `⋯` menu, set a baseline, scrub the ticket price, and watch input and result deltas appear in the sheet.
 - First run now opens a focused `Decision Playground`: one practical workshop model combines scrubbable assumptions, live profit and margin, a connected plot, and a valid goal-seek target. The broader `Quick Tour` remains available as a secondary template.

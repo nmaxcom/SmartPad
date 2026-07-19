@@ -4,6 +4,18 @@ All notable user-facing changes to SmartPad will be documented in this file.
 
 SmartPad uses semantic versioning. Pre-release builds use `-beta.N` or `-rc.N` suffixes.
 
+## 1.0.0-rc.10 - 2026-07-19
+
+### Added
+
+- Named numeric results now expose `See what matters most` in their existing actions menu.
+- SmartPad recursively finds numeric root assumptions, varies each one by ±10% in isolation, recalculates the model, and ranks their effect on the selected result.
+- A persistent inline tornado shows the current result, both recalculated outcomes, shared-scale impact bars, the most influential input, and accessible row descriptions.
+
+### Changed
+
+- Sensitivity results stay live while editing or scrubbing and can be moved to another result without changing sheet text, variables, baselines, scenarios, or undo history.
+
 ## 1.0.0-rc.9 - 2026-07-19
 
 ### Added

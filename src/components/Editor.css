@@ -798,6 +798,227 @@ body.number-scrubbing * {
   outline: none;
 }
 
+.editor-content p.semantic-sensitivity-line {
+  position: relative;
+}
+
+.semantic-sensitivity-analysis {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: min(100%, 720px);
+  margin: 9px 0 5px;
+  padding: 8px 9px 7px;
+  border: 1px solid
+    color-mix(in srgb, var(--color-teal) 26%, var(--color-border));
+  border-radius: 8px;
+  background:
+    linear-gradient(
+      115deg,
+      color-mix(in srgb, var(--color-teal) 7%, transparent),
+      transparent 42%
+    ),
+    var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-sans);
+  font-size: 10px;
+  line-height: 1.2;
+  pointer-events: auto;
+  user-select: text;
+}
+
+.semantic-sensitivity-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.semantic-sensitivity-title {
+  overflow: hidden;
+  color: var(--color-teal);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.semantic-sensitivity-method {
+  color: var(--color-text-secondary);
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.semantic-sensitivity-close {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 14px;
+  line-height: 18px;
+  cursor: pointer;
+}
+
+.semantic-sensitivity-close:hover,
+.semantic-sensitivity-close:focus-visible {
+  background: var(--ui-surface-subtle-hover);
+  color: var(--color-text-primary);
+  outline: 2px solid var(--color-teal);
+  outline-offset: 1px;
+}
+
+.semantic-sensitivity-baseline {
+  color: var(--color-text-secondary);
+  font-size: 9px;
+}
+
+.semantic-sensitivity-legend {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  font-size: 9px;
+  font-weight: 650;
+}
+
+.semantic-sensitivity-legend .is-minus,
+.semantic-sensitivity-outputs .is-minus {
+  color: var(--color-teal);
+}
+
+.semantic-sensitivity-legend .is-plus,
+.semantic-sensitivity-outputs .is-plus {
+  color: var(--color-pink);
+}
+
+.semantic-sensitivity-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.semantic-sensitivity-row {
+  display: grid;
+  grid-template-columns: minmax(88px, 0.75fr) minmax(150px, 2fr) minmax(
+      132px,
+      1fr
+    );
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.semantic-sensitivity-input {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.semantic-sensitivity-track {
+  position: relative;
+  display: block;
+  height: 18px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: color-mix(
+    in srgb,
+    var(--color-text-secondary) 7%,
+    transparent
+  );
+}
+
+.semantic-sensitivity-axis {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: color-mix(
+    in srgb,
+    var(--color-text-secondary) 48%,
+    transparent
+  );
+}
+
+.semantic-sensitivity-bar {
+  position: absolute;
+  width: var(--sensitivity-bar-width, 0%);
+  min-width: 1px;
+  border-radius: 2px;
+  transition:
+    width 150ms ease,
+    left 150ms ease,
+    right 150ms ease;
+}
+
+.semantic-sensitivity-bar.is-minus {
+  top: 3px;
+  height: 5px;
+  background: var(--color-teal);
+}
+
+.semantic-sensitivity-bar.is-plus {
+  bottom: 3px;
+  height: 5px;
+  background: var(--color-pink);
+}
+
+.semantic-sensitivity-bar.is-left {
+  right: 50%;
+}
+
+.semantic-sensitivity-bar.is-right {
+  left: 50%;
+}
+
+.semantic-sensitivity-bar.is-zero {
+  left: calc(50% - 1px);
+  width: 2px;
+  min-width: 2px;
+}
+
+.semantic-sensitivity-outputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  min-width: 0;
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.semantic-sensitivity-outputs > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.semantic-sensitivity-outputs .is-plus {
+  text-align: right;
+}
+
+.semantic-sensitivity-footer {
+  color: var(--color-text-secondary);
+  font-size: 9px;
+}
+
+@media (max-width: 720px) {
+  .semantic-sensitivity-row {
+    grid-template-columns: minmax(76px, 0.7fr) minmax(120px, 1.5fr);
+  }
+
+  .semantic-sensitivity-outputs {
+    grid-column: 2;
+  }
+}
+
 .semantic-result-action-menu {
   position: fixed;
   z-index: 1000;

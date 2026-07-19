@@ -86,3 +86,19 @@ SmartPad adds a compact strip beside that result:
 A sheet keeps up to six named scenarios locally across reloads. The snapshots never alter the sheet, add hidden formulas, or put controls in the Variables panel.
 
 > GIF/video marker: set a baseline, scrub one input, save `Higher ticket`, continue scrubbing so only Live changes, then move the strip from profit to margin.
+
+## See what matters most
+
+Open the `⋯` menu on a named numeric result and choose **See what matters most**. SmartPad follows derived variables back to their numeric root assumptions, changes each one by −10% and +10% one at a time, and recalculates the model through that result.
+
+The inline tornado keeps the method visible:
+
+- Rows are ordered by the largest output change in the tested range.
+- Teal is the −10% input case; pink is the +10% input case.
+- Both recalculated result values appear beside every bar.
+- Editing or scrubbing the model updates the center, ranking, bars, and values live.
+- The discreet `×` hides the analysis; **Move sensitivity here** moves it to another result.
+
+This is local sensitivity, not a forecast: the range is fixed at ±10%, inputs move one at a time, and SmartPad never edits the sheet or saves hidden assumptions.
+
+> GIF/video marker: open profit's result menu, choose **See what matters most**, scrub ticket price, watch the ranking update, then move the tornado to margin.
