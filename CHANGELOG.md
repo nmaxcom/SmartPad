@@ -4,6 +4,21 @@ All notable user-facing changes to SmartPad will be documented in this file.
 
 SmartPad uses semantic versioning. Pre-release builds use `-beta.N` or `-rc.N` suffixes.
 
+## 1.0.0-rc.9 - 2026-07-19
+
+### Added
+
+- Live and triggered result values are keyboard-focusable and open their existing actions with
+  `Enter`, `Space`, or `ArrowDown`.
+- Result menus support wrapping arrow navigation, `Home` / `End`, `Escape` focus restoration, and
+  a `Go to source line` action.
+- Reference chips act as keyboard links that return to and highlight their source line.
+
+### Changed
+
+- Goal Seek actions now use human-first labels such as `Find gross for a target…` while continuing
+  to insert transparent, editable `make ... by ... =>` lines.
+
 ## 1.0.0-rc.8 - 2026-07-18
 
 ### Added

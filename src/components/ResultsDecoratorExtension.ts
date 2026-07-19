@@ -5,6 +5,7 @@ import { Node as ProseMirrorNode } from "prosemirror-model";
 import type { RenderNode } from "../eval/renderNodes";
 import { parseVariableAssignment } from "../parsing/variableParser";
 import { sanitizeReferencePlaceholdersForDisplay } from "../references/referenceIds";
+import { buildResultChipAriaLabel } from "./resultActionAccessibility";
 
 const REF_TRACE_FLAG = "__SP_REF_TRACE_ENABLED";
 const REF_TRACE_LOG_STORE = "__SP_REF_TRACE_LOGS";
@@ -214,6 +215,13 @@ export const ResultsDecoratorExtension = Extension.create({
                         value.className = "semantic-result-value semantic-live-result-value";
                         value.setAttribute("contenteditable", "false");
                         value.setAttribute("draggable", "true");
+                        value.setAttribute("tabindex", "0");
+                        value.setAttribute("role", "button");
+                        value.setAttribute("aria-haspopup", "menu");
+                        value.setAttribute(
+                          "aria-label",
+                          buildResultChipAriaLabel(liveText),
+                        );
                         value.textContent = liveText;
 
                         const actions = document.createElement("span");

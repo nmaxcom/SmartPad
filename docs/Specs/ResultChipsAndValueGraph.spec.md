@@ -59,13 +59,13 @@ References are stored as structured inline reference nodes tied to stable source
 
 ## 3) Feature Overview
 
-| Feature | Plain explanation | Technical explanation |
-|---|---|---|
-| Result Lane | Results line up in one clean vertical lane, so scanning is instant. | Desktop editor computes a lane anchor and positions result widgets at a shared x-offset; narrow viewports collapse to inline mode. |
-| Chip as Value | You can drag/copy a chip, or use its explicit action menu, to reuse it in another expression. | Interaction inserts a `resultReference` inline node with `sourceLineId`/`sourceResultId` attrs, not plain text. |
-| Hidden References | Users never see raw `@L12` tokens while editing. | Internal serialization can use reference keys, but runtime editor view renders only chip nodes. |
-| Broken Source UX | If source value breaks, dependent chips show clear "broken link" state. | Resolver marks reference unresolved with cause code (`source_error`, `missing_source`, `type_mismatch`), and decorator renders stateful chip + inline warning. |
-| Type-Safe Chaining | Units/currency/list/number semantics propagate through references. | Evaluator resolves referenced semantic value before expression evaluation; no lossy string interpolation. |
+| Feature            | Plain explanation                                                                             | Technical explanation                                                                                                                                          |
+| ------------------ | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Result Lane        | Results line up in one clean vertical lane, so scanning is instant.                           | Desktop editor computes a lane anchor and positions result widgets at a shared x-offset; narrow viewports collapse to inline mode.                             |
+| Chip as Value      | You can drag/copy a chip, or use its explicit action menu, to reuse it in another expression. | Interaction inserts a `resultReference` inline node with `sourceLineId`/`sourceResultId` attrs, not plain text.                                                |
+| Hidden References  | Users never see raw `@L12` tokens while editing.                                              | Internal serialization can use reference keys, but runtime editor view renders only chip nodes.                                                                |
+| Broken Source UX   | If source value breaks, dependent chips show clear "broken link" state.                       | Resolver marks reference unresolved with cause code (`source_error`, `missing_source`, `type_mismatch`), and decorator renders stateful chip + inline warning. |
+| Type-Safe Chaining | Units/currency/list/number semantics propagate through references.                            | Evaluator resolves referenced semantic value before expression evaluation; no lossy string interpolation.                                                      |
 
 ---
 
@@ -220,7 +220,7 @@ Flow:
 3. Copy icon click copies the rendered value and briefly sets copied feedback state on the chip.
 4. Dragging the chip itself starts result-reference drag/drop. There is no separate drag handle.
 5. The action menu exposes current supported commands such as `Copy value` and enables plot creation when the source result depends on a plottable variable.
-   - Results with one or more solve candidates expose `Set target...` / `Set target by <variable>` actions that insert editable `make ... by ... =>` goal-seek lines below the source.
+   - Results with one or more solve candidates expose human-first `Find <variable> for a target…` actions that insert editable `make ... by ... =>` goal-seek lines below the source.
    - Goal-seek actions insert parser-safe numeric targets even when the visible chip uses grouped thousands; for example a rendered `2,520,000 EUR` target is inserted as `2520000 EUR`.
    - Single-input unnamed results insert a source-adjacent directive such as `@view plot x=x size=md`, relying on the existing nearest-expression binding instead of copying the formula into `y=...`.
    - Named results insert a live named binding such as `@view plot x=time y=speed size=md`, so later edits to `speed = ... =>` update the plot without rewriting the directive.
@@ -248,7 +248,26 @@ Guardrails:
 7. Goal-seek actions must never overwrite source variables automatically; applying a solved value is a separate future action.
 8. Disabled planned actions must be visually disabled and must not pretend a feature is currently available.
 
-### 5.6 Direct number scrubbing
+### 5.6 Keyboard result and reference workflow
+
+Flow:
+
+1. `Tab` may focus the visible value inside every live or triggered result chip.
+2. The focused value has a visible high-contrast ring and announces the value plus the available keyboard gesture.
+3. `Enter`, `Space`, or `ArrowDown` opens the same actions menu used by pointer interaction.
+4. The first enabled action receives focus. `ArrowDown` / `ArrowUp` move with wrapping, while `Home` / `End` move to the first / last enabled action.
+5. `Enter` or `Space` activates the focused action. `Escape` closes the menu and restores focus to the result value that opened it.
+6. `Go to source line` moves the caret to the source and briefly highlights it.
+7. Reference chips are focusable links; `Enter` or `Space` moves to and highlights their source line.
+
+Guardrails:
+
+1. Keyboard and pointer entry points must expose the same plot, baseline, Goal Seek, scenario, copy, and source actions.
+2. Disabled actions are skipped by arrow navigation and cannot be activated.
+3. Focusing or activating the result value must not insert a reference or mutate sheet text.
+4. Drag reuse remains available from the same rendered value without a separate drag handle.
+
+### 5.7 Direct number scrubbing
 
 Flow:
 
@@ -336,8 +355,8 @@ type ResultReferenceNode = {
    - `readable` (emit flattened visible values)
 5. Plain-text copy/paste must not append a duplicated live-result source suffix
    to assignment lines. For example, copying `ticket after promo = promo off
-   ticket list` must not paste as `ticket after promo = promo off ticket list
-   (promo off ticket list)`.
+ticket list` must not paste as `ticket after promo = promo off ticket list
+(promo off ticket list)`.
 
 Note:
 Raw symbolic refs are for export/debug tooling, not normal SmartPad editing UI.
@@ -358,6 +377,7 @@ Example:
 ```
 
 Meaning:
+
 - `lineId` is what SmartPad trusts.
 - References remain stable across insert/delete/reorder because identity is line-based, not position-based.
 

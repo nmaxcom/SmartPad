@@ -16,11 +16,27 @@ A chip is the small result pill SmartPad shows next to a line it can calculate. 
 
 - **Drag reuse**: drag the chip itself into another line to create a live reference.
 - **Copy value**: copies the visible value as plain text.
-- **Actions menu**: opens actions such as `Copy value` and plot or goal-seek suggestions when available.
+- **Actions menu**: opens actions such as `Copy value`, `Go to source line`, plot suggestions, and `Find <input> for a target…` when available.
 
 Clicking the chip value itself does not insert anything. Drag the chip when you want to reuse it in the sheet.
 
 > GIF/video marker: drag a result chip into another line, then hover a chip and point out the copy icon and menu.
+
+## Use results without a mouse
+
+Press `Tab` until a result value receives a teal focus ring. From there:
+
+- Press `Enter`, `Space`, or `ArrowDown` to open its actions.
+- Use `ArrowDown` / `ArrowUp` to move through enabled actions; `Home` and `End` jump to the first and last.
+- Press `Enter` or `Space` to run the focused action.
+- Press `Escape` to close the menu and return to the result.
+- Choose **Go to source line** to move the caret to the calculation that produced the result.
+
+References are keyboard links too. Focus one with `Tab`, then press `Enter` or `Space` to return to and briefly highlight its source.
+
+Goal Seek uses direct language in this menu. For example, **Find gross for a target…** inserts an editable `make ... by gross =>` line; it never overwrites `gross` automatically.
+
+> GIF/video marker: tab to a result, open its menu with Enter, move to a Goal Seek action with arrows, close with Escape, then jump from a reference to its source.
 
 ## References
 

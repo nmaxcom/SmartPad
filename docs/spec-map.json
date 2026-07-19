@@ -117,11 +117,13 @@
         "src/solve/",
         "src/types/SymbolicValue.ts",
         "docs/Specs/Solve.spec.md",
-        "docs/Specs/implemented/solve-and-symbolic-math.md"
+        "docs/Specs/implemented/solve-and-symbolic-math.md",
+        "docs/Specs/proposed/goal-seek-interactions.md"
       ],
       "docPrefixes": [
         "docs/Specs/Solve.spec.md",
         "docs/Specs/implemented/solve-and-symbolic-math.md",
+        "docs/Specs/proposed/goal-seek-interactions.md",
         "public/docs/"
       ],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
@@ -154,6 +156,7 @@
         "src/components/VariableHoverExtension.ts",
         "src/components/Result",
         "src/components/Reference",
+        "src/components/resultActionAccessibility.ts",
         "src/components/resultBaselineInteraction.ts",
         "src/state/scenarioComparisonStore.ts",
         "src/state/variableBaselineStore.ts",
@@ -162,6 +165,7 @@
         "docs/Specs/BaselineComparison.spec.md",
         "docs/Specs/implemented/baseline-comparison.md",
         "docs/Specs/proposed/scenario-comparison-sheets.md",
+        "docs/Specs/proposed/goal-seek-interactions.md",
         "docs/Specs/proposed/autocomplete.md"
       ],
       "docPrefixes": [
@@ -172,6 +176,7 @@
         "docs/Specs/BaselineComparison.spec.md",
         "docs/Specs/implemented/baseline-comparison.md",
         "docs/Specs/proposed/scenario-comparison-sheets.md",
+        "docs/Specs/proposed/goal-seek-interactions.md",
         "docs/Specs/proposed/autocomplete.md",
         "public/docs/"
       ],

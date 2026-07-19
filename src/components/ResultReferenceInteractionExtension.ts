@@ -38,6 +38,11 @@ import {
   formatBaselineDeltaLabel,
   resolveBaselineVariableName,
 } from "./resultBaselineInteraction";
+import {
+  buildGoalSeekActionLabel,
+  resolveResultMenuFocusIndex,
+  type ResultMenuNavigationKey,
+} from "./resultActionAccessibility";
 
 const RESULT_SELECTOR =
   ".semantic-result-display, .semantic-live-result-display";
@@ -1076,12 +1081,9 @@ const buildGoalSeekMenuActions = (
     return [];
   }
   return plan.xVariables.map((variable) => ({
-    label:
-      plan.xVariables.length > 1
-        ? `Set target by ${variable}`
-        : "Set target...",
+    label: buildGoalSeekActionLabel(variable),
     line: `make ${target} = ${currentValue} by ${variable} =>`,
-    title: `Insert an editable goal-seek line that solves ${variable}`,
+    title: `Insert an editable target line and calculate the ${variable} needed`,
   }));
 };
 
@@ -1419,9 +1421,19 @@ const selectReferenceNode = (view: any, referenceEl: HTMLElement): boolean => {
   }
 };
 
-const jumpToSourceLine = (view: any, sourceLineId: string): boolean => {
-  if (!sourceLineId) return false;
-  const paragraph = view.dom.querySelector(`p[data-line-id="${sourceLineId}"]`);
+const jumpToSourceLine = (
+  view: any,
+  sourceLineId: string,
+  sourceLine: number = 0,
+): boolean => {
+  const paragraphById = sourceLineId
+    ? view.dom.querySelector(`p[data-line-id="${sourceLineId}"]`)
+    : null;
+  const paragraphByNumber =
+    !paragraphById && sourceLine > 0
+      ? view.dom.querySelectorAll("p")[sourceLine - 1] || null
+      : null;
+  const paragraph = paragraphById || paragraphByNumber;
   if (!paragraph) return false;
   const pos = view.posAtDOM(paragraph, 0);
   const target = Math.max(1, Math.min(pos + 1, view.state.doc.content.size));
@@ -1544,6 +1556,12 @@ export const ResultReferenceInteractionExtension = Extension.create({
     let activeInlineDropPos: number | null = null;
     let activeMenu: HTMLElement | null = null;
     let activeMenuButton: HTMLElement | null = null;
+    let activeMenuActivatorIdentity: {
+      sourceLineId: string;
+      sourceLine: number;
+      selector: string;
+    } | null = null;
+    let resultActionMenuSequence = 0;
     let activePluginView: any = null;
     let baselineRefreshFrame: number | null = null;
     let baselineScrubMouseUpPending = false;
@@ -1593,15 +1611,77 @@ export const ResultReferenceInteractionExtension = Extension.create({
         (window as any)[RESULT_DRAG_ACTIVE_WINDOW_FLAG] = false;
       }
     };
-    const closeResultActionMenu = () => {
+    const resolveActiveMenuActivator = (): HTMLElement | null => {
+      if (activeMenuButton?.isConnected) return activeMenuButton;
+      if (!activePluginView || !activeMenuActivatorIdentity) return null;
+      const { sourceLineId, sourceLine, selector } = activeMenuActivatorIdentity;
+      const paragraphById = sourceLineId
+        ? activePluginView.dom.querySelector(
+            `p[data-line-id="${sourceLineId}"]`,
+          )
+        : null;
+      const paragraphByNumber =
+        !paragraphById && sourceLine > 0
+          ? activePluginView.dom.querySelectorAll("p")[sourceLine - 1] || null
+          : null;
+      return (paragraphById || paragraphByNumber)?.querySelector(selector) || null;
+    };
+    const syncActiveMenuActivatorAria = () => {
+      if (!activeMenu?.isConnected) return;
+      const activator = resolveActiveMenuActivator();
+      if (!activator) return;
+      activeMenuButton = activator;
+      if (
+        !activator.matches(
+          ".semantic-result-value, .semantic-live-result-value",
+        )
+      ) {
+        activator.setAttribute("aria-expanded", "true");
+        activator.setAttribute("aria-controls", activeMenu.id);
+      }
+    };
+    const activateResultActionMenu = (
+      menu: HTMLElement,
+      button: HTMLElement,
+      resultEl: HTMLElement,
+    ) => {
+      const payload = payloadFromElement(resultEl);
+      activeMenu = menu;
+      activeMenuButton = button;
+      activeMenuActivatorIdentity = {
+        sourceLineId: payload?.sourceLineId || "",
+        sourceLine: payload?.sourceLine || 0,
+        selector: button.matches(
+          ".semantic-result-value, .semantic-live-result-value",
+        )
+          ? ".semantic-result-value"
+          : ".semantic-result-menu",
+      };
+      syncActiveMenuActivatorAria();
+      window.requestAnimationFrame(syncActiveMenuActivatorAria);
+      window.setTimeout(syncActiveMenuActivatorAria, 60);
+    };
+    const closeResultActionMenu = (restoreFocus: boolean = false) => {
+      const focusTarget = resolveActiveMenuActivator();
       if (activeMenu?.parentElement) {
         activeMenu.parentElement.removeChild(activeMenu);
       }
-      if (activeMenuButton) {
-        activeMenuButton.setAttribute("aria-expanded", "false");
+      if (focusTarget) {
+        if (
+          !focusTarget.matches(
+            ".semantic-result-value, .semantic-live-result-value",
+          )
+        ) {
+          focusTarget.setAttribute("aria-expanded", "false");
+          focusTarget.removeAttribute("aria-controls");
+        }
       }
       activeMenu = null;
       activeMenuButton = null;
+      activeMenuActivatorIdentity = null;
+      if (restoreFocus && focusTarget?.isConnected) {
+        focusTarget.focus();
+      }
     };
     const buildMenuButton = (
       label: string,
@@ -1658,6 +1738,43 @@ export const ResultReferenceInteractionExtension = Extension.create({
       );
       menu.style.left = `${left}px`;
       menu.style.top = `${Math.max(8, top)}px`;
+    };
+
+    const installResultMenuKeyboardNavigation = (menu: HTMLElement) => {
+      menu.addEventListener("keydown", (event) => {
+        const keyboardEvent = event as KeyboardEvent;
+        if (keyboardEvent.key === "Escape") {
+          keyboardEvent.preventDefault();
+          keyboardEvent.stopPropagation();
+          closeResultActionMenu(true);
+          return;
+        }
+        if (
+          keyboardEvent.key !== "ArrowDown" &&
+          keyboardEvent.key !== "ArrowUp" &&
+          keyboardEvent.key !== "Home" &&
+          keyboardEvent.key !== "End"
+        ) {
+          return;
+        }
+        const items = Array.from(
+          menu.querySelectorAll<HTMLButtonElement>(
+            'button[role="menuitem"]:not(:disabled)',
+          ),
+        );
+        const currentIndex = items.indexOf(
+          document.activeElement as HTMLButtonElement,
+        );
+        const nextIndex = resolveResultMenuFocusIndex(
+          keyboardEvent.key as ResultMenuNavigationKey,
+          currentIndex,
+          items.length,
+        );
+        if (nextIndex === null) return;
+        keyboardEvent.preventDefault();
+        keyboardEvent.stopPropagation();
+        items[nextIndex]?.focus();
+      });
     };
 
     const getBaselineForActiveSheet = (): VariableBaselineSnapshot | null => {
@@ -2039,6 +2156,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
       const menu = document.createElement("div");
       menu.className =
         "semantic-result-action-menu semantic-scenario-name-menu";
+      menu.id = `smartpad-scenario-dialog-${++resultActionMenuSequence}`;
       menu.setAttribute("role", "dialog");
       menu.setAttribute("aria-label", `Save scenario for ${variableName}`);
 
@@ -2122,9 +2240,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
       });
 
       document.body.appendChild(menu);
-      activeMenu = menu;
-      activeMenuButton = button;
-      button.setAttribute("aria-expanded", "true");
+      activateResultActionMenu(menu, button, resultEl);
       positionResultActionMenu(menu, button);
       window.requestAnimationFrame(() => {
         input.focus();
@@ -2137,16 +2253,19 @@ export const ResultReferenceInteractionExtension = Extension.create({
       resultEl: HTMLElement,
       button: HTMLElement,
     ) => {
-      const wasOpenForButton = activeMenuButton === button;
+      const wasOpenForButton = resolveActiveMenuActivator() === button;
       closeResultActionMenu();
       if (wasOpenForButton) {
         return;
       }
 
+      const payload = payloadFromElement(resultEl);
+      const displayedValue = resolveDisplayedResultValue(resultEl);
       const menu = document.createElement("div");
       menu.className = "semantic-result-action-menu";
+      menu.id = `smartpad-result-menu-${++resultActionMenuSequence}`;
       menu.setAttribute("role", "menu");
-      menu.setAttribute("aria-label", "Result actions");
+      menu.setAttribute("aria-label", `Actions for result ${displayedValue}`);
 
       menu.appendChild(
         buildMenuButton("Copy value", () => {
@@ -2160,9 +2279,29 @@ export const ResultReferenceInteractionExtension = Extension.create({
         }),
       );
 
+      menu.appendChild(
+        buildMenuButton(
+          "Go to source line",
+          () => {
+            if (payload) {
+              jumpToSourceLine(view, payload.sourceLineId, payload.sourceLine);
+              highlightSource(view, payload.sourceLineId, payload.sourceLine, {
+                lockMs: 1600,
+              });
+            }
+            closeResultActionMenu();
+          },
+          {
+            disabled:
+              !payload || (!payload.sourceLineId && payload.sourceLine <= 0),
+            title: "Move the editor caret to the line that produced this result",
+            className: "semantic-result-source-action",
+          },
+        ),
+      );
+
       const activeSheetId = getActiveSheetId?.() || "";
       const activeBaseline = getBaselineForActiveSheet();
-      const payload = payloadFromElement(resultEl);
       const scenarioVariableName = resolveVariableNameForPayload(view, payload);
       const scenarioState = activeSheetId
         ? loadScenarioComparison(activeSheetId)
@@ -2280,7 +2419,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
       const goalSeekActions = buildGoalSeekMenuActions(view, payload);
       if (goalSeekActions.length === 0) {
         menu.appendChild(
-          buildMenuButton("Set target...", () => {}, {
+          buildMenuButton("Find an input for a target…", () => {}, {
             disabled: true,
             title:
               "Available when the result depends on a variable SmartPad can solve for",
@@ -2380,16 +2519,15 @@ export const ResultReferenceInteractionExtension = Extension.create({
         });
       }
       menu.appendChild(
-        buildMenuButton("Explore dependencies", () => {}, {
+        buildMenuButton("Show how this result is calculated", () => {}, {
           disabled: true,
           title: "Planned action",
         }),
       );
 
       document.body.appendChild(menu);
-      activeMenu = menu;
-      activeMenuButton = button;
-      button.setAttribute("aria-expanded", "true");
+      activateResultActionMenu(menu, button, resultEl);
+      installResultMenuKeyboardNavigation(menu);
       positionResultActionMenu(menu, button);
       const firstAction = menu.querySelector(
         "button:not(:disabled)",
@@ -2560,9 +2698,10 @@ export const ResultReferenceInteractionExtension = Extension.create({
               closeResultActionMenu();
               return;
             }
+            const currentActivator = resolveActiveMenuActivator();
             if (
               activeMenu?.contains(target) ||
-              activeMenuButton?.contains(target)
+              currentActivator?.contains(target)
             ) {
               return;
             }
@@ -2582,6 +2721,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
           const handleUiRenderComplete = () => {
             window.requestAnimationFrame(() => {
               refreshBaselineResultDeltas(view);
+              syncActiveMenuActivatorAria();
               if (document.body.classList.contains("number-scrubbing")) {
                 if (!baselineScrubMouseUpPending) {
                   baselineScrubMouseUpPending = true;
@@ -2929,9 +3069,13 @@ export const ResultReferenceInteractionExtension = Extension.create({
                 const isBroken =
                   referenceEl.classList.contains("semantic-reference-broken") ||
                   !!referenceEl.closest(".semantic-reference-broken");
-                if (isBroken && sourceLineId) {
+                if (isBroken && (sourceLineId || highlightSourceLine > 0)) {
                   event.preventDefault();
-                  return jumpToSourceLine(view, sourceLineId);
+                  return jumpToSourceLine(
+                    view,
+                    sourceLineId,
+                    highlightSourceLine,
+                  );
                 }
                 return false;
               }
@@ -2966,15 +3110,65 @@ export const ResultReferenceInteractionExtension = Extension.create({
               return false;
             },
             keydown: (view, event) => {
+              const keyboardEvent = event as KeyboardEvent;
+              const target = getEventElement(keyboardEvent.target);
               appendRefTrace("domKeydown", {
-                key: String((event as KeyboardEvent).key || ""),
-                code: String((event as KeyboardEvent).code || ""),
-                metaKey: Boolean((event as KeyboardEvent).metaKey),
-                ctrlKey: Boolean((event as KeyboardEvent).ctrlKey),
-                altKey: Boolean((event as KeyboardEvent).altKey),
-                shiftKey: Boolean((event as KeyboardEvent).shiftKey),
+                key: String(keyboardEvent.key || ""),
+                code: String(keyboardEvent.code || ""),
+                metaKey: Boolean(keyboardEvent.metaKey),
+                ctrlKey: Boolean(keyboardEvent.ctrlKey),
+                altKey: Boolean(keyboardEvent.altKey),
+                shiftKey: Boolean(keyboardEvent.shiftKey),
                 ...snapshotSelectionLine(view),
               });
+
+              if (
+                target &&
+                !keyboardEvent.metaKey &&
+                !keyboardEvent.ctrlKey &&
+                !keyboardEvent.altKey
+              ) {
+                const resultValue = target.closest(
+                  ".semantic-result-value, .semantic-live-result-value",
+                ) as HTMLElement | null;
+                if (
+                  resultValue &&
+                  (keyboardEvent.key === "Enter" ||
+                    keyboardEvent.key === " " ||
+                    keyboardEvent.key === "ArrowDown")
+                ) {
+                  const resultEl = resolveResultElementFromTarget(resultValue);
+                  if (resultEl) {
+                    keyboardEvent.preventDefault();
+                    keyboardEvent.stopPropagation();
+                    openResultActionMenu(view, resultEl, resultValue);
+                    return true;
+                  }
+                }
+
+                const referenceEl = target.closest(
+                  REFERENCE_SELECTOR,
+                ) as HTMLElement | null;
+                if (
+                  referenceEl &&
+                  (keyboardEvent.key === "Enter" || keyboardEvent.key === " ")
+                ) {
+                  const sourceLineId = String(
+                    referenceEl.getAttribute("data-source-line-id") || "",
+                  ).trim();
+                  const sourceLine = Number(
+                    referenceEl.getAttribute("data-source-line") || 0,
+                  );
+                  if (sourceLineId || sourceLine > 0) {
+                    keyboardEvent.preventDefault();
+                    keyboardEvent.stopPropagation();
+                    highlightSource(view, sourceLineId, sourceLine, {
+                      lockMs: 1600,
+                    });
+                    return jumpToSourceLine(view, sourceLineId, sourceLine);
+                  }
+                }
+              }
               return false;
             },
             beforeinput: (view, event) => {

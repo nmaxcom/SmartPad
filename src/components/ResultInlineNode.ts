@@ -1,4 +1,5 @@
 import { Node } from "@tiptap/core";
+import { buildResultChipAriaLabel } from "./resultActionAccessibility";
 
 export const ResultInlineNode = Node.create({
   name: "resultToken",
@@ -84,7 +85,19 @@ export const ResultInlineNode = Node.create({
             "aria-label": value,
             draggable: "true",
           },
-          ["span", { class: "semantic-result-value", contenteditable: "false", draggable: "true" }, 0],
+          [
+            "span",
+            {
+              class: "semantic-result-value",
+              contenteditable: "false",
+              draggable: "true",
+              tabindex: "0",
+              role: "button",
+              "aria-haspopup": "menu",
+              "aria-label": buildResultChipAriaLabel(value),
+            },
+            0,
+          ],
           [
             "span",
             { class: "semantic-result-actions", contenteditable: "false" },

@@ -1,4 +1,5 @@
 import { Node } from "@tiptap/core";
+import { buildReferenceChipAriaLabel } from "./resultActionAccessibility";
 
 export const ReferenceInlineNode = Node.create({
   name: "referenceToken",
@@ -74,7 +75,9 @@ export const ReferenceInlineNode = Node.create({
         "data-result": sourceValue,
         "data-flash": flash ? "true" : "false",
         title: sourceValue || label,
-        "aria-label": label,
+        "aria-label": buildReferenceChipAriaLabel(label),
+        tabindex: "0",
+        role: "link",
         draggable: "true",
       },
       label,

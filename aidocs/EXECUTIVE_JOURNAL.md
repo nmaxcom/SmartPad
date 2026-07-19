@@ -8023,3 +8023,30 @@
     *   Recommendation was read from `aidocs/TODO_BACKLOG.md`; no product behavior or backlog status changed.
 *   Pending:
     *   Owner: User; due: TBD; status: todo; authorize the result-chip accessibility and solve-language slice or choose a different feature item.
+
+## Entry J-2026-07-19-04
+
+*   Timestamp: 2026-07-19 03:19 CEST / 2026-07-19 01:19 UTC
+*   Summary:
+    *   User authorized the result-chip accessibility and solve-language slice.
+    *   SmartPad result values are now first-class keyboard entry points inside the sheet, and reference chips can return to their source without pointer input.
+    *   The existing discreet result menu remains the single action surface; no navigation or mutation controls were added to the Variables panel.
+*   Decisions:
+    *   Focus the rendered value itself and open its existing menu with `Enter`, `Space`, or `ArrowDown`.
+    *   Move focus into the first enabled menu action; support wrapping arrows, `Home`, `End`, and `Escape` with reliable focus restoration.
+    *   Add `Go to source line` and make reference chips keyboard links with source highlighting.
+    *   Replace implementation-oriented Goal Seek labels with human-first `Find <input> for a target…` copy while keeping the transparent editable `make ... by ... =>` line.
+    *   Advance SmartPad to `1.0.0-rc.9` and record Goal Seek as an implemented partial rather than fully proposed.
+*   Artifacts changed:
+    *   Added shared result-action accessibility helpers plus focused unit and browser coverage.
+    *   Extended result/reference rendering, menu interaction, focus styles, source navigation, Goal Seek copy, public docs, behavioral specs, trust/map registries, changelog, and version metadata.
+*   Validation:
+    *   Focused accessibility, solve, baseline, and scenario unit coverage passed: 50 of 50.
+    *   Broad Chromium result regression passed: 62 of 62 across keyboard access, references, live results, Goal Seek, plots, baseline, and named scenarios.
+    *   Visual QA confirmed the action menu remains compact beside the result; the keyboard e2e also verifies a solid 2 px visible focus outline.
+    *   `npm run docs:docusaurus:publish-local`, `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, and `npm run spec:trust` passed.
+    *   `npm run verify:changed -- HEAD` passed with related units and the production build; only the existing large-chunk warning remains.
+*   Pending:
+    *   Owner: User; due: TBD; status: in_progress; verify the exact in-sheet keyboard sequence and explicitly confirm or request refinements.
+*   Risks/blockers:
+    *   No machine blocker remains. The human completion gate is open.

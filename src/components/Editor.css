@@ -390,6 +390,19 @@ body.number-scrubbing * {
   display: inline-block;
   min-width: 0;
   cursor: grab;
+  border-radius: 3px;
+  outline: none;
+}
+
+.semantic-result-value[role="button"]:focus-visible,
+.semantic-live-result-value[role="button"]:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 4px;
+}
+
+.semantic-result-display:has(.semantic-result-value:focus-visible),
+.semantic-live-result-display:has(.semantic-live-result-value:focus-visible) {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-teal) 18%, transparent);
 }
 
 .semantic-result-display:active,
@@ -831,6 +844,10 @@ body.number-scrubbing * {
   font-weight: 600;
 }
 
+.semantic-result-action-menu button.semantic-result-source-action {
+  color: var(--color-text-secondary);
+}
+
 .semantic-result-action-menu button.semantic-result-baseline-clear-action {
   color: var(--color-text-secondary);
 }
@@ -954,6 +971,11 @@ body.number-scrubbing * {
   font-weight: 600;
   cursor: pointer;
   user-select: all;
+}
+
+.semantic-reference-chip:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 3px;
 }
 
 .semantic-reference-chip.semantic-reference-flash {

@@ -1,12 +1,25 @@
 # Goal-Seek Interactions
 
-Status: proposed
+Status: partial
 
 This document defines a text-first goal-seek feature for SmartPad that lets users say:
 
 - make this result become that value
 - by changing one or more chosen variables
 - without introducing new `@...` directive language
+
+## 0. Implemented partial
+
+SmartPad currently implements the reliable one-variable path:
+
+1. A result menu detects each input SmartPad can solve for.
+2. It presents a human-first action such as `Find gross for a target…`.
+3. Activating the action inserts an editable `make <result> = <current value> by <input> =>` line immediately below the source.
+4. The inserted target is parser-safe even when the visible result uses thousands grouping.
+5. The source sheet is never overwritten; the result line reports the required input value.
+6. The complete flow is operable from a focused result value with `Enter` / `Space`, arrow-key menu navigation, and `Escape` dismissal.
+
+Multiple constraints, multi-variable strategies, apply-to-sheet, create-scenario-from-solution, and frontier visualization remain proposed.
 
 ## 1. Purpose
 
@@ -38,8 +51,7 @@ This feature is distinct from general symbolic solve:
 
 Every result chip menu may expose:
 
-- `Set target...`
-- `Set target by...`
+- `Find <variable> for a target…`
 
 When chosen, SmartPad inserts a goal-seek line directly below the source line and anchors it to the source result using the same stable-chip mechanism used elsewhere in the editor.
 
@@ -64,7 +76,7 @@ Notes:
 ### 4.1 One-variable flow
 
 1. User opens a result chip menu.
-2. User chooses `Set target by...`.
+2. User chooses `Find <variable> for a target…`.
 3. User enters:
    - desired value
    - the variable to change
@@ -249,9 +261,9 @@ feasible combinations:
   100 km/h| 3 h
 ```
 
-## 10. Implementation gate
+## 10. Remaining implementation gate
 
-This feature is not promotable until all of the following are green:
+Promotion of the remaining constrained and multi-variable workflow requires:
 
 1. targeted Jest unit coverage for parsing, solving, constraints, and result-source anchoring
 2. targeted Playwright coverage for chip-menu entry, multi-variable strategy choice, apply-to-sheet, and failure states

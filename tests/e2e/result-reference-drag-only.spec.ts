@@ -495,7 +495,11 @@ test.describe("Result references (drag-only)", () => {
     const menu = page.locator(".semantic-result-action-menu");
     await expect(menu).toBeVisible();
     await expect(menu.getByRole("menuitem", { name: "Copy value" })).toBeEnabled();
-    await expect(menu.getByRole("menuitem", { name: "Explore dependencies" })).toBeDisabled();
+    await expect(
+      menu.getByRole("menuitem", {
+        name: "Show how this result is calculated",
+      }),
+    ).toBeDisabled();
     await expect(menu.getByRole("menuitem", { name: "Plot from result" })).toBeDisabled();
     await expect(menu.getByRole("menuitem", { name: "Insert reference" })).toHaveCount(0);
     await expect(menu.getByRole("menuitem", { name: "Insert value" })).toHaveCount(0);
@@ -740,8 +744,12 @@ test.describe("Result references (drag-only)", () => {
       .evaluate((button: HTMLElement) => button.click());
 
     const menu = page.locator(".semantic-result-action-menu");
-    await expect(menu.getByRole("menuitem", { name: "Set target by gross" })).toBeEnabled();
-    await menu.getByRole("menuitem", { name: "Set target by gross" }).click();
+    await expect(
+      menu.getByRole("menuitem", { name: "Find gross for a target…" }),
+    ).toBeEnabled();
+    await menu
+      .getByRole("menuitem", { name: "Find gross for a target…" })
+      .click();
     await waitForUIRenderComplete(page);
 
     const goalLine = page.locator(".ProseMirror p").nth(3);
@@ -781,8 +789,12 @@ test.describe("Result references (drag-only)", () => {
       .evaluate((button: HTMLElement) => button.click());
 
     const menu = page.locator(".semantic-result-action-menu");
-    await expect(menu.getByRole("menuitem", { name: "Set target by gross" })).toBeEnabled();
-    await menu.getByRole("menuitem", { name: "Set target by gross" }).click();
+    await expect(
+      menu.getByRole("menuitem", { name: "Find gross for a target…" }),
+    ).toBeEnabled();
+    await menu
+      .getByRole("menuitem", { name: "Find gross for a target…" })
+      .click();
     await waitForUIRenderComplete(page);
 
     const goalLine = page.locator(".ProseMirror p").nth(3);
