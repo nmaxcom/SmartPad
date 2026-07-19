@@ -8095,3 +8095,19 @@
 *   Risks/blockers:
     *   Zero inputs, clock/date values, lists, adjustable ranges, correlations, distributions, multiple simultaneous changes, and Monte Carlo are intentionally outside this first slice.
     *   The human completion gate remains open.
+
+## Entry J-2026-07-19-07
+
+*   Timestamp: 2026-07-19 13:38 CEST / 2026-07-19 11:38 UTC
+*   Summary:
+    *   User explicitly confirmed the complete in-sheet sensitivity workflow and asked the assistant to continue.
+    *   Both the machine gate and human gate are now closed for `T-2026-06-14-09`.
+*   Decisions:
+    *   Preserve the shipped `1.0.0-rc.10` sensitivity behavior and close the milestone without another version change.
+    *   Continue with `T-2026-06-14-08`, starting with transparent one-variable Goal Seek bounds before attempting multiple free variables or optimization strategies.
+*   Validation:
+    *   No product code changed after the already-green sensitivity gate: 56 focused units, 63 broad Chromium regressions, visual QA, public-docs build, docs/spec/trust/changed gates, and production build.
+*   Pending:
+    *   Owner: Assistant; due: TBD; status: in_progress; specify and implement one-variable lower/upper constraints with unit-aware feasibility checks, readable failures, inline discoverability, and focused unit/browser coverage.
+*   Risks/blockers:
+    *   Multiple free variables and frontier/optimization strategies remain separate future slices; the bounded solver must not imply a feasible answer outside the stated interval.
