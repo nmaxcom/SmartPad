@@ -115,6 +115,7 @@
       "name": "Solve And Symbolic Math",
       "specPrefixes": [
         "src/solve/",
+        "src/eval/solveEvaluator.ts",
         "src/types/SymbolicValue.ts",
         "docs/Specs/Solve.spec.md",
         "docs/Specs/implemented/solve-and-symbolic-math.md",

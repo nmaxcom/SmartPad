@@ -4,6 +4,22 @@ All notable user-facing changes to SmartPad will be documented in this file.
 
 SmartPad uses semantic versioning. Pre-release builds use `-beta.N` or `-rc.N` suffixes.
 
+## 1.0.0-rc.11 - 2026-07-19
+
+### Added
+
+- Goal Seek accepts visible inclusive bounds such as
+  `make profit = 7000 EUR by price with 40 EUR <= price <= 80 EUR =>`.
+- One-sided `>=` / `<=` clauses, compatible currency/unit bounds, and time-duration limits are
+  supported.
+- Numeric result menus expose `Find <input> within limits…`, which inserts editable starting
+  limits around the current input directly in the sheet.
+
+### Changed
+
+- A bounded Goal Seek returns the exact solution when feasible and explains whether the required
+  value falls below the minimum or above the maximum. Answers are never silently clamped.
+
 ## 1.0.0-rc.10 - 2026-07-19
 
 ### Added

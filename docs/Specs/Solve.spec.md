@@ -1,6 +1,6 @@
 # SmartPad Solve and Symbolic Math Spec
 
-This spec defines SmartPad's solve behavior for unknown variables, including implicit back-solving (`x =>`), explicit solve clauses (`solve x in ... =>`), and one-variable goal-seek lines (`make result = target by x =>`).
+This spec defines SmartPad's solve behavior for unknown variables, including implicit back-solving (`x =>`), explicit solve clauses (`solve x in ... =>`), and one-variable goal-seek lines with optional bounds (`make result = target by x with lower <= x <= upper =>`).
 
 ---
 
@@ -51,15 +51,21 @@ Recommendation:
 ### 1.4 Goal-seek trigger
 
 - Syntax: `make <target result or expression> = <desired value> by <variable> =>`
+- Bounded syntax: `make <target result or expression> = <desired value> by <variable> with <lower> <= <variable> <= <upper> =>`
 - Examples:
   - `make take home = 4000 EUR by gross =>`
   - Symbol-first currency targets such as `make take home = €4000 by gross =>` are valid.
   - `make distance / time = 80 km/h by time =>`
+  - `make profit = 5000 EUR by price with 40 EUR <= price <= 80 EUR =>`
+  - One-sided forms such as `with price >= 40 EUR` and comma-separated pairs such as `with price >= 40 EUR, price <= 80 EUR` are valid.
 
 Behavior:
 - Named target results use the latest source equation recorded above the goal line.
 - Unnamed target expressions are solved directly from the expression in the goal line.
 - V1 supports one free variable.
+- Inclusive bounds are evaluated after solving and must use compatible numbers, currencies, percentages, durations, or physical units.
+- Time-unit solutions can be checked against duration limits, so `60 min <= time <= 2 h` is valid.
+- SmartPad never clamps a solution to a bound. It either returns the exact feasible solution or explains whether the required value is below the minimum or above the maximum.
 - Multi-variable goal-seek requests must return an explicit unsupported/strategy error rather than inventing a single answer.
 - Goal-seek lines require `=>` and template normalization must preserve that trigger.
 - Incomplete `solve` / `make` command drafts without `=>` are treated as plain text while the user is still typing, rather than showing a premature parse error.
@@ -133,6 +139,9 @@ Solve returns explicit errors for invalid or unsupported cases, including:
 6. `⚠️ Cannot solve: no real solution` when solved expression requires invalid real-domain evaluation (for example negative radicand)
 7. `Cannot goal-seek: goal line is not valid` for malformed `make ... by ...` lines.
 8. `Cannot goal-seek multiple variables...` for unsupported v1 multi-variable goal-seek.
+9. `Cannot goal-seek: lower limit ... is above upper limit ...` for reversed or contradictory bounds.
+10. `Cannot goal-seek: limits for ... must use compatible values` for mismatched types, units, or currencies.
+11. `No feasible solution within limits: ... below the minimum ...` or `... above the maximum ...` when the exact answer falls outside the declared interval.
 
 ---
 
@@ -185,3 +194,15 @@ Solve returns explicit errors for invalid or unsupported cases, including:
    - `projected signups = base signups + ad spend * signup lift`
    - `make projected signups = 850 by ad spend =>`
    - Result: `2500 EUR`
+
+9. Bounded Goal Seek with a feasible answer:
+   - `price = 50 EUR`
+   - `unit cost = 20 EUR`
+   - `orders = 200`
+   - `profit = (price - unit cost) * orders`
+   - `make profit = 7000 EUR by price with 40 EUR <= price <= 80 EUR =>`
+   - Result: `55 EUR`
+
+10. Bounded Goal Seek with no feasible answer:
+    - Same model, then `make profit = 13000 EUR by price with price <= 80 EUR =>`
+    - Result: `⚠️ No feasible solution within limits: price needs to be 85 EUR, above the maximum 80 EUR`

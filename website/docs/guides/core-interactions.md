@@ -16,7 +16,7 @@ A chip is the small result pill SmartPad shows next to a line it can calculate. 
 
 - **Drag reuse**: drag the chip itself into another line to create a live reference.
 - **Copy value**: copies the visible value as plain text.
-- **Actions menu**: opens actions such as `Copy value`, `Go to source line`, plot suggestions, and `Find <input> for a target…` when available.
+- **Actions menu**: opens actions such as `Copy value`, `Go to source line`, plot suggestions, `Find <input> for a target…`, and `Find <input> within limits…` when available.
 
 Clicking the chip value itself does not insert anything. Drag the chip when you want to reuse it in the sheet.
 
@@ -35,6 +35,8 @@ Press `Tab` until a result value receives a teal focus ring. From there:
 References are keyboard links too. Focus one with `Tab`, then press `Enter` or `Space` to return to and briefly highlight its source.
 
 Goal Seek uses direct language in this menu. For example, **Find gross for a target…** inserts an editable `make ... by gross =>` line; it never overwrites `gross` automatically.
+
+Choose **Find gross within limits…** when the answer must stay in a realistic interval. SmartPad inserts visible starting limits around the current input, such as `with 1500 EUR <= gross <= 4500 EUR`; edit the target and either limit directly in the sheet. The answer is never silently clamped: SmartPad returns the exact value or explains which limit makes the target impossible.
 
 > GIF/video marker: tab to a result, open its menu with Enter, move to a Goal Seek action with arrows, close with Escape, then jump from a reference to its source.
 

@@ -58,7 +58,10 @@ target distance = 250 km
 target time = 3 h
 make target distance / target time = 100 km/h by target time =>
 
-# 10) Guardrail: v1 solves one input at a time.
+# 10) Keep a solution realistic with explicit lower and upper limits.
+make gross profit = 10500 EUR by price with 40 EUR <= price <= 60 EUR =>
+
+# 11) Guardrail: SmartPad still solves one input at a time.
 # Try this manually and it should reject the request instead of inventing one answer:
 # make checkout total = 200 EUR by unit price, items =>
 `;

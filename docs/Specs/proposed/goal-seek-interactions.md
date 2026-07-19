@@ -10,7 +10,7 @@ This document defines a text-first goal-seek feature for SmartPad that lets user
 
 ## 0. Implemented partial
 
-SmartPad currently implements the reliable one-variable path:
+SmartPad currently implements the reliable one-variable path, including explicit bounds:
 
 1. A result menu detects each input SmartPad can solve for.
 2. It presents a human-first action such as `Find gross for a target…`.
@@ -18,8 +18,11 @@ SmartPad currently implements the reliable one-variable path:
 4. The inserted target is parser-safe even when the visible result uses thousands grouping.
 5. The source sheet is never overwritten; the result line reports the required input value.
 6. The complete flow is operable from a focused result value with `Enter` / `Space`, arrow-key menu navigation, and `Escape` dismissal.
+7. One discreet `Find <variable> within limits…` action for the primary detected input inserts an editable line with transparent starting bounds around its current value; other inputs remain available through their normal target actions and manual `with` syntax.
+8. Manual goal lines accept an inclusive chained interval such as `with 40 EUR <= price <= 80 EUR` or equivalent one-sided `>=` / `<=` clauses.
+9. Bounds are unit- and currency-aware. SmartPad returns the exact solution when feasible and a readable below-minimum / above-maximum explanation otherwise; it never silently clamps the answer.
 
-Multiple constraints, multi-variable strategies, apply-to-sheet, create-scenario-from-solution, and frontier visualization remain proposed.
+Multi-variable strategies, apply-to-sheet, create-scenario-from-solution, and frontier visualization remain proposed.
 
 ## 1. Purpose
 
@@ -198,7 +201,7 @@ Proficient users will reasonably expect:
 
 1. unit-aware targets
 2. currency-aware targets
-3. explicit constraints
+3. explicit constraints (implemented for one variable)
 4. one-click "apply solved value"
 5. one-click "create scenario instead of applying"
 6. frontier visualization when multiple variables are free

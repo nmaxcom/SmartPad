@@ -1,4 +1,5 @@
 import {
+  buildBoundedGoalSeekActionLabel,
   buildGoalSeekActionLabel,
   buildReferenceChipAriaLabel,
   buildResultChipAriaLabel,
@@ -15,6 +16,9 @@ describe("result action accessibility", () => {
     );
     expect(buildGoalSeekActionLabel("ticket price")).toBe(
       "Find ticket price for a target…",
+    );
+    expect(buildBoundedGoalSeekActionLabel("ticket price")).toBe(
+      "Find ticket price within limits…",
     );
   });
 

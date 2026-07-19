@@ -221,6 +221,7 @@ Flow:
 4. Dragging the chip itself starts result-reference drag/drop. There is no separate drag handle.
 5. The action menu exposes current supported commands such as `Copy value` and enables plot creation when the source result depends on a plottable variable.
    - Results with one or more solve candidates expose human-first `Find <variable> for a target…` actions that insert editable `make ... by ... =>` goal-seek lines below the source.
+   - The primary numeric solve candidate also exposes one discreet `Find <variable> within limits…` action. It inserts the same editable goal line with visible starting bounds at 50% and 150% of the current input; these are suggestions in sheet text, not hidden constraints. Other inputs keep their normal target action and can use the same `with` syntax when edited manually.
    - Named numeric results with eligible non-zero root inputs expose `See what matters most`, which pins a live ±10% one-at-a-time sensitivity tornado below the result without inserting syntax or mutating the model.
    - Goal-seek actions insert parser-safe numeric targets even when the visible chip uses grouped thousands; for example a rendered `2,520,000 EUR` target is inserted as `2520000 EUR`.
    - Single-input unnamed results insert a source-adjacent directive such as `@view plot x=x size=md`, relying on the existing nearest-expression binding instead of copying the formula into `y=...`.
@@ -598,6 +599,7 @@ Interpretation goals:
 13. Dropping near the bottom edge of the last line inserts on a new line without pixel-perfect positioning.
 14. Number scrubbing supports normal, `Shift` fine, and `Alt`/`Option` coarse sensitivity, and
     `Escape` restores the exact pre-gesture literal.
+15. A numeric result's action menu can insert bounded Goal Seek text without adding controls to the Variables panel; feasible solutions remain exact and infeasible solutions explain the violated limit.
 
 ---
 

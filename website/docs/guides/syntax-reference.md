@@ -56,6 +56,10 @@ Dates and times can be used directly in calculations. Use ISO-style dates when y
 
 <ExamplePlayground title={"Goal seek command"} description={"Use the Goal Seek template when you want several real examples."} code={"items = 12\nunit price = 9 EUR\ncheckout total = items * unit price\nmake checkout total = 150 EUR by items =>"} />
 
+Add inclusive limits after `with` when the input has a realistic operating range. Use a readable chained interval or one-sided `>=` / `<=` clauses. Limits understand compatible currencies, durations, and physical units.
+
+<ExamplePlayground title={"Goal seek within limits"} description={"Change the target to `13000 EUR` to see a clear no-feasible-solution explanation."} code={"price = 50 EUR\nunit cost = 20 EUR\norders = 200\nprofit = (price - unit cost) * orders\nmake profit = 7000 EUR by price with 40 EUR <= price <= 80 EUR =>"} />
+
 ## Views
 
 `@view` lines create visual views from values already in the sheet. They are best learned from templates because views are more useful when there is a real model around them.

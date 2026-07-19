@@ -9,6 +9,9 @@ export const buildReferenceChipAriaLabel = (label: string): string =>
 export const buildGoalSeekActionLabel = (variable: string): string =>
   `Find ${variable} for a target…`;
 
+export const buildBoundedGoalSeekActionLabel = (variable: string): string =>
+  `Find ${variable} within limits…`;
+
 export const resolveResultMenuFocusIndex = (
   key: ResultMenuNavigationKey,
   currentIndex: number,

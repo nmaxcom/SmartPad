@@ -373,4 +373,133 @@ describe("Solve evaluator", () => {
     expect(result?.type).toBe("error");
     expect((result as any).error).toContain("multiple variables");
   });
+
+  test("goal-seek accepts a solution inside chained currency limits", () => {
+    const context = createContext();
+    evaluateLine("keep rate = 78%", context, 1);
+    evaluateLine("gross = 3000 EUR", context, 2);
+    evaluateLine("take home = gross * keep rate =>", context, 3);
+
+    const result = evaluateLine(
+      "make take home = 4000 EUR by gross with 3000 EUR <= gross <= 6000 EUR =>",
+      context,
+      4
+    );
+
+    expect(result?.type).toBe("mathResult");
+    expect((result as any).result).toBe("5128.205128 EUR");
+  });
+
+  test("goal-seek accepts equivalent comma-separated one-sided limits", () => {
+    const context = createContext();
+    evaluateLine("distance = 120 km", context, 1);
+    evaluateLine("time = 2 h", context, 2);
+
+    const result = evaluateLine(
+      "make distance / time = 80 km/h by time with time >= 60 min, time <= 2 h =>",
+      context,
+      3
+    );
+
+    expect(result?.type).toBe("mathResult");
+    expect((result as any).result).toBe("1.5 h");
+  });
+
+  test("goal-seek explains when the required value exceeds the maximum", () => {
+    const context = createContext();
+    evaluateLine("keep rate = 78%", context, 1);
+    evaluateLine("gross = 3000 EUR", context, 2);
+    evaluateLine("take home = gross * keep rate =>", context, 3);
+
+    const result = evaluateLine(
+      "make take home = 4000 EUR by gross with gross <= 5000 EUR =>",
+      context,
+      4
+    );
+
+    expect(result?.type).toBe("error");
+    expect((result as any).error).toContain("No feasible solution within limits");
+    expect((result as any).error).toContain("gross needs to be 5128.205128 EUR");
+    expect((result as any).error).toContain("above the maximum 5000 EUR");
+  });
+
+  test("goal-seek treats lower and upper limits as inclusive", () => {
+    const context = createContext();
+    evaluateLine("total = price * 10", context, 1);
+
+    const result = evaluateLine(
+      "make total = 500 by price with 50 <= price <= 50 =>",
+      context,
+      2
+    );
+
+    expect(result?.type).toBe("mathResult");
+    expect((result as any).result).toBe("50");
+  });
+
+  test("goal-seek explains when the required value falls below the minimum", () => {
+    const context = createContext();
+    evaluateLine("total = price * 10", context, 1);
+
+    const result = evaluateLine(
+      "make total = 200 by price with price >= 25 =>",
+      context,
+      2
+    );
+
+    expect(result?.type).toBe("error");
+    expect((result as any).error).toContain("price needs to be 20");
+    expect((result as any).error).toContain("below the minimum 25");
+  });
+
+  test("goal-seek rejects reversed limits before reporting feasibility", () => {
+    const context = createContext();
+    evaluateLine("total = price * 10", context, 1);
+
+    const result = evaluateLine(
+      "make total = 500 by price with 80 <= price <= 40 =>",
+      context,
+      2
+    );
+
+    expect(result?.type).toBe("error");
+    expect((result as any).error).toContain("lower limit 80 is above upper limit 40");
+  });
+
+  test("goal-seek rejects incompatible limit units", () => {
+    const context = createContext();
+    evaluateLine("speed = 60 km/h", context, 1);
+    evaluateLine("time = 2 h", context, 2);
+    evaluateLine("travel distance = speed * time", context, 3);
+
+    const result = evaluateLine(
+      "make travel distance = 180 km by speed with speed <= 100 kg =>",
+      context,
+      4
+    );
+
+    expect(result?.type).toBe("error");
+    expect((result as any).error).toContain("limits for speed must use compatible values");
+  });
+
+  test("goal-seek rejects malformed or unrelated limit clauses", () => {
+    const context = createContext();
+    evaluateLine("total = price * 10", context, 1);
+
+    const malformed = evaluateLine(
+      "make total = 500 by price with price < 80 =>",
+      context,
+      2
+    );
+    const unrelated = evaluateLine(
+      "make total = 500 by price with cost <= 80 =>",
+      context,
+      3
+    );
+
+    expect(malformed?.type).toBe("error");
+    expect((malformed as any).error).toContain("limits must look like");
+    expect(unrelated?.type).toBe("error");
+    expect((unrelated as any).error).toContain("every limit must compare price");
+  });
 });

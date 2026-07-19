@@ -37,6 +37,9 @@ describe("Goal Seek template", () => {
     expect(GOAL_SEEK_TEMPLATE).toContain(
       "make target distance / target time = 100 km/h by target time =>"
     );
+    expect(GOAL_SEEK_TEMPLATE).toContain(
+      "make gross profit = 10500 EUR by price with 40 EUR <= price <= 60 EUR =>"
+    );
     expect(GOAL_SEEK_TEMPLATE).not.toContain("wealth(y)");
     expect(GOAL_SEEK_TEMPLATE).not.toContain("need growth");
   });
@@ -82,7 +85,7 @@ describe("Goal Seek template", () => {
     });
 
     expect(failures).toEqual([]);
-    expect(goalSeekResults).toBe(9);
+    expect(goalSeekResults).toBe(10);
   });
 
   test("shows distance over declared duration in the user's compound speed unit", () => {

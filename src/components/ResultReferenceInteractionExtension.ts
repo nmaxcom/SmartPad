@@ -51,6 +51,7 @@ import {
 import type { SettingsState, Variable } from "../state/types";
 import { ReactiveVariableStore } from "../state/variableStore";
 import {
+  type DisplayOptions,
   ListValue,
   NumberValue,
   PercentageValue,
@@ -62,6 +63,7 @@ import {
   resolveBaselineVariableName,
 } from "./resultBaselineInteraction";
 import {
+  buildBoundedGoalSeekActionLabel,
   buildGoalSeekActionLabel,
   resolveResultMenuFocusIndex,
   type ResultMenuNavigationKey,
@@ -1098,6 +1100,8 @@ const buildVisualPlotMenuActions = (
 const buildGoalSeekMenuActions = (
   view: any,
   payload: ReferencePayload | null,
+  variableContext: Map<string, Variable>,
+  displayOptions: DisplayOptions,
 ): GoalSeekMenuAction[] => {
   if (!payload) return [];
   const sourceInfo = buildSourceResultInfo(view, payload);
@@ -1112,11 +1116,53 @@ const buildGoalSeekMenuActions = (
   if (!target || !currentValue) {
     return [];
   }
-  return plan.xVariables.map((variable) => ({
-    label: buildGoalSeekActionLabel(variable),
-    line: `make ${target} = ${currentValue} by ${variable} =>`,
-    title: `Insert an editable target line and calculate the ${variable} needed`,
-  }));
+  return plan.xVariables.flatMap((variable, variableIndex) => {
+    const actions: GoalSeekMenuAction[] = [
+      {
+        label: buildGoalSeekActionLabel(variable),
+        line: `make ${target} = ${currentValue} by ${variable} =>`,
+        title: `Insert an editable target line and calculate the ${variable} needed`,
+      },
+    ];
+    const variableValue = variableContext.get(variable)?.value;
+    const boundedValues = buildSuggestedGoalSeekBounds(variableValue, displayOptions);
+    if (variableIndex === 0 && boundedValues) {
+      actions.push({
+        label: buildBoundedGoalSeekActionLabel(variable),
+        line: `make ${target} = ${currentValue} by ${variable} with ${boundedValues.minimum} <= ${variable} <= ${boundedValues.maximum} =>`,
+        title: `Insert an editable target line with starting limits around the current ${variable}`,
+      });
+    }
+    return actions;
+  });
+};
+
+const buildSuggestedGoalSeekBounds = (
+  value: SemanticValue | null | undefined,
+  displayOptions: DisplayOptions,
+): { minimum: string; maximum: string } | null => {
+  if (!value?.isNumeric() || !Number.isFinite(value.getNumericValue())) {
+    return null;
+  }
+  const numericValue = value.getNumericValue();
+  if (numericValue === 0) return null;
+  const minimumFactor = numericValue > 0 ? 0.5 : 1.5;
+  const maximumFactor = numericValue > 0 ? 1.5 : 0.5;
+  const scale = (factor: number): SemanticValue => {
+    if (value.getType() === "percentage") {
+      return new PercentageValue(numericValue * factor * 100);
+    }
+    return value.multiply(NumberValue.from(factor));
+  };
+  try {
+    const safeDisplayOptions = { ...displayOptions, groupThousands: false };
+    return {
+      minimum: scale(minimumFactor).toString(safeDisplayOptions),
+      maximum: scale(maximumFactor).toString(safeDisplayOptions),
+    };
+  } catch (_error) {
+    return null;
+  }
 };
 
 const SENSITIVITY_NUMERIC_TYPES = new Set([
@@ -2926,7 +2972,12 @@ export const ResultReferenceInteractionExtension = Extension.create({
         );
       }
 
-      const goalSeekActions = buildGoalSeekMenuActions(view, payload);
+      const goalSeekActions = buildGoalSeekMenuActions(
+        view,
+        payload,
+        getVariableContext?.() || new Map<string, Variable>(),
+        getNumericDisplayOptions(),
+      );
       if (goalSeekActions.length === 0) {
         menu.appendChild(
           buildMenuButton("Find an input for a target…", () => {}, {

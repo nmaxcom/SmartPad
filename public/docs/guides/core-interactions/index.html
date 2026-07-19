@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.9.2">
 <title data-rh="true">Core Interactions | SmartPad Docs</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="http://localhost:3000/docs/img/logo.svg"><meta data-rh="true" name="twitter:image" content="http://localhost:3000/docs/img/logo.svg"><meta data-rh="true" property="og:url" content="http://localhost:3000/docs/guides/core-interactions/"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Core Interactions | SmartPad Docs"><meta data-rh="true" name="description" content="Understand result chips, references, copy, menus, and number scrubbing."><meta data-rh="true" property="og:description" content="Understand result chips, references, copy, menus, and number scrubbing."><link data-rh="true" rel="icon" href="/docs/img/logo.svg"><link data-rh="true" rel="canonical" href="http://localhost:3000/docs/guides/core-interactions/"><link data-rh="true" rel="alternate" href="http://localhost:3000/docs/guides/core-interactions/" hreflang="en"><link data-rh="true" rel="alternate" href="http://localhost:3000/docs/guides/core-interactions/" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Core Interactions","item":"http://localhost:3000/docs/guides/core-interactions"}]}</script><link rel="stylesheet" href="/docs/assets/css/styles.c85ae3c5.css">
-<script src="/docs/assets/js/runtime~main.295f0527.js" defer="defer"></script>
+<script src="/docs/assets/js/runtime~main.bb00d052.js" defer="defer"></script>
 <script src="/docs/assets/js/main.e8545e95.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -18,7 +18,7 @@
 <ul>
 <li class=""><strong>Drag reuse</strong>: drag the chip itself into another line to create a live reference.</li>
 <li class=""><strong>Copy value</strong>: copies the visible value as plain text.</li>
-<li class=""><strong>Actions menu</strong>: opens actions such as <code>Copy value</code>, <code>Go to source line</code>, plot suggestions, and <code>Find &lt;input&gt; for a target…</code> when available.</li>
+<li class=""><strong>Actions menu</strong>: opens actions such as <code>Copy value</code>, <code>Go to source line</code>, plot suggestions, <code>Find &lt;input&gt; for a target…</code>, and <code>Find &lt;input&gt; within limits…</code> when available.</li>
 </ul>
 <p>Clicking the chip value itself does not insert anything. Drag the chip when you want to reuse it in the sheet.</p>
 <blockquote>
@@ -35,6 +35,7 @@
 </ul>
 <p>References are keyboard links too. Focus one with <code>Tab</code>, then press <code>Enter</code> or <code>Space</code> to return to and briefly highlight its source.</p>
 <p>Goal Seek uses direct language in this menu. For example, <strong>Find gross for a target…</strong> inserts an editable <code>make ... by gross =&gt;</code> line; it never overwrites <code>gross</code> automatically.</p>
+<p>Choose <strong>Find gross within limits…</strong> when the answer must stay in a realistic interval. SmartPad inserts visible starting limits around the current input, such as <code>with 1500 EUR &lt;= gross &lt;= 4500 EUR</code>; edit the target and either limit directly in the sheet. The answer is never silently clamped: SmartPad returns the exact value or explains which limit makes the target impossible.</p>
 <blockquote>
 <p>GIF/video marker: tab to a result, open its menu with Enter, move to a Goal Seek action with arrows, close with Escape, then jump from a reference to its source.</p>
 </blockquote>

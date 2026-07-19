@@ -47,6 +47,12 @@ type SolveParseResult = {
   target: string;
   equations: SolveEquation[];
   whereClause?: string;
+  goalSeekBounds?: GoalSeekBoundConstraint[];
+};
+
+type GoalSeekBoundConstraint = {
+  kind: "minimum" | "maximum";
+  expression: string;
 };
 
 const operatorPrecedence: Record<string, number> = {
@@ -112,6 +118,107 @@ const splitTopLevelList = (input: string): string[] => {
   }
 
   return parts;
+};
+
+const splitTopLevelComparisons = (
+  input: string
+): { operands: string[]; operators: Array<"<=" | ">="> } | null => {
+  const operands: string[] = [];
+  const operators: Array<"<=" | ">="> = [];
+  let current = "";
+  let depth = 0;
+
+  for (let index = 0; index < input.length; index += 1) {
+    const char = input[index];
+    if (char === "(") depth += 1;
+    if (char === ")") depth = Math.max(0, depth - 1);
+
+    if (depth === 0 && (input.startsWith("<=", index) || input.startsWith(">=", index))) {
+      const operand = current.trim();
+      if (!operand) return null;
+      operands.push(operand);
+      operators.push(input.slice(index, index + 2) as "<=" | ">=");
+      current = "";
+      index += 1;
+      continue;
+    }
+
+    if (depth === 0 && (char === "<" || char === ">")) {
+      return null;
+    }
+
+    current += char;
+  }
+
+  const finalOperand = current.trim();
+  if (!finalOperand || operators.length === 0) return null;
+  operands.push(finalOperand);
+  return { operands, operators };
+};
+
+const parseGoalSeekBounds = (
+  section: string,
+  target: string
+): GoalSeekBoundConstraint[] | ErrorValue => {
+  const normalizedTarget = normalizeVariableName(target);
+  const clauses = splitTopLevelList(section);
+  if (clauses.length === 0) {
+    return ErrorValue.semanticError(
+      `Cannot goal-seek: limits must compare ${normalizedTarget} with a lower or upper value`
+    );
+  }
+
+  const bounds: GoalSeekBoundConstraint[] = [];
+  const addBound = (kind: "minimum" | "maximum", expression: string) => {
+    const normalizedExpression = expression.trim();
+    if (!normalizedExpression) return false;
+    bounds.push({ kind, expression: normalizedExpression });
+    return true;
+  };
+
+  for (const clause of clauses) {
+    const comparison = splitTopLevelComparisons(clause);
+    if (!comparison || comparison.operators.length > 2) {
+      return ErrorValue.semanticError(
+        `Cannot goal-seek: limits must look like 40 <= ${normalizedTarget} <= 80`
+      );
+    }
+
+    const { operands, operators } = comparison;
+    if (operators.length === 1) {
+      const leftIsTarget = normalizeVariableName(operands[0]) === normalizedTarget;
+      const rightIsTarget = normalizeVariableName(operands[1]) === normalizedTarget;
+      if (leftIsTarget === rightIsTarget) {
+        return ErrorValue.semanticError(
+          `Cannot goal-seek: every limit must compare ${normalizedTarget} with a value`
+        );
+      }
+
+      if (leftIsTarget) {
+        addBound(operators[0] === ">=" ? "minimum" : "maximum", operands[1]);
+      } else {
+        addBound(operators[0] === "<=" ? "minimum" : "maximum", operands[0]);
+      }
+      continue;
+    }
+
+    const middleIsTarget = normalizeVariableName(operands[1]) === normalizedTarget;
+    if (!middleIsTarget || operators[0] !== operators[1]) {
+      return ErrorValue.semanticError(
+        `Cannot goal-seek: chained limits must look like 40 <= ${normalizedTarget} <= 80`
+      );
+    }
+
+    if (operators[0] === "<=") {
+      addBound("minimum", operands[0]);
+      addBound("maximum", operands[2]);
+    } else {
+      addBound("maximum", operands[0]);
+      addBound("minimum", operands[2]);
+    }
+  }
+
+  return bounds;
 };
 
 const normalizeGoalSeekSourceExpression = (expression: string): string => {
@@ -211,6 +318,15 @@ const parseGoalSeekExpression = (
     );
   }
 
+  let goalSeekBounds: GoalSeekBoundConstraint[] | undefined;
+  if (withIndex !== null) {
+    const parsedBounds = parseGoalSeekBounds(strategySection, targetVariables[0]);
+    if (isErrorValue(parsedBounds)) {
+      return parsedBounds;
+    }
+    goalSeekBounds = parsedBounds;
+  }
+
   const goalEquation = splitTopLevelEquation(equationSection);
   if (!goalEquation) return null;
 
@@ -234,6 +350,7 @@ const parseGoalSeekExpression = (
     target: targetVariables[0],
     equations,
     whereClause: strategySection || undefined,
+    goalSeekBounds,
   };
 };
 
@@ -1039,7 +1156,15 @@ export class SolveEvaluator implements NodeEvaluator {
       return this.createErrorNode((solved as ErrorValue).getMessage(), node.expression, context.lineNumber);
     }
 
-    return this.formatSolveResult(node, solved as SolveExpression, conversion, context, localValues);
+    return this.formatSolveResult(
+      node,
+      solved as SolveExpression,
+      conversion,
+      context,
+      localValues,
+      parsed.goalSeekBounds,
+      target
+    );
   }
 
   private evaluateImplicitSolve(
@@ -1159,7 +1284,9 @@ export class SolveEvaluator implements NodeEvaluator {
     solved: SolveExpression,
     conversion: { baseExpression: string; target: string; keyword: string } | null,
     context: EvaluationContext,
-    localValues: Map<string, SemanticValue>
+    localValues: Map<string, SemanticValue>,
+    goalSeekBounds?: GoalSeekBoundConstraint[],
+    goalSeekTarget?: string
   ): RenderNode {
     const simplifiedExpression = simplifySolveExpression(solved);
     if (containsNegativeRadicand(simplifiedExpression)) {
@@ -1215,11 +1342,187 @@ export class SolveEvaluator implements NodeEvaluator {
       }
     }
 
+    if (goalSeekBounds?.length && goalSeekTarget) {
+      const constraintError = this.validateGoalSeekBounds(
+        resolved,
+        goalSeekBounds,
+        goalSeekTarget,
+        context,
+        localValues,
+        displayOptions
+      );
+      if (constraintError) {
+        return this.createErrorNode(constraintError, node.expression, context.lineNumber);
+      }
+    }
+
     return this.createMathResultNode(
       node.expression,
       resolved.toString(displayOptions),
       context.lineNumber
     );
+  }
+
+  private validateGoalSeekBounds(
+    solved: SemanticValue,
+    bounds: GoalSeekBoundConstraint[],
+    target: string,
+    context: EvaluationContext,
+    localValues: Map<string, SemanticValue>,
+    displayOptions: DisplayOptions
+  ): string | null {
+    if (!solved.isNumeric() || SemanticValueTypes.isSymbolic(solved)) {
+      return "Cannot goal-seek: limits require a numeric solution";
+    }
+
+    const resolvedBounds: Array<GoalSeekBoundConstraint & { value: SemanticValue }> = [];
+    for (const bound of bounds) {
+      const value = this.evaluateExpression(bound.expression, context, localValues);
+      if (
+        SemanticValueTypes.isError(value) ||
+        SemanticValueTypes.isSymbolic(value) ||
+        !value.isNumeric()
+      ) {
+        return `Cannot goal-seek: limit "${bound.expression}" is not a numeric value`;
+      }
+
+      const compatibility = this.compareGoalSeekValues(solved, value);
+      if (isErrorValue(compatibility)) {
+        return `Cannot goal-seek: limits for ${target} must use compatible values`;
+      }
+      resolvedBounds.push({ ...bound, value });
+    }
+
+    let effectiveMinimum: SemanticValue | null = null;
+    let effectiveMaximum: SemanticValue | null = null;
+    for (const bound of resolvedBounds) {
+      if (bound.kind === "minimum") {
+        if (
+          !effectiveMinimum ||
+          (this.compareGoalSeekValues(bound.value, effectiveMinimum) as number) >
+            this.goalSeekComparisonTolerance(bound.value)
+        ) {
+          effectiveMinimum = bound.value;
+        }
+      } else if (
+        !effectiveMaximum ||
+        (this.compareGoalSeekValues(bound.value, effectiveMaximum) as number) <
+          -this.goalSeekComparisonTolerance(bound.value)
+      ) {
+        effectiveMaximum = bound.value;
+      }
+    }
+
+    if (effectiveMinimum && effectiveMaximum) {
+      const order = this.compareGoalSeekValues(effectiveMinimum, effectiveMaximum);
+      if (isErrorValue(order)) {
+        return `Cannot goal-seek: limits for ${target} must use compatible values`;
+      }
+      if (order > this.goalSeekComparisonTolerance(effectiveMinimum)) {
+        return `Cannot goal-seek: lower limit ${effectiveMinimum.toString(
+          displayOptions
+        )} is above upper limit ${effectiveMaximum.toString(displayOptions)}`;
+      }
+    }
+
+    if (effectiveMinimum) {
+      const comparison = this.compareGoalSeekValues(solved, effectiveMinimum);
+      if (isErrorValue(comparison)) {
+        return `Cannot goal-seek: limits for ${target} must use compatible values`;
+      }
+      if (comparison < -this.goalSeekComparisonTolerance(solved)) {
+        return `No feasible solution within limits: ${target} needs to be ${solved.toString(
+          displayOptions
+        )}, below the minimum ${effectiveMinimum.toString(displayOptions)}`;
+      }
+    }
+
+    if (effectiveMaximum) {
+      const comparison = this.compareGoalSeekValues(solved, effectiveMaximum);
+      if (isErrorValue(comparison)) {
+        return `Cannot goal-seek: limits for ${target} must use compatible values`;
+      }
+      if (comparison > this.goalSeekComparisonTolerance(solved)) {
+        return `No feasible solution within limits: ${target} needs to be ${solved.toString(
+          displayOptions
+        )}, above the maximum ${effectiveMaximum.toString(displayOptions)}`;
+      }
+    }
+
+    return null;
+  }
+
+  private goalSeekComparisonTolerance(value: SemanticValue): number {
+    return Math.max(1, Math.abs(value.getNumericValue())) * 1e-9;
+  }
+
+  private compareGoalSeekValues(
+    left: SemanticValue,
+    right: SemanticValue
+  ): number | ErrorValue {
+    if (left.getType() === "unit" && right.getType() === "duration") {
+      try {
+        return (
+          (left as UnitValue).convertTo("s").getNumericValue() -
+          right.getNumericValue()
+        );
+      } catch (_error) {
+        return ErrorValue.semanticError("Incompatible Goal Seek limit types");
+      }
+    }
+    if (left.getType() === "duration" && right.getType() === "unit") {
+      try {
+        return (
+          left.getNumericValue() -
+          (right as UnitValue).convertTo("s").getNumericValue()
+        );
+      } catch (_error) {
+        return ErrorValue.semanticError("Incompatible Goal Seek limit types");
+      }
+    }
+    if (left.getType() !== right.getType()) {
+      return ErrorValue.semanticError("Incompatible Goal Seek limit types");
+    }
+
+    try {
+      if (left.getType() === "currency") {
+        const leftCurrency = left as CurrencyValue;
+        const rightCurrency = right as CurrencyValue;
+        if (
+          CurrencyValue.getCurrencyCode(leftCurrency.getSymbol()) !==
+          CurrencyValue.getCurrencyCode(rightCurrency.getSymbol())
+        ) {
+          return ErrorValue.semanticError("Incompatible Goal Seek currencies");
+        }
+        return leftCurrency.getNumericValue() - rightCurrency.getNumericValue();
+      }
+
+      if (left.getType() === "unit") {
+        const leftUnit = left as UnitValue;
+        const converted = (right as UnitValue).convertTo(leftUnit.getUnit());
+        return leftUnit.getNumericValue() - converted.getNumericValue();
+      }
+
+      if (left.getType() === "currencyUnit") {
+        const leftCurrencyUnit = left as CurrencyUnitValue;
+        const rightCurrencyUnit = right as CurrencyUnitValue;
+        if (
+          CurrencyValue.getCurrencyCode(leftCurrencyUnit.getSymbol() as CurrencySymbol) !==
+            CurrencyValue.getCurrencyCode(rightCurrencyUnit.getSymbol() as CurrencySymbol) ||
+          leftCurrencyUnit.isPerUnit() !== rightCurrencyUnit.isPerUnit()
+        ) {
+          return ErrorValue.semanticError("Incompatible Goal Seek currency units");
+        }
+        const converted = rightCurrencyUnit.convertTo(leftCurrencyUnit.getUnit());
+        return leftCurrencyUnit.getNumericValue() - converted.getNumericValue();
+      }
+
+      return left.getNumericValue() - right.getNumericValue();
+    } catch (error) {
+      return ErrorValue.semanticError(
+        error instanceof Error ? error.message : "Incompatible Goal Seek limits"
+      );
+    }
   }
 
   private evaluateExpression(

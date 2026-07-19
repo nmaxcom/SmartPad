@@ -8111,3 +8111,30 @@
     *   Owner: Assistant; due: TBD; status: in_progress; specify and implement one-variable lower/upper constraints with unit-aware feasibility checks, readable failures, inline discoverability, and focused unit/browser coverage.
 *   Risks/blockers:
     *   Multiple free variables and frontier/optimization strategies remain separate future slices; the bounded solver must not imply a feasible answer outside the stated interval.
+
+## Entry J-2026-07-19-08
+
+*   Timestamp: 2026-07-19 13:53 CEST / 2026-07-19 11:53 UTC
+*   Summary:
+    *   SmartPad now supports transparent one-variable Goal Seek limits directly in editable sheet text.
+    *   Users can write `with 40 EUR <= price <= 80 EUR`, use equivalent one-sided `>=` / `<=` clauses, or choose one discreet `Find <input> within limits…` action from the result menu.
+    *   Feasible answers remain exact; impossible targets explain whether the required value is below the minimum or above the maximum instead of silently clamping it.
+*   Decisions:
+    *   Keep every bound inclusive, visible, editable, and compatible with numbers, percentages, currencies, physical units, currency-units, and time/duration values.
+    *   Insert starting bounds at 50% and 150% of the current primary input, without hidden state or Variables-panel controls.
+    *   After visual QA showed duplicate bounded actions made the shared result menu too long, expose the bounded shortcut only for the primary detected input; other inputs retain normal Goal Seek actions and accept manual `with` syntax.
+    *   Advance SmartPad to `1.0.0-rc.11`; multiple free variables, strategies, frontiers, apply-back, and scenario-from-solution remain future Goal Seek slices.
+*   Artifacts changed:
+    *   Extended the solve evaluator, result actions, Goal Seek template, focused unit/browser coverage, public docs generator/output, solve/result specs, trust/map registries, changelog, version metadata, and feature backlog.
+*   Validation:
+    *   Focused solve/template/accessibility units passed: 56 of 56.
+    *   Related unit sweep passed: 476 of 476 across 37 suites.
+    *   Broad Chromium regression passed: 38 of 38 across bounded Goal Seek, Goal Seek template, keyboard result actions, references/drag-drop, sensitivity, baseline, and scenarios.
+    *   Public docs generation/build passed, and all 22 interactive Docusaurus examples validated.
+    *   `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, `npm run spec:trust`, and `npm run verify:changed -- HEAD` passed; production build retained only the existing large-chunk warning.
+    *   Visual QA confirmed the bounded shortcut stays in the existing result menu; the initial duplicate-per-input design was reduced to exactly one bounded shortcut.
+*   Pending:
+    *   Owner: User; due: TBD; status: in_progress; verify the exact bounded Goal Seek flow and explicitly confirm or request refinements.
+*   Risks/blockers:
+    *   The Playwright skill's bundled CLI wrapper still exits on a line-16 shell syntax error; the repository's installed Playwright runner completed all browser validation instead.
+    *   No product or machine blocker remains. The human completion gate is open.

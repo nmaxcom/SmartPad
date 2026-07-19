@@ -67,7 +67,8 @@
         "tests/e2e/live-result.spec.ts",
         "tests/e2e/result-chip-keyboard-accessibility.spec.ts",
         "tests/unit/resultActionAccessibility.test.ts",
-        "tests/e2e/sensitivity-analysis.spec.ts"
+        "tests/e2e/sensitivity-analysis.spec.ts",
+        "tests/e2e/bounded-goal-seek.spec.ts"
       ]
     },
     {
@@ -151,7 +152,10 @@
       "testRefs": [
         "tests/unit/solve.test.ts",
         "tests/unit/astParser.test.ts",
-        "tests/unit/capabilitySprintTemplate.test.ts"
+        "tests/unit/capabilitySprintTemplate.test.ts",
+        "tests/unit/goalSeekTemplate.test.ts",
+        "tests/e2e/bounded-goal-seek.spec.ts",
+        "tests/e2e/goal-seek-template.spec.ts"
       ]
     },
     {
@@ -213,6 +217,9 @@
       "mappedGroups": ["Solve And Symbolic Math", "Editor And Result Chips"],
       "testRefs": [
         "tests/unit/solve.test.ts",
+        "tests/unit/goalSeekTemplate.test.ts",
+        "tests/e2e/bounded-goal-seek.spec.ts",
+        "tests/e2e/goal-seek-template.spec.ts",
         "tests/e2e/result-reference-drag-only.spec.ts",
         "tests/e2e/result-chip-keyboard-accessibility.spec.ts",
         "tests/unit/resultActionAccessibility.test.ts"

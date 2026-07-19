@@ -16,6 +16,9 @@ test.describe("Goal Seek template", () => {
     await expect(editor).toContainText("make runway = 12 month by monthly burn =>");
     await expect(editor).toContainText("make projected signups = 850 by ad spend =>");
     await expect(editor).toContainText("make target distance / target time = 100 km/h by target time =>");
+    await expect(editor).toContainText(
+      "make gross profit = 10500 EUR by price with 40 EUR <= price <= 60 EUR =>",
+    );
 
     await expect(page.locator(".semantic-error-result")).toHaveCount(0);
     expect(await page.locator(".semantic-result-display").count()).toBeGreaterThanOrEqual(18);
