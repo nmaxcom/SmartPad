@@ -320,7 +320,7 @@
   flex-direction: column;
   position: relative;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: clip;
   max-width: 100%;
   box-sizing: border-box;
 }

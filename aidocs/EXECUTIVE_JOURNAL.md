@@ -8160,3 +8160,32 @@
     *   Owner: Assistant; due: TBD; status: todo; once chosen, turn the direction into one narrow visual prototype with a task-based usefulness test before implementing a broad feature.
 *   Risks/blockers:
     *   Continuing to add isolated menu actions would increase capability while worsening discovery and cognitive load.
+
+## Entry J-2026-07-20-01
+
+*   Timestamp: 2026-07-20 14:07 CEST / 2026-07-20 12:07 UTC
+*   Summary:
+    *   SmartPad now combines result understanding, model manipulation, proactive deterministic insights, direct plot control, and reviewed plain-language commands in one inline `Explore result` loop.
+    *   The explorer shows the live result and clickable source formula, ranks root assumptions with mini response curves, reports the strongest local driver and a sampled break-even, and lets users drag an assumption while rewriting its visible source assignment.
+    *   Connected plots expose their current point as an authoritative horizontal control and recursively resolve named intermediate formulas so the curve represents the full dependency chain.
+*   Decisions:
+    *   Keep navigation and mutation in the sheet; add no new controls to the Variables panel.
+    *   Compile supported Spanish/English plot, target, conversion, and set requests locally into a bounded structured intent, then canonical parser-validated visible SmartPad syntax. Any future language model may only propose the structured intent; it must never directly emit trusted syntax or mutate the sheet.
+    *   Make scrubbable numbers quiet but discoverable with a faint dotted underline, horizontal cursor, existing live delta feedback, and a one-time hover hint. Avoid mutating ProseMirror mark attributes on hover because visual QA proved that DOM replacement could swallow the following drag gesture.
+    *   Keep graph discovery visible even when plot-detail headers are disabled through a small in-chart `Drag ● ↔ to change <x>` hint.
+    *   Advance SmartPad to `1.0.0-rc.12` and merge the deterministic natural-language slice into this unified feature review.
+*   Artifacts changed:
+    *   Added deterministic intent compilation, authoritative numeric source editing, plot dependency expansion, sampled break-even analysis, and focused unit coverage.
+    *   Extended result actions/explorer rendering, direct plot manipulation, number scrubber discovery, related browser regressions, public docs, specs, trust/map registries, changelog, version metadata, and the feature backlog.
+*   Validation:
+    *   Focused analysis/intent/editing/plot units passed: 19 of 19 across 5 suites.
+    *   `npm run verify:changed -- HEAD` passed with 478 related unit tests across 38 suites and a fresh production build.
+    *   The related Chromium regression is green across 48 cases covering the unified explorer, number scrubbing, plot interactions, keyboard result actions, and reference/drag workflows.
+    *   Visual browser QA caught and fixed both disappearing intent-composer state and a flat derived-result curve; the final plot changes slope correctly and exposes its live drag hint.
+    *   Docusaurus generation/build/sync, `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, and `npm run spec:trust` passed.
+*   Pending:
+    *   Owner: User; due: TBD; status: in_progress; verify the exact combined in-sheet flow and explicitly confirm or request a concrete refinement.
+*   Risks/blockers:
+    *   The deterministic intent compiler is intentionally narrow; unsupported or ambiguous prose is not guessed. A future optional model-to-structured-intent layer remains a separate privacy/product decision.
+    *   The existing large production chunk warning remains. The Playwright skill wrapper still has its known line-16 shell syntax error, so the repository Playwright runner performed browser validation.
+    *   No machine blocker remains. The human completion gate is open.

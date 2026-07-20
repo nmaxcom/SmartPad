@@ -60,9 +60,9 @@ Brittleness is not a bug — **losing user intent is**.
 
 ### 1.3 Text is the source of truth
 
-* Variables are scrubbed in text (already existing behavior)
-* Plots never become the primary control surface
-* Plots are *views*, not controllers
+* Text remains the source of truth
+* A plot may directly manipulate the visible assignment represented by its live point
+* Viewport interactions remain view-only; model manipulation always rewrites ordinary sheet text
 
 ---
 
@@ -148,9 +148,9 @@ This plot is **temporary** unless explicitly persisted.
 
 ---
 
-### 3.4 Scrubbing (already existing behavior)
+### 3.4 Direct model manipulation
 
-All variables are already scrubbable by dragging their unit/value.
+Variables remain scrubbable by dragging their value in text. A connected plot also exposes its current-value dot as a direct horizontal control when X resolves to an editable numeric assignment.
 
 During scrubbing:
 
@@ -158,7 +158,9 @@ During scrubbing:
 * dot moves
 * dependent results update
 
-Plots never introduce new scrubbing mechanics.
+Dragging the live dot maps its horizontal position through the visible X range, preserves the X value's semantic type, and rewrites the existing X assignment. A compact floating chip shows the proposed X value during the gesture. `Escape` restores the value captured at gesture start.
+
+When Y is a derived named result, sampling recursively resolves its prior variable formulas while keeping X live. The plotted curve therefore represents the full dependency chain rather than reusing the current scalar values of intermediate variables.
 
 ---
 
@@ -475,6 +477,7 @@ Pan/zoom only affects the **viewport**.
 
 ### 9.2 Interaction
 
+* Drag the current-value dot horizontally = update the editable X assignment in the sheet. A subtle always-visible chart hint, header hint when plot details are enabled, and `↔` cursor expose this behavior.
 * Drag inside the plot body = pan the current viewport.
 * Scroll = zoom X around the pointer position.
 * Shift + scroll = pan.
@@ -485,6 +488,7 @@ Pan/zoom only affects the **viewport**.
 * Double-clicking the chart resets the user viewport to the computed view.
 * Rendered series, fills, bars, scatter dots, current-value dots, and intersection dots are clipped to the plot body. Axes, ticks, and labels remain above the clipped plot layer.
 * Axes with draggable viewport behavior must expose resize cursors and a practical pointer hit area, not just a one-pixel SVG line.
+* The current-value dot exposes slider semantics, its live/min/max X values, a practical pointer target, and a distinct hover/focus halo.
 
 ---
 

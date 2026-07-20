@@ -219,10 +219,10 @@ Flow:
    - an action menu icon.
 3. Copy icon click copies the rendered value and briefly sets copied feedback state on the chip.
 4. Dragging the chip itself starts result-reference drag/drop. There is no separate drag handle.
-5. The action menu exposes current supported commands such as `Copy value` and enables plot creation when the source result depends on a plottable variable.
+5. The action menu exposes `Explore result` near the top for eligible named numeric results, plus current supported commands such as `Copy value`, target solving, and plot creation.
    - Results with one or more solve candidates expose human-first `Find <variable> for a target…` actions that insert editable `make ... by ... =>` goal-seek lines below the source.
    - The primary numeric solve candidate also exposes one discreet `Find <variable> within limits…` action. It inserts the same editable goal line with visible starting bounds at 50% and 150% of the current input; these are suggestions in sheet text, not hidden constraints. Other inputs keep their normal target action and can use the same `with` syntax when edited manually.
-   - Named numeric results with eligible non-zero root inputs expose `See what matters most`, which pins a live ±10% one-at-a-time sensitivity tornado below the result without inserting syntax or mutating the model.
+   - Named numeric results with eligible non-zero root inputs expose `Explore result`, which pins one inline result explorer with source, automatic insights, live assumption controls, mini response curves, and reviewed natural-language-to-syntax proposals.
    - Goal-seek actions insert parser-safe numeric targets even when the visible chip uses grouped thousands; for example a rendered `2,520,000 EUR` target is inserted as `2520000 EUR`.
    - Single-input unnamed results insert a source-adjacent directive such as `@view plot x=x size=md`, relying on the existing nearest-expression binding instead of copying the formula into `y=...`.
    - Named results insert a live named binding such as `@view plot x=time y=speed size=md`, so later edits to `speed = ... =>` update the plot without rewriting the directive.
@@ -248,7 +248,7 @@ Guardrails:
 5. `Plot from result` must stay disabled for scalar-only results that would create a disconnected chart.
 6. Histogram/scatter suggestions must only appear for list shapes the renderer can connect immediately.
 7. Goal-seek actions must never overwrite source variables automatically; applying a solved value is a separate future action.
-8. Sensitivity actions must use isolated reevaluation and must never overwrite source variables, baselines, scenarios, or sheet text.
+8. Automatic sensitivity and break-even probes must use isolated reevaluation. Only an explicit assumption drag or reviewed syntax proposal may rewrite visible sheet text.
 9. Disabled planned actions must be visually disabled and must not pretend a feature is currently available.
 
 ### 5.6 Keyboard result and reference workflow
@@ -275,11 +275,12 @@ Guardrails:
 Flow:
 
 1. Drag a highlighted numeric literal left or right to edit that literal in place.
-2. Downstream results and plots update during the gesture.
-3. Hold `Shift` for fine control at one tenth of normal sensitivity.
-4. Hold `Alt` or `Option` for coarse control at ten times normal sensitivity.
-5. Press `Escape` before release to restore the exact text that existed before the gesture.
-6. The floating delta chip identifies fine or coarse mode while that modifier is active.
+2. Eligible literals carry a faint dotted underline and an east-west cursor. The first hover in a profile shows a one-time `Drag ↔ to change` hint.
+3. Downstream results and plots update during the gesture.
+4. Hold `Shift` for fine control at one tenth of normal sensitivity.
+5. Hold `Alt` or `Option` for coarse control at ten times normal sensitivity.
+6. Press `Escape` before release to restore the exact text that existed before the gesture.
+7. The floating delta chip identifies fine or coarse mode while that modifier is active.
 
 Guardrails:
 

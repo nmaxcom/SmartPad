@@ -1,12 +1,12 @@
 Smartpad is a lightweight computational notebook designed for thinking with numbers, not just calculating them. It blends calculator-style expressions, unit-aware math, variables, percentages, dates, lists, and light symbolic reasoning into a single plain-text surface. The core idea is that you write things close to the way you’d naturally think about them (including units, currencies, and phrases), and Smartpad continuously interprets them as meaningful computations. It’s closer to a “quantitative scratchpad” than a programming language or a spreadsheet.
 
-Any literal number, whether assigned to a variable or not, can be scrubbed by dragging it left or right. Hold `Shift` for fine control, `Alt`/`Option` for coarse control, or press `Escape` to restore the exact starting value. All calculations update live, making it easier to feel the shape of a relationship and find a useful result quickly.
+Any literal number, whether assigned to a variable or not, can be scrubbed by dragging it left or right. A discreet dotted underline, horizontal cursor, and one-time hover hint make that gesture discoverable. Hold `Shift` for fine control, `Alt`/`Option` for coarse control, or press `Escape` to restore the exact starting value. All calculations update live, making it easier to feel the shape of a relationship and find a useful result quickly.
 
 A result chip's `⋯` menu can capture a persistent baseline for its sheet. As numbers are edited or scrubbed, Smartpad keeps direct-input comparisons beside the editable text and propagated deltas beside their results, without introducing hidden formulas or alternate model state.
 
 After setting a baseline, the same discreet result menu can save the current model as a named scenario. Smartpad places a compact Base / saved scenarios / Live comparison beside the chosen result, updates Live continuously, and lets the user move or clear the comparison without leaving the sheet.
 
-For a named numeric result, `See what matters most` varies every non-zero root assumption by ±10% one at a time, recalculates the full model, and places a live tornado ranking directly below the result. The method and both outcomes stay visible, while the experiment never changes the sheet itself.
+For a named numeric result, `Explore result` opens one inline thinking surface with its source, live value, root assumptions, mini response curves, strongest driver, and possible sampled break-even. Dragging an assumption or a connected plot's live point rewrites its visible source assignment. `Ask in plain language…` locally compiles supported Spanish/English requests into editable, parser-validated SmartPad syntax and waits for explicit insertion.
 
 Goal Seek can keep a reverse calculation realistic with visible bounds such as `with 40 EUR <= price <= 80 EUR`. The result menu can insert an editable bounded line around the current input; Smartpad returns the exact answer when it fits and explains which limit makes the target impossible when it does not.
 
@@ -17,7 +17,7 @@ It's a node web application, written in typescript and react.
 Recent template updates:
 
 - The `Goal Seek` template and result menu now demonstrate unit-aware lower and upper limits with exact feasible answers and readable no-feasible-solution states.
-- Named numeric results can now open a persistent inline sensitivity tornado from `See what matters most`; it recursively finds root assumptions, ranks their ±10% one-at-a-time impact, and stays live while the model changes.
+- Named numeric results now expose one persistent `Explore result` loop for source, assumptions, automatic local insights, direct manipulation, and reviewed natural-language-to-syntax proposals; connected plot points can also update their visible X assignment.
 - Decision Playground now teaches the complete named-scenario gesture: set a baseline, scrub an assumption, save the current scenario from a result menu, and compare it beside another result.
 - The focused Decision Playground now starts with a complete comparison gesture: open a result chip's `⋯` menu, set a baseline, scrub the ticket price, and watch input and result deltas appear in the sheet.
 - First run now opens a focused `Decision Playground`: one practical workshop model combines scrubbable assumptions, live profit and margin, a connected plot, and a valid goal-seek target. The broader `Quick Tour` remains available as a secondary template.

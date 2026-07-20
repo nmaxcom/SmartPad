@@ -27,6 +27,6 @@ Implemented interaction contract:
 - Result values are keyboard-focusable: `Enter`, `Space`, or `ArrowDown` opens their actions; arrows plus `Home` / `End` navigate enabled actions; `Escape` closes and restores focus.
 - Result and reference actions expose `Go to source line`; focused reference chips also jump to their source with `Enter` or `Space`.
 - Goal Seek menu labels use the human-first form `Find <variable> for a target…` while preserving editable `make ... by ... =>` sheet syntax.
-- Eligible named numeric results expose `See what matters most`; the action pins one live inline sensitivity tornado while keeping all controls and outcomes in the sheet.
-- Highlighted numeric literals can be scrubbed directly: `Shift` gives fine control,
+- Eligible named numeric results expose `Explore result`; the action pins one live inline surface for source, assumptions, deterministic insights, direct input manipulation, and reviewed language-to-syntax proposals.
+- Highlighted numeric literals use a discreet dotted underline, horizontal cursor, and one-time hover hint so their direct manipulation is discoverable. They can be scrubbed directly: `Shift` gives fine control,
   `Alt`/`Option` gives coarse control, and `Escape` restores the exact pre-gesture text.

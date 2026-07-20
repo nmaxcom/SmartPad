@@ -16,6 +16,7 @@ import {
 import type { DurationUnit } from "../types/DurationValue";
 import { SmartPadQuantity } from "../units/unitsnetAdapter";
 import type { PlotPoint, PlotRange } from "../eval/renderNodes";
+import { parseExpressionComponents } from "../parsing/expressionComponents";
 
 export type PlotStatus = "connected" | "disconnected";
 
@@ -55,6 +56,136 @@ export interface PlotComputationInput {
   maxSamples?: number;
   domainExpansionFactor?: number;
 }
+
+const renderExpandedComponents = (
+  components: ExpressionComponent[],
+  xVariable: string,
+  variableContext: Map<string, Variable>,
+  visited: Set<string>
+): string =>
+  components
+    .map((component) => {
+      if (component.type === "variable" || component.type === "resultReference") {
+        const name = component.value.trim();
+        if (!name || name === xVariable || visited.has(name)) return component.value;
+        const rawValue = variableContext.get(name)?.rawValue?.trim();
+        if (!rawValue || rawValue === name) return component.value;
+        try {
+          const nextVisited = new Set(visited);
+          nextVisited.add(name);
+          const parsedComponents = parseExpressionComponents(rawValue);
+          const expanded = renderExpandedComponents(
+            parsedComponents,
+            xVariable,
+            variableContext,
+            nextVisited
+          );
+          const isAtomic =
+            parsedComponents.length === 1 &&
+            (parsedComponents[0].type === "literal" ||
+              parsedComponents[0].type === "variable" ||
+              parsedComponents[0].type === "resultReference" ||
+              parsedComponents[0].type === "function" ||
+              parsedComponents[0].type === "listAccess");
+          return expanded ? (isAtomic ? expanded : `(${expanded})`) : component.value;
+        } catch {
+          return component.value;
+        }
+      }
+
+      if (component.type === "parentheses") {
+        return `(${renderExpandedComponents(
+          component.children || [],
+          xVariable,
+          variableContext,
+          visited
+        )})`;
+      }
+
+      if (component.type === "function") {
+        const args = (component.args || [])
+          .map((arg) => {
+            const value = renderExpandedComponents(
+              arg.components,
+              xVariable,
+              variableContext,
+              visited
+            );
+            return arg.name ? `${arg.name}=${value}` : value;
+          })
+          .join(", ");
+        return `${component.value}(${args})`;
+      }
+
+      if (component.type === "listAccess" && component.access) {
+        const base = renderExpandedComponents(
+          [component.access.base],
+          xVariable,
+          variableContext,
+          visited
+        );
+        if (component.access.kind === "index") {
+          const index = renderExpandedComponents(
+            component.access.indexComponents || [],
+            xVariable,
+            variableContext,
+            visited
+          );
+          return `${base}[${index}]`;
+        }
+        const start = renderExpandedComponents(
+          component.access.startComponents || [],
+          xVariable,
+          variableContext,
+          visited
+        );
+        const end = renderExpandedComponents(
+          component.access.endComponents || [],
+          xVariable,
+          variableContext,
+          visited
+        );
+        return `${base}[${start}:${end}]`;
+      }
+
+      if (component.type === "literal" && component.parsedValue) {
+        return component.parsedValue.toString();
+      }
+
+      return component.value;
+    })
+    .join(" ")
+    .replace(/\s+([,\]\)])/g, "$1")
+    .replace(/([\[\(])\s+/g, "$1")
+    .trim();
+
+/**
+ * Inlines prior variable formulas so changing the plot's x variable propagates
+ * through the whole dependency chain instead of reading stale derived values.
+ */
+export const expandPlotExpressionDependencies = (
+  expressionNode: ExpressionNode,
+  xVariable: string,
+  variableContext: Map<string, Variable>
+): ExpressionNode => {
+  const expression = renderExpandedComponents(
+    expressionNode.components,
+    xVariable,
+    variableContext,
+    new Set()
+  );
+  if (!expression || expression === expressionNode.expression) return expressionNode;
+  try {
+    return {
+      ...expressionNode,
+      raw: expression,
+      expression,
+      components: parseExpressionComponents(expression),
+    };
+  } catch {
+    return expressionNode;
+  }
+};
 
 const DEFAULT_SAMPLE_COUNT = 60;
 const DEFAULT_DOMAIN_EXPANSION = 16;

@@ -499,7 +499,8 @@ test.describe("Result references (drag-only)", () => {
       menu.getByRole("menuitem", {
         name: "Show how this result is calculated",
       }),
-    ).toBeDisabled();
+    ).toHaveCount(0);
+    await expect(menu.getByRole("menuitem", { name: "Explore result" })).toBeDisabled();
     await expect(menu.getByRole("menuitem", { name: "Plot from result" })).toBeDisabled();
     await expect(menu.getByRole("menuitem", { name: "Insert reference" })).toHaveCount(0);
     await expect(menu.getByRole("menuitem", { name: "Insert value" })).toHaveCount(0);

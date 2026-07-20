@@ -166,6 +166,7 @@
       "mappedGroups": ["Plotting And Visualization"],
       "testRefs": [
         "tests/unit/plotViewEvaluator.test.ts",
+        "tests/unit/plottingDependencyExpansion.test.ts",
         "tests/e2e/plot-view-interactions.spec.ts",
         "tests/e2e/result-reference-drag-only.spec.ts",
         "tests/unit/visualInsightsTemplate.test.ts",
@@ -196,6 +197,8 @@
       "testRefs": [
         "tests/unit/sensitivityAnalysis.test.ts",
         "tests/unit/sensitivityAnalysisStore.test.ts",
+        "tests/unit/naturalIntent.test.ts",
+        "tests/unit/authoritativeNumericEditing.test.ts",
         "tests/e2e/sensitivity-analysis.spec.ts",
         "tests/e2e/result-chip-keyboard-accessibility.spec.ts",
         "tests/e2e/result-reference-drag-only.spec.ts"

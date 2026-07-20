@@ -29,6 +29,11 @@ export interface SensitivityAnalysis {
   maxAbsDelta: number;
 }
 
+export interface SensitivityBreakEven {
+  inputName: string;
+  inputFactor: number;
+}
+
 export type SensitivityEvaluator = (
   variableName: string,
   inputFactor: number,
@@ -109,6 +114,64 @@ export const resolveSensitivityBarPercent = (
     return 0;
   }
   return Math.min(50, (Math.abs(delta) / maxAbsDelta) * 50);
+};
+
+export const buildSensitivityInsight = (
+  analysis: SensitivityAnalysis,
+  targetName: string,
+): string | null => {
+  const strongest = analysis.impacts[0];
+  if (!strongest) return null;
+  const rising = strongest.plusDelta > strongest.minusDelta;
+  const direction = rising ? "raises" : "lowers";
+  const variationPercent = Math.round(analysis.variation * 100);
+  return `${strongest.name} is the strongest local driver: +${variationPercent}% ${direction} ${targetName} to ${strongest.plusOutput.displayValue}.`;
+};
+
+export const findSensitivityBreakEven = (options: {
+  inputName: string;
+  evaluate: (factor: number) => SensitivityEvaluation | null;
+  minimumFactor?: number;
+  maximumFactor?: number;
+  sampleCount?: number;
+}): SensitivityBreakEven | null => {
+  const minimumFactor = options.minimumFactor ?? 0.1;
+  const maximumFactor = options.maximumFactor ?? 2;
+  const sampleCount = Math.max(3, Math.round(options.sampleCount ?? 21));
+  if (
+    !Number.isFinite(minimumFactor) ||
+    !Number.isFinite(maximumFactor) ||
+    maximumFactor <= minimumFactor
+  ) {
+    return null;
+  }
+
+  let previous: { factor: number; value: number } | null = null;
+  for (let index = 0; index < sampleCount; index += 1) {
+    const factor =
+      minimumFactor +
+      ((maximumFactor - minimumFactor) * index) / (sampleCount - 1);
+    const evaluation = options.evaluate(factor);
+    const value = evaluation?.numericValue;
+    if (value === undefined || !Number.isFinite(value)) {
+      previous = null;
+      continue;
+    }
+    if (Math.abs(value) <= 1e-9) {
+      return { inputName: options.inputName, inputFactor: factor };
+    }
+    if (previous && Math.sign(previous.value) !== Math.sign(value)) {
+      const span = value - previous.value;
+      const ratio = Math.abs(span) <= Number.EPSILON ? 0 : -previous.value / span;
+      return {
+        inputName: options.inputName,
+        inputFactor:
+          previous.factor + Math.max(0, Math.min(1, ratio)) * (factor - previous.factor),
+      };
+    }
+    previous = { factor, value };
+  }
+  return null;
 };
 
 export const collectLeafSensitivityInputs = (options: {

@@ -31,6 +31,26 @@ const SCRUB_MODE_MULTIPLIER: Record<NumberScrubMode, number> = {
   fine: 0.1,
   coarse: 10,
 };
+const SCRUB_HINT_STORAGE_KEY = "smartpad-number-scrub-hint-v1";
+
+function showFirstScrubHint(target: HTMLElement) {
+  try {
+    if (window.localStorage.getItem(SCRUB_HINT_STORAGE_KEY)) return;
+    window.localStorage.setItem(SCRUB_HINT_STORAGE_KEY, "seen");
+  } catch {
+    // A private or restricted storage context should not block the interaction.
+  }
+  if (document.querySelector(".number-scrub-discovery-hint")) return;
+  const hint = document.createElement("div");
+  hint.className = "number-scrub-discovery-hint";
+  hint.textContent = "Drag ↔ to change · Shift fine · Alt coarse";
+  hint.setAttribute("role", "status");
+  const rect = target.getBoundingClientRect();
+  hint.style.left = `${Math.max(12, Math.min(window.innerWidth - 280, rect.left + rect.width / 2))}px`;
+  hint.style.top = `${Math.max(12, rect.top - 10)}px`;
+  document.body.appendChild(hint);
+  window.setTimeout(() => hint.remove(), 4200);
+}
 
 function getNumberScrubMode(event: MouseEvent): NumberScrubMode {
   if (event.altKey) return "coarse";
@@ -57,6 +77,14 @@ export const NumberScrubberExtension = Extension.create({
 
         props: {
           handleDOMEvents: {
+            mouseover: (_view: EditorView, event: MouseEvent) => {
+              const target = event.target as HTMLElement;
+              if (!target.classList.contains("semantic-scrubbableNumber")) {
+                return false;
+              }
+              showFirstScrubHint(target);
+              return false;
+            },
             mousedown: (view: EditorView, event: MouseEvent) => {
               const target = event.target as HTMLElement;
 

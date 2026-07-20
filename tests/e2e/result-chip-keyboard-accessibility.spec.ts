@@ -100,10 +100,15 @@ test.describe("Result chip keyboard accessibility", () => {
 
     await page.keyboard.press("ArrowDown");
     await page.keyboard.press("ArrowDown");
-    await page.keyboard.press("ArrowDown");
     const goalAction = menu.getByRole("menuitem", {
       name: "Find gross for a target…",
     });
+    for (let index = 0; index < 12; index += 1) {
+      if (await goalAction.evaluate((element) => element === document.activeElement)) {
+        break;
+      }
+      await page.keyboard.press("ArrowDown");
+    }
     await expect(goalAction).toBeFocused();
     await page.keyboard.press("Enter");
     await waitForUIRenderComplete(page);

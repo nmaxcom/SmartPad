@@ -2,14 +2,23 @@ import { Extension } from "@tiptap/core";
 import { NodeSelection, Plugin, TextSelection } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import {
+  buildSensitivityInsight,
   calculateSensitivity,
   collectLeafSensitivityInputs,
+  findSensitivityBreakEven,
   resolveSensitivityBarPercent,
   type SensitivityAnalysis,
+  type SensitivityBreakEven,
   type SensitivityCandidate,
   type SensitivityEvaluation,
 } from "../analysis/sensitivityAnalysis";
 import { defaultRegistry, type EvaluationContext } from "../eval";
+import { interpretNaturalIntent } from "../intent/naturalIntent";
+import {
+  findVariableAssignmentValueRange,
+  formatSemanticNumericValue,
+  replaceVariableAssignmentValue,
+} from "../interaction/authoritativeNumericEditing";
 import {
   ExpressionComponent,
   FunctionDefinitionNode,
@@ -175,6 +184,7 @@ interface SensitivitySourcePlan {
   sourceLineId: string;
   sourceLine: number;
   targetName: string;
+  expression: string;
   candidates: SensitivityCandidate[];
   baseline: SensitivityEvaluation;
 }
@@ -1280,6 +1290,11 @@ const buildSensitivitySourcePlan = (
     sourceLineId: source.lineId || payload.sourceLineId,
     sourceLine: source.lineNumber,
     targetName,
+    expression: isCombinedAssignmentNode(astNode)
+      ? astNode.expression
+      : isVariableAssignmentNode(astNode)
+        ? astNode.rawValue
+        : "",
     candidates,
     baseline: {
       numericValue: targetValue.getNumericValue(),
@@ -1790,6 +1805,14 @@ export const ResultReferenceInteractionExtension = Extension.create({
     let sensitivityAnalysisCache: {
       key: string;
       analysis: SensitivityAnalysis;
+      breakEven: SensitivityBreakEven | null;
+    } | null = null;
+    let explorerIntentDraft: {
+      key: string;
+      open: boolean;
+      prompt: string;
+      syntax: string;
+      feedback: string;
     } | null = null;
     const clearDropTargetIndicator = (view: any) => {
       view.dom
@@ -2485,18 +2508,28 @@ export const ResultReferenceInteractionExtension = Extension.create({
         `target:${plan.baseline.numericValue}`,
       ].join("|");
       if (sensitivityAnalysisCache?.key !== cacheKey) {
+        const analysis = calculateSensitivity({
+          baseline: plan.baseline,
+          candidates: plan.candidates,
+          variation: selection.variation,
+          evaluate: (inputName, factor) =>
+            evaluateSensitivityVariant(view, plan, inputName, factor),
+        });
+        const strongestInput = analysis.impacts[0]?.name || "";
         sensitivityAnalysisCache = {
           key: cacheKey,
-          analysis: calculateSensitivity({
-            baseline: plan.baseline,
-            candidates: plan.candidates,
-            variation: selection.variation,
-            evaluate: (inputName, factor) =>
-              evaluateSensitivityVariant(view, plan, inputName, factor),
-          }),
+          analysis,
+          breakEven: strongestInput
+            ? findSensitivityBreakEven({
+                inputName: strongestInput,
+                evaluate: (factor) =>
+                  evaluateSensitivityVariant(view, plan, strongestInput, factor),
+              })
+            : null,
         };
       }
       const analysis = sensitivityAnalysisCache.analysis;
+      const breakEven = sensitivityAnalysisCache.breakEven;
 
       let line = 0;
       let targetRange: { from: number; to: number; widgetPos: number } | null =
@@ -2548,7 +2581,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
           targetRange.widgetPos,
           () => {
             const container = document.createElement("span");
-            container.className = SENSITIVITY_ANALYSIS_WIDGET_CLASS;
+            container.className = `${SENSITIVITY_ANALYSIS_WIDGET_CLASS} semantic-result-explorer`;
             container.setAttribute("contenteditable", "false");
             container.setAttribute("role", "group");
             container.setAttribute("data-sensitivity-target", plan.targetName);
@@ -2562,25 +2595,25 @@ export const ResultReferenceInteractionExtension = Extension.create({
             );
             container.setAttribute(
               "aria-label",
-              `What matters most for ${plan.targetName}. Each input changes by plus or minus ${variationPercent} percent, one at a time.`,
+              `Explore ${plan.targetName}. Review its source, manipulate its assumptions, and inspect live effects.`,
             );
 
             const header = document.createElement("span");
             header.className = "semantic-sensitivity-header";
             const heading = document.createElement("span");
             heading.className = "semantic-sensitivity-title";
-            heading.textContent = `What matters most · ${plan.targetName}`;
+            heading.textContent = `Explore · ${plan.targetName}`;
             header.appendChild(heading);
             const method = document.createElement("span");
             method.className = "semantic-sensitivity-method";
-            method.textContent = `±${variationPercent}% · one input at a time`;
+            method.textContent = "live model";
             header.appendChild(method);
             const close = document.createElement("button");
             close.type = "button";
             close.className = "semantic-sensitivity-close";
             close.textContent = "×";
-            close.title = "Hide sensitivity analysis";
-            close.setAttribute("aria-label", "Hide sensitivity analysis");
+            close.title = "Close result explorer";
+            close.setAttribute("aria-label", "Close result explorer");
             close.addEventListener("mousedown", (event) => {
               event.preventDefault();
               event.stopPropagation();
@@ -2597,14 +2630,76 @@ export const ResultReferenceInteractionExtension = Extension.create({
             header.appendChild(close);
             container.appendChild(header);
 
-            const baseline = document.createElement("span");
-            baseline.className = "semantic-sensitivity-baseline";
-            baseline.textContent = `Live result ${analysis.baseline.displayValue}`;
-            container.appendChild(baseline);
+            const resultSummary = document.createElement("span");
+            resultSummary.className = "semantic-explorer-result-summary";
+            const liveLabel = document.createElement("span");
+            liveLabel.textContent = "Now";
+            resultSummary.appendChild(liveLabel);
+            const liveValue = document.createElement("strong");
+            liveValue.textContent = analysis.baseline.displayValue;
+            resultSummary.appendChild(liveValue);
+            const source = document.createElement("code");
+            source.className = "semantic-explorer-source";
+            source.textContent = `${plan.targetName} = ${plan.expression}`;
+            source.title = "Go to the editable SmartPad source";
+            source.setAttribute("role", "button");
+            source.setAttribute("tabindex", "0");
+            source.setAttribute(
+              "aria-label",
+              `Go to source: ${plan.targetName} equals ${plan.expression}`,
+            );
+            const goToExplorerSource = (event: Event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              if (!activePluginView) return;
+              jumpToSourceLine(
+                activePluginView,
+                plan.sourceLineId,
+                plan.sourceLine,
+              );
+              highlightSource(
+                activePluginView,
+                plan.sourceLineId,
+                plan.sourceLine,
+                { lockMs: 1600 },
+              );
+            };
+            source.addEventListener("click", goToExplorerSource);
+            source.addEventListener("keydown", (event) => {
+              if (event.key !== "Enter" && event.key !== " ") return;
+              goToExplorerSource(event);
+            });
+            resultSummary.appendChild(source);
+            container.appendChild(resultSummary);
+
+            const insightText = buildSensitivityInsight(analysis, plan.targetName);
+            const insight = document.createElement("span");
+            insight.className = "semantic-explorer-insight";
+            insight.setAttribute("data-explorer-insight", "strongest-driver");
+            insight.textContent = insightText || "No stable local driver was found.";
+            container.appendChild(insight);
+
+            if (breakEven) {
+              const inputValue = variables.get(breakEven.inputName)?.value;
+              const breakEvenValue = inputValue
+                ? formatSemanticNumericValue(
+                    inputValue,
+                    inputValue.getNumericValue() * breakEven.inputFactor,
+                    getNumericDisplayOptions(),
+                  )
+                : null;
+              if (breakEvenValue) {
+                const breakEvenInsight = document.createElement("span");
+                breakEvenInsight.className = "semantic-explorer-insight is-secondary";
+                breakEvenInsight.setAttribute("data-explorer-insight", "break-even");
+                breakEvenInsight.textContent = `Possible break-even near ${breakEven.inputName} = ${breakEvenValue} in the sampled range.`;
+                container.appendChild(breakEvenInsight);
+              }
+            }
 
             const legend = document.createElement("span");
             legend.className = "semantic-sensitivity-legend";
-            legend.innerHTML = `<span class="is-minus">−${variationPercent}% input</span><span class="is-plus">+${variationPercent}% input</span>`;
+            legend.innerHTML = `<span class="semantic-explorer-drag-hint">Drag a value ↔</span><span class="is-minus">−${variationPercent}%</span><span class="is-plus">+${variationPercent}%</span>`;
             container.appendChild(legend);
 
             const rows = document.createElement("span");
@@ -2623,7 +2718,90 @@ export const ResultReferenceInteractionExtension = Extension.create({
 
               const label = document.createElement("span");
               label.className = "semantic-sensitivity-input";
-              label.textContent = impact.name;
+              const inputName = document.createElement("span");
+              inputName.className = "semantic-explorer-input-name";
+              inputName.textContent = impact.name;
+              label.appendChild(inputName);
+              const inputVariable = variables.get(impact.name);
+              const valueButton = document.createElement("button");
+              valueButton.type = "button";
+              valueButton.className = "semantic-explorer-input-value";
+              valueButton.textContent = inputVariable
+                ? inputVariable.value.toString(getNumericDisplayOptions())
+                : String(impact.baseInput);
+              valueButton.title = `Drag left or right to change ${impact.name} in the sheet. Shift = fine, Alt = coarse, Esc = cancel.`;
+              valueButton.setAttribute(
+                "aria-label",
+                `Change ${impact.name}. Drag left or right; Shift for fine changes and Alt for coarse changes.`,
+              );
+              if (inputVariable && activePluginView) {
+                valueButton.addEventListener("mousedown", (event) => {
+                  if (event.button !== 0 || !activePluginView) return;
+                  const baseNumeric = inputVariable.value.getNumericValue();
+                  const originalRange = findVariableAssignmentValueRange(
+                    activePluginView,
+                    impact.name,
+                  );
+                  if (!originalRange || !Number.isFinite(baseNumeric)) return;
+                  event.preventDefault();
+                  event.stopPropagation();
+                  const startX = event.clientX;
+                  let moved = false;
+                  document.body.classList.add("number-scrubbing");
+
+                  const finish = (cancelled: boolean) => {
+                    document.removeEventListener("mousemove", move);
+                    document.removeEventListener("mouseup", up);
+                    document.removeEventListener("keydown", keydown, true);
+                    document.body.classList.remove("number-scrubbing");
+                    if (cancelled && moved && activePluginView) {
+                      replaceVariableAssignmentValue(
+                        activePluginView,
+                        impact.name,
+                        originalRange.rawValue,
+                      );
+                    }
+                  };
+                  const move = (moveEvent: MouseEvent) => {
+                    if (!activePluginView) return;
+                    const deltaX = moveEvent.clientX - startX;
+                    if (Math.abs(deltaX) > 3) moved = true;
+                    if (!moved) return;
+                    moveEvent.preventDefault();
+                    const rate = moveEvent.shiftKey
+                      ? 0.001
+                      : moveEvent.altKey
+                        ? 0.02
+                        : 0.005;
+                    const factor = Math.max(0.01, 1 + deltaX * rate);
+                    const nextRawValue = formatSemanticNumericValue(
+                      inputVariable.value,
+                      baseNumeric * factor,
+                      getNumericDisplayOptions(),
+                    );
+                    if (nextRawValue) {
+                      replaceVariableAssignmentValue(
+                        activePluginView,
+                        impact.name,
+                        nextRawValue,
+                      );
+                    }
+                  };
+                  const up = () => finish(false);
+                  const keydown = (keyboardEvent: KeyboardEvent) => {
+                    if (keyboardEvent.key !== "Escape") return;
+                    keyboardEvent.preventDefault();
+                    keyboardEvent.stopPropagation();
+                    finish(true);
+                  };
+                  document.addEventListener("mousemove", move);
+                  document.addEventListener("mouseup", up);
+                  document.addEventListener("keydown", keydown, true);
+                });
+              } else {
+                valueButton.disabled = true;
+              }
+              label.appendChild(valueButton);
               row.appendChild(label);
 
               const track = document.createElement("span");
@@ -2631,6 +2809,38 @@ export const ResultReferenceInteractionExtension = Extension.create({
               const axis = document.createElement("span");
               axis.className = "semantic-sensitivity-axis";
               track.appendChild(axis);
+              const responseCurve = document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "svg",
+              );
+              responseCurve.setAttribute("viewBox", "0 0 100 20");
+              responseCurve.setAttribute("preserveAspectRatio", "none");
+              responseCurve.setAttribute("class", "semantic-explorer-mini-curve");
+              responseCurve.setAttribute("aria-hidden", "true");
+              const curveScale = Math.max(
+                analysis.maxAbsDelta,
+                Number.EPSILON,
+              );
+              const curveY = (delta: number) =>
+                10 - Math.max(-1, Math.min(1, delta / curveScale)) * 7;
+              const curve = document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "polyline",
+              );
+              curve.setAttribute(
+                "points",
+                `0,${curveY(impact.minusDelta)} 50,10 100,${curveY(impact.plusDelta)}`,
+              );
+              responseCurve.appendChild(curve);
+              const livePoint = document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "circle",
+              );
+              livePoint.setAttribute("cx", "50");
+              livePoint.setAttribute("cy", "10");
+              livePoint.setAttribute("r", "1.8");
+              responseCurve.appendChild(livePoint);
+              track.appendChild(responseCurve);
               const appendBar = (
                 kind: "minus" | "plus",
                 delta: number,
@@ -2668,15 +2878,152 @@ export const ResultReferenceInteractionExtension = Extension.create({
 
             const footer = document.createElement("span");
             footer.className = "semantic-sensitivity-footer";
-            if (analysis.impacts.length > 0) {
-              footer.textContent = `${analysis.impacts[0].name} moves ${plan.targetName} the most in this range.`;
-            } else {
-              footer.textContent = "SmartPad could not recalculate these inputs.";
-            }
+            footer.textContent = `Ranges compare one assumption at a time around the current model.`;
             if (analysis.failedInputs.length > 0) {
               footer.title = `Could not recalculate: ${analysis.failedInputs.join(", ")}`;
             }
             container.appendChild(footer);
+
+            const askToggle = document.createElement("button");
+            askToggle.type = "button";
+            askToggle.className = "semantic-explorer-ask-toggle";
+            askToggle.textContent = "Ask in plain language…";
+            const intentDraftKey = `${sheetId}:${plan.sourceLineId || plan.sourceLine}:${plan.targetName}`;
+            if (explorerIntentDraft?.key !== intentDraftKey) {
+              explorerIntentDraft = {
+                key: intentDraftKey,
+                open: false,
+                prompt: "",
+                syntax: "",
+                feedback:
+                  "Your sheet changes only after you review and insert the syntax.",
+              };
+            }
+            const intentDraft = explorerIntentDraft!;
+            askToggle.setAttribute("aria-expanded", String(intentDraft.open));
+            container.appendChild(askToggle);
+
+            const composer = document.createElement("span");
+            composer.className = "semantic-explorer-intent";
+            composer.hidden = !intentDraft.open;
+            const prompt = document.createElement("input");
+            prompt.type = "text";
+            prompt.className = "semantic-explorer-intent-prompt";
+            prompt.placeholder = `Try “plot ${plan.targetName} against ${analysis.impacts[0]?.name || "an input"}”`;
+            prompt.value = intentDraft.prompt;
+            prompt.setAttribute("aria-label", "Describe what you want SmartPad to do");
+            composer.appendChild(prompt);
+            const proposalRow = document.createElement("span");
+            proposalRow.className = "semantic-explorer-intent-proposal";
+            const syntax = document.createElement("input");
+            syntax.type = "text";
+            syntax.className = "semantic-explorer-intent-syntax";
+            syntax.placeholder = "Validated SmartPad syntax will appear here";
+            syntax.value = intentDraft.syntax;
+            syntax.setAttribute("aria-label", "Editable SmartPad syntax proposal");
+            proposalRow.appendChild(syntax);
+            const apply = document.createElement("button");
+            apply.type = "button";
+            apply.className = "semantic-explorer-intent-apply";
+            apply.textContent = "Insert";
+            apply.disabled = true;
+            proposalRow.appendChild(apply);
+            composer.appendChild(proposalRow);
+            const feedback = document.createElement("span");
+            feedback.className = "semantic-explorer-intent-feedback";
+            feedback.textContent = intentDraft.feedback;
+            composer.appendChild(feedback);
+            container.appendChild(composer);
+
+            let currentProposal = interpretNaturalIntent(prompt.value, {
+              targetName: plan.targetName,
+              variableNames: Array.from(variables.keys()),
+            });
+            const validateEditedSyntax = () => {
+              const editedNode = parseLine(syntax.value.trim(), 1);
+              const valid =
+                Boolean(syntax.value.trim()) &&
+                editedNode.type !== "plainText" &&
+                editedNode.type !== "error";
+              apply.disabled = !valid;
+              feedback.classList.toggle("is-error", !valid && Boolean(syntax.value));
+              if (!valid && syntax.value) {
+                feedback.textContent = "This is not valid SmartPad syntax yet.";
+                intentDraft.feedback = feedback.textContent;
+              }
+              return valid;
+            };
+            const updateProposal = () => {
+              currentProposal = interpretNaturalIntent(prompt.value, {
+                targetName: plan.targetName,
+                variableNames: Array.from(variables.keys()),
+              });
+              syntax.value = currentProposal?.syntax || "";
+              intentDraft.prompt = prompt.value;
+              intentDraft.syntax = syntax.value;
+              feedback.classList.toggle("is-error", !currentProposal && Boolean(prompt.value.trim()));
+              feedback.textContent = currentProposal
+                ? `${currentProposal.summary}. Review or edit the syntax before inserting.`
+                : prompt.value.trim()
+                  ? "I cannot map that safely yet. Try plot, find, convert, or set."
+                  : "Your sheet changes only after you review and insert the syntax.";
+              intentDraft.feedback = feedback.textContent;
+              validateEditedSyntax();
+            };
+            askToggle.addEventListener("click", (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              composer.hidden = !composer.hidden;
+              intentDraft.open = !composer.hidden;
+              askToggle.setAttribute("aria-expanded", String(!composer.hidden));
+              if (!composer.hidden) prompt.focus();
+            });
+            prompt.addEventListener("input", updateProposal);
+            syntax.addEventListener("input", () => {
+              intentDraft.syntax = syntax.value;
+              validateEditedSyntax();
+            });
+            if (currentProposal && !syntax.value) {
+              syntax.value = currentProposal.syntax;
+              intentDraft.syntax = syntax.value;
+            }
+            validateEditedSyntax();
+            apply.addEventListener("click", (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              if (!activePluginView || !validateEditedSyntax()) return;
+              const editedSyntax = syntax.value.trim();
+              const editedNode = parseLine(editedSyntax, 1);
+              let applied = false;
+              if (isVariableAssignmentNode(editedNode)) {
+                applied = replaceVariableAssignmentValue(
+                  activePluginView,
+                  editedNode.variableName,
+                  editedNode.rawValue,
+                );
+              }
+              if (!applied) {
+                const insertedCursor = insertTextAfterSourceLine(
+                  activePluginView,
+                  {
+                    sourceLineId: plan.sourceLineId,
+                    sourceLine: plan.sourceLine,
+                    sourceLabel: plan.targetName,
+                    sourceValue: analysis.baseline.displayValue,
+                  },
+                  editedSyntax,
+                );
+                applied = typeof insertedCursor === "number";
+              }
+              if (applied) {
+                feedback.classList.remove("is-error");
+                feedback.textContent = currentProposal?.kind === "set"
+                  ? "Updated the existing visible assignment."
+                  : "Inserted as visible, editable SmartPad syntax.";
+                intentDraft.feedback = feedback.textContent;
+                apply.disabled = true;
+              }
+            });
             return container;
           },
           { side: 4, key: `sensitivity-analysis-${widgetKey}` },
@@ -2685,6 +3032,19 @@ export const ResultReferenceInteractionExtension = Extension.create({
     };
 
     const refreshBaselinePresentation = (view: any) => {
+      const resetHorizontalEditorScroll = () => {
+        let element: HTMLElement | null = view.dom as HTMLElement;
+        while (element) {
+          if (
+            element.classList.contains("editor-content") ||
+            element.classList.contains("editor-card-container")
+          ) {
+            element.scrollLeft = 0;
+          }
+          element = element.parentElement;
+        }
+      };
+      resetHorizontalEditorScroll();
       const tr = view.state.tr;
       tr.setMeta(BASELINE_REFRESH_META, Date.now());
       tr.setMeta("addToHistory", false);
@@ -2694,6 +3054,7 @@ export const ResultReferenceInteractionExtension = Extension.create({
       }
       baselineRefreshFrame = window.requestAnimationFrame(() => {
         baselineRefreshFrame = null;
+        resetHorizontalEditorScroll();
         refreshBaselineResultDeltas(view);
       });
     };
@@ -2857,6 +3218,54 @@ export const ResultReferenceInteractionExtension = Extension.create({
       );
 
       const activeSheetId = getActiveSheetId?.() || "";
+      const sensitivityPlan = buildSensitivitySourcePlan(
+        view,
+        payload,
+        getVariableContext?.() || new Map<string, Variable>(),
+        getNumericDisplayOptions(),
+      );
+      const pinnedSensitivity = activeSheetId
+        ? loadSensitivityAnalysis(activeSheetId)
+        : null;
+      const sensitivityShownHere = Boolean(
+        sensitivityPlan &&
+          pinnedSensitivity &&
+          pinnedSensitivity.targetName === sensitivityPlan.targetName &&
+          ((pinnedSensitivity.sourceLineId &&
+            pinnedSensitivity.sourceLineId === sensitivityPlan.sourceLineId) ||
+            (!pinnedSensitivity.sourceLineId &&
+              pinnedSensitivity.sourceLine === sensitivityPlan.sourceLine)),
+      );
+      menu.appendChild(
+        buildMenuButton(
+          sensitivityShownHere
+            ? "Exploring this result"
+            : pinnedSensitivity
+              ? "Explore this result instead"
+              : "Explore result",
+          () => {
+            if (activeSheetId && sensitivityPlan) {
+              saveSensitivityAnalysis(activeSheetId, {
+                sourceLineId: sensitivityPlan.sourceLineId,
+                sourceLine: sensitivityPlan.sourceLine,
+                targetName: sensitivityPlan.targetName,
+              });
+              sensitivityAnalysisCache = null;
+              refreshBaselinePresentation(view);
+            }
+            closeResultActionMenu();
+          },
+          {
+            disabled: !activeSheetId || !sensitivityPlan || sensitivityShownHere,
+            title: sensitivityPlan
+              ? "Open one inline place to understand and manipulate this result"
+              : "Available for a named numeric result with editable root assumptions",
+            className: "semantic-result-explorer-action",
+            accent: Boolean(sensitivityPlan && !sensitivityShownHere),
+          },
+        ),
+      );
+
       const activeBaseline = getBaselineForActiveSheet();
       const scenarioVariableName = resolveVariableNameForPayload(view, payload);
       const scenarioState = activeSheetId
@@ -3013,55 +3422,6 @@ export const ResultReferenceInteractionExtension = Extension.create({
           );
         });
       }
-      const sensitivityPlan = buildSensitivitySourcePlan(
-        view,
-        payload,
-        getVariableContext?.() || new Map<string, Variable>(),
-        getNumericDisplayOptions(),
-      );
-      const pinnedSensitivity = activeSheetId
-        ? loadSensitivityAnalysis(activeSheetId)
-        : null;
-      const sensitivityShownHere = Boolean(
-        sensitivityPlan &&
-          pinnedSensitivity &&
-          pinnedSensitivity.targetName === sensitivityPlan.targetName &&
-          ((pinnedSensitivity.sourceLineId &&
-            pinnedSensitivity.sourceLineId ===
-              sensitivityPlan.sourceLineId) ||
-            (!pinnedSensitivity.sourceLineId &&
-              pinnedSensitivity.sourceLine === sensitivityPlan.sourceLine)),
-      );
-      menu.appendChild(
-        buildMenuButton(
-          sensitivityShownHere
-            ? "Sensitivity shown here"
-            : pinnedSensitivity
-              ? "Move sensitivity here"
-              : "See what matters most",
-          () => {
-            if (activeSheetId && sensitivityPlan) {
-              saveSensitivityAnalysis(activeSheetId, {
-                sourceLineId: sensitivityPlan.sourceLineId,
-                sourceLine: sensitivityPlan.sourceLine,
-                targetName: sensitivityPlan.targetName,
-              });
-              sensitivityAnalysisCache = null;
-              refreshBaselinePresentation(view);
-            }
-            closeResultActionMenu();
-          },
-          {
-            disabled:
-              !activeSheetId || !sensitivityPlan || sensitivityShownHere,
-            title: sensitivityPlan
-              ? `Vary ${sensitivityPlan.candidates.length} root input${sensitivityPlan.candidates.length === 1 ? "" : "s"} by ±10%, one at a time`
-              : "Available for a named numeric result with non-zero numeric inputs",
-            className: "semantic-result-sensitivity-action",
-            accent: Boolean(sensitivityPlan && !sensitivityShownHere),
-          },
-        ),
-      );
       const visualPlotActions = buildVisualPlotMenuActions(view, payload);
       visualPlotActions.forEach((plotAction) => {
         menu.appendChild(
@@ -3128,13 +3488,6 @@ export const ResultReferenceInteractionExtension = Extension.create({
           );
         });
       }
-      menu.appendChild(
-        buildMenuButton("Show how this result is calculated", () => {}, {
-          disabled: true,
-          title: "Planned action",
-        }),
-      );
-
       document.body.appendChild(menu);
       activateResultActionMenu(menu, button, resultEl);
       installResultMenuKeyboardNavigation(menu);

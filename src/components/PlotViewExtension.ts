@@ -20,7 +20,10 @@ import {
   PlotRange,
   isPlotViewRenderNode,
 } from "../eval/renderNodes";
-import { computePlotData } from "../plotting/plottingUtils";
+import {
+  computePlotData,
+  expandPlotExpressionDependencies,
+} from "../plotting/plottingUtils";
 import { defaultRegistry } from "../eval/registry";
 import { ReactiveVariableStore } from "../state/variableStore";
 import {
@@ -34,6 +37,10 @@ import {
 } from "../types";
 import { getDateLocaleEffective } from "../types/DateValue";
 import { applyThousandsSeparator } from "../utils/numberFormatting";
+import {
+  formatSemanticNumericValue,
+  replaceVariableAssignmentValue,
+} from "../interaction/authoritativeNumericEditing";
 
 const plotViewPluginKey = new PluginKey("plotView");
 const ENABLE_RESULT_CLICK_PLOTTING = false;
@@ -644,7 +651,10 @@ const computeModelFromExpression = (
   const yDomainPadding = resolvePlotSettingNumber(settings?.plotYDomainPadding, 8, 1);
   const yPanDomainPadding = resolvePlotSettingNumber(settings?.plotPanYDomainPadding, 6, 1);
 
-  const seriesResults = (seriesNodes as ExpressionNode[]).map((node) =>
+  const expandedSeriesNodes = (seriesNodes as ExpressionNode[]).map((node) =>
+    expandPlotExpressionDependencies(node, xVariable, variableContext)
+  );
+  const seriesResults = expandedSeriesNodes.map((node) =>
     computePlotData({
       expressionNode: node,
       xVariable,
@@ -730,7 +740,7 @@ const computeModelFromExpression = (
     });
   }
   const xUnit = getPlotUnitFormat(variableContext.get(xVariable)?.value);
-  const seriesUnits = (seriesNodes as ExpressionNode[]).map((node, index) => {
+  const seriesUnits = expandedSeriesNodes.map((node, index) => {
     const seriesLabel = seriesSpecs[index]?.label;
     const directValue = seriesLabel ? variableContext.get(seriesLabel)?.value : undefined;
     if (directValue) {
@@ -1111,9 +1121,16 @@ const createPlotSvg = (
       const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       dot.setAttribute("cx", `${xScale(currentPoint.x)}`);
       dot.setAttribute("cy", `${yScale(currentPoint.y)}`);
-      dot.setAttribute("r", "3.5");
-      dot.setAttribute("class", "plot-view-dot");
+      dot.setAttribute("r", "5");
+      dot.setAttribute("class", "plot-view-dot plot-view-current-dot");
       dot.setAttribute("data-series-index", String(index));
+      dot.setAttribute("data-current-x", String(currentPoint.x));
+      dot.setAttribute("role", "slider");
+      dot.setAttribute("tabindex", "0");
+      dot.setAttribute("aria-label", `Current ${model.x || "x"}. Drag left or right to change it in the sheet.`);
+      dot.setAttribute("aria-valuenow", String(currentPoint.x));
+      dot.setAttribute("aria-valuemin", String(viewRange.min));
+      dot.setAttribute("aria-valuemax", String(viewRange.max));
       dot.style.fill = seriesLayout.color;
       plotLayer.appendChild(dot);
     }
@@ -1248,7 +1265,8 @@ const createPlotWidget = (
   }) => void,
   onClose?: () => void,
   editorView?: EditorView | null,
-  stableViewKey?: string
+  stableViewKey?: string,
+  onScrubCurrentX?: (nextValue: number) => boolean
 ): HTMLElement => {
   const cachedView = stableViewKey ? interactivePlotViewCache.get(stableViewKey) : undefined;
   let currentXView: PlotRange | undefined =
@@ -1295,6 +1313,12 @@ const createPlotWidget = (
   }
   title.textContent = `${titleText}${xLabel}`;
 
+  const directHint = document.createElement("span");
+  directHint.className = "plot-view-direct-hint";
+  if (onScrubCurrentX && model.currentX !== undefined && model.x) {
+    directHint.textContent = `Drag the live point ↔ to change ${model.x}`;
+  }
+
   const actions = document.createElement("div");
   actions.className = "plot-view-actions";
 
@@ -1333,6 +1357,7 @@ const createPlotWidget = (
   }
 
   header.appendChild(title);
+  if (directHint.textContent) header.appendChild(directHint);
   header.appendChild(actions);
   container.appendChild(header);
 
@@ -1747,6 +1772,12 @@ const createPlotWidget = (
     const chart = document.createElement("div");
     chart.className = "plot-view-chart";
     chart.style.touchAction = "none";
+    if (onScrubCurrentX && model.currentX !== undefined && model.x) {
+      const chartHint = document.createElement("div");
+      chartHint.className = "plot-view-direct-overlay";
+      chartHint.textContent = `Drag ● ↔ to change ${model.x}`;
+      chart.appendChild(chartHint);
+    }
     if (model.source === "transient" && onDetach) {
       const pinOverlay = document.createElement("button");
       pinOverlay.type = "button";
@@ -1782,10 +1813,37 @@ const createPlotWidget = (
     let hoverDot: SVGCircleElement | null = null;
     let lineElements = new Map<number, SVGPathElement>();
     let activeSeriesIndex: number | null = null;
-    let dragMode: "pan" | "zoom-x" | "zoom-y" | null = null;
+    let dragMode: "pan" | "zoom-x" | "zoom-y" | "scrub-x" | null = null;
     let dragStartPos: { x: number; y: number } | null = null;
     let dragStartXView: PlotRange | null = null;
     let dragStartYView: PlotRange | null = null;
+    let scrubBounds: {
+      left: number;
+      width: number;
+      range: PlotRange;
+      originalValue: number;
+    } | null = null;
+    let scrubChip: HTMLDivElement | null = null;
+
+    const removeScrubChip = () => {
+      scrubChip?.remove();
+      scrubChip = null;
+    };
+
+    const updateScrubChip = (event: PointerEvent, value: number) => {
+      if (!scrubChip) {
+        scrubChip = document.createElement("div");
+        scrubChip.className = "plot-view-scrub-chip";
+        document.body.appendChild(scrubChip);
+      }
+      scrubChip.textContent = `${model.x || "x"} = ${formatPlotValueWithUnit(
+        value,
+        model.xUnit,
+        model.formatSettings,
+      )}`;
+      scrubChip.style.left = `${event.clientX}px`;
+      scrubChip.style.top = `${event.clientY - 12}px`;
+    };
 
     const updateLineHighlight = (index: number | null) => {
       lineElements.forEach((line, seriesIndex) => {
@@ -2078,6 +2136,10 @@ const createPlotWidget = (
         chart.style.cursor = "ns-resize";
         return;
       }
+      if (dragMode === "scrub-x" || target?.closest?.(".plot-view-current-dot")) {
+        chart.style.cursor = "ew-resize";
+        return;
+      }
       const axis = getAxisDragZone(position, target);
       if (axis === "x") {
         chart.style.cursor = "ew-resize";
@@ -2091,6 +2153,19 @@ const createPlotWidget = (
     };
 
     const handlePointerMove = (event: MouseEvent | PointerEvent) => {
+      if (dragMode === "scrub-x" && scrubBounds && onScrubCurrentX) {
+        const ratio = Math.max(
+          0,
+          Math.min(1, (event.clientX - scrubBounds.left) / scrubBounds.width),
+        );
+        const nextValue =
+          scrubBounds.range.min +
+          ratio * (scrubBounds.range.max - scrubBounds.range.min);
+        event.preventDefault();
+        updateScrubChip(event as PointerEvent, nextValue);
+        onScrubCurrentX(nextValue);
+        return;
+      }
       if (!plotLayout) return;
       const position = getPointerPosition(event);
       if (!position) return;
@@ -2305,6 +2380,32 @@ const createPlotWidget = (
       const target = event.target as Element | null;
       if (target?.closest?.(".plot-view-pin-overlay")) return;
       if (plotLayout) {
+        const currentDot = target?.closest?.(".plot-view-current-dot");
+        if (
+          currentDot &&
+          onScrubCurrentX &&
+          model.currentX !== undefined &&
+          Number.isFinite(model.currentX)
+        ) {
+          const rect = svg.getBoundingClientRect();
+          const range = currentXView || plotLayout.viewRange;
+          event.preventDefault();
+          event.stopPropagation();
+          dragMode = "scrub-x";
+          scrubBounds = {
+            left: rect.left +
+              (plotLayout.padding.left / plotLayout.width) * rect.width,
+            width:
+              ((plotLayout.width -
+                plotLayout.padding.left -
+                plotLayout.padding.right) /
+                plotLayout.width) *
+              rect.width,
+            range: { ...range },
+            originalValue: model.currentX,
+          };
+          updateScrubChip(event, model.currentX);
+        } else {
         const axis = getAxisDragZone(position, target);
 
         if (axis) {
@@ -2348,10 +2449,19 @@ const createPlotWidget = (
             dragStartYView = currentYView || model.yDomain || null;
           }
         }
+        }
       }
 
       const onMove = (moveEvent: PointerEvent) => handlePointerMove(moveEvent);
-      const onUp = () => {
+      const finishPointerInteraction = (cancelled = false) => {
+        if (
+          cancelled &&
+          dragMode === "scrub-x" &&
+          scrubBounds &&
+          onScrubCurrentX
+        ) {
+          onScrubCurrentX(scrubBounds.originalValue);
+        }
         if (isPlotDebugEnabled()) {
           logPlotDebug("[plot] drag end", {
             mode: dragMode,
@@ -2384,13 +2494,24 @@ const createPlotWidget = (
         dragStartPos = null;
         dragStartXView = null;
         dragStartYView = null;
+        scrubBounds = null;
+        removeScrubChip();
         document.removeEventListener("pointermove", onMove);
         document.removeEventListener("pointerup", onUp);
         document.removeEventListener("pointercancel", onUp);
+        document.removeEventListener("keydown", onKeyDown, true);
+      };
+      const onUp = () => finishPointerInteraction(false);
+      const onKeyDown = (keyboardEvent: KeyboardEvent) => {
+        if (keyboardEvent.key !== "Escape" || dragMode !== "scrub-x") return;
+        keyboardEvent.preventDefault();
+        keyboardEvent.stopPropagation();
+        finishPointerInteraction(true);
       };
       document.addEventListener("pointermove", onMove);
       document.addEventListener("pointerup", onUp);
       document.addEventListener("pointercancel", onUp);
+      document.addEventListener("keydown", onKeyDown, true);
     };
 
     chart.addEventListener("mousemove", handlePointerMove);
@@ -2641,6 +2762,40 @@ export const PlotViewExtension = Extension.create({
               tr.setMeta("addToHistory", false);
               currentView.dispatch(tr);
             };
+            const handleCurrentXScrub = (
+              model: PlotViewModel,
+              nextValue: number,
+            ): boolean => {
+              if (!currentView || !model.x) return false;
+              const variable = getVariableContext().get(model.x);
+              if (!variable?.value?.isNumeric()) return false;
+              const settings = getSettings();
+              const nextRawValue = formatSemanticNumericValue(
+                variable.value,
+                nextValue,
+                {
+                  precision: settings?.decimalPlaces ?? 6,
+                  scientificUpperThreshold: Math.pow(
+                    10,
+                    settings?.scientificUpperExponent ?? 12,
+                  ),
+                  scientificLowerThreshold: Math.pow(
+                    10,
+                    settings?.scientificLowerExponent ?? -4,
+                  ),
+                  trimTrailingZeros:
+                    settings?.scientificTrimTrailingZeros ?? true,
+                  groupThousands: false,
+                },
+              );
+              return nextRawValue
+                ? replaceVariableAssignmentValue(
+                    currentView,
+                    model.x,
+                    nextRawValue,
+                  )
+                : false;
+            };
 
             pluginState.viewNodes.forEach((plotNode) => {
               const info = lineIndex[plotNode.line];
@@ -2683,7 +2838,8 @@ export const PlotViewExtension = Extension.create({
                     (patch) => handleOverrideUpdate(overrideKey, patch),
                     undefined,
                     currentView,
-                    overrideKey
+                    overrideKey,
+                    (nextValue) => handleCurrentXScrub(model, nextValue)
                   ),
                 {
                   key: buildPlotKey(model, plotNode.line),
@@ -2730,7 +2886,8 @@ export const PlotViewExtension = Extension.create({
                         (patch) => handleOverrideUpdate(overrideKey, patch),
                         () => handleCloseTransient(overrideKey),
                         currentView,
-                        overrideKey
+                        overrideKey,
+                        (nextValue) => handleCurrentXScrub(model, nextValue)
                       ),
                     {
                       key: buildPlotKey(model, pluginState.transient.targetLine),

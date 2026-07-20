@@ -4,6 +4,30 @@ All notable user-facing changes to SmartPad will be documented in this file.
 
 SmartPad uses semantic versioning. Pre-release builds use `-beta.N` or `-rc.N` suffixes.
 
+## 1.0.0-rc.12 - 2026-07-20
+
+### Added
+
+- Eligible named results now open one inline `Explore result` surface with the live value, source
+  formula, root assumptions, mini response curves, and deterministic strongest-driver and sampled
+  break-even insights.
+- Assumption values inside the explorer can be dragged horizontally to rewrite their visible source
+  assignment while every dependent result and plot updates live.
+- `Ask in plain language…` locally compiles supported Spanish/English plot, target, conversion, and
+  set requests into visible, editable, parser-validated SmartPad syntax before insertion.
+- A connected plot's highlighted live point can be dragged horizontally to update its existing X
+  assignment, with a live value chip, subtle always-visible discovery hint, and `Escape`
+  cancellation. Derived series are sampled through their full formula dependency chain.
+
+### Changed
+
+- Scrubbable numeric literals now use a discreet dotted underline, horizontal cursor, contextual
+  title, and one-time hover hint so new users can discover horizontal dragging.
+- Result exploration replaces the isolated `See what matters most` tornado entry; automatic probes
+  remain non-mutating while explicit gestures always edit ordinary sheet text.
+- Editor surfaces are kept horizontally aligned after result-menu focus changes so inline controls
+  cannot slide beneath the sheet navigation panel.
+
 ## 1.0.0-rc.11 - 2026-07-19
 
 ### Added
