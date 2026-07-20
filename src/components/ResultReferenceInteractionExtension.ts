@@ -1950,7 +1950,10 @@ export const ResultReferenceInteractionExtension = Extension.create({
         button.classList.add("semantic-result-plot-suggestion");
       }
       if (options?.className) {
-        button.classList.add(options.className);
+        const classNames = options.className.split(/\s+/).filter(Boolean);
+        if (classNames.length > 0) {
+          button.classList.add(...classNames);
+        }
       }
       if (options?.title) {
         button.title = options.title;
@@ -3260,7 +3263,8 @@ export const ResultReferenceInteractionExtension = Extension.create({
             title: sensitivityPlan
               ? "Open one inline place to understand and manipulate this result"
               : "Available for a named numeric result with editable root assumptions",
-            className: "semantic-result-explorer-action",
+            className:
+              "semantic-result-sensitivity-action semantic-result-explorer-action",
             accent: Boolean(sensitivityPlan && !sensitivityShownHere),
           },
         ),

@@ -149,6 +149,8 @@ Flow:
 1. User opens the source result chip action menu.
 2. Menu actions may copy the value or create source-adjacent helper lines such as plots or goal-seek commands.
 3. The menu must not expose `Insert reference` or `Insert value`.
+4. An action may carry multiple whitespace-separated styling hooks. Menu construction must add each
+   hook as an individual CSS token and must never prevent the `⋯` menu from opening.
 4. Creating references in the document is done through drag-to-reuse only.
 
 User sees:

@@ -8189,3 +8189,22 @@
     *   The deterministic intent compiler is intentionally narrow; unsupported or ambiguous prose is not guessed. A future optional model-to-structured-intent layer remains a separate privacy/product decision.
     *   The existing large production chunk warning remains. The Playwright skill wrapper still has its known line-16 shell syntax error, so the repository Playwright runner performed browser validation.
     *   No machine blocker remains. The human completion gate is open.
+
+## Entry J-2026-07-20-02
+
+*   Timestamp: 2026-07-20 14:28 CEST / 2026-07-20 12:28 UTC
+*   Summary:
+    *   User reported that clicking a result's `⋯` menu threw `InvalidCharacterError` because one action supplied two CSS hooks in a single string to `DOMTokenList.add`.
+    *   Result-menu construction now splits whitespace-separated hooks, removes empty entries, and adds every class token safely; `Explore result` retains both its legacy sensitivity hook and its explorer hook.
+*   Decisions:
+    *   Fix the shared menu-button constructor instead of weakening the action's styling contract, so every current and future multi-hook action is safe.
+    *   Advance SmartPad to `1.0.0-rc.13` and add a browser assertion for both class hooks before exercising the real `⋯` click and full explorer flow.
+*   Validation:
+    *   The complete explorer Chromium regression passed: 1 of 1.
+    *   Focused pointer/keyboard result-menu regressions passed: 2 of 2.
+    *   `npm run verify:changed -- HEAD` passed with 6 related unit tests and a fresh production build.
+    *   Docusaurus generation/build/sync, docs map/drift, spec-test, and spec-trust gates passed.
+*   Pending:
+    *   Owner: User; due: TBD; status: in_progress; reload the local web app, retry the result `⋯`, and confirm that `Explore result` opens or report any remaining issue.
+*   Risks/blockers:
+    *   No machine blocker remains. The human completion gate is open.

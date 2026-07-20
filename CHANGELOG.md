@@ -4,6 +4,13 @@ All notable user-facing changes to SmartPad will be documented in this file.
 
 SmartPad uses semantic versioning. Pre-release builds use `-beta.N` or `-rc.N` suffixes.
 
+## 1.0.0-rc.13 - 2026-07-20
+
+### Fixed
+
+- Result `⋯` menus now accept actions with multiple CSS hooks without throwing a
+  `DOMTokenList` error, so `Explore result` opens reliably after the unified explorer update.
+
 ## 1.0.0-rc.12 - 2026-07-20
 
 ### Added

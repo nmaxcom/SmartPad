@@ -28,5 +28,6 @@ Implemented interaction contract:
 - Result and reference actions expose `Go to source line`; focused reference chips also jump to their source with `Enter` or `Space`.
 - Goal Seek menu labels use the human-first form `Find <variable> for a target…` while preserving editable `make ... by ... =>` sheet syntax.
 - Eligible named numeric results expose `Explore result`; the action pins one live inline surface for source, assumptions, deterministic insights, direct input manipulation, and reviewed language-to-syntax proposals.
+- Result-menu actions may carry multiple CSS hooks; each hook is added as a separate token so pointer and keyboard menu entry cannot fail with a `DOMTokenList` exception.
 - Highlighted numeric literals use a discreet dotted underline, horizontal cursor, and one-time hover hint so their direct manipulation is discoverable. They can be scrubbed directly: `Shift` gives fine control,
   `Alt`/`Option` gives coarse control, and `Escape` restores the exact pre-gesture text.

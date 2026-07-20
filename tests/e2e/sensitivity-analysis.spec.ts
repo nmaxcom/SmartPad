@@ -60,6 +60,8 @@ test.describe("Inline result explorer", () => {
     await expect(menu).toBeVisible();
     const action = menu.getByRole("menuitem", { name: /explor/i }).first();
     await expect(action).toBeEnabled();
+    await expect(action).toHaveClass(/semantic-result-sensitivity-action/);
+    await expect(action).toHaveClass(/semantic-result-explorer-action/);
     await expect(action).toHaveAttribute(
       "title",
       "Open one inline place to understand and manipulate this result",
