@@ -8208,3 +8208,28 @@
     *   Owner: User; due: TBD; status: in_progress; reload the local web app, retry the result `⋯`, and confirm that `Explore result` opens or report any remaining issue.
 *   Risks/blockers:
     *   No machine blocker remains. The human completion gate is open.
+
+## Entry J-2026-07-21-01
+
+*   Timestamp: 2026-07-21 02:23 CEST / 2026-07-21 00:23 UTC
+*   Summary:
+    *   User deferred model-assisted natural-language translation for a later evaluation and requested a candid competitor gap review focused on features SmartPad currently handles worse.
+    *   Review compared SmartPad's current product and public guidance with official Soulver, Calca, Numi, Parsify, and Desmos material.
+*   Decisions:
+    *   Keep the shipped deterministic visible-syntax compiler as the current product path.
+    *   Track any AI layer separately as an experiment with explicit accuracy, false-positive, latency, cost, privacy, parser-validation, and user-review gates.
+    *   Prioritize competitor lessons that reduce ordinary-task friction and increase direct in-sheet manipulation before adding more advanced analysis commands.
+*   Product assessment:
+    *   SmartPad's main weakness is not raw capability; it is discoverability, progressive disclosure, and long-sheet ergonomics. Too many useful actions depend on hidden gestures, menus, or prior syntax knowledge.
+    *   Highest-value gaps are section/block organization, safe variable rename/refactoring, automatic totals and selection statistics, pasted tabular data, persistent in-sheet controls, reusable blocks, and polished sharing/export.
+    *   Advanced symbolic algebra, matrices, regressions, distributions, plug-ins, and OS launchers are credible later differentiators but should follow the interaction foundation.
+*   Artifacts changed:
+    *   `aidocs/TODO_BACKLOG.md`: added experiment `T-2026-07-21-01` with an evidence-based go/no-go completion contract.
+    *   `aidocs/EXECUTIVE_JOURNAL.md`: recorded the product decision and competitor review.
+*   Validation:
+    *   No product code changed; no product test or version bump was required.
+*   Pending:
+    *   Owner: User; due: TBD; status: todo; choose the first competitor-inspired product slice after reviewing the ranked recommendations.
+    *   Owner: Assistant; due: TBD; status: todo; evaluate optional AI intent interpretation only when the experiment is deliberately activated.
+*   Risks/blockers:
+    *   Copying isolated competitor features would recreate SmartPad's current fragmentation; new work should be evaluated as a complete user task performed directly in the sheet.
