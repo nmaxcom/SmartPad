@@ -4,6 +4,27 @@ All notable user-facing changes to SmartPad will be documented in this file.
 
 SmartPad uses semantic versioning. Pre-release builds use `-beta.N` or `-rc.N` suffixes.
 
+## 1.0.0-rc.14 - 2026-07-21
+
+### Added
+
+- Rectangular spreadsheet, CSV/TSV, pipe, and HTML-table clipboard data now becomes a subtle,
+  editable text table with typed columns and a live row/column summary.
+- Table columns support dot access, row-wise derived columns, list aggregation, autocomplete, and
+  direct use in existing scatter and histogram views without adding a spreadsheet UI.
+- Numeric table cells keep SmartPad's native horizontal scrubber, so formulas and connected views
+  update live while the visible source value is dragged.
+- Matrices and complex numbers are reusable semantic values with core linear algebra, linear-system
+  solving, eigenvalues, and conventional complex-number helpers.
+- Explicit symbolic commands support simplification, expansion, factorization, derivatives,
+  integrals, substitution, and roots; named symbolic results can feed later operations.
+- New **Data Table** and **Advanced Math** templates provide runnable, in-sheet introductions.
+
+### Changed
+
+- Documentation example validation now evaluates whole documents, allowing structured multiline
+  values to be checked with the same parser used by the editor.
+
 ## 1.0.0-rc.13 - 2026-07-20
 
 ### Fixed

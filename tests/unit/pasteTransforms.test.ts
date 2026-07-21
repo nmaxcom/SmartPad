@@ -1,6 +1,7 @@
 import {
   isLikelySharedLiveExpressionSource,
   normalizePastedHTML,
+  normalizePastedTable,
   selectPastePayload,
   stripSharedLiveResultSuffixes,
 } from "../../src/components/pasteTransforms";
@@ -45,6 +46,44 @@ describe("selectPastePayload", () => {
     const text = "line 1\nline 2";
 
     expect(selectPastePayload(markdown, text)).toBe(markdown);
+  });
+});
+
+describe("normalizePastedTable", () => {
+  test("turns spreadsheet TSV into canonical SmartPad text", () => {
+    const result = normalizePastedTable(
+      "",
+      "item\tqty\tprice\nA\t12\t9 EUR\nB\t5\t14 EUR",
+      "Orders"
+    );
+    expect(result).toEqual({
+      canonical:
+        "Orders:\n  item | qty | price\n  A | 12 | 9 EUR\n  B | 5 | 14 EUR",
+      columns: 3,
+      rows: 2,
+    });
+  });
+
+  test("uses HTML headers and preserves cell text", () => {
+    const result = normalizePastedTable(
+      "<table><tr><th>City</th><th>Sales</th></tr><tr><td>New York</td><td>120 EUR</td></tr></table>",
+      "City\tSales\nNew York\t120 EUR",
+      "Campaigns"
+    );
+    expect(result?.canonical).toBe(
+      "Campaigns:\n  City | Sales\n  New York | 120 EUR"
+    );
+  });
+
+  test("creates headers for headerless numeric data", () => {
+    const result = normalizePastedTable("", "1,2\n3,4", "Data");
+    expect(result?.canonical).toBe(
+      "Data:\n  column 1 | column 2\n  1 | 2\n  3 | 4"
+    );
+  });
+
+  test("does not reinterpret ordinary comma prose as a table", () => {
+    expect(normalizePastedTable("", "Hello, world", "Data")).toBeNull();
   });
 });
 

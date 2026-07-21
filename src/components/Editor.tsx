@@ -29,6 +29,7 @@ import { VariableHoverExtension } from "./VariableHoverExtension";
 import {
   isLikelySharedLiveExpressionSource,
   normalizePastedHTML,
+  normalizePastedTable,
   selectPastePayload,
   stripSharedLiveResultSuffixes,
 } from "./pasteTransforms";
@@ -41,7 +42,7 @@ import { AutocompleteExtension } from "./autocomplete/AutocompleteExtension";
 import { getDateLocaleEffective } from "../types/DateValue";
 import { LineIdExtension } from "./LineIdExtension";
 // Import helper to identify combined assignment nodes (e.g. "speed = slider(...)")
-import { parseLine } from "../parsing/astParser";
+import { parseContent, parseLine } from "../parsing/astParser";
 import { recordEquationFromNode } from "../solve/equationStore";
 import { FunctionDefinitionNode, isExpressionNode } from "../parsing/ast";
 import { SemanticParsers, NumberValue, SymbolicValue, SemanticValueTypes } from "../types";
@@ -361,7 +362,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
 
         // STAGE 1: Parse user input as-is (no cleaning, no text manipulation)
         console.time("handleUpdateV2-parsing");
-        const astNodes = lines.map((line: string, index: number) => parseLine(line, index + 1));
+        const astNodes = parseContent(lines.join("\n"));
         console.timeEnd("handleUpdateV2-parsing");
         console.log("[AST PIPELINE] Parsed", astNodes.length, "lines into AST nodes");
 
@@ -1165,6 +1166,29 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
 
         if (!hasStructuredClipboardInput && !text) {
           return false;
+        }
+
+        const existingNames = new Set(
+          extractEditorLineData(view.state.doc)
+            .map((entry) => entry.text.match(/^\s*([A-Za-z][A-Za-z0-9 _-]*)\s*:\s*$/)?.[1]?.trim())
+            .filter((name): name is string => !!name)
+            .map((name) => name.toLowerCase())
+        );
+        let tableName = "Pasted data";
+        let tableSuffix = 2;
+        while (existingNames.has(tableName.toLowerCase())) {
+          tableName = `Pasted data ${tableSuffix}`;
+          tableSuffix += 1;
+        }
+        const tablePaste = normalizePastedTable(html, text, tableName);
+        if (tablePaste) {
+          const { schema } = view.state;
+          const paragraphs = tablePaste.canonical.split("\n").map((line) =>
+            schema.nodes.paragraph.create(null, line ? schema.text(line) : undefined)
+          );
+          const slice = new Slice(Fragment.fromArray(paragraphs), 0, 0);
+          view.dispatch(view.state.tr.replaceSelection(slice).scrollIntoView());
+          return true;
         }
 
         const payload = hasStructuredClipboardInput ? selectPastePayload(markdown, text) : text;

@@ -271,11 +271,30 @@
     },
     {
       "id": "tables-and-structured-collections",
-      "status": "proposed",
-      "sourceSpec": "docs/Specs/proposed/tables-and-structured-collections.md",
-      "canonicalSpec": "docs/Specs/proposed/tables-and-structured-collections.md",
-      "mappedGroups": ["Lists And Ranges", "Plotting And Visualization"],
-      "testRefs": []
+      "status": "implemented",
+      "sourceSpec": "docs/Specs/Tables.spec.md",
+      "canonicalSpec": "docs/Specs/implemented/tables-and-structured-collections.md",
+      "mappedGroups": [
+        "Tables And Structured Data",
+        "Editor And Result Chips",
+        "Plotting And Visualization"
+      ],
+      "testRefs": [
+        "tests/unit/table.test.ts",
+        "tests/unit/pasteTransforms.test.ts",
+        "tests/e2e/tables-and-advanced-math.spec.ts"
+      ]
+    },
+    {
+      "id": "advanced-math",
+      "status": "implemented",
+      "sourceSpec": "docs/Specs/AdvancedMath.spec.md",
+      "canonicalSpec": "docs/Specs/implemented/advanced-math.md",
+      "mappedGroups": ["Advanced Math", "Expression Engine"],
+      "testRefs": [
+        "tests/unit/advancedMath.test.ts",
+        "tests/e2e/tables-and-advanced-math.spec.ts"
+      ]
     },
     {
       "id": "unit-aliases-and-ratio",

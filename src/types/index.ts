@@ -21,6 +21,10 @@ import type { DurationUnit } from './DurationValue';
 import { ErrorValue, type ErrorType, type ErrorContext } from './ErrorValue';
 import { SymbolicValue } from './SymbolicValue';
 import { ListValue } from './ListValue';
+import { TextValue } from './TextValue';
+import { ComplexValue } from './ComplexValue';
+import { MatrixValue } from './MatrixValue';
+import { TableValue, type TableColumn } from './TableValue';
 import { getListMaxLength } from './listConfig';
 import { SmartPadQuantity } from '../units/unitsnetAdapter';
 import { defaultUnitRegistry } from '../units/definitions';
@@ -41,6 +45,10 @@ export { DurationValue };
 export { ErrorValue, type ErrorType, type ErrorContext };
 export { SymbolicValue };
 export { ListValue };
+export { TextValue };
+export { ComplexValue };
+export { MatrixValue };
+export { TableValue, type TableColumn };
 
 // Type guards and utilities
 export const SemanticValueTypes = {
@@ -55,6 +63,10 @@ export const SemanticValueTypes = {
   isError: (value: SemanticValue): value is ErrorValue => value.getType() === 'error',
   isSymbolic: (value: SemanticValue): value is SymbolicValue => value.getType() === 'symbolic',
   isList: (value: SemanticValue): value is ListValue => value.getType() === 'list',
+  isText: (value: SemanticValue): value is TextValue => value.getType() === 'text',
+  isComplex: (value: SemanticValue): value is ComplexValue => value.getType() === 'complex',
+  isMatrix: (value: SemanticValue): value is MatrixValue => value.getType() === 'matrix',
+  isTable: (value: SemanticValue): value is TableValue => value.getType() === 'table',
 } as const;
 
 // Factory functions for creating semantic values
@@ -249,6 +261,9 @@ const parseSingleValue = (input: string): SemanticValue | null => {
   const unitRate = parseUnitRate(trimmed);
   if (unitRate) return unitRate;
 
+  const complex = ComplexValue.parse(trimmed);
+  if (complex) return complex;
+
   if (trimmed.match(/^-?\d+(?:\.\d+)?%$/)) {
     return new PercentageValue(parseFloat(trimmed));
   }
@@ -438,6 +453,60 @@ const parseListLiteral = (input: string): SemanticValue | null => {
   return createListResult(items, delimiter);
 };
 
+const splitTopLevelMatrixRows = (input: string): string[] => {
+  const rows: string[] = [];
+  let current = "";
+  let depth = 0;
+  for (const char of input) {
+    if (char === "[") depth += 1;
+    if (char === "]") depth = Math.max(0, depth - 1);
+    if ((char === ";" && depth === 0) || (char === "," && depth === 0)) {
+      if (current.trim()) rows.push(current.trim());
+      current = "";
+      continue;
+    }
+    current += char;
+  }
+  if (current.trim()) rows.push(current.trim());
+  return rows;
+};
+
+const parseMatrixLiteral = (input: string): MatrixValue | null => {
+  const trimmed = input.trim();
+  if (!trimmed.startsWith("[") || !trimmed.endsWith("]")) return null;
+
+  const inner = trimmed.slice(1, -1).trim();
+  const nested = inner.startsWith("[") && inner.endsWith("]");
+  const rawRows = nested
+    ? splitTopLevelMatrixRows(inner)
+    : inner.includes(";")
+      ? splitTopLevelMatrixRows(inner)
+      : [];
+  if (rawRows.length === 0) return null;
+
+  const rows: Array<Array<NumberValue | ComplexValue>> = [];
+  for (const rawRow of rawRows) {
+    const rowBody = rawRow.startsWith("[") && rawRow.endsWith("]")
+      ? rawRow.slice(1, -1)
+      : rawRow;
+    const cells = splitTopLevelCommas(rowBody).map((cell) => cell.trim());
+    if (cells.length === 0 || cells.some((cell) => !cell)) return null;
+    const values: Array<NumberValue | ComplexValue> = [];
+    for (const cell of cells) {
+      const value = parseSingleValue(cell);
+      if (!(value instanceof NumberValue) && !(value instanceof ComplexValue)) return null;
+      values.push(value);
+    }
+    rows.push(values);
+  }
+
+  try {
+    return MatrixValue.fromRows(rows);
+  } catch {
+    return null;
+  }
+};
+
 export const SemanticParsers = {
   /**
    * Try to parse a string as a semantic value
@@ -446,6 +515,8 @@ export const SemanticParsers = {
     if (!str) return null;
     const trimmed = str.trim();
     if (!trimmed) return null;
+    const matrixValue = parseMatrixLiteral(trimmed);
+    if (matrixValue) return matrixValue;
     const listValue = parseListLiteral(trimmed);
     if (listValue) return listValue;
     const single = parseSingleValue(trimmed);

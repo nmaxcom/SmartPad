@@ -18,6 +18,9 @@ import {
   CombinedAssignmentNode,
   ErrorNode,
   FunctionDefinitionNode,
+  TableColumnAssignmentNode,
+  TableDeclarationNode,
+  TableRowNode,
 } from "./ast";
 import {
   parseVariableAssignment,
@@ -57,6 +60,11 @@ export function parseLine(line: string, lineNumber: number = 1): ASTNode {
   }
 
   try {
+    const tableColumnAssignment = parseTableColumnAssignment(trimmedLine, line, lineNumber);
+    if (tableColumnAssignment) {
+      return tableColumnAssignment;
+    }
+
     // Check for function definitions before variable assignments
     const functionDef = parseFunctionDefinition(trimmedLine, line, lineNumber);
     if (functionDef) {
@@ -114,6 +122,30 @@ export function parseLine(line: string, lineNumber: number = 1): ASTNode {
       lineNumber
     );
   }
+}
+
+function parseTableColumnAssignment(
+  trimmedLine: string,
+  raw: string,
+  line: number
+): TableColumnAssignmentNode | null {
+  const showResult = trimmedLine.endsWith("=>");
+  const withoutTrigger = showResult
+    ? trimmedLine.slice(0, trimmedLine.lastIndexOf("=>")).trim()
+    : trimmedLine;
+  const match = withoutTrigger.match(
+    /^([A-Za-z][A-Za-z0-9 _-]*?)\.([A-Za-z][A-Za-z0-9 _-]*?)\s*=\s*(.+)$/
+  );
+  if (!match) return null;
+  return {
+    type: "tableColumnAssignment",
+    line,
+    raw,
+    tableName: match[1].replace(/\s+/g, " ").trim(),
+    columnName: match[2].replace(/\s+/g, " ").trim(),
+    expression: match[3].trim(),
+    showResult,
+  };
 }
 
 /**
@@ -717,8 +749,92 @@ function parseFunctionParams(
  */
 export function parseContent(content: string): ASTNode[] {
   const lines = content.split("\n");
-  return lines.map((line, index) => parseLine(line, index + 1));
+  const nodes = lines.map((line, index) => parseLine(line, index + 1));
+
+  for (let index = 0; index < lines.length - 1; index += 1) {
+    const declaration = parseTableDeclaration(lines, index);
+    if (!declaration) continue;
+    nodes[index] = declaration.node;
+    for (let rowIndex = index + 1; rowIndex <= declaration.lastLineIndex; rowIndex += 1) {
+      const rowNode: TableRowNode = {
+        type: "tableRow",
+        line: rowIndex + 1,
+        raw: lines[rowIndex],
+        tableName: declaration.node.tableName,
+        rowKind: rowIndex === index + 1 ? "header" : "data",
+      };
+      nodes[rowIndex] = rowNode;
+    }
+    index = declaration.lastLineIndex;
+  }
+
+  return nodes;
 }
+
+const splitPipeRow = (line: string): string[] => {
+  const cells: string[] = [];
+  let current = "";
+  let escaped = false;
+  for (const char of line.trim()) {
+    if (escaped) {
+      current += char;
+      escaped = false;
+      continue;
+    }
+    if (char === "\\") {
+      escaped = true;
+      continue;
+    }
+    if (char === "|") {
+      cells.push(current.trim());
+      current = "";
+      continue;
+    }
+    current += char;
+  }
+  if (escaped) current += "\\";
+  cells.push(current.trim());
+  return cells;
+};
+
+const parseTableDeclaration = (
+  lines: string[],
+  index: number
+): { node: TableDeclarationNode; lastLineIndex: number } | null => {
+  const raw = lines[index];
+  const match = raw.match(/^\s*([A-Za-z][A-Za-z0-9 _-]*?)\s*:\s*$/);
+  if (!match) return null;
+  const headerRaw = lines[index + 1] || "";
+  if (!/^\s+/.test(headerRaw) || !headerRaw.includes("|")) return null;
+
+  const columns = splitPipeRow(headerRaw);
+  if (columns.length < 2 || columns.some((column) => !column)) return null;
+
+  const rows: string[][] = [];
+  const rowLines: number[] = [];
+  let lastLineIndex = index + 1;
+  for (let rowIndex = index + 2; rowIndex < lines.length; rowIndex += 1) {
+    const row = lines[rowIndex];
+    if (!row.trim()) break;
+    if (!/^\s+/.test(row) || !row.includes("|")) break;
+    rows.push(splitPipeRow(row));
+    rowLines.push(rowIndex + 1);
+    lastLineIndex = rowIndex;
+  }
+
+  return {
+    node: {
+      type: "tableDeclaration",
+      line: index + 1,
+      raw,
+      tableName: match[1].replace(/\s+/g, " ").trim(),
+      columns,
+      rows,
+      rowLines,
+    },
+    lastLineIndex,
+  };
+};
 
 /**
  * Developer utility function for debugging (exposed on window in dev mode)

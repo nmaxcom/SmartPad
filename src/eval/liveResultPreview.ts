@@ -110,7 +110,9 @@ export const shouldShowLiveForAssignmentValue = (
 };
 
 export const shouldBypassUnresolvedLiveGuard = (expression: string): boolean =>
-  LIVE_WORD_OPERATOR_REGEX.test(expression);
+  LIVE_WORD_OPERATOR_REGEX.test(expression) ||
+  /^\s*(?:simplify|expand|factor|derive|derivative|differentiate|integrate|roots|substitute)\b/i.test(expression) ||
+  /[A-Za-z][A-Za-z0-9 _-]*\.[A-Za-z][A-Za-z0-9 _-]*/.test(expression);
 
 export const hasKnownVariableReference = (
   expression: string,
@@ -160,6 +162,7 @@ export const hasUnresolvedLiveIdentifiers = (
     if (variableContext.has(name)) continue;
     if (DATE_KEYWORD_IDENTIFIERS.has(name.toLowerCase())) continue;
     if (name === "PI" || name === "E") continue;
+    if (name.toLowerCase() === "i") continue;
     if (defaultUnitRegistry.isBuiltinSymbol(name)) continue;
     return true;
   }

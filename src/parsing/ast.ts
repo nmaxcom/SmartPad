@@ -46,6 +46,28 @@ export interface ViewDirectiveNode extends BaseASTNode {
   readonly params: Record<string, string>;
 }
 
+export interface TableDeclarationNode extends BaseASTNode {
+  readonly type: "tableDeclaration";
+  readonly tableName: string;
+  readonly columns: string[];
+  readonly rows: string[][];
+  readonly rowLines: number[];
+}
+
+export interface TableRowNode extends BaseASTNode {
+  readonly type: "tableRow";
+  readonly tableName: string;
+  readonly rowKind: "header" | "data";
+}
+
+export interface TableColumnAssignmentNode extends BaseASTNode {
+  readonly type: "tableColumnAssignment";
+  readonly tableName: string;
+  readonly columnName: string;
+  readonly expression: string;
+  readonly showResult: boolean;
+}
+
 /**
  * Represents a variable assignment: `variableName = value`
  * Value is now parsed as a SemanticValue during parsing phase
@@ -169,6 +191,9 @@ export type ASTNode =
   | PlainTextNode
   | CommentNode
   | ViewDirectiveNode
+  | TableDeclarationNode
+  | TableRowNode
+  | TableColumnAssignmentNode
   | VariableAssignmentNode
   | ExpressionNode
   | CombinedAssignmentNode
@@ -188,6 +213,18 @@ export function isCommentNode(node: ASTNode): node is CommentNode {
 
 export function isViewDirectiveNode(node: ASTNode): node is ViewDirectiveNode {
   return node.type === "viewDirective";
+}
+
+export function isTableDeclarationNode(node: ASTNode): node is TableDeclarationNode {
+  return node.type === "tableDeclaration";
+}
+
+export function isTableRowNode(node: ASTNode): node is TableRowNode {
+  return node.type === "tableRow";
+}
+
+export function isTableColumnAssignmentNode(node: ASTNode): node is TableColumnAssignmentNode {
+  return node.type === "tableColumnAssignment";
 }
 
 export function isVariableAssignmentNode(node: ASTNode): node is VariableAssignmentNode {

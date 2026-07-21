@@ -19,7 +19,11 @@ export type SemanticValueType =
   | 'duration'
   | 'error'
   | 'symbolic'
-  | 'list';
+  | 'list'
+  | 'text'
+  | 'complex'
+  | 'matrix'
+  | 'table';
 
 export interface DisplayOptions {
   precision?: number;

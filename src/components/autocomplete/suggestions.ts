@@ -68,6 +68,24 @@ const BUILT_IN_FUNCTIONS = [
   { name: "min", signature: "min(list)", detail: "minimum value" },
   { name: "max", signature: "max(list)", detail: "maximum value" },
   { name: "range", signature: "range(list)", detail: "max minus min" },
+  { name: "transpose", signature: "transpose(matrix)", detail: "swap matrix rows and columns" },
+  { name: "det", signature: "det(matrix)", detail: "matrix determinant" },
+  { name: "inv", signature: "inv(matrix)", detail: "matrix inverse" },
+  { name: "trace", signature: "trace(matrix)", detail: "sum matrix diagonal" },
+  { name: "linsolve", signature: "linsolve(matrix, values)", detail: "solve a linear system" },
+  { name: "eigenvalues", signature: "eigenvalues(matrix)", detail: "matrix eigenvalues" },
+  { name: "complex", signature: "complex(real, imaginary)", detail: "create a complex number" },
+  { name: "conj", signature: "conj(value)", detail: "complex conjugate" },
+  { name: "arg", signature: "arg(value)", detail: "complex phase angle" },
+  { name: "re", signature: "re(value)", detail: "real component" },
+  { name: "im", signature: "im(value)", detail: "imaginary component" },
+  { name: "simplify", signature: "simplify(expression)", detail: "simplify symbolic algebra" },
+  { name: "expand", signature: "expand(expression)", detail: "expand symbolic algebra" },
+  { name: "factor", signature: "factor(expression)", detail: "factor symbolic algebra" },
+  { name: "derive", signature: "derive(expression, variable)", detail: "symbolic derivative" },
+  { name: "integrate", signature: "integrate(expression, variable)", detail: "symbolic integral" },
+  { name: "roots", signature: "roots(expression, variable)", detail: "symbolic equation roots" },
+  { name: "substitute", signature: "substitute(expression, variable, value)", detail: "replace a symbolic variable" },
 ];
 const CURRENCY_SUGGESTIONS = [
   { label: "USD", detail: "US dollar" },
@@ -189,7 +207,7 @@ function isVariableEligibleForViewKey(variable: Variable, key: string): boolean 
     return type === "list";
   }
   if (key === "x" || key === "y") {
-    return ["number", "percentage", "currency", "unit", "duration"].includes(type);
+    return ["number", "percentage", "currency", "unit", "duration", "list"].includes(type);
   }
   return true;
 }

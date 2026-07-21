@@ -48,6 +48,57 @@ const templates = [
     content: INVESTMENT_TEMPLATE,
   },
   {
+    id: "data-table",
+    emoji: "▦",
+    name: "Data Table",
+    content: `# Data Table: structured data that stays readable text
+# Tip: copy cells from a spreadsheet and paste them into an empty sheet.
+
+Orders:
+  item | qty | price
+  Notebook | 12 | 9 EUR
+  Pen set | 5 | 14 EUR
+  Desk lamp | 8 | 11 EUR
+
+# Dot access turns a column into a normal SmartPad list.
+Orders.total = Orders.qty * Orders.price
+sum(Orders.total) =>
+mean(Orders.price) =>
+
+# Table columns connect directly to existing data views.
+@view scatter x=Orders.qty y=Orders.total size=md
+@view hist y=Orders.total size=sm`,
+  },
+  {
+    id: "advanced-math",
+    emoji: "∑",
+    name: "Advanced Math",
+    content: `# Advanced Math: matrices, complex numbers, and symbolic algebra
+
+# Matrices remain normal variables and can feed later expressions.
+A = [[1, 2], [3, 4]]
+det(A) =>
+transpose(A) =>
+inv(A) =>
+A^2 =>
+
+# Solve A·x=b without rewriting the system by hand.
+b = [[5], [11]]
+linsolve(A, b) =>
+
+# Complex values use conventional i notation.
+z = 3 + 4i
+z * (2 - i) =>
+abs(z) =>
+conj(z) =>
+
+# Symbolic operations are explicit, predictable, and reusable.
+formula = expand((x + 1)^3)
+derive(formula, x) =>
+factor(x^2 - 5*x + 6) =>
+roots(x^2 - 5*x + 6, x) =>`,
+  },
+  {
     id: "unit-aliases",
     emoji: "🧭",
     name: "Unit Aliases & Ratios",

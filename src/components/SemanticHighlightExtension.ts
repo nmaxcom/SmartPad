@@ -9,7 +9,7 @@ import { Plugin, PluginKey } from "prosemirror-state";
 import { Decoration, DecorationSet } from "prosemirror-view";
 import { Node as ProseMirrorNode } from "prosemirror-model";
 import { Variable } from "../state/types";
-import { UnitValue } from "../types";
+import { SemanticParsers, SemanticValueTypes, UnitValue } from "../types";
 import { parseLine } from "../parsing/astParser";
 import { isLikelyLiveExpression } from "../eval/liveResultPreview";
 import { scanUnitExpression } from "../units/unitExpressionScanner";
@@ -23,6 +23,7 @@ import {
   isErrorNode,
   isFunctionDefinitionNode,
   isViewDirectiveNode,
+  isTableColumnAssignmentNode,
 } from "../parsing/ast";
 
 const LIVE_HIGHLIGHT_KEYWORD_REGEX = /\b(to|in|of|on|off|as|is|per|where|asc|desc)\b/i;
@@ -85,6 +86,45 @@ const getTokenizableLineText = (node: ProseMirrorNode): string => {
     return undefined;
   });
   return text;
+};
+
+const tokenizeTableDataRow = (
+  text: string,
+  variableContext: Map<string, Variable>
+): Token[] => {
+  const ranges: Array<{ start: number; end: number }> = [];
+  let start = 0;
+  let escaped = false;
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (char === "\\") {
+      escaped = true;
+      continue;
+    }
+    if (char === "|") {
+      ranges.push({ start, end: index });
+      start = index + 1;
+    }
+  }
+  ranges.push({ start, end: text.length });
+
+  return ranges.flatMap((range) => {
+    const rawCell = text.slice(range.start, range.end);
+    const leadingWhitespace = rawCell.length - rawCell.trimStart().length;
+    const cell = rawCell.trim();
+    if (!cell) return [];
+    const parsed = SemanticParsers.parse(cell);
+    if (!parsed || SemanticValueTypes.isSymbolic(parsed)) return [];
+    return tokenizeExpression(
+      cell,
+      range.start + leadingWhitespace,
+      variableContext
+    ).filter((token) => token.type === "scrubbableNumber");
+  });
 };
 
 // Token types that can be identified in mathematical expressions
@@ -225,6 +265,9 @@ export const SemanticHighlightExtension = Extension.create({
 
     const buildDecorations = (doc: ProseMirrorNode): DecorationSet => {
       const decorations: Decoration[] = [];
+      let activeTable = false;
+      let expectingTableHeader = false;
+      let pendingTableTitle: { offset: number; nodeSize: number } | null = null;
 
       doc.forEach((node: ProseMirrorNode, offset: number) => {
         if (node.type.name !== "paragraph") {
@@ -232,6 +275,47 @@ export const SemanticHighlightExtension = Extension.create({
         }
 
         const text = getTokenizableLineText(node);
+        const isTableTitle = /^\s*[A-Za-z][A-Za-z0-9 _-]*\s*:\s*$/.test(text);
+        const isTableRow = /^\s+.*\|.*$/.test(text);
+        const isActiveTableRow = activeTable && isTableRow;
+        const isTableHeaderRow = isActiveTableRow && expectingTableHeader;
+        if (isTableTitle) {
+          activeTable = true;
+          expectingTableHeader = true;
+          pendingTableTitle = { offset, nodeSize: node.nodeSize };
+        } else if (activeTable && isTableRow) {
+          if (expectingTableHeader && pendingTableTitle) {
+            decorations.push(
+              Decoration.node(
+                pendingTableTitle.offset,
+                pendingTableTitle.offset + pendingTableTitle.nodeSize,
+                { class: "smartpad-table-title" }
+              )
+            );
+          }
+          decorations.push(
+            Decoration.node(offset, offset + node.nodeSize, {
+              class: expectingTableHeader
+                ? "smartpad-table-row smartpad-table-header-row"
+                : "smartpad-table-row smartpad-table-data-row",
+            })
+          );
+          const separatorRegex = /\|/g;
+          for (const match of text.matchAll(separatorRegex)) {
+            if (match.index === undefined) continue;
+            decorations.push(
+              Decoration.inline(offset + match.index + 1, offset + match.index + 2, {
+                class: "smartpad-table-separator",
+              })
+            );
+          }
+          expectingTableHeader = false;
+          pendingTableTitle = null;
+        } else if (text.trim()) {
+          activeTable = false;
+          expectingTableHeader = false;
+          pendingTableTitle = null;
+        }
         // Reference atoms are represented as a single placeholder rune for offset alignment.
         // Parse using a numeric stand-in so normal expression tokenization still works and
         // does not degrade to full-line "error" highlighting on valid reference expressions.
@@ -240,6 +324,9 @@ export const SemanticHighlightExtension = Extension.create({
         const astNode = parseLine(parseText, lineNumber); // Parse text into AST
         const variableContext = getVariableContext();
         let tokens = extractTokensFromASTNode(astNode, variableContext);
+        if (isActiveTableRow && !isTableHeaderRow) {
+          tokens = tokenizeTableDataRow(text, variableContext);
+        }
         if (
           tokens.length === 0 &&
           isPlainTextNode(astNode) &&
@@ -400,6 +487,41 @@ export function extractTokensFromASTNode(
       const trimmedStart = text.indexOf(valueText, valueStart);
       tokens.push(...tokenizeExpression(valueText, trimmedStart, variableContext));
     });
+    return tokens;
+  }
+
+  if (isTableColumnAssignmentNode(astNode)) {
+    const equalsIndex = text.indexOf("=");
+    const dotIndex = text.indexOf(".");
+    if (dotIndex > leadingWhitespace) {
+      tokens.push({
+        type: "variable",
+        start: leadingWhitespace,
+        end: dotIndex,
+        text: text.slice(leadingWhitespace, dotIndex),
+      });
+      tokens.push({
+        type: "operator",
+        start: dotIndex,
+        end: dotIndex + 1,
+        text: ".",
+      });
+    }
+    if (equalsIndex > dotIndex) {
+      tokens.push({
+        type: "variable",
+        start: dotIndex + 1,
+        end: equalsIndex,
+        text: text.slice(dotIndex + 1, equalsIndex).trim(),
+      });
+      tokens.push({
+        type: "operator",
+        start: equalsIndex,
+        end: equalsIndex + 1,
+        text: "=",
+      });
+      tokens.push(...tokenizeExpression(text.slice(equalsIndex + 1), equalsIndex + 1, variableContext));
+    }
     return tokens;
   }
   

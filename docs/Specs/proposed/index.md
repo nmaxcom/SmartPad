@@ -9,7 +9,6 @@ These entries are intentionally **not treated as fully shipped contracts**.
 | Scenario Comparison Sheets | `docs/Specs/proposed/scenario-comparison-sheets.md` | `docs/Specs/proposed/scenario-comparison-sheets.md` | `proposed` |
 | Auto-Suggested Plots | `docs/Specs/proposed/auto-suggested-plots.md` | `docs/Specs/proposed/auto-suggested-plots.md` | `proposed` |
 | Human-First Solve Phrasing | `docs/Specs/proposed/human-first-solve-phrasing.md` | `docs/Specs/proposed/human-first-solve-phrasing.md` | `proposed` |
-| Tables and Structured Collections | `docs/Specs/proposed/tables-and-structured-collections.md` | `docs/Specs/proposed/tables-and-structured-collections.md` | `proposed` |
 | Unit Alias and Ratio | `docs/Specs/proposed/unit-aliases-and-ratio.md` | `docs/Specs/proposed/unit-aliases-and-ratio.md` | `proposed` |
 | Unit Decision Forks | `docs/Specs/proposed/unit-decision-forks.md` | `docs/Specs/proposed/unit-decision-forks.md` | `proposed` |
 | Date Keywords, Timezones, and Business Days | `docs/Specs/proposed/date-keywords-timezones-business-days.md` | `docs/Specs/proposed/date-keywords-timezones-business-days.md` | `proposed` |

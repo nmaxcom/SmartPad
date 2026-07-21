@@ -19,7 +19,12 @@ function VariablePanel() {
   };
 
   // Convert the Map to an array for easier rendering
-  const variableList = Array.from(variables.entries());
+  const variableList = Array.from(variables.entries()).filter(([name]) => {
+    const dotIndex = name.indexOf(".");
+    if (dotIndex <= 0) return true;
+    const tableName = name.slice(0, dotIndex);
+    return variables.get(tableName)?.value?.getType?.() !== "table";
+  });
 
   // Helper function to format variable values using SemanticValue's toString()
   const formatVariableValue = (variable: any) => {
@@ -62,19 +67,16 @@ function VariablePanel() {
                         <span className="variable-equals">=</span>
                         <span className="variable-computed-value">
                           {(() => {
-                            if (variable.value?.toString) {
-                              const value = getComputedDisplayValue(variable);
-                              const type = variable.value.getType();
-                              return (
-                                <>
-                                  <span className="variable-value">{value}</span>
-                                  <span className={`variable-type variable-type-${type}`}>
-                                    {type}
-                                  </span>
-                                </>
-                              );
-                            }
-                            return String(variable.value);
+                            const value = getComputedDisplayValue(variable);
+                            const type = variable.value.getType();
+                            return (
+                              <>
+                                <span className="variable-value">{value}</span>
+                                <span className={`variable-type variable-type-${type}`}>
+                                  {type}
+                                </span>
+                              </>
+                            );
                           })()}
                         </span>
                       </>

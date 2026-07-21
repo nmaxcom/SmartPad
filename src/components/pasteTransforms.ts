@@ -1,5 +1,5 @@
 import { parseLine } from "../parsing/astParser";
-import { SemanticParsers } from "../types";
+import { SemanticParsers, SemanticValueTypes } from "../types";
 
 const SHARED_LIVE_RESULT_SUFFIX_RE = /^(.*?)(\s+\(([^()\n]+)\)\s*)$/;
 
@@ -55,6 +55,140 @@ export function stripSharedLiveResultSuffixes(payload: string): string {
     .split("\n")
     .map((line) => stripSharedLiveResultSuffixFromLine(line))
     .join("\n");
+}
+
+export interface TabularPasteResult {
+  canonical: string;
+  columns: number;
+  rows: number;
+}
+
+const parseDelimitedLine = (line: string, delimiter: string): string[] => {
+  const cells: string[] = [];
+  let current = "";
+  let quoted = false;
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index];
+    if (char === '"') {
+      if (quoted && line[index + 1] === '"') {
+        current += '"';
+        index += 1;
+      } else {
+        quoted = !quoted;
+      }
+      continue;
+    }
+    if (char === delimiter && !quoted) {
+      cells.push(current.trim());
+      current = "";
+      continue;
+    }
+    current += char;
+  }
+  cells.push(current.trim());
+  return cells;
+};
+
+const extractHtmlTable = (html: string): { rows: string[][]; hasHeader: boolean } | null => {
+  if (!html || !/<table\b/i.test(html)) return null;
+  try {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const table = doc.querySelector("table");
+    if (!table) return null;
+    const rows = Array.from(table.querySelectorAll("tr"))
+      .map((row) =>
+        Array.from(row.querySelectorAll(":scope > th, :scope > td")).map((cell) =>
+          (cell.textContent || "").replace(/\s+/g, " ").trim()
+        )
+      )
+      .filter((row) => row.length > 0);
+    return {
+      rows,
+      hasHeader: !!table.querySelector("tr:first-child th"),
+    };
+  } catch {
+    return null;
+  }
+};
+
+const extractTextTable = (text: string): string[][] | null => {
+  const lines = normalizeClipboardText(text)
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .filter((line) => line.trim().length > 0);
+  if (lines.length < 2) return null;
+  const delimiter = lines.some((line) => line.includes("\t"))
+    ? "\t"
+    : lines.every((line) => line.includes(","))
+      ? ","
+      : lines.every((line) => line.includes("|"))
+        ? "|"
+        : null;
+  if (!delimiter) return null;
+  const rows = lines.map((line) => parseDelimitedLine(line, delimiter));
+  const width = rows[0]?.length || 0;
+  if (width < 2 || rows.some((row) => row.length !== width)) return null;
+  return rows;
+};
+
+const isCalculatedCell = (value: string): boolean => {
+  const parsed = SemanticParsers.parse(value);
+  return !!parsed && !SemanticValueTypes.isSymbolic(parsed);
+};
+
+const inferHeader = (rows: string[][]): boolean => {
+  if (rows.length < 2) return false;
+  const first = rows[0];
+  const second = rows[1];
+  const firstLooksTextual = first.every((cell) => !isCalculatedCell(cell));
+  const laterCalculated = second.filter((cell) => isCalculatedCell(cell)).length;
+  return firstLooksTextual && laterCalculated >= Math.max(1, Math.floor(second.length / 2));
+};
+
+const normalizeCell = (value: string): string =>
+  value
+    .replace(/\r?\n/g, " ")
+    .replace(/\\/g, "\\\\")
+    .replace(/\|/g, "\\|")
+    .trim();
+
+export function normalizePastedTable(
+  html: string,
+  text: string,
+  tableName = "Pasted data"
+): TabularPasteResult | null {
+  const htmlTable = extractHtmlTable(html);
+  const rows = htmlTable?.rows || extractTextTable(text);
+  if (!rows || rows.length < 2) return null;
+  const width = rows[0]?.length || 0;
+  if (width < 2 || width > 40 || rows.some((row) => row.length !== width)) return null;
+
+  const hasHeader = htmlTable?.hasHeader || inferHeader(rows);
+  const headers = hasHeader
+    ? rows[0].map((cell, index) => normalizeCell(cell) || `column ${index + 1}`)
+    : rows[0].map((_cell, index) => `column ${index + 1}`);
+  const dataRows = hasHeader ? rows.slice(1) : rows;
+  if (dataRows.length > 500) return null;
+
+  const duplicateHeaders = new Set<string>();
+  const uniqueHeaders = headers.map((header) => {
+    const base = header.replace(/\s+/g, " ").trim();
+    let candidate = base;
+    let suffix = 2;
+    while (duplicateHeaders.has(candidate.toLowerCase())) {
+      candidate = `${base} ${suffix}`;
+      suffix += 1;
+    }
+    duplicateHeaders.add(candidate.toLowerCase());
+    return candidate;
+  });
+
+  const canonical = [
+    `${tableName}:`,
+    `  ${uniqueHeaders.join(" | ")}`,
+    ...dataRows.map((row) => `  ${row.map(normalizeCell).join(" | ")}`),
+  ].join("\n");
+  return { canonical, columns: width, rows: dataRows.length };
 }
 
 export function isLikelySharedLiveExpressionSource(line: string): boolean {

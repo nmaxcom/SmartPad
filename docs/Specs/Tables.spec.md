@@ -1,6 +1,8 @@
 # Tables and Structured Collections
 
-Status: proposed
+Status: implemented
+
+Implemented in: `1.0.0-rc.14`
 
 This document defines a first-class table value type for SmartPad.
 
@@ -21,9 +23,11 @@ SmartPad should support this without becoming a spreadsheet clone.
 ## 2. Core principles
 
 1. Tables remain text-first.
-2. Pasted CSV, TSV, and pipe tables must normalize to one readable canonical form.
+2. Pasted CSV, TSV, spreadsheet, HTML, and pipe tables normalize to one readable canonical form.
 3. Columns are typed semantically just like normal SmartPad values.
-4. Tables feed calculations, summaries, and plot suggestions.
+4. Tables feed calculations and the existing plot views without introducing a second interaction model.
+5. The visible sheet remains the primary interface; internal column variables do not clutter the Variables panel.
+6. Numeric values inside table cells use the same horizontal scrubber as numeric values elsewhere in the sheet.
 
 ## 3. Canonical text form
 
@@ -49,14 +53,19 @@ Accepted pasted inputs:
 - CSV
 - TSV
 - spreadsheet clipboard rows
+- HTML tables copied from web pages
 - pipe tables
 
 On paste, SmartPad should:
 
-1. detect tabular structure
+1. detect tabular structure only when at least two equally wide rows and two columns are present
 2. infer header row if present
 3. normalize to canonical pipe form
 4. preserve typed values such as units, dates, and currency
+5. generate `column 1`, `column 2`, and so on for headerless data
+6. disambiguate duplicate pasted headers with a numeric suffix
+
+The inserted result is ordinary editable SmartPad text named `Pasted data`, `Pasted data 2`, and so on. Ambiguous or oversized clipboard content falls back to the normal paste behavior instead of being silently reinterpreted.
 
 ## 5. Column access
 
@@ -75,6 +84,8 @@ Example:
 Orders.total = Orders.qty * Orders.price
 sum(Orders.total) => EUR 266
 ```
+
+Direct column references return normal list values, so the existing list functions apply. The supported aggregate set is `sum`, `total`, `mean`, `avg`, `median`, `count`, `stddev`, `min`, `max`, and `range`. `count` also accepts text columns.
 
 ## 6. Human-like examples
 
@@ -111,11 +122,11 @@ Body Data:
   182 | 81 | 67
 ```
 
-Expected suggestions:
+Useful views:
 
-- scatter: `height cm` vs `weight kg`
-- histogram: `height cm`
-- histogram: `resting bpm`
+- `@view scatter x=Body Data.height cm y=Body Data.weight kg`
+- `@view hist y=Body Data.height cm`
+- `@view hist y=Body Data.resting bpm`
 
 ### 6.3 Pasted business sheet
 
@@ -135,10 +146,10 @@ Campaigns.sales / Campaigns.spend =>
 mean(Campaigns.clicks) =>
 ```
 
-Useful suggestions:
+Useful views:
 
-- scatter: `spend` vs `sales`
-- scatter: `clicks` vs `sales`
+- `@view scatter x=Campaigns.spend y=Campaigns.sales`
+- `@view scatter x=Campaigns.clicks y=Campaigns.sales`
 
 ## 7. Derived columns
 
@@ -160,17 +171,19 @@ Rules:
 2. Duplicate column names are invalid unless normalized explicitly.
 3. Tables cannot silently coerce wildly incompatible cell types in one column.
 4. Large-paste normalization must fail clearly if shape detection is uncertain.
-5. V1 may cap row count for interactive performance, but the cap must be explicit and documented.
+5. Tables are capped at 500 data rows and 40 columns for interactive performance.
+6. Empty cells, multiline CSV cells, sorting, filtering, spreadsheet-style cell coordinates, screenshot OCR, and external-file import are not part of this version.
+7. A derived expression must reference at least one table column, and every referenced column must have the same row count.
 
-## 9. Plot suggestions from tables
+## 9. Plot integration
 
-When a table is present, SmartPad may suggest:
+Table columns participate in the existing visual language as list values:
 
-- histogram for one numeric column
-- scatter for two numeric columns
-- time series for date/time plus numeric
+- `@view hist y=Table.column` for one numeric column
+- `@view scatter x=Table.x y=Table.y` for two numeric columns
+- autocomplete exposes table columns in the `x=` and `y=` positions
 
-These suggestions should surface through result-chip or table-summary menus using the same visual cue system defined in the plot-suggestion spec.
+No persistent slider, detached table widget, or required Variables-panel action is added. A subtle title/header treatment and one live `rows × columns` result are enough to make the structure legible while every source value remains directly editable.
 
 ## 10. Acceptance examples
 
@@ -196,8 +209,7 @@ Pasted TSV should normalize into canonical pipe form without losing semantic val
 Promotion requires:
 
 1. targeted Jest coverage for parsing, normalization, typing, column access, and derived columns
-2. targeted Playwright coverage for paste flows, editing, plot suggestions, and rendering
-3. full Jest suite
-4. full Playwright suite
-5. all general regression checks green
-6. iteration on failures until the feature behaves exactly as documented here
+2. targeted Playwright coverage for paste, editing, explicit plotting, and rendering
+3. documentation/spec-map/trust checks
+4. production build
+5. related regression tests

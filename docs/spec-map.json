@@ -8,6 +8,7 @@
         "src/lowering/",
         "src/math/",
         "src/types/index.ts",
+        "src/types/SemanticValue.ts",
         "src/types/NumberValue.ts",
         "src/types/PercentageValue.ts",
         "docs/Specs/LiveResult.spec.md",
@@ -30,6 +31,10 @@
         "docs/Specs/implemented/modulo-operator.md",
         "docs/Specs/Solve.spec.md",
         "docs/Specs/implemented/solve-and-symbolic-math.md",
+        "docs/Specs/AdvancedMath.spec.md",
+        "docs/Specs/implemented/advanced-math.md",
+        "docs/Specs/Tables.spec.md",
+        "docs/Specs/implemented/tables-and-structured-collections.md",
         "docs/Specs/Plotting.spec.md",
         "docs/Specs/Lists.spec.md",
         "docs/Specs/implemented/lists.md",
@@ -88,6 +93,51 @@
         "public/docs/"
       ],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
+    },
+    {
+      "name": "Tables And Structured Data",
+      "specPrefixes": [
+        "src/eval/tableEvaluator.ts",
+        "src/types/TableValue.ts",
+        "src/types/TextValue.ts",
+        "src/components/pasteTransforms.ts",
+        "src/parsing/ast.ts",
+        "src/parsing/astParser.ts",
+        "docs/Specs/Tables.spec.md",
+        "docs/Specs/implemented/tables-and-structured-collections.md"
+      ],
+      "docPrefixes": [
+        "docs/Specs/Tables.spec.md",
+        "docs/Specs/implemented/tables-and-structured-collections.md",
+        "website/docs/guides/syntax-reference.md",
+        "public/docs/"
+      ],
+      "testPrefixes": [
+        "tests/unit/table.test.ts",
+        "tests/unit/pasteTransforms.test.ts",
+        "tests/e2e/tables-and-advanced-math.spec.ts"
+      ]
+    },
+    {
+      "name": "Advanced Math",
+      "specPrefixes": [
+        "src/eval/advancedMathEvaluator.ts",
+        "src/types/ComplexValue.ts",
+        "src/types/MatrixValue.ts",
+        "src/types/nerdamer-modules.d.ts",
+        "docs/Specs/AdvancedMath.spec.md",
+        "docs/Specs/implemented/advanced-math.md"
+      ],
+      "docPrefixes": [
+        "docs/Specs/AdvancedMath.spec.md",
+        "docs/Specs/implemented/advanced-math.md",
+        "website/docs/guides/syntax-reference.md",
+        "public/docs/"
+      ],
+      "testPrefixes": [
+        "tests/unit/advancedMath.test.ts",
+        "tests/e2e/tables-and-advanced-math.spec.ts"
+      ]
     },
     {
       "name": "Date Time And Duration",
@@ -195,6 +245,11 @@
         "docs/Specs/proposed/scenario-comparison-sheets.md",
         "docs/Specs/proposed/goal-seek-interactions.md",
         "docs/Specs/proposed/autocomplete.md",
+        "docs/Specs/Tables.spec.md",
+        "docs/Specs/implemented/tables-and-structured-collections.md",
+        "docs/Specs/AdvancedMath.spec.md",
+        "docs/Specs/implemented/advanced-math.md",
+        "website/docs/guides/syntax-reference.md",
         "public/docs/"
       ],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]

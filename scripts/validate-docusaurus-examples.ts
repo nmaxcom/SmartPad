@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { defaultRegistry } from "../src/eval";
 import type { EvaluationContext } from "../src/eval";
-import { parseLine } from "../src/parsing/astParser";
+import { parseContent } from "../src/parsing/astParser";
 import { recordEquationFromNode } from "../src/solve/equationStore";
 import { ReactiveVariableStore } from "../src/state/variableStore";
 import type { Variable } from "../src/state/types";
@@ -59,26 +59,29 @@ const extractExamples = (): PlaygroundExample[] => {
 
 const validateExample = (example: PlaygroundExample): string[] => {
   const context = createContext();
+  const lines = example.code.split("\n");
+  const nodes = parseContent(example.code);
+  context.astNodes = nodes;
 
-  return example.code.split("\n").flatMap((line, index) => {
+  return nodes.flatMap((node) => {
+    const line = lines[node.line - 1] || node.raw;
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith("#")) {
       return [];
     }
 
     try {
-      const node = parseLine(line, index + 1);
-      context.lineNumber = index + 1;
+      context.lineNumber = node.line;
       const result = defaultRegistry.evaluate(node, context);
       recordEquationFromNode(node, context.equationStore ?? []);
       syncVariables(context);
 
       if (result?.type === "error") {
-        return [`${example.file} :: ${example.title} :: line ${index + 1}: ${line} -> ${result.message}`];
+        return [`${example.file} :: ${example.title} :: line ${node.line}: ${line} -> ${result.message}`];
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      return [`${example.file} :: ${example.title} :: line ${index + 1}: ${line} -> ${message}`];
+      return [`${example.file} :: ${example.title} :: line ${node.line}: ${line} -> ${message}`];
     }
 
     return [];

@@ -60,6 +60,28 @@ Add inclusive limits after `with` when the input has a realistic operating range
 
 <ExamplePlayground title={"Goal seek within limits"} description={"Change the target to `13000 EUR` to see a clear no-feasible-solution explanation."} code={"price = 50 EUR\nunit cost = 20 EUR\norders = 200\nprofit = (price - unit cost) * orders\nmake profit = 7000 EUR by price with 40 EUR <= price <= 80 EUR =>"} />
 
+## Tables from pasted data
+
+Copy a rectangular range from a spreadsheet, CSV/TSV text, or an HTML table and paste it directly into the sheet. SmartPad turns it into readable, editable text. A table name ends in `:`, the first indented row contains the headers, and the remaining indented rows contain the data.
+
+Use `Table.column` wherever you would use a list. Define a derived column with `Table.new column = ...`; it is recalculated row by row and can feed normal aggregators and views. Drag any numeric cell left or right to use the same live scrubber as the rest of SmartPad.
+
+<ExamplePlayground title={"A small editable table"} description={"Change a source cell, add a row, or reuse a column in another calculation."} code={"Orders:\n  item | qty | price\n  Notebook | 12 | 9 EUR\n  Pen set | 5 | 14 EUR\n  Desk lamp | 8 | 11 EUR\n\nOrders.total = Orders.qty * Orders.price\nsum(Orders.total)\nmean(Orders.price)\n@view scatter x=Orders.qty y=Orders.total size=md"} />
+
+The current interactive limit is 500 data rows and 40 columns. Each source column should be consistently text or consistently calculable; mixed text/numeric columns and uneven row widths produce a clear error at the table. Empty cells and multiline CSV cells are not supported yet.
+
+## Matrices, complex numbers, and symbolic algebra
+
+Matrices and complex numbers are first-class values: name them once and reuse them in later lines. Matrix literals accept `[[1, 2], [3, 4]]` or the compact `[1, 2; 3, 4]` form.
+
+<ExamplePlayground title={"Linear algebra and complex values"} description={"The Advanced Math template contains a longer guided example."} code={"A = [[1, 2], [3, 4]]\ndet(A)\ntranspose(A)\ninv(A)\nA^2\n\nb = [[5], [11]]\nlinsolve(A, b)\n\nz = 3 + 4i\nz * (2 - i)\nabs(z)\nconj(z)"} />
+
+Symbolic work is explicit, so an ordinary unresolved word is never silently turned into algebra. Use `simplify`, `expand`, `factor`, `derive`, `integrate`, `substitute`, or `roots`, and name the result when you want to reuse it.
+
+<ExamplePlayground title={"Explicit symbolic math"} description={"Every transformation stays visible and editable in the sheet."} code={"formula = expand((x + 1)^3)\nderive(formula, x)\nfactor(x^2 - 5*x + 6)\nintegrate(2*x, x)\nsubstitute(x^2 + 1, x, 3)\nroots(x^2 - 5*x + 6, x)"} />
+
+Matrices are limited to 25 × 25. This release intentionally does not add an algebra canvas, step-by-step proofs, symbolic units/currencies, assumptions/domains, limits, or differential-equation solving.
+
 ## Views
 
 `@view` lines create visual views from values already in the sheet. They are best learned from templates because views are more useful when there is a real model around them.

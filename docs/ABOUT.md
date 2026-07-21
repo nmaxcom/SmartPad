@@ -10,6 +10,10 @@ For a named numeric result, `Explore result` opens one inline thinking surface w
 
 Goal Seek can keep a reverse calculation realistic with visible bounds such as `with 40 EUR <= price <= 80 EUR`. The result menu can insert an editable bounded line around the current input; Smartpad returns the exact answer when it fits and explains which limit makes the target impossible when it does not.
 
+Copied spreadsheet ranges, CSV/TSV text, and HTML tables can become first-class text tables directly in the sheet. Their typed columns support row-wise formulas, aggregation, autocomplete, and existing scatter/histogram views while the visible source stays editable and internal columns stay out of the Variables panel.
+
+Advanced math stays in the same flow: matrices and complex numbers can be named and reused, and explicit commands handle linear algebra, derivatives, integrals, factorization, substitution, and roots. Smartpad only enters symbolic mode when asked, so ordinary text and unresolved model variables keep their existing meaning.
+
 Smartpad emphasizes readability and intent over strict syntax. Units are first-class, conversions are semantic (to, in, on, off, as %), variables can be named with spaces, and results can be previewed live or explicitly committed. The goal is to make everyday quantitative reasoning—finance, planning, science, estimation—fast, expressive, and low-friction.
 
 It's a node web application, written in typescript and react.

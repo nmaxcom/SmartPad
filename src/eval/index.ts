@@ -35,6 +35,8 @@ import { FunctionDefinitionEvaluator } from "./functionDefinitionEvaluator";
 import { DateMathEvaluator } from "./dateMathEvaluator";
 import { SolveEvaluator } from "./solveEvaluator";
 import { PlotViewEvaluator } from "./plotViewEvaluator";
+import { defaultTableEvaluator } from "./tableEvaluator";
+import { defaultAdvancedMathEvaluator } from "./advancedMathEvaluator";
 
 /**
  * Sets up the V2 evaluator registry with semantic-aware evaluators.
@@ -59,6 +61,10 @@ export function setupDefaultEvaluators(): void {
   const plotViewEvaluator = new PlotViewEvaluator();
 
   // Register V2 evaluators in order of priority
+  // Tables own document-level declarations, derived columns, and table-column expressions.
+  defaultRegistry.register(defaultTableEvaluator);
+  defaultRegistry.register(defaultAdvancedMathEvaluator);
+
   // Percentage evaluator first - handles complex percentage operations
   defaultRegistry.register(percentageEvaluatorV2);
 

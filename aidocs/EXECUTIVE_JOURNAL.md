@@ -8233,3 +8233,32 @@
     *   Owner: Assistant; due: TBD; status: todo; evaluate optional AI intent interpretation only when the experiment is deliberately activated.
 *   Risks/blockers:
     *   Copying isolated competitor features would recreate SmartPad's current fragmentation; new work should be evaluated as a complete user task performed directly in the sheet.
+
+## Entry J-2026-07-21-02
+
+*   Timestamp: 2026-07-21 03:20 CEST / 2026-07-21 01:20 UTC
+*   Summary:
+    *   User explicitly rejected a persistent GeoGebra-style variable control and asked to keep SmartPad's existing number scrubber as the direct-manipulation model.
+    *   SmartPad now turns copied spreadsheet, CSV/TSV, pipe, and HTML table data into subtle editable text tables with typed columns, derived columns, aggregation, autocomplete, existing scatter/histogram views, and the native horizontal scrubber inside numeric cells.
+    *   SmartPad now supports reusable matrices and complex values plus explicit symbolic simplification, expansion, factorization, derivatives, integrals, substitution, and roots.
+*   Decisions:
+    *   Keep every table source value in ordinary sheet text, expose only a live `rows × columns` summary, and hide internal `Table.column` values from the Variables panel.
+    *   Preserve the existing scrubber unchanged; add no detached grid, formula bar, persistent slider, or algebra canvas.
+    *   Enter symbolic evaluation only through explicit operations so unresolved model variables and prose retain their existing SmartPad meaning.
+    *   Promote Nerdamer to a runtime dependency, cap tables at 500 × 40 and matrices at 25 × 25, and defer screenshot OCR to a separate reviewed local-first import task.
+    *   Advance SmartPad to `1.0.0-rc.14`.
+*   Artifacts changed:
+    *   Added table/complex/matrix/text semantic types, document-level table parsing/evaluation, advanced-math evaluation, conservative clipboard normalization, table highlighting, discovery templates, autocomplete entries, and focused unit/browser coverage.
+    *   Promoted the tables spec, added the advanced-math spec and trust cards, updated docs mapping/trust, public Syntax Reference/examples, ABOUT/README, changelog, version metadata, and the feature backlog.
+*   Validation:
+    *   Full Jest passed: 82 suites, 1,145 passed and 2 skipped tests.
+    *   Related Chromium regression passed: 71 of 71 across table/advanced math, autocomplete, live results, plotting, and result-reference interactions; the final focused table/advanced-math run passed 3 of 3 including live cell scrubbing.
+    *   `npm run verify:changed -- HEAD` passed all six impacted groups with 850 related unit tests and a production build.
+    *   Docusaurus generation/build/sync passed and all 25 public interactive examples evaluated through the document parser.
+    *   Visual QA confirmed the table remains quiet editable text and symbolic results use readable parseable spacing.
+*   Pending:
+    *   Owner: User; due: TBD; status: in_progress; verify the `Data Table` and `Advanced Math` templates plus one real spreadsheet/web-table paste, then explicitly confirm or request a refinement.
+*   Risks/blockers:
+    *   The production bundle retains the existing large-chunk warning and is now about 3.36 MB minified / 837 kB gzip because the complete symbolic engine is shipped locally; code-splitting it requires an asynchronous evaluator boundary and remains a later performance task.
+    *   The Playwright skill wrapper still has its known line-16 shell syntax error; repository Playwright completed browser and visual validation.
+    *   No machine blocker remains. The human completion gate is open.

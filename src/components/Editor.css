@@ -2300,3 +2300,37 @@ body.number-scrubbing * {
 .smartpad-autocomplete-kind-directive {
   color: var(--syntax-keyword);
 }
+.ProseMirror p.smartpad-table-title {
+  margin-top: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.ProseMirror p.smartpad-table-row {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-left: 0.55rem;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--accent-color, #7c9cff) 5%, transparent),
+    transparent 72%
+  );
+}
+
+.ProseMirror p.smartpad-table-header-row {
+  color: var(--text-secondary, #aab2c4);
+  font-size: 0.92em;
+  font-weight: 620;
+  border-bottom: 1px solid color-mix(in srgb, var(--text-color, #dfe4ef) 14%, transparent);
+}
+
+.ProseMirror p.smartpad-table-data-row:last-of-type {
+  margin-bottom: 0.28rem;
+}
+
+.smartpad-table-separator {
+  color: color-mix(in srgb, var(--text-color, #dfe4ef) 30%, transparent);
+  padding-inline: 0.12rem;
+  user-select: none;
+}

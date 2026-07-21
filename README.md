@@ -852,6 +852,7 @@ SmartPad is built with:
 - **React** + **TypeScript** for the UI
 - **TipTap** for the text editor
 - **Math.js** for mathematical operations
+- **Nerdamer** for explicit symbolic transformations
 - **Luxon** for date/time handling
 - **unitsnet-js** for unit conversions
 
@@ -890,11 +891,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Roadmap
 
 SmartPad is actively being developed. Planned features include:
-- 🔍 **Equation solving** - Find unknowns in equations
-- 📊 **Charts & visualizations** - Inline graphs and plots
-- 📋 **Tables** - Structured data with formulas
 - 🎲 **Statistics** - Descriptive stats and distributions
-- 🔄 **Scenarios** - Compare different calculation scenarios
+- 🎲 **Uncertainty models** - Ranges, distributions, and lightweight simulation
+- 🧩 **Reusable blocks** - Save and insert local snippets and model fragments
 
 See [docs/Specs/proposed/feature-vision.md](docs/Specs/proposed/feature-vision.md) for the complete feature roadmap.
 
