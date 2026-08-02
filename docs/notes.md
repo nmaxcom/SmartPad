@@ -3,7 +3,7 @@ antinote, p, figr.app, aybo.app, calca.io, numi.app, Soulver 3, notepadcalculato
 
 ---
 # UI inspiration
-https://dribbble.com/shots/24984990-Deposit-Calculator-UI-Kit-Widgets
+[Deposit Calculator UI Kit Widgets](https://dribbble.com/shots/24984990-Deposit-Calculator-UI-Kit-Widgets)
 
 # TODO
 - finalizar [spec implementation](./Specs/ResultChipsAndValueGraph.implementation-gaps.md)
