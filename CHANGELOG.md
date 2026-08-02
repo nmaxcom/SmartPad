@@ -10,6 +10,8 @@ SmartPad uses semantic versioning. Pre-release builds use `-beta.N` or `-rc.N` s
 
 - Documentation generation now preserves old generated output in a temporary backup when the
   system trash command is unavailable, allowing GitHub Pages builds to run reliably on CI.
+- Documentation link checks accept valid `202 Accepted` responses from asynchronous sites instead
+  of reporting them as broken links.
 
 ## 1.0.0-rc.16 - 2026-08-02
 
