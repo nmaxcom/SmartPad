@@ -164,6 +164,7 @@
       "specPrefixes": [
         "src/date/",
         "src/eval/dateMathEvaluator.ts",
+        "src/types/DateValue.ts",
         "src/types/DurationValue.ts",
         "src/utils/localeDateNormalization.ts",
         "docs/Specs/duration.spec.md",

@@ -4,6 +4,13 @@ All notable user-facing changes to SmartPad will be documented in this file.
 
 SmartPad uses semantic versioning. Pre-release builds use `-beta.N` or `-rc.N` suffixes.
 
+## 1.0.0-rc.17 - 2026-08-02
+
+### Fixed
+
+- Documentation generation now preserves old generated output in a temporary backup when the
+  system trash command is unavailable, allowing GitHub Pages builds to run reliably on CI.
+
 ## 1.0.0-rc.16 - 2026-08-02
 
 ### Added

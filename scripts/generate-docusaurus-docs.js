@@ -1,6 +1,6 @@
 const fs = require("node:fs");
 const path = require("node:path");
-const { spawnSync } = require("node:child_process");
+const { moveGeneratedPathToTrash } = require("./generated-path-trash");
 
 const repoRoot = process.cwd();
 const specsDir = path.join(repoRoot, "docs", "Specs");
@@ -702,20 +702,9 @@ const ensureDir = (dirPath) => {
   }
 };
 
-const trashPath = (targetPath) => {
-  if (!fs.existsSync(targetPath)) return;
-  const result = spawnSync("trash", [targetPath], { encoding: "utf8" });
-  if (result.status !== 0) {
-    const message = result.stderr || result.stdout || "`trash` command failed";
-    throw new Error(
-      `Unable to move generated path to trash: ${targetPath}\n${message}`,
-    );
-  }
-};
-
 const resetGeneratedDirs = () => {
-  trashPath(specsOutDir);
-  trashPath(guidesOutDir);
+  moveGeneratedPathToTrash(specsOutDir);
+  moveGeneratedPathToTrash(guidesOutDir);
   ensureDir(specsOutDir);
   ensureDir(guidesOutDir);
 };
