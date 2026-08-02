@@ -8352,3 +8352,29 @@
     *   Product-design discussion only; no runtime behavior, version, or machine gate changed.
 *   Pending:
     *   Owner: User; due: TBD; status: in_progress; choose whether `+/-` plus contextual completion should replace `±` as the primary documented entry path.
+
+## Entry J-2026-08-02-05
+
+*   Timestamp: 2026-08-02 16:47 CEST / 2026-08-02 14:47 UTC
+*   Summary:
+    *   User directed the assistant to update the public GitHub Pages app and resolve every CI issue that surfaced.
+    *   Published 72 accumulated commits through `main`; the live app and docs now serve SmartPad `1.0.0-rc.17` from `https://nmaxcom.github.io/SmartPad/`.
+    *   Fixed the two release blockers found during validation: missing `DateValue` traceability and generated-doc cleanup that depended on a platform-specific system trash command.
+    *   Fixed the documentation workflow's `202 Accepted` false positive and made configuration/workflow changes trigger the link checker, with manual dispatch available for recovery.
+*   Decisions:
+    *   Preserve replaced generated directories through the system trash when available and through a uniquely named temporary backup otherwise; never hard-delete generated output.
+    *   Treat HTTP `200`, `202`, `204`, and `206` as valid documentation-link responses.
+    *   Keep this work scoped to release/CI behavior and leave concurrent product and generated-cache changes unstaged.
+*   Artifacts changed:
+    *   `docs/spec-map.json`, docs generation/sync scripts, shared generated-path preservation helper, regression test, documentation link-check configuration/workflow, `docs/notes.md`, version metadata, and `CHANGELOG.md`.
+    *   Commits: `de035101`, `6a699ad8`, and `4917ed6a`.
+*   Validation:
+    *   Full `npm run verify:changed -- origin/main...HEAD` gate passed before publication: docs map/drift, spec-test sync, spec trust, 72 related Jest suites with 887 passing and 2 skipped tests, and production build.
+    *   Generated-path regression passed 2 of 2; exact production docs build and `VITE_BASE_PATH=/SmartPad/ npm run build` passed.
+    *   The exact `markdown-link-check@3.14.2` scan passed locally after accepting the valid Dribbble `202` response.
+    *   GitHub Actions runs `30752809016` (Documentation Link Checker) and `30752808996` (Deploy To GitHub Pages) completed successfully.
+    *   Live app root, application bundle, and docs root all returned HTTP 200; the served bundle contains `1.0.0-rc.17` and docs assets resolve under `/SmartPad/docs/`.
+*   Pending:
+    *   Owner: User; due: TBD; status: in_progress; review the updated public app and explicitly confirm completion or request a concrete follow-up.
+*   Risks/blockers:
+    *   No CI or deployment blocker remains. The production bundle retains the existing large-chunk warning; this is a performance follow-up, not a release failure.
