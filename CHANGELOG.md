@@ -4,6 +4,13 @@ All notable user-facing changes to SmartPad will be documented in this file.
 
 SmartPad uses semantic versioning. Pre-release builds use `-beta.N` or `-rc.N` suffixes.
 
+## 1.0.0-rc.15 - 2026-08-02
+
+### Fixed
+
+- Autocomplete opens above triggers that are too close to the bottom of the viewport and remains
+  anchored to its caret while the sheet scrolls.
+
 ## 1.0.0-rc.14 - 2026-07-21
 
 ### Added

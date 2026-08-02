@@ -8288,3 +8288,25 @@
     *   Owner: User; due: TBD; status: todo; choose whether to implement the recommended uncertainty/range experience or one of the smaller everyday-UX improvements first.
 *   Risks/blockers:
     *   Uncertainty can become statistically intimidating; the first slice must remain deterministic, legible, and useful before Monte Carlo or probability distributions are introduced.
+
+## Entry J-2026-08-02-01
+
+*   Timestamp: 2026-08-02 04:06 CEST / 2026-08-02 02:06 UTC
+*   Summary:
+    *   User reported that autocomplete could open below a low trigger and be clipped, then remain floating at its original viewport position while the sheet scrolled.
+    *   Autocomplete now chooses the side with usable viewport room, opens above low carets, stays inside the viewport, and recalculates its fixed position on any document scroll or window resize.
+*   Decisions:
+    *   Keep the menu attached to `document.body` and coalesce scroll/resize repositioning through animation frames so nested SmartPad scroll containers are handled without rebuilding the suggestion list.
+    *   Advance SmartPad to `1.0.0-rc.15` and record the behavior in the canonical autocomplete spec and changelog.
+*   Artifacts changed:
+    *   Autocomplete positioning/lifecycle code, focused unit and Chromium regressions, autocomplete spec, changelog, and version metadata.
+*   Validation:
+    *   Focused autocomplete positioning/suggestion units passed: 22 of 22.
+    *   Complete autocomplete Chromium regression passed: 14 of 14, including low-trigger placement and live scroll anchoring.
+    *   `npm run docs:map`, `npm run docs:drift`, `npm run spec:test`, `npm run spec:trust`, and `npm run verify:changed -- HEAD` passed; the production build retained only the existing large-chunk warning.
+*   Pending:
+    *   Owner: User; due: TBD; status: in_progress; review the autocomplete placement and scroll behavior and explicitly confirm completion or request a refinement.
+*   Risks/blockers:
+    *   The first focused Jest invocation hit Watchman's out-of-repository permission boundary and passed with Watchman disabled.
+    *   The optional Playwright skill wrapper retains its known line-16 shell syntax error; the repository's installed Playwright runner completed browser validation successfully.
+    *   No product or machine blocker remains. The human completion gate is open.

@@ -353,4 +353,138 @@ test.describe("Autocomplete", () => {
       (geometry as any).menuBottom,
     );
   });
+
+  test("opens above a caret near the bottom of the viewport", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 900, height: 520 });
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      const lines = Array.from(
+        { length: 80 },
+        (_, index) => `<p>position item ${index} = ${index + 1}</p>`,
+      );
+      lines.splice(40, 0, "<p></p>");
+      editor.commands.setContent(lines.join(""));
+
+      let position = 1;
+      for (let index = 0; index < 40; index += 1) {
+        position += editor.state.doc.child(index).nodeSize;
+      }
+      editor.commands.setTextSelection(position);
+      editor.commands.focus();
+      const scroller = [
+        document.querySelector<HTMLElement>(".editor-content"),
+        document.querySelector<HTMLElement>(".editor-card-container"),
+      ].reduce<HTMLElement | null>((best, candidate) => {
+        if (!candidate) return best;
+        const range = candidate.scrollHeight - candidate.clientHeight;
+        const bestRange = best ? best.scrollHeight - best.clientHeight : -1;
+        return range > bestRange ? candidate : best;
+      }, null);
+      const caret = editor.view.coordsAtPos(position);
+      if (scroller) {
+        scroller.scrollTop += caret.bottom - (window.innerHeight - 20);
+      }
+    });
+
+    await page.keyboard.press("Control+Shift+K");
+    const menu = page.locator(".smartpad-autocomplete-menu");
+    await expect(menu).toBeVisible();
+    await expect(menu).toHaveAttribute("data-placement", "above");
+
+    const geometry = await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      const menuRect = document
+        .querySelector(".smartpad-autocomplete-menu")!
+        .getBoundingClientRect();
+      const caret = editor.view.coordsAtPos(editor.state.selection.from);
+      return { menuBottom: menuRect.bottom, caretTop: caret.top };
+    });
+    expect(geometry.menuBottom).toBeLessThanOrEqual(geometry.caretTop - 7);
+  });
+
+  test("keeps the open menu anchored while the editor scrolls", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 900, height: 620 });
+    await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      const lines = Array.from(
+        { length: 80 },
+        (_, index) => `<p>scroll item ${index} = ${index + 1}</p>`,
+      );
+      lines.splice(40, 0, "<p></p>");
+      editor.commands.setContent(lines.join(""));
+
+      let position = 1;
+      for (let index = 0; index < 40; index += 1) {
+        position += editor.state.doc.child(index).nodeSize;
+      }
+      editor.commands.setTextSelection(position);
+      editor.commands.focus();
+      const scroller = [
+        document.querySelector<HTMLElement>(".editor-content"),
+        document.querySelector<HTMLElement>(".editor-card-container"),
+      ].reduce<HTMLElement | null>((best, candidate) => {
+        if (!candidate) return best;
+        const range = candidate.scrollHeight - candidate.clientHeight;
+        const bestRange = best ? best.scrollHeight - best.clientHeight : -1;
+        return range > bestRange ? candidate : best;
+      }, null);
+      const caret = editor.view.coordsAtPos(position);
+      if (scroller) {
+        scroller.scrollTop += caret.top - window.innerHeight / 2;
+      }
+    });
+
+    await page.keyboard.press("Control+Shift+K");
+    const menu = page.locator(".smartpad-autocomplete-menu");
+    await expect(menu).toBeVisible();
+
+    const before = await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      const menuRect = document
+        .querySelector(".smartpad-autocomplete-menu")!
+        .getBoundingClientRect();
+      const caret = editor.view.coordsAtPos(editor.state.selection.from);
+      return { menuTop: menuRect.top, caretTop: caret.top };
+    });
+
+    await page.evaluate(() => {
+      const scroller = [
+        document.querySelector<HTMLElement>(".editor-content"),
+        document.querySelector<HTMLElement>(".editor-card-container"),
+      ].reduce<HTMLElement | null>((best, candidate) => {
+        if (!candidate) return best;
+        const range = candidate.scrollHeight - candidate.clientHeight;
+        const bestRange = best ? best.scrollHeight - best.clientHeight : -1;
+        return range > bestRange ? candidate : best;
+      }, null);
+      if (scroller) {
+        scroller.scrollTop += 60;
+      }
+    });
+
+    await expect
+      .poll(async () =>
+        page
+          .locator(".smartpad-autocomplete-menu")
+          .evaluate((element) => element.getBoundingClientRect().top),
+      )
+      .toBeLessThan(before.menuTop - 20);
+
+    const after = await page.evaluate(() => {
+      const editor = (window as any).tiptapEditor;
+      const menuRect = document
+        .querySelector(".smartpad-autocomplete-menu")!
+        .getBoundingClientRect();
+      const caret = editor.view.coordsAtPos(editor.state.selection.from);
+      return { menuTop: menuRect.top, caretTop: caret.top };
+    });
+    const menuDelta = after.menuTop - before.menuTop;
+    const caretDelta = after.caretTop - before.caretTop;
+    expect(caretDelta).toBeLessThan(-20);
+    expect(menuDelta).toBeCloseTo(caretDelta, 0);
+  });
 });

@@ -38,10 +38,10 @@ The first version focuses on reusing names and syntax that already exist in the 
 9. When keyboard navigation moves through a long suggestion list, the menu scroll position follows
    the highlighted option so the active item remains visible.
 10. The manual autocomplete command opens contextual suggestions even when the current token is
-   empty, for cases such as a blank expression line, `roi ` phrase continuations, `x=`, or
-   `30kg to `.
+    empty, for cases such as a blank expression line, `roi ` phrase continuations, `x=`, or
+    `30kg to `.
 11. The manual autocomplete shortcut is configurable in Settings by recording a key combination.
-   The default is `Ctrl + Shift + K`, avoiding common OS-reserved space shortcuts.
+    The default is `Ctrl + Shift + K`, avoiding common OS-reserved space shortcuts.
 12. Settings must not record shortcuts that are likely to be intercepted by the OS before the
     browser receives them, such as `Ctrl + Space` or `Cmd + Space`.
 13. For blank-line manual suggestions, existing variables appear first, user-defined functions
@@ -52,6 +52,10 @@ The first version focuses on reusing names and syntax that already exist in the 
 15. The manual shortcut should make the menu visible in the same interaction frame. Large result
     sets may render additional rows in follow-up animation frames, but all ranked suggestions must
     remain available.
+16. When the full menu does not fit below the caret, it opens above the caret if that side has more
+    room. The menu remains inside the viewport in either placement.
+17. While autocomplete is open, scrolling any document container repositions the fixed menu so it
+    stays anchored to the triggering caret instead of floating at its previous screen position.
 
 ## Source types
 
@@ -188,13 +192,16 @@ ranking above `msr`, and `msr` ranking above generic substring matches.
 15. Recording a new manual autocomplete shortcut in Settings changes the editor command without
     requiring a page refresh.
 16. Reserved shortcuts such as `Ctrl + Space` and `Cmd + Space` are ignored by the recorder.
-17. On a blank line, the manual autocomplete command opens complete contextual suggestions for
+17. A trigger near the bottom of the viewport opens its menu above the caret.
+18. Scrolling the editor after opening autocomplete moves the menu by the same viewport delta as
+    the triggering caret.
+19. On a blank line, the manual autocomplete command opens complete contextual suggestions for
     available variables and functions instead of silently doing nothing.
-18. Blank-line manual autocomplete includes built-in SmartPad functions, but ranks them after
+20. Blank-line manual autocomplete includes built-in SmartPad functions, but ranks them after
     existing variables and user-defined functions.
-19. Manual autocomplete returns the full ranked suggestion set by default, rather than hiding
+21. Manual autocomplete returns the full ranked suggestion set by default, rather than hiding
     lower-ranked items behind an arbitrary cap.
-20. With at least 80 available variables, the manual shortcut paints the menu and its first visible
+22. With at least 80 available variables, the manual shortcut paints the menu and its first visible
     rows synchronously, then appends the remaining suggestions without truncating them.
-21. With `a` already defined, typing `result = a * b` and pressing `Enter` while the automatic
+23. With `a` already defined, typing `result = a * b` and pressing `Enter` while the automatic
     `abs` suggestion is visible preserves the exact expression and creates a new line.

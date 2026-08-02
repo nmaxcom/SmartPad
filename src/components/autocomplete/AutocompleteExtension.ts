@@ -23,6 +23,52 @@ interface AutocompleteOptions {
 const pluginKey = new PluginKey<AutocompleteState>("smartpad-autocomplete");
 const INITIAL_RENDER_ITEM_COUNT = 24;
 const FOLLOW_UP_RENDER_ITEM_COUNT = 64;
+const MENU_VIEWPORT_PADDING = 8;
+const MENU_ANCHOR_GAP = 8;
+
+interface AutocompleteMenuPositionInput {
+  anchor: Pick<DOMRect, "top" | "bottom" | "left">;
+  menu: Pick<DOMRect, "width" | "height">;
+  viewportWidth: number;
+  viewportHeight: number;
+}
+
+export interface AutocompleteMenuPosition {
+  left: number;
+  top: number;
+  placement: "above" | "below";
+}
+
+export function calculateAutocompleteMenuPosition({
+  anchor,
+  menu,
+  viewportWidth,
+  viewportHeight,
+}: AutocompleteMenuPositionInput): AutocompleteMenuPosition {
+  const spaceBelow =
+    viewportHeight - anchor.bottom - MENU_ANCHOR_GAP - MENU_VIEWPORT_PADDING;
+  const spaceAbove = anchor.top - MENU_ANCHOR_GAP - MENU_VIEWPORT_PADDING;
+  const placement =
+    spaceBelow < menu.height && spaceAbove > spaceBelow ? "above" : "below";
+  const preferredTop =
+    placement === "above"
+      ? anchor.top - MENU_ANCHOR_GAP - menu.height
+      : anchor.bottom + MENU_ANCHOR_GAP;
+  const maxLeft = Math.max(
+    MENU_VIEWPORT_PADDING,
+    viewportWidth - menu.width - MENU_VIEWPORT_PADDING,
+  );
+  const maxTop = Math.max(
+    MENU_VIEWPORT_PADDING,
+    viewportHeight - menu.height - MENU_VIEWPORT_PADDING,
+  );
+
+  return {
+    left: Math.max(MENU_VIEWPORT_PADDING, Math.min(anchor.left, maxLeft)),
+    top: Math.max(MENU_VIEWPORT_PADDING, Math.min(preferredTop, maxTop)),
+    placement,
+  };
+}
 
 const emptyState: AutocompleteState = {
   active: false,
@@ -237,6 +283,7 @@ export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
           document.body.appendChild(menu);
 
           let pendingRenderFrame: number | null = null;
+          let pendingPositionFrame: number | null = null;
           let renderGeneration = 0;
 
           const cancelPendingRender = () => {
@@ -288,6 +335,37 @@ export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
             return button;
           };
 
+          const positionMenu = (state: AutocompleteState) => {
+            const anchor = view.coordsAtPos(state.anchorPos);
+            const menuRect = menu.getBoundingClientRect();
+            const position = calculateAutocompleteMenuPosition({
+              anchor,
+              menu: menuRect,
+              viewportWidth: window.innerWidth,
+              viewportHeight: window.innerHeight,
+            });
+            menu.style.left = `${position.left}px`;
+            menu.style.top = `${position.top}px`;
+            menu.dataset.placement = position.placement;
+          };
+
+          const scheduleMenuPosition = () => {
+            if (pendingPositionFrame !== null) {
+              return;
+            }
+            pendingPositionFrame = window.requestAnimationFrame(() => {
+              pendingPositionFrame = null;
+              const state = pluginKey.getState(view.state) || emptyState;
+              if (
+                state.active &&
+                state.items.length > 0 &&
+                menu.style.display !== "none"
+              ) {
+                positionMenu(state);
+              }
+            });
+          };
+
           const render = () => {
             cancelPendingRender();
             const generation = renderGeneration;
@@ -296,12 +374,9 @@ export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
 
             if (!state.active || state.items.length === 0) {
               menu.style.display = "none";
+              delete menu.dataset.placement;
               return;
             }
-
-            const coords = view.coordsAtPos(state.anchorPos);
-            menu.style.left = `${Math.max(8, Math.min(coords.left, window.innerWidth - 328))}px`;
-            menu.style.top = `${Math.min(coords.bottom + 8, window.innerHeight - 48)}px`;
             menu.style.display = "block";
 
             const appendItems = (start: number, end: number) => {
@@ -319,6 +394,7 @@ export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
               Math.max(INITIAL_RENDER_ITEM_COUNT, state.selectedIndex + 1),
             );
             appendItems(0, renderedCount);
+            positionMenu(state);
             menu
               .querySelector(".smartpad-autocomplete-item-active")
               ?.scrollIntoView({ block: "nearest" });
@@ -366,6 +442,8 @@ export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
           };
 
           document.addEventListener("keydown", handleDocumentKeyDown, true);
+          document.addEventListener("scroll", scheduleMenuPosition, true);
+          window.addEventListener("resize", scheduleMenuPosition);
 
           return {
             update() {
@@ -373,11 +451,21 @@ export const AutocompleteExtension = Extension.create<AutocompleteOptions>({
             },
             destroy() {
               cancelPendingRender();
+              if (pendingPositionFrame !== null) {
+                window.cancelAnimationFrame(pendingPositionFrame);
+                pendingPositionFrame = null;
+              }
               document.removeEventListener(
                 "keydown",
                 handleDocumentKeyDown,
                 true,
               );
+              document.removeEventListener(
+                "scroll",
+                scheduleMenuPosition,
+                true,
+              );
+              window.removeEventListener("resize", scheduleMenuPosition);
               menu.remove();
             },
           };
