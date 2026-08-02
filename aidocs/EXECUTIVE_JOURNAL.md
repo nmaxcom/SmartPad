@@ -8262,3 +8262,29 @@
     *   The production bundle retains the existing large-chunk warning and is now about 3.36 MB minified / 837 kB gzip because the complete symbolic engine is shipped locally; code-splitting it requires an asynchronous evaluator boundary and remains a later performance task.
     *   The Playwright skill wrapper still has its known line-16 shell syntax error; repository Playwright completed browser and visual validation.
     *   No machine blocker remains. The human completion gate is open.
+
+## Entry J-2026-08-02-01
+
+*   Timestamp: 2026-08-02 04:05 CEST / 2026-08-02 02:05 UTC
+*   Summary:
+    *   User explicitly confirmed that the text-first tables and advanced-math interaction work well, closing the human gate for `T-2026-06-14-06` and `T-2026-07-21-03`.
+    *   User asked what genuinely new capabilities should come next.
+*   Decisions:
+    *   Close both `1.0.0-rc.14` feature tasks without further product-code or version changes.
+    *   Do not recommend persistent GeoGebra-style controls or another disconnected advanced command.
+    *   Recommend a first-class `uncertain value` model as the next major product bet: ranges and tolerances written directly beside assumptions, propagated as live result bands and graph envelopes, with the native number scrubber remaining the direct manipulation control.
+    *   Rank safe variable rename/refactoring and instant selection summaries as smaller high-leverage everyday improvements; rank table regression/curve fitting and reusable scoped blocks as the next substantial capabilities after uncertainty.
+*   Product assessment:
+    *   Current Soulver emphasizes fast line references, multi-word variables, auto-updating variable renames, quick totals, and low-friction text-plus-math.
+    *   Calca remains strong in heading-aware structure and broad symbolic/matrix computation.
+    *   Desmos remains strongest at linking tables, regression, distributions, points of interest, and live parameter manipulation.
+    *   SmartPad's differentiating opportunity is not to reproduce their visible control surfaces, but to make assumptions, uncertainty, evidence, and consequences directly manipulable inside readable text.
+*   Artifacts changed:
+    *   `aidocs/TODO_BACKLOG.md`: marked tables and advanced math done after explicit user confirmation.
+    *   `aidocs/EXECUTIVE_JOURNAL.md`: recorded the confirmation and ranked product direction.
+*   Validation:
+    *   No product behavior changed, so no product tests or version bump were required; the prior `1.0.0-rc.14` machine gate remains the completion evidence.
+*   Pending:
+    *   Owner: User; due: TBD; status: todo; choose whether to implement the recommended uncertainty/range experience or one of the smaller everyday-UX improvements first.
+*   Risks/blockers:
+    *   Uncertainty can become statistically intimidating; the first slice must remain deterministic, legible, and useful before Monte Carlo or probability distributions are introduced.
