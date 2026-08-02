@@ -8338,3 +8338,17 @@
 *   Risks/blockers:
     *   Deterministic interval arithmetic is conservative and does not track correlation, so repeated use of one uncertain input may overestimate the possible range; this limitation is explicit in the sheet documentation.
     *   No machine blocker remains. The human completion gate is open.
+
+## Entry J-2026-08-02-03
+
+*   Timestamp: 2026-08-02 15:27 CEST / 2026-08-02 13:27 UTC
+*   Summary:
+    *   User correctly identified that the Unicode `±` character is too uncommon and difficult to type to serve as SmartPad's primary uncertainty syntax.
+*   Product direction under review:
+    *   Prefer keyboard-native `+/-` as the visible canonical input while continuing to accept pasted `±` as an alias.
+    *   Keep discovery in the text surface: offer a contextual `Add tolerance (+/-)` completion after a numeric value, update the discovery template/docs to use `+/-`, and avoid silent source rewriting or a new Variables-panel control.
+    *   Do not use bare `+-`, `~`, or a numeric range as the primary form because they are respectively ambiguous arithmetic, vague approximation, or unable to preserve the central estimate.
+*   Validation:
+    *   Product-design discussion only; no runtime behavior, version, or machine gate changed.
+*   Pending:
+    *   Owner: User; due: TBD; status: in_progress; choose whether `+/-` plus contextual completion should replace `±` as the primary documented entry path.
