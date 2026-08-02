@@ -32,6 +32,7 @@ export class FunctionDefinitionEvaluator implements NodeEvaluator {
       console.warn(`Function redefined: ${normalizedName}`);
     }
 
+    context.modelStore?.delete(normalizedName);
     context.functionStore.set(normalizedName, def);
 
     const renderNode: TextRenderNode = {

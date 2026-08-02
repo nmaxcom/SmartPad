@@ -98,6 +98,24 @@ describe("TemplatePanel", () => {
     expect(makeActive).toBe(true);
   });
 
+  test("includes the text-first Uncertainty & Models template", () => {
+    const createSheetFromContent = jest.fn().mockResolvedValue(undefined);
+    (useSheetContext as jest.Mock).mockReturnValue({
+      createSheetFromContent,
+    });
+
+    render(<TemplatePanel />);
+    fireEvent.click(screen.getByRole("button", { name: /Uncertainty & Models/i }));
+
+    expect(createSheetFromContent).toHaveBeenCalledTimes(1);
+    const [content, title, makeActive] = createSheetFromContent.mock.calls[0];
+    expect(content).toContain("visits = 10000 ± 2000");
+    expect(content).toContain("model Revenue(visits, conversion, price):");
+    expect(content).toContain("@view plot x=price y=forecast");
+    expect(title).toBe("Uncertainty & Models");
+    expect(makeActive).toBe(true);
+  });
+
   test("includes a plottable Currency FX function example", () => {
     const createSheetFromContent = jest.fn().mockResolvedValue(undefined);
     (useSheetContext as jest.Mock).mockReturnValue({

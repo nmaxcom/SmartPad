@@ -2300,6 +2300,122 @@ body.number-scrubbing * {
 .smartpad-autocomplete-kind-directive {
   color: var(--syntax-keyword);
 }
+
+/* Ephemeral selection tools: close to the selected text, never a side panel. */
+.smartpad-selection-insights {
+  position: fixed;
+  z-index: 1180;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: max-content;
+  max-width: min(520px, calc(100vw - 16px));
+  padding: 5px;
+  border: 1px solid color-mix(in srgb, var(--color-teal) 28%, var(--color-border));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-surface) 96%, transparent);
+  box-shadow: 0 12px 30px
+    color-mix(in srgb, var(--color-background) 28%, transparent);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-sans);
+  font-size: 10px;
+  backdrop-filter: blur(10px);
+}
+
+.smartpad-selection-insight-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.smartpad-selection-insight-count {
+  min-width: 44px;
+  padding: 0 4px;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.smartpad-selection-insights button {
+  padding: 3px 6px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.smartpad-selection-insights button:hover,
+.smartpad-selection-insights button:focus-visible {
+  background: var(--color-teal-soft);
+  color: var(--color-teal);
+  outline: none;
+}
+
+/* A caret-only substitution lens under the formula it explains. */
+.smartpad-substitution-lens {
+  display: block;
+  max-width: min(100%, 760px);
+  margin: 3px 0 2px 1.1rem;
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+.smartpad-substitution-lens::before {
+  content: "values  ";
+  color: color-mix(in srgb, var(--color-text-secondary) 70%, transparent);
+  font-family: var(--font-family-sans);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.smartpad-substitution-result {
+  color: var(--color-teal);
+  font-weight: 650;
+}
+
+/* Reusable models stay visibly text-native: structure, not a separate editor. */
+.ProseMirror p.smartpad-model-header {
+  margin-top: 0.75rem;
+  padding: 3px 8px;
+  border-left: 2px solid color-mix(in srgb, var(--color-pink) 70%, transparent);
+  border-radius: 0 5px 5px 0;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-pink) 8%, transparent),
+    transparent 72%
+  );
+  color: var(--color-text-primary);
+  font-weight: 650;
+}
+
+.ProseMirror p.smartpad-model-body {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-left: 1.15rem;
+  border-left: 1px solid color-mix(in srgb, var(--color-pink) 24%, transparent);
+}
+
+.ProseMirror p.smartpad-model-return {
+  margin-bottom: 0.35rem;
+  color: var(--color-teal);
+  font-weight: 620;
+}
+
+.plot-view-uncertainty-band {
+  pointer-events: none;
+}
 .ProseMirror p.smartpad-table-title {
   margin-top: 0.7rem;
   font-weight: 650;

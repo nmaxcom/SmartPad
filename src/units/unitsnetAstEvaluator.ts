@@ -51,6 +51,7 @@ import {
   ListValue,
   SemanticValueTypes,
   DurationValue,
+  UncertainValue,
 } from "../types";
 import type { DurationUnit } from "../types/DurationValue";
 import { Variable } from "../state/types";
@@ -963,10 +964,16 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     }
     const variableNames = this.collectVariableNames(components);
 
-    const { hasCurrency, hasUnit, hasPercentage, hasList } = this.collectVariableMetadata(
+    const { hasCurrency, hasUnit, hasPercentage, hasList, hasUncertain } = this.collectVariableMetadata(
       variableNames,
       context
     );
+
+    // Preserve interval bounds. UnitsNet receives scalar quantities and would
+    // otherwise reduce an uncertain input to its centre value.
+    if (hasUncertain) {
+      return true;
+    }
 
     const parsedLiteral = SemanticParsers.parse(expression);
     if (parsedLiteral && parsedLiteral.getType() !== "error") {
@@ -983,7 +990,9 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     const functionComponents = components.filter((component) => component.type === "function");
     if (functionComponents.length > 0) {
       const hasUserFunction = functionComponents.some(
-        (component) => context.functionStore?.has(component.value)
+        (component) =>
+          context.functionStore?.has(component.value) ||
+          context.modelStore?.has(component.value)
       );
       if (hasUserFunction) {
         return true;
@@ -1107,15 +1116,20 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
     hasUnit: boolean;
     hasPercentage: boolean;
     hasList: boolean;
+    hasUncertain: boolean;
   } {
     let hasCurrency = false;
     let hasUnit = false;
     let hasPercentage = false;
     let hasList = false;
+    let hasUncertain = false;
 
     variableNames.forEach((name) => {
       const variable = context.variableContext.get(name);
       const value = variable?.value;
+      if (value instanceof UncertainValue) {
+        hasUncertain = true;
+      }
       if (value instanceof ListValue) {
         hasList = true;
       }
@@ -1130,7 +1144,7 @@ export class UnitsNetExpressionEvaluator implements NodeEvaluator {
       }
     });
 
-    return { hasCurrency, hasUnit, hasPercentage, hasList };
+    return { hasCurrency, hasUnit, hasPercentage, hasList, hasUncertain };
   }
 
   private containsDateVariable(

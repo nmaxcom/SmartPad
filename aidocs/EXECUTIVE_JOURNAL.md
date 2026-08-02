@@ -8310,3 +8310,31 @@
     *   The first focused Jest invocation hit Watchman's out-of-repository permission boundary and passed with Watchman disabled.
     *   The optional Playwright skill wrapper retains its known line-16 shell syntax error; the repository's installed Playwright runner completed browser validation successfully.
     *   No product or machine blocker remains. The human completion gate is open.
+
+## Entry J-2026-08-02-02
+
+*   Timestamp: 2026-08-02 14:14 CEST / 2026-08-02 12:14 UTC
+*   Summary:
+    *   User chose four text-first product capabilities: first-class uncertainty, selection statistics, a caret substitution lens, and reusable multi-step models.
+    *   SmartPad now accepts typed `centre ± tolerance` assumptions, preserves both native scrubbers, propagates conservative intervals through typed calculations and models, and draws a shaded live plot envelope.
+    *   Indented `model Name(...):` blocks keep visible intermediate steps, isolated local values, defaults/named arguments, autocomplete, and an explicit typed return.
+    *   Selecting compatible visible numbers opens a nearby sum/mean/min/max palette whose actions insert normal expressions; placing the caret on a formula shows one transient current-value substitution line.
+*   Decisions:
+    *   Keep all four interactions in the editor/plot surface and add no controls or navigation to the Variables panel.
+    *   Treat `±` as deterministic possibility, not probability; defer distributions, confidence intervals, correlation tracking, Monte Carlo, and nested uncertainty literals.
+    *   Keep models deliberately readable and bounded: 16 parameters, 40 calculation lines, one final return, isolated locals, and 20 nested calls.
+    *   Advance SmartPad to `1.0.0-rc.16` and add the runnable `Uncertainty & Models` template as the primary discovery path.
+*   Artifacts changed:
+    *   Added the uncertainty semantic type/evaluator, model parser/evaluator, plot envelopes, selection and substitution extensions, template, highlighting/styles, autocomplete integration, and focused unit/browser coverage.
+    *   Added three implemented specs and trust cards, updated spec mapping/trust, README, changelog, public docs generator/output, version metadata, and feature backlog review gates.
+*   Validation:
+    *   Focused units passed: 70 of 70 across uncertainty/models, inline aids, templates, plotting, functions, and semantic highlighting; the final affected-module gate passed 844 with 2 skipped tests.
+    *   New Chromium interaction coverage passed 4 of 4, including tolerance scrubbing, model/plot updates, caret show/hide, selection insertion, and toolbar scroll anchoring. The broader related run passed 30 of 31 initially; its one pre-existing Option/coarse-scrub failure passed immediately when isolated.
+    *   Visual QA confirmed a quiet text-native model block, readable substitution lens, selection toolbar beside the text, and a restrained uncertainty envelope; two minor spacing/label ambiguities were corrected afterward.
+    *   Docusaurus generation/build/sync passed and all 27 interactive examples evaluated through the document parser.
+    *   `npm run docs:map -- HEAD`, `npm run docs:drift -- HEAD`, `npm run spec:test -- HEAD`, `npm run spec:trust`, and `npm run verify:changed -- HEAD` passed; production build retains only the existing large-chunk warning.
+*   Pending:
+    *   Owner: User; due: TBD; status: in_progress; review the four interactions from the `Uncertainty & Models` template and explicitly confirm completion or request a concrete refinement.
+*   Risks/blockers:
+    *   Deterministic interval arithmetic is conservative and does not track correlation, so repeated use of one uncertain input may overestimate the possible range; this limitation is explicit in the sheet documentation.
+    *   No machine blocker remains. The human completion gate is open.

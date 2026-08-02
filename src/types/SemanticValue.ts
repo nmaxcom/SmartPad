@@ -23,7 +23,8 @@ export type SemanticValueType =
   | 'text'
   | 'complex'
   | 'matrix'
-  | 'table';
+  | 'table'
+  | 'uncertain';
 
 export interface DisplayOptions {
   precision?: number;

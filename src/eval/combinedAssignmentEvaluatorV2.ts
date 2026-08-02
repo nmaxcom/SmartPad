@@ -342,6 +342,7 @@ export class CombinedAssignmentEvaluatorV2 implements NodeEvaluator {
       variableName,
       expression,
       result: displayValue,
+      semanticValue: value,
       displayText,
       line: lineNumber,
       originalRaw,

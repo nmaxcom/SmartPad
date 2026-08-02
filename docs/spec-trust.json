@@ -297,6 +297,40 @@
       ]
     },
     {
+      "id": "uncertainty-intervals",
+      "status": "implemented",
+      "sourceSpec": "docs/Specs/Uncertainty.spec.md",
+      "canonicalSpec": "docs/Specs/implemented/uncertainty-intervals.md",
+      "mappedGroups": ["Expression Engine", "Plotting And Visualization"],
+      "testRefs": [
+        "tests/unit/uncertaintyAndModels.test.ts",
+        "tests/e2e/uncertainty-models-thinking-aids.spec.ts"
+      ]
+    },
+    {
+      "id": "reusable-models",
+      "status": "implemented",
+      "sourceSpec": "docs/Specs/Models.spec.md",
+      "canonicalSpec": "docs/Specs/implemented/reusable-models.md",
+      "mappedGroups": ["Expression Engine", "Editor And Result Chips"],
+      "testRefs": [
+        "tests/unit/uncertaintyAndModels.test.ts",
+        "tests/e2e/uncertainty-models-thinking-aids.spec.ts",
+        "tests/unit/templatePanelSheetCreation.test.tsx"
+      ]
+    },
+    {
+      "id": "inline-thinking-aids",
+      "status": "implemented",
+      "sourceSpec": "docs/Specs/InlineThinkingAids.spec.md",
+      "canonicalSpec": "docs/Specs/implemented/inline-thinking-aids.md",
+      "mappedGroups": ["Editor And Result Chips"],
+      "testRefs": [
+        "tests/unit/inlineThinkingAids.test.ts",
+        "tests/e2e/uncertainty-models-thinking-aids.spec.ts"
+      ]
+    },
+    {
       "id": "unit-aliases-and-ratio",
       "status": "proposed",
       "sourceSpec": "docs/Specs/proposed/unit-aliases-and-ratio.md",

@@ -25,6 +25,7 @@ import { TextValue } from './TextValue';
 import { ComplexValue } from './ComplexValue';
 import { MatrixValue } from './MatrixValue';
 import { TableValue, type TableColumn } from './TableValue';
+import { UncertainValue, type UncertaintyDisplayMode } from './UncertainValue';
 import { getListMaxLength } from './listConfig';
 import { SmartPadQuantity } from '../units/unitsnetAdapter';
 import { defaultUnitRegistry } from '../units/definitions';
@@ -49,6 +50,7 @@ export { TextValue };
 export { ComplexValue };
 export { MatrixValue };
 export { TableValue, type TableColumn };
+export { UncertainValue, type UncertaintyDisplayMode };
 
 // Type guards and utilities
 export const SemanticValueTypes = {
@@ -67,6 +69,7 @@ export const SemanticValueTypes = {
   isComplex: (value: SemanticValue): value is ComplexValue => value.getType() === 'complex',
   isMatrix: (value: SemanticValue): value is MatrixValue => value.getType() === 'matrix',
   isTable: (value: SemanticValue): value is TableValue => value.getType() === 'table',
+  isUncertain: (value: SemanticValue): value is UncertainValue => value.getType() === 'uncertain',
 } as const;
 
 // Factory functions for creating semantic values
@@ -713,6 +716,12 @@ export const SemanticArithmetic = {
    */
   add: (left: SemanticValue, right: SemanticValue): SemanticValue => {
     try {
+      if (SemanticValueTypes.isUncertain(left)) {
+        return (left as UncertainValue).add(right);
+      }
+      if (SemanticValueTypes.isUncertain(right)) {
+        return UncertainValue.exact(left).add(right);
+      }
       if (SemanticValueTypes.isSymbolic(left) || SemanticValueTypes.isSymbolic(right)) {
         const base = SemanticValueTypes.isSymbolic(left) ? left : SymbolicValue.from(left.toString());
         return base.add(right);
@@ -728,6 +737,12 @@ export const SemanticArithmetic = {
    */
   subtract: (left: SemanticValue, right: SemanticValue): SemanticValue => {
     try {
+      if (SemanticValueTypes.isUncertain(left)) {
+        return (left as UncertainValue).subtract(right);
+      }
+      if (SemanticValueTypes.isUncertain(right)) {
+        return UncertainValue.exact(left).subtract(right);
+      }
       if (SemanticValueTypes.isSymbolic(left) || SemanticValueTypes.isSymbolic(right)) {
         const base = SemanticValueTypes.isSymbolic(left) ? left : SymbolicValue.from(left.toString());
         return base.subtract(right);
@@ -743,6 +758,12 @@ export const SemanticArithmetic = {
    */
   multiply: (left: SemanticValue, right: SemanticValue): SemanticValue => {
     try {
+      if (SemanticValueTypes.isUncertain(left)) {
+        return (left as UncertainValue).multiply(right);
+      }
+      if (SemanticValueTypes.isUncertain(right)) {
+        return UncertainValue.exact(left).multiply(right);
+      }
       if (SemanticValueTypes.isSymbolic(left) || SemanticValueTypes.isSymbolic(right)) {
         const base = SemanticValueTypes.isSymbolic(left) ? left : SymbolicValue.from(left.toString());
         return base.multiply(right);
@@ -842,6 +863,12 @@ export const SemanticArithmetic = {
    */
   divide: (left: SemanticValue, right: SemanticValue): SemanticValue => {
     try {
+      if (SemanticValueTypes.isUncertain(left)) {
+        return (left as UncertainValue).divide(right);
+      }
+      if (SemanticValueTypes.isUncertain(right)) {
+        return UncertainValue.exact(left).divide(right);
+      }
       if (SemanticValueTypes.isSymbolic(left) || SemanticValueTypes.isSymbolic(right)) {
         const base = SemanticValueTypes.isSymbolic(left) ? left : SymbolicValue.from(left.toString());
         return base.divide(right);
@@ -863,6 +890,9 @@ export const SemanticArithmetic = {
    */
   modulo: (left: SemanticValue, right: SemanticValue): SemanticValue => {
     try {
+      if (SemanticValueTypes.isUncertain(left) || SemanticValueTypes.isUncertain(right)) {
+        return ErrorValue.semanticError("Modulo does not support uncertain values");
+      }
       const wrap = (expr: string) => {
         const trimmed = expr.trim();
         if (!/\s|[+\-*/^%]/.test(trimmed)) {
@@ -897,6 +927,9 @@ export const SemanticArithmetic = {
    */
   power: (base: SemanticValue, exponent: number): SemanticValue => {
     try {
+      if (SemanticValueTypes.isUncertain(base)) {
+        return (base as UncertainValue).power(exponent);
+      }
       if (SemanticValueTypes.isSymbolic(base)) {
         return base.power(exponent);
       }

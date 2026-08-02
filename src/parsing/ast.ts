@@ -68,6 +68,36 @@ export interface TableColumnAssignmentNode extends BaseASTNode {
   readonly showResult: boolean;
 }
 
+export interface CallableParameter {
+  readonly name: string;
+  readonly defaultExpression?: string;
+  readonly defaultComponents?: ExpressionComponent[];
+}
+
+export interface ModelLocalAssignment {
+  readonly name: string;
+  readonly expression: string;
+  readonly components: ExpressionComponent[];
+  readonly line: number;
+}
+
+export interface ModelDefinitionNode extends BaseASTNode {
+  readonly type: "modelDefinition";
+  readonly modelName: string;
+  readonly functionName: string;
+  readonly params: CallableParameter[];
+  readonly locals: ModelLocalAssignment[];
+  readonly returnExpression: string;
+  readonly returnComponents: ExpressionComponent[];
+  readonly bodyLines: number[];
+}
+
+export interface ModelBodyNode extends BaseASTNode {
+  readonly type: "modelBody";
+  readonly modelName: string;
+  readonly bodyKind: "assignment" | "return" | "comment" | "blank" | "invalid";
+}
+
 /**
  * Represents a variable assignment: `variableName = value`
  * Value is now parsed as a SemanticValue during parsing phase
@@ -175,11 +205,7 @@ export interface ErrorNode extends BaseASTNode {
 export interface FunctionDefinitionNode extends BaseASTNode {
   readonly type: "functionDefinition";
   readonly functionName: string;
-  readonly params: Array<{
-    name: string;
-    defaultExpression?: string;
-    defaultComponents?: ExpressionComponent[];
-  }>;
+  readonly params: CallableParameter[];
   readonly expression: string;
   readonly components: ExpressionComponent[];
 }
@@ -194,6 +220,8 @@ export type ASTNode =
   | TableDeclarationNode
   | TableRowNode
   | TableColumnAssignmentNode
+  | ModelDefinitionNode
+  | ModelBodyNode
   | VariableAssignmentNode
   | ExpressionNode
   | CombinedAssignmentNode
@@ -225,6 +253,14 @@ export function isTableRowNode(node: ASTNode): node is TableRowNode {
 
 export function isTableColumnAssignmentNode(node: ASTNode): node is TableColumnAssignmentNode {
   return node.type === "tableColumnAssignment";
+}
+
+export function isModelDefinitionNode(node: ASTNode): node is ModelDefinitionNode {
+  return node.type === "modelDefinition";
+}
+
+export function isModelBodyNode(node: ASTNode): node is ModelBodyNode {
+  return node.type === "modelBody";
 }
 
 export function isVariableAssignmentNode(node: ASTNode): node is VariableAssignmentNode {

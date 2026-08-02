@@ -11,6 +11,8 @@
         "src/types/SemanticValue.ts",
         "src/types/NumberValue.ts",
         "src/types/PercentageValue.ts",
+        "src/types/UncertainValue.ts",
+        "src/utils/uncertaintyExpression.ts",
         "docs/Specs/LiveResult.spec.md",
         "docs/Specs/implemented/live-results.md",
         "docs/Specs/ExplicitTrigger.spec.md",
@@ -18,7 +20,11 @@
         "docs/Specs/Functions.spec.md",
         "docs/Specs/implemented/functions-and-user-defined-formulas.md",
         "docs/Specs/Modulo.spec.md",
-        "docs/Specs/implemented/modulo-operator.md"
+        "docs/Specs/implemented/modulo-operator.md",
+        "docs/Specs/Uncertainty.spec.md",
+        "docs/Specs/implemented/uncertainty-intervals.md",
+        "docs/Specs/Models.spec.md",
+        "docs/Specs/implemented/reusable-models.md"
       ],
       "docPrefixes": [
         "docs/Specs/LiveResult.spec.md",
@@ -33,6 +39,10 @@
         "docs/Specs/implemented/solve-and-symbolic-math.md",
         "docs/Specs/AdvancedMath.spec.md",
         "docs/Specs/implemented/advanced-math.md",
+        "docs/Specs/Uncertainty.spec.md",
+        "docs/Specs/implemented/uncertainty-intervals.md",
+        "docs/Specs/Models.spec.md",
+        "docs/Specs/implemented/reusable-models.md",
         "docs/Specs/Tables.spec.md",
         "docs/Specs/implemented/tables-and-structured-collections.md",
         "docs/Specs/Plotting.spec.md",
@@ -58,6 +68,8 @@
       "docPrefixes": [
         "docs/Specs/duration.spec.md",
         "docs/Specs/implemented/duration-and-time-values.md",
+        "docs/Specs/Uncertainty.spec.md",
+        "docs/Specs/implemented/uncertainty-intervals.md",
         "docs/Specs/proposed/unit-aliases-and-ratio.md",
         "docs/Specs/proposed/unit-decision-forks.md",
         "public/docs/"
@@ -73,7 +85,12 @@
         "src/types/CurrencyValue.ts",
         "docs/Specs/Currency.spec.md"
       ],
-      "docPrefixes": ["docs/Specs/Currency.spec.md", "public/docs/"],
+      "docPrefixes": [
+        "docs/Specs/Currency.spec.md",
+        "docs/Specs/Uncertainty.spec.md",
+        "docs/Specs/implemented/uncertainty-intervals.md",
+        "public/docs/"
+      ],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
     },
     {
@@ -109,12 +126,15 @@
       "docPrefixes": [
         "docs/Specs/Tables.spec.md",
         "docs/Specs/implemented/tables-and-structured-collections.md",
+        "docs/Specs/Models.spec.md",
+        "docs/Specs/implemented/reusable-models.md",
         "website/docs/guides/syntax-reference.md",
         "public/docs/"
       ],
       "testPrefixes": [
         "tests/unit/table.test.ts",
         "tests/unit/pasteTransforms.test.ts",
+        "tests/unit/uncertaintyAndModels.test.ts",
         "tests/e2e/tables-and-advanced-math.spec.ts"
       ]
     },
@@ -192,13 +212,17 @@
         "docs/Specs/Plotting.spec.md",
         "docs/Specs/implemented/plotting-and-dependency-views.md",
         "docs/Specs/SensitivityAnalysis.spec.md",
-        "docs/Specs/implemented/sensitivity-analysis.md"
+        "docs/Specs/implemented/sensitivity-analysis.md",
+        "docs/Specs/Uncertainty.spec.md",
+        "docs/Specs/implemented/uncertainty-intervals.md"
       ],
       "docPrefixes": [
         "docs/Specs/Plotting.spec.md",
         "docs/Specs/implemented/plotting-and-dependency-views.md",
         "docs/Specs/SensitivityAnalysis.spec.md",
         "docs/Specs/implemented/sensitivity-analysis.md",
+        "docs/Specs/Uncertainty.spec.md",
+        "docs/Specs/implemented/uncertainty-intervals.md",
         "public/docs/"
       ],
       "testPrefixes": ["tests/unit/", "tests/features/", "tests/e2e/"]
@@ -213,6 +237,10 @@
         "src/components/autocomplete/",
         "src/components/SemanticHighlightExtension.ts",
         "src/components/VariableHoverExtension.ts",
+        "src/components/SelectionInsightsExtension.ts",
+        "src/components/SubstitutionLensExtension.ts",
+        "src/analysis/selectionInsights.ts",
+        "src/analysis/substitutionLens.ts",
         "src/components/Result",
         "src/components/Reference",
         "src/components/resultActionAccessibility.ts",
@@ -231,7 +259,11 @@
         "docs/Specs/implemented/sensitivity-analysis.md",
         "docs/Specs/proposed/scenario-comparison-sheets.md",
         "docs/Specs/proposed/goal-seek-interactions.md",
-        "docs/Specs/proposed/autocomplete.md"
+        "docs/Specs/proposed/autocomplete.md",
+        "docs/Specs/Models.spec.md",
+        "docs/Specs/implemented/reusable-models.md",
+        "docs/Specs/InlineThinkingAids.spec.md",
+        "docs/Specs/implemented/inline-thinking-aids.md"
       ],
       "docPrefixes": [
         "docs/Specs/ResultChipsAndValueGraph.spec.md",
@@ -249,6 +281,10 @@
         "docs/Specs/implemented/tables-and-structured-collections.md",
         "docs/Specs/AdvancedMath.spec.md",
         "docs/Specs/implemented/advanced-math.md",
+        "docs/Specs/Models.spec.md",
+        "docs/Specs/implemented/reusable-models.md",
+        "docs/Specs/InlineThinkingAids.spec.md",
+        "docs/Specs/implemented/inline-thinking-aids.md",
         "website/docs/guides/syntax-reference.md",
         "public/docs/"
       ],
@@ -290,6 +326,7 @@
         "src/templates/visualInsightsTemplate.ts",
         "src/templates/goalSeekTemplate.ts",
         "src/templates/investmentTemplate.ts",
+        "src/templates/uncertaintyModelsTemplate.ts",
         "src/App.css",
         "src/styles/",
         "src/App.tsx",
@@ -299,6 +336,12 @@
       ],
       "docPrefixes": [
         "docs/ABOUT.md",
+        "docs/Specs/Uncertainty.spec.md",
+        "docs/Specs/implemented/uncertainty-intervals.md",
+        "docs/Specs/Models.spec.md",
+        "docs/Specs/implemented/reusable-models.md",
+        "docs/Specs/InlineThinkingAids.spec.md",
+        "docs/Specs/implemented/inline-thinking-aids.md",
         "docs/Specs/proposed/ux-feature-ideas-backlog.md",
         "public/docs/"
       ],

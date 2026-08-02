@@ -60,6 +60,20 @@ Highlighted numbers can be dragged left or right. Scrubbing edits the number in 
 
 > GIF/video marker: scrub `years` and show the result changing live.
 
+## Scrub uncertainty, not just one estimate
+
+Write a centre and tolerance as `value = centre ± tolerance`. Both numbers use the same horizontal scrubber. Dependent results keep a conservative possible interval, and connected line plots show it as a quiet shaded envelope behind the centre line.
+
+<ExamplePlayground title={"A forecast with visible uncertainty"} description={"Change either side of ±; SmartPad keeps the assumption and its consequences together."} code={"visits = 10000 ± 2000\nconversion = 3% ± 0.5%\nprice = 49 EUR\nforecast = visits * conversion * price"} />
+
+## Inspect a formula at the caret
+
+Place the caret on a calculated formula that uses named values. A muted `values` line appears directly beneath it with the current values substituted and the live result. It disappears when you move away and never changes the sheet.
+
+## Calculate from a selection
+
+Select two or more compatible visible numbers in the editor. A compact toolbar follows the selection and shows sum, mean, minimum, and maximum. Choosing one inserts an ordinary editable SmartPad calculation after the selection; nothing is stored in a panel or hidden formula.
+
 ## Compare with a baseline
 
 Open the `⋯` actions menu on any result chip and choose **Set baseline** before changing a model. SmartPad captures the current numeric variables for this sheet, then compares them with every edit or scrub in real time.

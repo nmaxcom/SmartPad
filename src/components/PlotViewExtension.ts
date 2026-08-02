@@ -9,6 +9,7 @@ import {
   ExpressionNode,
   CombinedAssignmentNode,
   FunctionDefinitionNode,
+  ModelDefinitionNode,
 } from "../parsing/ast";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
 import { Variable } from "../state/types";
@@ -34,6 +35,7 @@ import {
   UnitValue,
   PercentageValue,
   DurationValue,
+  UncertainValue,
 } from "../types";
 import { getDateLocaleEffective } from "../types/DateValue";
 import { applyThousandsSeparator } from "../utils/numberFormatting";
@@ -81,6 +83,8 @@ interface PlotSeriesModel {
   expression: string;
   data?: PlotPoint[];
   currentY?: number | null;
+  currentLower?: number | null;
+  currentUpper?: number | null;
   color?: string;
   unit?: PlotUnitFormat | null;
 }
@@ -131,7 +135,7 @@ interface PlotSeriesLayout {
   label?: string;
   expression: string;
   color: string;
-  points: Array<{ x: number; y: number }>;
+  points: Array<{ x: number; y: number; lower?: number | null; upper?: number | null }>;
 }
 
 interface PlotSvgLayout {
@@ -276,6 +280,8 @@ const buildPlotModel = (
           expression: entry.expression,
           data: entry.data,
           currentY: entry.currentY,
+          currentLower: entry.currentLower,
+          currentUpper: entry.currentUpper,
           color: PLOT_SERIES_COLORS[index % PLOT_SERIES_COLORS.length],
         }))
       : plotNode.data
@@ -401,13 +407,19 @@ const deriveYDomainFromSeries = (
       if (!range) return true;
       return point.x >= range.min && point.x <= range.max;
     })
-  ) as Array<{ x: number; y: number }>;
+  ) as Array<{ x: number; y: number; lower?: number | null; upper?: number | null }>;
   if (points.length === 0) return undefined;
   let min = points[0].y;
   let max = points[0].y;
   points.forEach((point) => {
     min = Math.min(min, point.y);
     max = Math.max(max, point.y);
+    if (typeof point.lower === "number" && Number.isFinite(point.lower)) {
+      min = Math.min(min, point.lower);
+    }
+    if (typeof point.upper === "number" && Number.isFinite(point.upper)) {
+      max = Math.max(max, point.upper);
+    }
   });
   if (min === max) {
     const delta = min === 0 ? 1 : Math.abs(min) * 0.1;
@@ -563,6 +575,9 @@ const formatAxisLabel = (name: string, unitLabel?: string) => {
 };
 const getPlotUnitFormat = (value: any): PlotUnitFormat | null => {
   if (!value || typeof value.getType !== "function") return null;
+  if (SemanticValueTypes.isUncertain(value as UncertainValue)) {
+    return getPlotUnitFormat((value as UncertainValue).getCenter());
+  }
   if (SemanticValueTypes.isPercentage(value as PercentageValue)) {
     return { suffix: "%", scale: 100 };
   }
@@ -619,6 +634,7 @@ const computeModelFromExpression = (
   lineIndex: ReturnType<typeof buildLineIndex>,
   variableContext: Map<string, Variable>,
   functionStore: Map<string, FunctionDefinitionNode> | undefined,
+  modelStore: Map<string, ModelDefinitionNode> | undefined,
   settings: any
 ): PlotViewModel | null => {
   const info = lineIndex[targetLine];
@@ -665,6 +681,7 @@ const computeModelFromExpression = (
         return store;
       })(),
       functionStore,
+      modelStore,
       registry: defaultRegistry,
       settings,
       domainSpec: domainOverride ? `${domainOverride.min}..${domainOverride.max}` : undefined,
@@ -685,6 +702,8 @@ const computeModelFromExpression = (
     expression: spec.expression,
     data: seriesResults[index]?.data,
     currentY: seriesResults[index]?.currentY,
+    currentLower: seriesResults[index]?.currentLower,
+    currentUpper: seriesResults[index]?.currentUpper,
   }));
   const baseYDomain =
     deriveYDomainFromSeries(seriesData, viewCandidate) || deriveYDomainFromSeries(seriesData);
@@ -755,6 +774,8 @@ const computeModelFromExpression = (
     expression: spec.expression,
     data: seriesResults[index]?.data,
     currentY: seriesResults[index]?.currentY,
+    currentLower: seriesResults[index]?.currentLower,
+    currentUpper: seriesResults[index]?.currentUpper,
     color: PLOT_SERIES_COLORS[index % PLOT_SERIES_COLORS.length],
     unit: seriesUnits[index],
   }));
@@ -805,7 +826,7 @@ const createPlotSvg = (
     const points = (series.data || []).filter(
       (point) =>
         point.y !== null && point.x >= viewRange.min && point.x <= viewRange.max
-    ) as Array<{ x: number; y: number }>;
+    ) as Array<{ x: number; y: number; lower?: number | null; upper?: number | null }>;
     return {
       index,
       label: series.label,
@@ -818,7 +839,17 @@ const createPlotSvg = (
   const visiblePoints = seriesLayouts.flatMap((series) => series.points);
   if (visiblePoints.length === 0) return null;
 
-  const derivedRange = deriveYDomain(visiblePoints);
+  const visibleRangePoints = visiblePoints.flatMap((point) => {
+    const values = [{ x: point.x, y: point.y }];
+    if (typeof point.lower === "number" && Number.isFinite(point.lower)) {
+      values.push({ x: point.x, y: point.lower });
+    }
+    if (typeof point.upper === "number" && Number.isFinite(point.upper)) {
+      values.push({ x: point.x, y: point.upper });
+    }
+    return values;
+  });
+  const derivedRange = deriveYDomain(visibleRangePoints);
   const yRangeBase =
     yViewOverride || (yViewAuto ? undefined : model.yView || model.yDomain) || derivedRange;
   if (!yRangeBase) return null;
@@ -1075,6 +1106,31 @@ const createPlotSvg = (
     }
 
     if (pathData) {
+      const bandPoints = seriesLayout.points.filter(
+        (point) =>
+          typeof point.lower === "number" &&
+          Number.isFinite(point.lower) &&
+          typeof point.upper === "number" &&
+          Number.isFinite(point.upper)
+      );
+      if (bandPoints.length > 1) {
+        const upperPath = bandPoints
+          .map((point, pointIndex) =>
+            `${pointIndex === 0 ? "M" : "L"} ${xScale(point.x)} ${yScale(point.upper as number)}`
+          )
+          .join(" ");
+        const lowerPath = [...bandPoints]
+          .reverse()
+          .map((point) => `L ${xScale(point.x)} ${yScale(point.lower as number)}`)
+          .join(" ");
+        const band = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        band.setAttribute("d", `${upperPath} ${lowerPath} Z`);
+        band.setAttribute("class", "plot-view-uncertainty-band");
+        band.setAttribute("data-series-index", String(index));
+        band.style.fill = seriesLayout.color;
+        band.style.fillOpacity = "0.16";
+        plotLayer.appendChild(band);
+      }
       if (pathPoints.length > 1) {
         const gradientId = `plot-series-fill-${index}`;
         const gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
@@ -2627,6 +2683,9 @@ export const PlotViewExtension = Extension.create({
     const getFunctionStore =
       this.options.getFunctionStore ||
       (() => undefined as Map<string, FunctionDefinitionNode> | undefined);
+    const getModelStore =
+      this.options.getModelStore ||
+      (() => undefined as Map<string, ModelDefinitionNode> | undefined);
     const getSettings = this.options.getSettings || (() => ({}));
 
     return [
@@ -2665,6 +2724,7 @@ export const PlotViewExtension = Extension.create({
 
             const lineIndex = buildLineIndex(state.doc);
             const functionStore = getFunctionStore();
+            const modelStore = getModelStore();
             const decorations: Decoration[] = [];
             const handleOverrideUpdate = (
               key: string,
@@ -2822,6 +2882,7 @@ export const PlotViewExtension = Extension.create({
                   lineIndex,
                   getVariableContext(),
                   functionStore,
+                  modelStore,
                   settings
                 );
                 if (recomputed) {
@@ -2867,6 +2928,7 @@ export const PlotViewExtension = Extension.create({
                 lineIndex,
                 getVariableContext(),
                 functionStore,
+                modelStore,
                 settings
               );
               if (model) {
@@ -2989,6 +3051,7 @@ export const PlotViewExtension = Extension.create({
                     const settings = buildSettingsSnapshot(getSettings());
                     const variableContext = getVariableContext();
                     const functionStore = getFunctionStore();
+                    const modelStore = getModelStore();
                     const store = new ReactiveVariableStore();
                     variableContext.forEach((variable) => store.setVariableWithMetadata(variable));
                     const preview = computePlotData({
@@ -2997,6 +3060,7 @@ export const PlotViewExtension = Extension.create({
                       variableContext,
                       variableStore: store,
                       functionStore,
+                      modelStore,
                       registry: defaultRegistry,
                       settings,
                       sampleCount: 10,

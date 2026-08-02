@@ -5,6 +5,7 @@ import { CAPABILITY_SPRINT_TEMPLATE } from "../../templates/capabilitySprintTemp
 import { NEW_STUFF_TEMPLATE } from "../../templates/visualInsightsTemplate";
 import { GOAL_SEEK_TEMPLATE } from "../../templates/goalSeekTemplate";
 import { INVESTMENT_TEMPLATE } from "../../templates/investmentTemplate";
+import { UNCERTAINTY_MODELS_TEMPLATE } from "../../templates/uncertaintyModelsTemplate";
 import { useSheetContext } from "../../state/SheetContext";
 import { normalizeTemplateTriggers } from "./templateTriggerNormalization";
 import "./TemplatePanel.css";
@@ -46,6 +47,12 @@ const templates = [
     emoji: "💶",
     name: "Investment Lab",
     content: INVESTMENT_TEMPLATE,
+  },
+  {
+    id: "uncertainty-models",
+    emoji: "◒",
+    name: "Uncertainty & Models",
+    content: UNCERTAINTY_MODELS_TEMPLATE,
   },
   {
     id: "data-table",

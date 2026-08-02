@@ -20,6 +20,14 @@ Use this page as a lookup table after you have made your first sheet.
 
 <ExamplePlayground title={"Syntax essentials"} description={"Small patterns that cover most day-to-day sheets."} code={"subtotal = $128\ntax = 8.5% on subtotal\ntotal = subtotal + tax\ndistance = 42 km\ndistance in mi\nscores = 71, 77, 84, 90, 94\navg(scores)"} />
 
+## Uncertainty and reusable models
+
+Use `centre ± tolerance` for a deterministic possible range. Name it before using it in another expression. A `model` block gives a readable multi-step calculation a callable name; its indented intermediate values stay local to the model.
+
+<ExamplePlayground title={"A reusable uncertain forecast"} description={"The centre, interval, model steps, and final result all remain normal editable text."} code={"visits = 10000 ± 2000\nconversion = 3% ± 0.5%\nprice = 49 EUR\n\nmodel Revenue(visits, conversion, price):\n  buyers = visits * conversion\n  return buyers * price\n\nforecast = Revenue(visits, conversion, price)"} />
+
+Model parameters may be positional or named and may have defaults, for example `model Profit(revenue, costs, tax rate = 20%):`. A model ends with one final indented `return`. Uncertain literals inside a larger expression are not supported yet; assign them first as shown above.
+
 ## Lists and aggregation
 
 Lists use commas. Aggregators such as `sum`, `avg`, `min`, `max`, `median`, `count`, `range`, and `stddev` work on list values. Pairwise math works when the lists line up.

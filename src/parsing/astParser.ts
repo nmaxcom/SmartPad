@@ -21,6 +21,9 @@ import {
   TableColumnAssignmentNode,
   TableDeclarationNode,
   TableRowNode,
+  ModelDefinitionNode,
+  ModelBodyNode,
+  ModelLocalAssignment,
 } from "./ast";
 import {
   parseVariableAssignment,
@@ -34,6 +37,7 @@ import { looksLikeDateExpression } from "../date/dateMath";
 import { containsRangeOperatorOutsideString } from "../utils/rangeExpression";
 import { splitTopLevelCommas } from "../utils/listExpression";
 import { extractConversionSuffix } from "../utils/conversionSuffix";
+import { containsUncertaintyExpression } from "../utils/uncertaintyExpression";
 
 /**
  * Parse a single line of text into an AST node
@@ -347,6 +351,7 @@ function createVariableAssignmentNode(
 function createExpressionNode(expression: string, raw: string, line: number): ExpressionNode | ErrorNode {
   try {
     const hasTrigger = raw.includes("=>");
+    const isUncertaintyExpression = containsUncertaintyExpression(expression);
     const isCommandExpression = /^(solve|make)\b/i.test(expression.trim());
     if (!hasTrigger && containsTopLevelEquation(expression)) {
       return {
@@ -385,7 +390,7 @@ function createExpressionNode(expression: string, raw: string, line: number): Ex
     // Parse the expression into a component tree if it's not a raw list literal
     let components: ReturnType<typeof parseExpressionComponents> = [];
     const isCommaList = splitTopLevelCommas(expressionForComponents).length > 1;
-    if (!isListLiteral && !isCommandExpression) {
+    if (!isListLiteral && !isCommandExpression && !isUncertaintyExpression) {
       try {
         if (!isCommaList) {
           components = parseExpressionComponents(expressionForComponents);
@@ -407,6 +412,7 @@ function createExpressionNode(expression: string, raw: string, line: number): Ex
     if (
       hasTrigger &&
       !isPercentageExpression &&
+      !isUncertaintyExpression &&
       !hasFunction &&
       components.length > 0 &&
       !looksLikeDateExpression(normalizedExpression)
@@ -447,6 +453,7 @@ function createCombinedAssignmentNode(
   line: number
 ): CombinedAssignmentNode | ErrorNode {
   try {
+    const isUncertaintyExpression = containsUncertaintyExpression(expression);
     const isPercentageExpression =
       /%/.test(expression) ||
       /\bof\b/.test(expression) ||
@@ -473,7 +480,7 @@ function createCombinedAssignmentNode(
     // Parse the expression into a component tree
     let components: ReturnType<typeof parseExpressionComponents> = [];
     const isCommaList = splitTopLevelCommas(expressionForComponents).length > 1;
-    if (!isListLiteral) {
+    if (!isListLiteral && !isUncertaintyExpression) {
       try {
         if (!isCommaList) {
           components = parseExpressionComponents(expressionForComponents);
@@ -491,7 +498,7 @@ function createCombinedAssignmentNode(
     
     // Validate types early (without variable context yet)
     const hasFunction = components.some((component) => component.type === "function");
-    if (!isPercentageExpression && !hasFunction && components.length > 0 && !looksLikeDateExpression(expression)) {
+    if (!isPercentageExpression && !isUncertaintyExpression && !hasFunction && components.length > 0 && !looksLikeDateExpression(expression)) {
       const typeError = validateExpressionTypes(components, new Map(), undefined, {
         allowUnknownVariables: true,
       });
@@ -688,6 +695,7 @@ function parseFunctionParams(
   if (!paramsRaw) return [];
 
   const params: FunctionDefinitionNode["params"] = [];
+  const parameterNames = new Set<string>();
   const parts: string[] = [];
   let current = "";
   let depth = 0;
@@ -719,6 +727,10 @@ function parseFunctionParams(
     if (!/^[a-zA-Z][a-zA-Z0-9\s_]*$/.test(name)) {
       return createErrorNode(`Invalid parameter name: ${name}`, "syntax", raw, line);
     }
+    if (parameterNames.has(name)) {
+      return createErrorNode(`Duplicate parameter name: ${name}`, "syntax", raw, line);
+    }
+    parameterNames.add(name);
 
     let defaultComponents: ReturnType<typeof parseExpressionComponents> | undefined;
     if (defaultExpression) {
@@ -751,7 +763,20 @@ export function parseContent(content: string): ASTNode[] {
   const lines = content.split("\n");
   const nodes = lines.map((line, index) => parseLine(line, index + 1));
 
+  for (let index = 0; index < lines.length; index += 1) {
+    const declaration = parseModelDeclaration(lines, index);
+    if (!declaration) continue;
+    nodes[index] = declaration.node;
+    declaration.bodyNodes.forEach((bodyNode, bodyIndex) => {
+      nodes[index + bodyIndex + 1] = bodyNode;
+    });
+    index = declaration.lastLineIndex;
+  }
+
   for (let index = 0; index < lines.length - 1; index += 1) {
+    if (nodes[index].type === "modelDefinition" || nodes[index].type === "modelBody") {
+      continue;
+    }
     const declaration = parseTableDeclaration(lines, index);
     if (!declaration) continue;
     nodes[index] = declaration.node;
@@ -770,6 +795,144 @@ export function parseContent(content: string): ASTNode[] {
 
   return nodes;
 }
+
+const parseModelDeclaration = (
+  lines: string[],
+  index: number
+): {
+  node: ModelDefinitionNode | ErrorNode;
+  bodyNodes: ModelBodyNode[];
+  lastLineIndex: number;
+} | null => {
+  const raw = lines[index];
+  const header = raw.match(
+    /^\s*model\s+([A-Za-z][A-Za-z0-9 _]*)\s*\((.*)\)\s*:\s*$/i
+  );
+  if (!header) return null;
+
+  const modelName = header[1].replace(/\s+/g, " ").trim();
+  const paramsResult = parseFunctionParams(header[2].trim(), raw, index + 1);
+  const bodyNodes: ModelBodyNode[] = [];
+  const locals: ModelLocalAssignment[] = [];
+  const bodyLines: number[] = [];
+  let returnExpression = "";
+  let returnComponents: ReturnType<typeof parseExpressionComponents> = [];
+  let parseError =
+    paramsResult && (paramsResult as ErrorNode).type === "error"
+      ? (paramsResult as ErrorNode).error
+      : "";
+  const params = parseError ? [] : (paramsResult as ModelDefinitionNode["params"]);
+  if (params.length > 16) {
+    parseError = "Models support at most 16 parameters";
+  }
+
+  const knownNames = new Set(params.map((param) => param.name));
+  let lastLineIndex = index;
+  let meaningfulLines = 0;
+  let sawReturn = false;
+
+  for (let bodyIndex = index + 1; bodyIndex < lines.length; bodyIndex += 1) {
+    const bodyRaw = lines[bodyIndex];
+    if (bodyRaw.trim() && !/^\s+/.test(bodyRaw)) break;
+    lastLineIndex = bodyIndex;
+    bodyLines.push(bodyIndex + 1);
+    const trimmed = bodyRaw.trim();
+    let bodyKind: ModelBodyNode["bodyKind"] = "blank";
+
+    if (!trimmed) {
+      bodyKind = "blank";
+    } else if (trimmed.startsWith("#") || trimmed.startsWith("//")) {
+      bodyKind = "comment";
+    } else if (/^return\b/i.test(trimmed)) {
+      bodyKind = "return";
+      meaningfulLines += 1;
+      if (sawReturn) {
+        parseError ||= "A model can contain only one return line";
+      }
+      sawReturn = true;
+      returnExpression = trimmed.replace(/^return\b/i, "").trim();
+      if (!returnExpression) {
+        parseError ||= "Model return requires an expression";
+      } else {
+        try {
+          returnComponents = parseExpressionComponents(returnExpression);
+        } catch (error) {
+          parseError ||= `Model return parse error: ${
+            error instanceof Error ? error.message : String(error)
+          }`;
+        }
+      }
+    } else {
+      meaningfulLines += 1;
+      bodyKind = "assignment";
+      if (sawReturn) {
+        parseError ||= "Model return must be the final calculation in the block";
+      }
+      const assignment = splitTopLevelAssignment(trimmed);
+      const localName = assignment?.left.replace(/\s+/g, " ").trim() || "";
+      const expression = assignment?.right.trim() || "";
+      if (
+        !assignment ||
+        !/^[A-Za-z][A-Za-z0-9 _]*$/.test(localName) ||
+        !expression ||
+        localName.includes("(")
+      ) {
+        bodyKind = "invalid";
+        parseError ||= `Invalid model line: ${trimmed}`;
+      } else if (knownNames.has(localName)) {
+        bodyKind = "invalid";
+        parseError ||= `Duplicate model name: ${localName}`;
+      } else {
+        try {
+          const components = parseExpressionComponents(expression);
+          locals.push({ name: localName, expression, components, line: bodyIndex + 1 });
+          knownNames.add(localName);
+        } catch (error) {
+          bodyKind = "invalid";
+          parseError ||= `Model line parse error: ${
+            error instanceof Error ? error.message : String(error)
+          }`;
+        }
+      }
+    }
+
+    bodyNodes.push({
+      type: "modelBody",
+      line: bodyIndex + 1,
+      raw: bodyRaw,
+      modelName,
+      bodyKind,
+    });
+  }
+
+  if (meaningfulLines > 40) parseError ||= "Models support at most 40 calculation lines";
+  if (!sawReturn) parseError ||= "Model requires a final indented return line";
+
+  if (parseError) {
+    return {
+      node: createErrorNode(parseError, "syntax", raw, index + 1),
+      bodyNodes,
+      lastLineIndex,
+    };
+  }
+
+  return {
+    node: {
+      type: "modelDefinition",
+      line: index + 1,
+      raw,
+      modelName,
+      functionName: modelName,
+      params,
+      locals,
+      returnExpression,
+      returnComponents,
+      bodyLines,
+    },
+    bodyNodes,
+    lastLineIndex,
+  };
+};
 
 const splitPipeRow = (line: string): string[] => {
   const cells: string[] = [];

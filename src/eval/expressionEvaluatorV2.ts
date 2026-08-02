@@ -9,6 +9,7 @@ import {
   ASTNode,
   ExpressionNode,
   ExpressionComponent,
+  ModelDefinitionNode,
   isExpressionNode,
 } from "../parsing/ast";
 import { NodeEvaluator, EvaluationContext } from "./registry";
@@ -37,6 +38,7 @@ import {
   mapListItems,
   DurationValue,
   TimeValue,
+  UncertainValue,
 } from "../types";
 import { DateTime } from "luxon";
 import {
@@ -61,6 +63,9 @@ import {
 import { defaultUnitRegistry } from "../units/definitions";
 
 function applyAbsToSemanticValue(value: SemanticValue): SemanticValue {
+  if (SemanticValueTypes.isUncertain(value)) {
+    return (value as UncertainValue).map(applyAbsToSemanticValue, { includeZero: true });
+  }
   if (!value.isNumeric()) {
     return ErrorValue.typeError("abs expects a numeric argument", "number", value.getType());
   }
@@ -885,6 +890,57 @@ export class SimpleExpressionParser {
       return ErrorValue.semanticError(`Named arguments not supported for ${funcName}`);
     }
 
+    const uncertainArgs = args.positional.filter(SemanticValueTypes.isUncertain);
+    if (uncertainArgs.length > 0) {
+      if (args.positional.length !== 1) {
+        return ErrorValue.semanticError(
+          `${funcName}() does not support multiple uncertain arguments`
+        );
+      }
+      const uncertain = args.positional[0] as UncertainValue;
+      if (funcName === "abs") {
+        return applyAbsToSemanticValue(uncertain);
+      }
+      const monotonicFunctions = new Set([
+        "sqrt",
+        "round",
+        "floor",
+        "ceil",
+        "log",
+        "log10",
+        "ln",
+        "exp",
+      ]);
+      if (!monotonicFunctions.has(funcName)) {
+        return ErrorValue.semanticError(
+          `${funcName}() does not yet propagate uncertain values safely`
+        );
+      }
+      if (
+        ["sqrt", "log", "log10", "ln"].includes(funcName) &&
+        uncertain.getLower().getNumericValue() <= (funcName === "sqrt" ? -Number.EPSILON : 0)
+      ) {
+        return ErrorValue.semanticError(
+          `${funcName}() uncertainty interval leaves its valid domain`
+        );
+      }
+      const mapValue = (value: SemanticValue): SemanticValue => {
+        const mapped = this.evaluateBuiltInFunction(
+          funcName,
+          { positional: [value], named: new Map() },
+          context
+        );
+        return mapped || ErrorValue.semanticError(`Unsupported function: ${funcName}`);
+      };
+      const center = mapValue(uncertain.getCenter());
+      const lower = mapValue(uncertain.getLower());
+      const upper = mapValue(uncertain.getUpper());
+      if ([center, lower, upper].some(SemanticValueTypes.isError)) {
+        return [center, lower, upper].find(SemanticValueTypes.isError) as ErrorValue;
+      }
+      return UncertainValue.fromBounds(center, [lower, upper]);
+    }
+
     const unitArgs = args.positional.filter((value) => value.getType() === "unit");
     const currencyArgs = args.positional.filter(
       (value) => value.getType() === "currency" || value.getType() === "currencyUnit"
@@ -1013,6 +1069,10 @@ export class SimpleExpressionParser {
     const functionStore = context.functionStore ?? new Map();
     const definition = functionStore.get(name);
     if (!definition) {
+      const model = context.modelStore?.get(name);
+      if (model) {
+        return this.evaluateModel(name, model, args, context);
+      }
       return ErrorValue.semanticError(`Undefined function: ${name}`);
     }
 
@@ -1079,6 +1139,105 @@ export class SimpleExpressionParser {
       return ErrorValue.semanticError(`Error in ${name}: ${message}`);
     }
 
+    return result;
+  }
+
+  private static evaluateModel(
+    name: string,
+    definition: ModelDefinitionNode,
+    args: { positional: SemanticValue[]; named: Map<string, SemanticValue> },
+    context: EvaluationContext
+  ): SemanticValue {
+    const nextDepth = (context.functionCallDepth || 0) + 1;
+    if (nextDepth > 20) {
+      return ErrorValue.semanticError("Maximum call depth exceeded");
+    }
+
+    const boundVariables = new Map(context.variableContext);
+    const usedNamed = new Set<string>();
+
+    if (args.positional.length > definition.params.length) {
+      return ErrorValue.semanticError(
+        `${name} expects at most ${definition.params.length} arguments, got ${args.positional.length}`
+      );
+    }
+    const duplicatedArgument = definition.params
+      .slice(0, args.positional.length)
+      .find((param) => args.named.has(param.name));
+    if (duplicatedArgument) {
+      return ErrorValue.semanticError(
+        `Argument ${duplicatedArgument.name} was provided twice`
+      );
+    }
+
+    for (let index = 0; index < definition.params.length; index += 1) {
+      const param = definition.params[index];
+      let value: SemanticValue | null = null;
+      if (args.named.has(param.name)) {
+        value = args.named.get(param.name) || null;
+        usedNamed.add(param.name);
+      } else if (args.positional.length > index) {
+        value = args.positional[index];
+      } else if (param.defaultComponents || param.defaultExpression) {
+        const components =
+          param.defaultComponents || parseExpressionComponents(param.defaultExpression || "");
+        value = this.evaluateComponentList(components, {
+          ...context,
+          variableContext: boundVariables,
+          functionCallDepth: nextDepth,
+        });
+      }
+
+      if (!value) {
+        return ErrorValue.semanticError(`Missing argument: ${param.name}`);
+      }
+      if (SemanticValueTypes.isError(value)) {
+        return value;
+      }
+      boundVariables.set(param.name, {
+        name: param.name,
+        value,
+        rawValue: value.toString(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
+
+    if (args.named.size > usedNamed.size) {
+      const unknown = Array.from(args.named.keys()).find((key) => !usedNamed.has(key));
+      return ErrorValue.semanticError(`Unknown argument: ${unknown}`);
+    }
+
+    for (const local of definition.locals) {
+      const value = this.evaluateComponentList(local.components, {
+        ...context,
+        variableContext: boundVariables,
+        functionCallDepth: nextDepth,
+      });
+      if (SemanticValueTypes.isError(value)) {
+        return ErrorValue.semanticError(
+          `Error in ${name}.${local.name}: ${(value as ErrorValue).getMessage()}`
+        );
+      }
+      boundVariables.set(local.name, {
+        name: local.name,
+        value,
+        rawValue: local.expression,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
+
+    const result = this.evaluateComponentList(definition.returnComponents, {
+      ...context,
+      variableContext: boundVariables,
+      functionCallDepth: nextDepth,
+    });
+    if (SemanticValueTypes.isError(result)) {
+      return ErrorValue.semanticError(
+        `Error in ${name}: ${(result as ErrorValue).getMessage()}`
+      );
+    }
     return result;
   }
 
@@ -2791,6 +2950,7 @@ export class ExpressionEvaluatorV2 implements NodeEvaluator {
       type: "mathResult",
       expression,
       result: resultString,
+      semanticValue: result,
       displayText,
       line: lineNumber,
       originalRaw: expression,

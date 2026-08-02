@@ -4,6 +4,29 @@ All notable user-facing changes to SmartPad will be documented in this file.
 
 SmartPad uses semantic versioning. Pre-release builds use `-beta.N` or `-rc.N` suffixes.
 
+## 1.0.0-rc.16 - 2026-08-02
+
+### Added
+
+- Typed `centre ± tolerance` values propagate conservative bounds through calculations while both
+  source numbers keep SmartPad's native horizontal scrubber.
+- Connected line plots render uncertain series as a discreet shaded envelope behind the live centre
+  line and include the bounds when choosing their vertical range.
+- Text-native `model Name(...):` blocks support indented local calculations, an explicit return,
+  defaults and named arguments, isolated locals, autocomplete, units, currencies, and uncertainty.
+- Selecting compatible visible numbers reveals nearby sum, mean, minimum, and maximum actions;
+  choosing one inserts an ordinary editable SmartPad calculation into the sheet.
+- Resting the caret on a formula shows one muted, non-persistent substitution line with current
+  variable values and the live result.
+- The **Uncertainty & Models** template introduces the four interactions in one runnable sheet.
+
+### Changed
+
+- Plot dependency expansion preserves uncertain source variables instead of flattening their `±`
+  text into an exact scalar.
+- Unit-aware expression routing defers uncertain inputs to the semantic interval engine so their
+  bounds cannot be lost silently.
+
 ## 1.0.0-rc.15 - 2026-08-02
 
 ### Fixed

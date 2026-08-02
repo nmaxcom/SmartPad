@@ -33,6 +33,8 @@ When an alternative is worth keeping, return to that result menu and choose **Sa
 
 <ExamplePlayground title={"Scrub the assumptions"} description={"Try dragging `40`, `82`, or `22` in the app."} code={"hours = 40\nrate = $82/hour\ngross = hours * rate\ntax = 22% on gross\nnet = gross - tax"} />
 
+For a more exploratory starting point, open the **Uncertainty & Models** template. It keeps a possible range, a reusable multi-step model, and a connected graph together in ordinary sheet text.
+
 ## Reuse a result
 
 Drag the result chip itself into another expression to create a reference that stays connected to the original result. Hover controls are for copying the value or opening the chip menu.

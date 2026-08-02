@@ -45,6 +45,7 @@ export interface MathResultRenderNode extends BaseRenderNode {
   readonly expression: string;
   readonly result: string | number;
   readonly displayText: string;
+  readonly semanticValue?: import("../types").SemanticValue;
 }
 
 /**
@@ -55,6 +56,7 @@ export interface VariableRenderNode extends BaseRenderNode {
   readonly variableName: string;
   readonly value: string | number;
   readonly displayText: string;
+  readonly semanticValue?: import("../types").SemanticValue;
 }
 
 /**
@@ -66,6 +68,7 @@ export interface CombinedRenderNode extends BaseRenderNode {
   readonly expression: string;
   readonly result: string | number;
   readonly displayText: string;
+  readonly semanticValue?: import("../types").SemanticValue;
 }
 
 /**
@@ -92,6 +95,8 @@ export interface PlotRange {
 export interface PlotPoint {
   readonly x: number;
   readonly y: number | null;
+  readonly lower?: number | null;
+  readonly upper?: number | null;
 }
 
 export interface PlotSeries {
@@ -99,6 +104,8 @@ export interface PlotSeries {
   readonly expression: string;
   readonly data?: PlotPoint[];
   readonly currentY?: number | null;
+  readonly currentLower?: number | null;
+  readonly currentUpper?: number | null;
 }
 
 /**

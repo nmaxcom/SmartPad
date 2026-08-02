@@ -1,4 +1,4 @@
-import { ExpressionNode, ExpressionComponent, FunctionDefinitionNode } from "../parsing/ast";
+import { ExpressionNode, ExpressionComponent, FunctionDefinitionNode, ModelDefinitionNode } from "../parsing/ast";
 import { EvaluatorRegistry, EvaluationContext } from "../eval/registry";
 import { Variable } from "../state/types";
 import { ReactiveVariableStore } from "../state/variableStore";
@@ -12,11 +12,13 @@ import {
   DateValue,
   TimeValue,
   DurationValue,
+  UncertainValue,
 } from "../types";
 import type { DurationUnit } from "../types/DurationValue";
 import { SmartPadQuantity } from "../units/unitsnetAdapter";
 import type { PlotPoint, PlotRange } from "../eval/renderNodes";
 import { parseExpressionComponents } from "../parsing/expressionComponents";
+import { containsUncertaintyExpression } from "../utils/uncertaintyExpression";
 
 export type PlotStatus = "connected" | "disconnected";
 
@@ -29,6 +31,8 @@ export interface PlotComputationResult {
   autoView?: PlotRange;
   currentX?: number;
   currentY?: number | null;
+  currentLower?: number | null;
+  currentUpper?: number | null;
 }
 
 export interface PlotSettings {
@@ -47,6 +51,7 @@ export interface PlotComputationInput {
   variableContext: Map<string, Variable>;
   variableStore: ReactiveVariableStore;
   functionStore?: Map<string, FunctionDefinitionNode>;
+  modelStore?: Map<string, ModelDefinitionNode>;
   registry: EvaluatorRegistry;
   settings: PlotSettings;
   domainSpec?: string;
@@ -70,6 +75,9 @@ const renderExpandedComponents = (
         if (!name || name === xVariable || visited.has(name)) return component.value;
         const rawValue = variableContext.get(name)?.rawValue?.trim();
         if (!rawValue || rawValue === name) return component.value;
+        // Preserve the semantic interval. Parsing `centre ± tolerance` as an
+        // ordinary expression would discard the ± operator during expansion.
+        if (containsUncertaintyExpression(rawValue)) return component.value;
         try {
           const nextVisited = new Set(visited);
           nextVisited.add(name);
@@ -297,6 +305,22 @@ const buildFunctionSignature = (functionStore?: Map<string, FunctionDefinitionNo
     .join("|");
 };
 
+const buildModelSignature = (modelStore?: Map<string, ModelDefinitionNode>): string => {
+  if (!modelStore || modelStore.size === 0) return "";
+  return Array.from(modelStore.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([name, definition]) => {
+      const params = definition.params
+        .map((param) => `${param.name}=${param.defaultExpression ?? ""}`)
+        .join(",");
+      const locals = definition.locals
+        .map((local) => `${local.name}=${local.expression}`)
+        .join(";");
+      return `${name}(${params}){${locals};return ${definition.returnExpression}}`;
+    })
+    .join("|");
+};
+
 const readCache = (key: string): PlotCacheEntry | null => {
   const entry = plotDataCache.get(key);
   if (!entry) return null;
@@ -404,6 +428,9 @@ const buildSampleValue = (
   sample: number,
   durationUnit?: DurationUnit | null
 ): SemanticValue => {
+  if (baseValue.getType() === "uncertain") {
+    return buildSampleValue((baseValue as UncertainValue).getCenter(), sample, durationUnit);
+  }
   const type = baseValue.getType();
   if (type === "number") {
     return new NumberValue(sample);
@@ -474,11 +501,13 @@ const buildEvaluationContext = (
   variableContext: Map<string, Variable>,
   variableStore: ReactiveVariableStore,
   functionStore: Map<string, FunctionDefinitionNode> | undefined,
+  modelStore: Map<string, ModelDefinitionNode> | undefined,
   settings: PlotSettings
 ): EvaluationContext => ({
   variableStore,
   variableContext,
   functionStore,
+  modelStore,
   equationStore: undefined,
   lineNumber: expressionNode.line,
   decimalPlaces: settings.decimalPlaces,
@@ -491,30 +520,46 @@ const buildEvaluationContext = (
   functionCallDepth: 0,
 });
 
+interface PlotEvaluatedValue {
+  value: number | null;
+  lower?: number | null;
+  upper?: number | null;
+}
+
 const evaluateExpressionAt = (
   registry: EvaluatorRegistry,
   expressionNode: ExpressionNode,
   variableContext: Map<string, Variable>,
   variableStore: ReactiveVariableStore,
   functionStore: Map<string, FunctionDefinitionNode> | undefined,
+  modelStore: Map<string, ModelDefinitionNode> | undefined,
   settings: PlotSettings
-): number | null => {
+): PlotEvaluatedValue => {
   const context = buildEvaluationContext(
     expressionNode,
     variableContext,
     variableStore,
     functionStore,
+    modelStore,
     settings
   );
   const renderNode = registry.evaluate(expressionNode, context);
-  if (!renderNode || renderNode.type === "error") return null;
+  if (!renderNode || renderNode.type === "error") return { value: null };
+  const semanticValue = (renderNode as any).semanticValue;
+  if (semanticValue instanceof UncertainValue) {
+    return {
+      value: getPlotNumericValue(semanticValue.getCenter()),
+      lower: getPlotNumericValue(semanticValue.getLower()),
+      upper: getPlotNumericValue(semanticValue.getUpper()),
+    };
+  }
   const rawResult = (renderNode as any).result ?? "";
   const rawText = typeof rawResult === "string" ? rawResult : String(rawResult);
   // Remove thousands separators so parsing doesn't drop large values.
   const normalized = rawText.replace(/(\d),(?=\d{3}(\D|$))/g, "$1");
   const parsed = SemanticParsers.parse(normalized);
-  if (!parsed) return null;
-  return getPlotNumericValue(parsed);
+  if (!parsed) return { value: null };
+  return { value: getPlotNumericValue(parsed) };
 };
 
 const cloneVariableStore = (variableContext: Map<string, Variable>): ReactiveVariableStore => {
@@ -532,6 +577,7 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
     variableContext,
     variableStore,
     functionStore,
+    modelStore,
     registry,
     settings,
     domainSpec,
@@ -612,6 +658,7 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
   const dependencies = collectVariableDependencies(expressionNode.components);
   const depsSignature = buildDependencySignature(dependencies, xVariable, variableContext);
   const fnSignature = buildFunctionSignature(functionStore);
+  const modelSignature = buildModelSignature(modelStore);
   const cacheKey = [
     expressionNode.expression,
     xVariable,
@@ -620,6 +667,7 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
     totalSamples,
     depsSignature,
     fnSignature,
+    modelSignature,
   ].join("|");
   const cached = readCache(cacheKey);
   if (cached) {
@@ -629,6 +677,7 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
       baseContext,
       variableStore,
       functionStore,
+      modelStore,
       settings
     );
     return {
@@ -638,7 +687,9 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
       view: cached.view,
       autoView: cached.autoView || cached.view,
       currentX: baseNumeric,
-      currentY,
+      currentY: currentY.value,
+      currentLower: currentY.lower,
+      currentUpper: currentY.upper,
     };
   }
 
@@ -664,10 +715,16 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
       sampleContext,
       baseStore,
       functionStore,
+      modelStore,
       settings
     );
 
-    data.push({ x: sampleX, y: yValue });
+    data.push({
+      x: sampleX,
+      y: yValue.value,
+      lower: yValue.lower,
+      upper: yValue.upper,
+    });
   }
 
   const currentY = evaluateExpressionAt(
@@ -676,6 +733,7 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
     baseContext,
     variableStore,
     functionStore,
+    modelStore,
     settings
   );
 
@@ -696,6 +754,8 @@ export const computePlotData = (input: PlotComputationInput): PlotComputationRes
     view: clampedView,
     autoView,
     currentX: baseNumeric,
-    currentY,
+    currentY: currentY.value,
+    currentLower: currentY.lower,
+    currentUpper: currentY.upper,
   };
 };

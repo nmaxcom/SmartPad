@@ -543,6 +543,25 @@ total_circle(r) = circumference(r) + circle_area(r)
 - Functions can call other functions
 - Dynamic scope (uses current variable values)
 
+### ◒ Uncertainty and Reusable Models
+
+Use `centre ± tolerance` when an input is an estimate rather than a false-precision point. Both numbers use the normal horizontal scrubber, dependent results keep conservative bounds, and line plots shade the propagated interval.
+
+```text
+visits = 10000 ± 2000
+conversion = 3% ± 0.5%
+price = 49 EUR
+
+model Revenue(visits, conversion, price):
+  buyers = visits * conversion
+  return buyers * price
+
+forecast = Revenue(visits, conversion, price) =>
+@view plot x=price y=forecast domain=20..80
+```
+
+Model parameters support defaults and named arguments. Indented local steps are isolated from the sheet, while units, currencies, percentages, and uncertain values retain their semantic types. Put the caret on a derived formula to see its current values substituted; select compatible visible numbers to insert a live sum, mean, minimum, or maximum.
+
 ### 🔬 Scientific Notation
 
 Work with very large or very small numbers naturally.

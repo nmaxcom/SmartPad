@@ -38,14 +38,16 @@ import { ReferenceInlineNode } from "./ReferenceInlineNode";
 import { ResultInteractionExtension } from "./ResultInteractionExtension";
 import { ResultReferenceInteractionExtension } from "./ResultReferenceInteractionExtension";
 import { PlotViewExtension } from "./PlotViewExtension";
+import { SelectionInsightsExtension } from "./SelectionInsightsExtension";
+import { SubstitutionLensExtension } from "./SubstitutionLensExtension";
 import { AutocompleteExtension } from "./autocomplete/AutocompleteExtension";
 import { getDateLocaleEffective } from "../types/DateValue";
 import { LineIdExtension } from "./LineIdExtension";
 // Import helper to identify combined assignment nodes (e.g. "speed = slider(...)")
 import { parseContent, parseLine } from "../parsing/astParser";
 import { recordEquationFromNode } from "../solve/equationStore";
-import { FunctionDefinitionNode, isExpressionNode } from "../parsing/ast";
-import { SemanticParsers, NumberValue, SymbolicValue, SemanticValueTypes } from "../types";
+import { FunctionDefinitionNode, ModelDefinitionNode, isExpressionNode } from "../parsing/ast";
+import { SemanticParsers, NumberValue, SymbolicValue, SemanticValue, SemanticValueTypes } from "../types";
 import { defaultRegistry } from "../eval";
 import type { RenderNode } from "../eval";
 import type { EvaluationContext } from "../eval";
@@ -266,6 +268,9 @@ const extractEditorLineData = (doc: ProseMirrorNode): EditorLineData[] => {
 
 const parseRenderNodeValue = (renderNode: any): any | null => {
   if (!renderNode) return null;
+  if (renderNode.semanticValue instanceof SemanticValue) {
+    return renderNode.semanticValue;
+  }
   const raw = renderNode.result;
   if (typeof raw === "number") {
     return NumberValue.from(raw);
@@ -329,6 +334,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
   const activeSheetIdRef = useRef(activeSheetId);
   const lineResultStatusByIdRef = useRef<Map<string, LineResultStatus>>(new Map());
   const functionStoreRef = useRef<Map<string, FunctionDefinitionNode>>(new Map());
+  const modelStoreRef = useRef<Map<string, ModelDefinitionNode>>(new Map());
   const isUpdatingRef = useRef(false);
 
   useEffect(() => {
@@ -377,6 +383,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         // Process nodes one by one in document order for variable state
         const collectedRenderNodes: RenderNode[] = [];
         const functionStore = new Map<string, FunctionDefinitionNode>();
+        const modelStore = new Map<string, ModelDefinitionNode>();
         const equationStore: import("../solve/equationStore").EquationEntry[] = [];
         const lineResultById = new Map<string, LineResultState>();
         const lineResultByLine = new Map<number, LineResultState>();
@@ -501,6 +508,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
             variableStore: reactiveStore,
             variableContext: currentVariableContext,
             functionStore,
+            modelStore,
             equationStore,
             astNodes,
             lineNumber: index + 1,
@@ -998,6 +1006,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
           (window as any).__lineResultStatusById = Array.from(lineResultStatusById.entries());
           lineResultStatusByIdRef.current = new Map(lineResultStatusById);
           functionStoreRef.current = new Map(functionStore);
+          modelStoreRef.current = new Map(modelStore);
           
           window.dispatchEvent(
             new CustomEvent("evaluationDone", { 
@@ -1108,6 +1117,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       }),
       // Number scrubber for interactive dragging
       NumberScrubberExtension,
+      SelectionInsightsExtension,
       // Semantic highlighting extension with variable context
       SemanticHighlightExtension.configure({
         getVariableContext: () => {
@@ -1118,6 +1128,28 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       }),
       // The ResultsDecoratorExtension is responsible for rendering the results of calculations.
       ResultsDecoratorExtension,
+      SubstitutionLensExtension.configure({
+        getVariableContext: () => {
+          const variables = reactiveStore.getAllVariables();
+          return new Map(variables.map((variable) => [variable.name, variable]));
+        },
+        getDisplayOptions: () => ({
+          precision: settingsRef.current.decimalPlaces,
+          scientificUpperThreshold: Math.pow(
+            10,
+            settingsRef.current.scientificUpperExponent
+          ),
+          scientificLowerThreshold: Math.pow(
+            10,
+            settingsRef.current.scientificLowerExponent
+          ),
+          scientificTrimTrailingZeros:
+            settingsRef.current.scientificTrimTrailingZeros,
+          groupThousands: settingsRef.current.groupThousands,
+          dateFormat: settingsRef.current.dateDisplayFormat,
+          dateLocale: resolveDateLocaleForEvaluation(settingsRef.current),
+        }),
+      }),
       // Plot view extension for dependency exploration and @view rendering.
       PlotViewExtension.configure({
         getVariableContext: () => {
@@ -1125,6 +1157,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
           return new Map(variables.map((variable) => [variable.name, variable]));
         },
         getFunctionStore: () => functionStoreRef.current,
+        getModelStore: () => modelStoreRef.current,
         getSettings: () => settings,
       }),
       AutocompleteExtension.configure({
@@ -1132,7 +1165,13 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
           const variables = reactiveStore.getAllVariables();
           return new Map(variables.map((variable) => [variable.name, variable]));
         },
-        getFunctionStore: () => functionStoreRef.current,
+        getFunctionStore: () => {
+          const callables = new Map<string, FunctionDefinitionNode>(functionStoreRef.current);
+          modelStoreRef.current.forEach((model, name) => {
+            callables.set(name, model as unknown as FunctionDefinitionNode);
+          });
+          return callables;
+        },
         getManualShortcut: () => settingsRef.current.autocompleteManualShortcut,
       }),
       // The VariableHoverExtension provides hover-to-highlight functionality for variables.

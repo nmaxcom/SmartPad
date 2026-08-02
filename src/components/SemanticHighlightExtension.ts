@@ -268,6 +268,7 @@ export const SemanticHighlightExtension = Extension.create({
       let activeTable = false;
       let expectingTableHeader = false;
       let pendingTableTitle: { offset: number; nodeSize: number } | null = null;
+      let activeModel = false;
 
       doc.forEach((node: ProseMirrorNode, offset: number) => {
         if (node.type.name !== "paragraph") {
@@ -275,7 +276,30 @@ export const SemanticHighlightExtension = Extension.create({
         }
 
         const text = getTokenizableLineText(node);
-        const isTableTitle = /^\s*[A-Za-z][A-Za-z0-9 _-]*\s*:\s*$/.test(text);
+        const isModelHeader = /^\s*model\s+[A-Za-z][A-Za-z0-9 _]*\s*\(.*\)\s*:\s*$/i.test(text);
+        const isModelBody = activeModel && (!text.trim() || /^\s+/.test(text));
+        if (isModelHeader) {
+          activeModel = true;
+          decorations.push(
+            Decoration.node(offset, offset + node.nodeSize, {
+              class: "smartpad-model-header",
+            })
+          );
+        } else if (isModelBody) {
+          if (text.trim()) {
+            decorations.push(
+              Decoration.node(offset, offset + node.nodeSize, {
+                class: /^\s+return\b/i.test(text)
+                  ? "smartpad-model-body smartpad-model-return"
+                  : "smartpad-model-body",
+              })
+            );
+          }
+        } else if (text.trim()) {
+          activeModel = false;
+        }
+        const isTableTitle =
+          !isModelHeader && /^\s*[A-Za-z][A-Za-z0-9 _-]*\s*:\s*$/.test(text);
         const isTableRow = /^\s+.*\|.*$/.test(text);
         const isActiveTableRow = activeTable && isTableRow;
         const isTableHeaderRow = isActiveTableRow && expectingTableHeader;
@@ -715,7 +739,7 @@ export function tokenizeExpression(
   const numberRegex = /^[-+]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/;
   const functionRegex = /^([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/;
   const commandKeywordRegex = /^(solve|make)\b/i;
-  const operatorRegex = /^[\+\-\*\/\^\%]/;
+  const operatorRegex = /^[\+\-\*\/\^\%±]/;
   const parenRegex = /^[\(\)]/;
   const bracketRegex = /^[\[\]]/;
   const rangeOperatorRegex = /^\.\./;

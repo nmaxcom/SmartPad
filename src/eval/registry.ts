@@ -5,7 +5,7 @@
  * into render nodes. It provides a plugin-based architecture for extensibility.
  */
 
-import { ASTNode, FunctionDefinitionNode } from "../parsing/ast";
+import { ASTNode, FunctionDefinitionNode, ModelDefinitionNode } from "../parsing/ast";
 import { RenderNode } from "./renderNodes";
 import { ReactiveVariableStore } from "../state/variableStore";
 import { Variable } from "../state/types";
@@ -26,6 +26,7 @@ export interface EvaluationContext {
   variableStore: ReactiveVariableStore;
   variableContext: Map<string, Variable>;
   functionStore?: Map<string, FunctionDefinitionNode>;
+  modelStore?: Map<string, ModelDefinitionNode>;
   equationStore?: EquationEntry[];
   astNodes?: ASTNode[];
   lineNumber: number;
